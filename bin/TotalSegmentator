@@ -1,3 +1,51 @@
 #!/usr/bin/env python
+import sys
+import os
+import argparse
+# import subprocess
+from pkg_resources import require
+from pathlib import Path
 
-print("hello world")
+import numpy as np
+import nibabel as nib
+
+from totalsegmentator.nnunet import nnUNet_predict_image
+from totalsegmentator.libs import setup_nnunet
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Segment X classes in CT images.",
+                                        epilog="Written by Jakob Wasserthal. Please reference TODO")
+
+    parser.add_argument("-i", metavar="filepath", dest="input",
+                        help="CT nifti image", 
+                        type=lambda p: Path(p).absolute(), required=True)
+
+    parser.add_argument("-o", metavar="directory", dest="output",
+                        help="Output directory for segmentation masks", 
+                        type=lambda p: Path(p).absolute(), required=True)
+
+    parser.add_argument("--ml", action="store_true", help="Save one multilabel image for all classes",
+                        default=False)
+
+    parser.add_argument("--verbose", action="store_true", help="Show more intermediate output",
+                        default=False)
+
+    parser.add_argument('--version', action='version', version=require("TotalSegmentator")[0].version)
+
+    args = parser.parse_args()
+
+    setup_nnunet()
+
+    task_id = 224  # 17
+    folds = [0]  # None
+    nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
+                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=args.ml)
+
+    # os.environ["mytest"] = "hello"
+    # subprocess.call("echo what", shell=True)
+    # subprocess.call("echo $mytest", shell=True)
+
+
+if __name__ == "__main__":
+    main()
