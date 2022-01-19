@@ -1,0 +1,9 @@
+.idea
+.vscode
+*.pyc
+*.npz
+.DS_Store
+*.egg-info
+.pytest_cache/*
+build/
+dist/
