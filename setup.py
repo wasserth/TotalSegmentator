@@ -13,7 +13,8 @@ setup(name='TotalSegmentator',
         install_requires=[
             'numpy',
             'nibabel>=2.3.0',
-            'tqdm'
+            'tqdm',
+            'nnunet'
         ],
         zip_safe=False,
         classifiers=[
