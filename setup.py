@@ -12,6 +12,7 @@ setup(name='TotalSegmentator',
         packages=find_packages(),
         install_requires=[
             'numpy',
+            'psutil',
             'nibabel>=2.3.0',
             'tqdm',
             'p_tqdm',
