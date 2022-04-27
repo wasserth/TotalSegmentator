@@ -14,7 +14,7 @@ setup(name='TotalSegmentator',
             'numpy',
             'nibabel>=2.3.0',
             'tqdm',
-            'nnunet'
+            # 'nnunet'
         ],
         zip_safe=False,
         classifiers=[

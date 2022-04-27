@@ -3,8 +3,22 @@
 Tool for segmentation of X classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images.
 
 ### Installation
+
+Install dependencies
 ```
-pip install totalsegmentator
+pip install batchgenerators==0.21                             
+pip install https://github.com/wasserth/nnUNet_cust/archive/refs/heads/working_2022_03_18.zip
+pip install fury==0.7.1
+```
+
+Install Totalsegmentator
+```
+pip install https://github.com/wasserth/TotalSegmentator/archive/refs/heads/main.zip
+```
+
+Copy nnUNet weights to
+```
+~/.totalsegmentator/nnunet/results/nnUNet/3d_fullres
 ```
 
 ### Usage

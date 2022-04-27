@@ -16,6 +16,7 @@ with nostdout():
 
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
+from totalsegmentator.resampling import change_spacing
 
 
 def _get_full_task_name(task_id: int, src: str="raw"):
@@ -96,7 +97,10 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
-                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=True):
+                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=None):
+    """
+    resample: None or float  (target spacing for all dimensions)
+    """
     file_in, file_out = Path(file_in), Path(file_out)
     
     tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8)))
@@ -105,8 +109,21 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     # shutil.copy(file_in, tmp_dir / "s01_0000.nii.gz")
     as_closest_canonical_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
+    if resample is not None:
+        print(f"Resampling to: {resample}")
+        img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
+        img_in_shape = img_in.shape
+        img_in_rsp = change_spacing(img_in, [resample, resample, resample], order=3, dtype=np.int32)
+        nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
+
     # with nostdout():
     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+
+    if resample is not None:
+        print(f"Resampling to: {img_in_shape}")
+        img_pred = nib.load(tmp_dir / "s01.nii.gz")
+        img_pred_rsp = change_spacing(img_pred, [resample, resample, resample], img_in_shape, order=0, dtype=np.uint8)
+        nib.save(img_pred_rsp, tmp_dir / "s01.nii.gz")
 
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01.nii.gz")
 
@@ -122,3 +139,6 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     file_out / f"{v}.nii.gz")
             
     shutil.rmtree(tmp_dir)
+
+    # todo: Add try except around everything and if fails, then remove nnunet_tmp dir
+    #       Is there a smarter way to cleanup tmp files in error case?

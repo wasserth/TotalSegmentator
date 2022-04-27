@@ -27,6 +27,12 @@ def main():
     parser.add_argument("--ml", action="store_true", help="Save one multilabel image for all classes",
                         default=False)
 
+    parser.add_argument("-f", "--fast", action="store_true", help="Run faster lower resolution model",
+                        default=False)
+
+    parser.add_argument("--preview", action="store_true", help="Generate a png preview of segmentation",
+                        default=False)
+
     parser.add_argument("--verbose", action="store_true", help="Show more intermediate output",
                         default=False)
 
@@ -45,10 +51,20 @@ def main():
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
     # task_id = 224  # 17
-    task_id = 800
+    # task_id = 800
+    trainer = "nnUNetTrainerV2_ep4000_nomirror"
+
+    if args.fast:
+        task_id = 256
+        resample = 3.0
+    else:
+        raise ValueError("The non-fast option is not implemented yet")
+        task_id = 251
+        resample = 1.5
+
     folds = [0]  # None
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
-                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=args.ml)
+                         trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample)
 
 
     # maybe add preview option
