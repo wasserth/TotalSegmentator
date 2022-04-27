@@ -14,6 +14,7 @@ setup(name='TotalSegmentator',
             'numpy',
             'nibabel>=2.3.0',
             'tqdm',
+            'p_tqdm',
             # 'nnunet'
         ],
         zip_safe=False,

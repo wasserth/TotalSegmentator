@@ -10,6 +10,7 @@ import numpy as np
 import nibabel as nib
 
 from totalsegmentator.libs import setup_nnunet
+from totalsegmentator.preview import generate_preview
 
 
 def main():
@@ -66,8 +67,9 @@ def main():
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample)
 
-
-    # maybe add preview option
+    if args.preview:
+        preview_path = Path(args.input).parent
+        generate_preview(Path(args.input), preview_path / "preview.png", (args.output))
     
 
 if __name__ == "__main__":
