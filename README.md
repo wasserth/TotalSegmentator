@@ -23,7 +23,7 @@ Copy nnUNet weights to
 
 ### Usage
 ```
-TotalSegmentator -i ct.nii.gz -o segmentations
+TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 ```
 
 ### List of classes
