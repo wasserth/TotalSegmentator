@@ -68,8 +68,7 @@ def main():
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample)
 
     if args.preview:
-        preview_path = args.input.parent
-        generate_preview(args.input, preview_path / "preview.png", args.output)
+        generate_preview(args.input, args.output / "preview.png", args.output)
     
 
 if __name__ == "__main__":
