@@ -1,0 +1,8 @@
+# ** is any number of nested directories
+# **/*.model
+# db/models/*
+# db/test_data/*
+# db/log.txt
+# db/api_keys.txt
+# db/server_config.txt
+# tmp_weights

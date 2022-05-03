@@ -7,3 +7,5 @@
 .pytest_cache/*
 build/
 dist/
+tmp_weights/
+store/

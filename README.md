@@ -13,7 +13,7 @@ pip install dipy==1.2.0 fury==0.7.1 xvfbwrapper
 
 Install Totalsegmentator
 ```
-pip install https://github.com/wasserth/TotalSegmentator/archive/refs/heads/main.zip
+pip install git+https://github.com/wasserth/TotalSegmentator.git
 ```
 
 Copy nnUNet weights to
