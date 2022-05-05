@@ -8,7 +8,6 @@ Install dependencies
 ```
 pip install batchgenerators==0.21                             
 pip install https://github.com/wasserth/nnUNet_cust/archive/refs/heads/working_2022_03_18.zip
-pip install dipy==1.2.0 fury==0.7.1 xvfbwrapper
 ```
 
 Install Totalsegmentator

@@ -1,8 +1,34 @@
 import numpy as np
 import vtk
-from dipy.viz import utils
-from dipy.utils.optpkg import optional_package
-numpy_support, have_ns, _ = optional_package('vtk.util.numpy_support')
+from vtk.util import numpy_support
+
+
+def set_input(vtk_object, inp):
+    """Set Generic input function which takes into account VTK 5 or 6.
+
+    Parameters
+    ----------
+    vtk_object: vtk object
+    inp: vtkPolyData or vtkImageData or vtkAlgorithmOutput
+
+    Returns
+    -------
+    vtk_object
+
+    Notes
+    -------
+    This can be used in the following way::
+        from fury.utils import set_input
+        poly_mapper = set_input(vtk.vtkPolyDataMapper(), poly_data)
+
+    This function is copied from dipy.viz.utils
+    """
+    if isinstance(inp, (vtk.vtkPolyData, vtk.vtkImageData)):
+        vtk_object.SetInputData(inp)
+    elif isinstance(inp, vtk.vtkAlgorithmOutput):
+        vtk_object.SetInputConnection(inp)
+    vtk_object.Update()
+    return vtk_object
 
 
 def plot_mask(renderer, mask_data, affine, x_current, y_current, orientation="axial",
@@ -120,7 +146,7 @@ def contour_from_roi_smooth(data, affine=None, color=np.array([1, 0, 0]), opacit
 
     # Set the reslicing
     image_resliced = vtk.vtkImageReslice()
-    utils.set_input(image_resliced, im)
+    set_input(image_resliced, im)
     image_resliced.SetResliceTransform(transform)
     image_resliced.AutoCropOutputOn()
 

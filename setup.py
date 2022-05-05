@@ -16,6 +16,8 @@ setup(name='TotalSegmentator',
             'nibabel>=2.3.0',
             'tqdm',
             'p_tqdm',
+            'xvfbwrapper',
+            'fury',
             # 'nnunet'
         ],
         zip_safe=False,

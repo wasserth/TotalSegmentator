@@ -1,2 +1,7 @@
 numpy
+psutil
 nibabel
+tqdm
+p_tqdm
+xvfbwrapper
+fury
