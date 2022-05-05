@@ -51,15 +51,19 @@ def download_pretrained_weights(task_id):
 
 
 def setup_nnunet():
-    config_dir = Path.home() / ".totalsegmentator"
-    config_dir.mkdir(exist_ok=True)
-    (config_dir / "nnunet/results/nnUNet/3d_fullres").mkdir(exist_ok=True, parents=True)
+    # check if environment variable totalsegmentator_config is set
+    if "TOTALSEG_WEIGHTS_PATH" in os.environ:
+        weights_dir = os.environ["TOTALSEG_WEIGHTS_PATH"]
+    else:
+        config_dir = Path.home() / ".totalsegmentator"
+        (config_dir / "nnunet/results/nnUNet/3d_fullres").mkdir(exist_ok=True, parents=True)
+        weights_dir = config_dir / "nnunet/results"
 
     # todo
     # download_pretrained_weights(224)
 
     # This variables will only be active during the python script execution. Therefore
     # do not have to unset them in the end.
-    os.environ["nnUNet_raw_data_base"] = str(config_dir / "nnunet/raw")
-    os.environ["nnUNet_preprocessed"] = str(config_dir / "nnunet/preprocessed")
-    os.environ["RESULTS_FOLDER"] = str(config_dir / "nnunet/results")
+    os.environ["nnUNet_raw_data_base"] = str(weights_dir)  # not needed, just needs to be an existing directory
+    os.environ["nnUNet_preprocessed"] = str(weights_dir)  # not needed, just needs to be an existing directory
+    os.environ["RESULTS_FOLDER"] = str(weights_dir)
