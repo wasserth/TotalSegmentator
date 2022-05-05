@@ -111,23 +111,27 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     as_closest_canonical_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
     if resample is not None:
-        print(f"Resampling to: {resample}")
+        print(f"Resampling to: {resample}mm")
         img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
         img_in_shape = img_in.shape
-        img_in_rsp = change_spacing(img_in, [resample, resample, resample], order=3, dtype=np.int32)
+        img_in_rsp = change_spacing(img_in, [resample, resample, resample],
+                                    order=3, dtype=np.int32, nr_cpus=1)
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
+        print(f"from {img_in.shape} to {img_in_rsp.shape}")
 
     # with nostdout():
     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
 
     if resample is not None:
-        print(f"Resampling to: {img_in_shape}")
+        print(f"Resampling back to original resolution: {img_in_shape}")
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
-        img_pred_rsp = change_spacing(img_pred, [resample, resample, resample], img_in_shape, order=0, dtype=np.uint8)
+        img_pred_rsp = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
+                                      order=0, dtype=np.uint8, nr_cpus=1)
         nib.save(img_pred_rsp, tmp_dir / "s01.nii.gz")
 
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01.nii.gz")
 
+    print("Saving segmentations...")
     if multilabel_image:
         shutil.copy(tmp_dir / "s01.nii.gz", file_out)
     else:  # save each class as a separate binary image

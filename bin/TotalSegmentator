@@ -68,6 +68,7 @@ def main():
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample)
 
     if args.preview:
+        print("Generating preview...")
         generate_preview(args.input, args.output / "preview.png", args.output)
     
 
