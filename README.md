@@ -41,3 +41,16 @@ Wasserthal et al. TODO
 For faster runtime you can use the option TODO.
 For usage without a CPU we recommend the following settings for reasonable runtime: TODO.
 
+
+### Resource Requirements
+For a quite big CT image Totalsegmentator has the following memory requirements:  
+with option `--fast` (using 3mm model):  
+
+input 3mm image:  
+mode: normal: GPU: roughly 5GB, RAM: 15.3GB, runtime 130s
+mode: fastest: GPU: roughly 10GB, RAM: 7.0GB, runtime 25s
+
+input 1.5mm image:
+mode: normal: GPU: roughly 5GB, RAM: 15.6GB, runtime 140s
+mode: fastest: GPU: roughly 10GB, RAM: 7.3GB, runtime 48s
+

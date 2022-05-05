@@ -73,7 +73,8 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     num_parts = 1
     disable_tta = not tta
     overwrite_existing = False
-    mode = "normal"
+    # mode = "normal"
+    mode = "fastest"
     all_in_gpu = None
     step_size = 0.5
     chk = "model_final_checkpoint"

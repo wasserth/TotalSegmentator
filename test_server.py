@@ -29,7 +29,7 @@ else:
     print(f"message: {r.json()['message']}")
 
 
-print("------------- Upload data ------------------")
+print("------------- predict_image ------------------")
 
 test_data_dir = Path("/home/jakob/Downloads/nnunet_test")
 filename = test_data_dir / "ct3mm_0000.nii.gz"

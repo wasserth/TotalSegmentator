@@ -9,3 +9,9 @@ build/
 dist/
 tmp_weights/
 store/
+
+*.tfstate
+*.tfstate.backup
+*.plan
+.terraform/
+*.pem
