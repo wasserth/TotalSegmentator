@@ -2,11 +2,13 @@ import os
 import sys
 import random
 import string
+import time
 import shutil
 from pathlib import Path
 from os.path import join
 import numpy as np
 import nibabel as nib
+from p_tqdm import p_map
 
 from totalsegmentator.libs import nostdout
 
@@ -100,7 +102,7 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
-                         resample=None, quiet=False, verbose=False):
+                         resample=None, preview=False, quiet=False, verbose=False):
     """
     resample: None or float  (target spacing for all dimensions)
     """
@@ -124,10 +126,15 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     # with nostdout():
     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
 
-    # if args.preview:
-    #     if not quiet: print("Generating preview...")
-    #     smoothing = 20
-    #     generate_preview(args.input, args.output / "preview.png", args.output, smoothing)
+    if preview:
+        # Generate preview before upsampling so it is faster and still in canonical space 
+        # for better orientation.
+        if not quiet: print("Generating preview...")
+        st = time.time()
+        smoothing = 20
+        roi_data = nib.load(tmp_dir / "s01.nii.gz").get_fdata()
+        generate_preview(file_in, file_out / "preview.png", roi_data, smoothing)
+        print("Preview generated in {:.2f}s".format(time.time() - st))
 
     if resample is not None:
         print(f"Resampling back to original resolution: {img_in_shape}")
@@ -139,6 +146,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01.nii.gz")
 
     print("Saving segmentations...")
+    # todo: make saving faster with multithreading (see nnunet?). With p_map multicore it was a lot
+    # slower (probably because copying of big data is slow)
+    st = time.time()
     if multilabel_image:
         shutil.copy(tmp_dir / "s01.nii.gz", file_out)
     else:  # save each class as a separate binary image
@@ -149,6 +159,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             binary_img = img_data == k
             nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), 
                     file_out / f"{v}.nii.gz")
+    print(f"Saved in {time.time() - st:.2f}s")
             
     shutil.rmtree(tmp_dir)
 

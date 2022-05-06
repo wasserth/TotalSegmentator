@@ -71,13 +71,7 @@ def main():
     folds = [0]  # None
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
-                         quiet=quiet, verbose=verbose)
-
-    if args.preview:
-        if not quiet: print("Generating preview...")
-        smoothing = 20
-        generate_preview(args.input, args.output / "preview.png", args.output, smoothing)
-    
+                         preview=args.preview, quiet=quiet, verbose=verbose)
 
 if __name__ == "__main__":
     main()
