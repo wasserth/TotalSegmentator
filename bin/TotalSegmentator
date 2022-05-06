@@ -31,10 +31,13 @@ def main():
     parser.add_argument("-f", "--fast", action="store_true", help="Run faster lower resolution model",
                         default=False)
 
-    parser.add_argument("--preview", action="store_true", help="Generate a png preview of segmentation",
+    parser.add_argument("-p", "--preview", action="store_true", help="Generate a png preview of segmentation",
                         default=False)
 
-    parser.add_argument("--verbose", action="store_true", help="Show more intermediate output",
+    parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
+                        default=False)
+
+    parser.add_argument("-v", "--verbose", action="store_true", help="Show more intermediate output",
                         default=False)
 
     # per default run with 5 folds; add optional fast option to run on only one fold
@@ -47,6 +50,8 @@ def main():
     parser.add_argument('--version', action='version', version=require("TotalSegmentator")[0].version)
 
     args = parser.parse_args()
+
+    quiet, verbose = args.quiet, args.verbose
 
     setup_nnunet()
 
@@ -65,11 +70,13 @@ def main():
 
     folds = [0]  # None
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
-                         trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample)
+                         trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
+                         quiet=quiet, verbose=verbose)
 
     if args.preview:
-        print("Generating preview...")
-        generate_preview(args.input, args.output / "preview.png", args.output)
+        if not quiet: print("Generating preview...")
+        smoothing = 20
+        generate_preview(args.input, args.output / "preview.png", args.output, smoothing)
     
 
 if __name__ == "__main__":

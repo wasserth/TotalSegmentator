@@ -52,7 +52,7 @@ roi_groups = [
 ]
 
 
-def plot_roi_group(subject_path, scene, rois, x, y, roi_dir="roi"):
+def plot_roi_group(subject_path, scene, rois, x, y, smoothing, roi_dir="roi"):
     ref_img = nib.load(subject_path)
     roi_actors = []
     for idx, roi in enumerate(rois):
@@ -69,7 +69,7 @@ def plot_roi_group(subject_path, scene, rois, x, y, roi_dir="roi"):
         opacity = 1
         # opacity = 0.5  # Not good. Not so easy to see failures anymore.
 
-        smoothing=20
+        # smoothing=20
         # smoothing=0  # faster
 
         if data.max() > 0:  # empty mask
@@ -80,7 +80,7 @@ def plot_roi_group(subject_path, scene, rois, x, y, roi_dir="roi"):
             roi_actors.append(cont_actor)
 
 
-def plot_subject(subject_path, output_path, df=None, roi_dir="roi"):
+def plot_subject(subject_path, output_path, df=None, roi_dir="roi", smoothing=20):
     subject_width = 330
     # subject_height = 700
     nr_cols = 10
@@ -106,7 +106,7 @@ def plot_subject(subject_path, output_path, df=None, roi_dir="roi"):
         x = (idx % nr_cols) * subject_width
         # y = (idx // nr_cols) * subject_height
         y = 0
-        plot_roi_group(subject_path, scene, roi_group, x, y, roi_dir)
+        plot_roi_group(subject_path, scene, roi_group, x, y, smoothing, roi_dir)
 
     # window.show(scene, size=(900, 700), reset_camera=False)
     # print(scene.get_camera())
@@ -125,11 +125,11 @@ def plot_subject(subject_path, output_path, df=None, roi_dir="roi"):
     scene.clear()
 
 
-def generate_preview(ct_in, file_out, roi_dir):
+def generate_preview(ct_in, file_out, roi_dir, smoothing):
     from xvfbwrapper import Xvfb
     vdisplay = Xvfb()
     vdisplay.start()
     try:
-        plot_subject(ct_in, file_out, df=None, roi_dir=roi_dir)
+        plot_subject(ct_in, file_out, df=None, roi_dir=roi_dir, smoothing=smoothing)
     finally:
         vdisplay.stop()

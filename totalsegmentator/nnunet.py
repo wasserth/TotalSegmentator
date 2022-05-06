@@ -17,6 +17,7 @@ with nostdout():
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.resampling import change_spacing
+from totalsegmentator.preview import generate_preview
 
 
 def _get_full_task_name(task_id: int, src: str="raw"):
@@ -98,7 +99,8 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
-                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=None):
+                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
+                         resample=None, quiet=False, verbose=False):
     """
     resample: None or float  (target spacing for all dimensions)
     """
@@ -121,6 +123,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
     # with nostdout():
     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+
+    # if args.preview:
+    #     if not quiet: print("Generating preview...")
+    #     smoothing = 20
+    #     generate_preview(args.input, args.output / "preview.png", args.output, smoothing)
 
     if resample is not None:
         print(f"Resampling back to original resolution: {img_in_shape}")
