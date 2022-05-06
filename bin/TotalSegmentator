@@ -33,6 +33,8 @@ def main():
     parser.add_argument("-f", "--fast", action="store_true", help="Run faster lower resolution model",
                         default=False)
 
+    parser.add_argument("-t", "--nora_tag", type=str, help="tag in nora as mask. Pass nora project id as argument.")
+
     parser.add_argument("-p", "--preview", action="store_true", help="Generate a png preview of segmentation",
                         default=False)
 
@@ -73,7 +75,8 @@ def main():
     folds = [0]  # None
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
-                         preview=args.preview, nr_cpus=args.nr_cpus, quiet=quiet, verbose=verbose)
+                         nora_tag=args.nora_tag, preview=args.preview, nr_cpus=args.nr_cpus, 
+                         quiet=quiet, verbose=verbose)
 
 if __name__ == "__main__":
     main()

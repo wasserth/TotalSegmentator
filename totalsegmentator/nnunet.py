@@ -102,7 +102,8 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
-                         resample=None, preview=False, nr_cpus=1, quiet=False, verbose=False):
+                         resample=None, nora_tag=None, preview=False, nr_cpus=1, 
+                         quiet=False, verbose=False):
     """
     resample: None or float  (target spacing for all dimensions)
     """
@@ -158,8 +159,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         img_data = img.get_fdata()
         for k, v in class_map.items():
             binary_img = img_data == k
-            nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), 
-                    file_out / f"{v}.nii.gz")
+            output_path = str(file_out / f"{v}.nii.gz")
+            nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+            subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
     print(f"Saved in {time.time() - st:.2f}s")
             
     shutil.rmtree(tmp_dir)
