@@ -1,7 +1,6 @@
 import sys
 import os
 import itertools
-import random
 import pickle
 from pathlib import Path
 
@@ -14,11 +13,9 @@ from fury import window, actor, ui, io, utils
 from totalsegmentator.vtk_utils import contour_from_roi_smooth, plot_mask
 from totalsegmentator.map_to_binary import class_map
 
-random.seed(1234)
+
 np.random.seed(1234)
-
 random_colors = np.random.rand(100, 4)
-
 
 roi_groups = [
     ['humerus_left', 'humerus_right', 'scapula_left', 'scapula_right', 'clavicula_left',

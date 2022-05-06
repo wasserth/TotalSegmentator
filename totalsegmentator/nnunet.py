@@ -102,16 +102,17 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
-                         resample=None, preview=False, quiet=False, verbose=False):
+                         resample=None, preview=False, nr_cpus=1, quiet=False, verbose=False):
     """
     resample: None or float  (target spacing for all dimensions)
     """
     file_in, file_out = Path(file_in), Path(file_out)
     
+    # do not set random seed because would lead to same random dir every time 
+    # (np random seed is ok, because is separate from python random)
     tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8)))
     (tmp_dir).mkdir(exist_ok=True)
 
-    # shutil.copy(file_in, tmp_dir / "s01_0000.nii.gz")
     as_closest_canonical_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
     if resample is not None:
@@ -119,7 +120,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
         img_in_shape = img_in.shape
         img_in_rsp = change_spacing(img_in, [resample, resample, resample],
-                                    order=3, dtype=np.int32, nr_cpus=1)
+                                    order=3, dtype=np.int32, nr_cpus=nr_cpus)  # 4 cpus instead of 1 makes it a bit slower
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
         print(f"from {img_in.shape} to {img_in_rsp.shape}")
 
@@ -140,7 +141,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         print(f"Resampling back to original resolution: {img_in_shape}")
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
         img_pred_rsp = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
-                                      order=0, dtype=np.uint8, nr_cpus=1)
+                                      order=0, dtype=np.uint8, nr_cpus=nr_cpus)
         nib.save(img_pred_rsp, tmp_dir / "s01.nii.gz")
 
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01.nii.gz")
