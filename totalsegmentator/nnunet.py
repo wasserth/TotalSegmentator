@@ -4,6 +4,7 @@ import random
 import string
 import time
 import shutil
+import subprocess
 from pathlib import Path
 from os.path import join
 import numpy as np
@@ -161,7 +162,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             binary_img = img_data == k
             output_path = str(file_out / f"{v}.nii.gz")
             nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
-            subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+            if nora_tag != "None":
+                subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
     print(f"Saved in {time.time() - st:.2f}s")
             
     shutil.rmtree(tmp_dir)
