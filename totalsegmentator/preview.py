@@ -116,9 +116,6 @@ def plot_subject(subject_path, output_path, df=None, roi_data=None, smoothing=20
 
 def generate_preview(ct_in, file_out, roi_data, smoothing):
     from xvfbwrapper import Xvfb
-    vdisplay = Xvfb()
-    vdisplay.start()
-    try:
+    # do not set random seed, otherwise can not call xvfb in parallel, because all generate same tmp dir
+    with Xvfb() as xvfb:
         plot_subject(ct_in, file_out, df=None, roi_data=roi_data, smoothing=smoothing)
-    finally:
-        vdisplay.stop()
