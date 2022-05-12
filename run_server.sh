@@ -6,6 +6,6 @@ set -e
 # cd /app
 # python server.py
 
-# Using gunicorn
+# Using gunicorn  (timeout is in seconds)
 cd /app
-gunicorn --bind 0.0.0.0:5000 -w 1 server:app
+gunicorn --bind 0.0.0.0:5000 --timeout 300 -w 1 server:app
