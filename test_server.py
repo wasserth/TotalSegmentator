@@ -1,5 +1,6 @@
 import os
 import requests
+import time
 from pathlib import Path
 
 """
@@ -14,8 +15,8 @@ Steps to test the server:
 3. Then in another shell run `python test_server.py`. 
 """
 
-# url_base = 'http://localhost:5000/'
-url_base = 'http://184.72.210.75:80/'
+url_base = 'http://localhost:5000/'
+# url_base = 'http://184.72.210.75:80/'
 
 
 print("------------- get_server_status ------------------")
@@ -31,6 +32,7 @@ else:
 
 # print("------------- predict_image ------------------")
 
+# st = time.time()
 # test_data_dir = Path("/home/jakob/Downloads/nnunet_test")
 # filename = test_data_dir / "ct3mm_0000.nii.gz"
 # r = requests.post(url_base + "predict_image",
@@ -44,3 +46,5 @@ else:
 # else:
 #     print(f"status code: {r.status_code}")
 #     print(f"message: {r.json()['message']}")
+# print(f"took: {time.time() - st:.2f}s")
+# # 3mm: 51s
