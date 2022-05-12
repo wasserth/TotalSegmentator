@@ -155,13 +155,13 @@ resource "aws_default_security_group" "main_vpc_security_group" {
     }
 
     # for Jupyter notebook
-    ingress {
-      from_port = 8888
-      to_port = 8888
-      protocol = "tcp"
-      cidr_blocks = [
-        "0.0.0.0/0"]
-    }
+    # ingress {
+    #   from_port = 8888
+    #   to_port = 8888
+    #   protocol = "tcp"
+    #   cidr_blocks = [
+    #     "0.0.0.0/0"]
+    # }
 
     ingress {
       from_port = 80

@@ -23,7 +23,7 @@ docker run --gpus 'device=0' --ipc=host -v /home/ubuntu/test:/workspace totalseg
 
 Run docker flask server for test
 ``` 
-docker run -p 5000:5000 --gpus 'device=0' --ipc=host -v /home/jakob/dev/TotalSegmentator/store:/app/store totalsegmentator:master /app/run_server.sh
+docker run -p 80:5000 --gpus 'device=0' --ipc=host -v /home/jakob/dev/TotalSegmentator/store:/app/store totalsegmentator:master /app/run_server.sh
 ``` 
 Can only be killed via docker
 ``` 
@@ -32,7 +32,7 @@ docker kill $(docker ps -q)
 
 Run docker on server for production
 ``` 
-docker run -d --restart always -p 5000:80 --gpus 'device=0' --ipc=host --name totalsegmentator-server-job -v /mnt/data/server-store:/app/store totalsegmentator:master /app/run_server.sh
+docker run -d --restart always -p 80:5000 --gpus 'device=0' --ipc=host --name totalsegmentator-server-job -v /mnt/data/server-store:/app/store totalsegmentator:master /app/run_server.sh
 ``` 
 
 Stop docker
@@ -48,10 +48,6 @@ docker logs totalsegmentator-server-job
 
 
 ## Other commands
-Upload docker to server
-``` 
-docker save totalsegmentator:master | ssh -C <username>@<URL_TODO> docker load
-``` 
 
 Backup to local harddrive
 ``` 
