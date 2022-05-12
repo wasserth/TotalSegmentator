@@ -21,3 +21,6 @@ COPY tmp_weights /root/.totalsegmentator/nnunet/results/nnUNet/3d_fullres
 
 COPY . /app
 RUN pip install /app
+
+# expose not needed if using -p
+# EXPOSE 80

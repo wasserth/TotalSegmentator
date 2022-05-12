@@ -155,13 +155,21 @@ resource "aws_default_security_group" "main_vpc_security_group" {
     }
 
     # for Jupyter notebook
-    # ingress {
-    #   from_port = 8888
-    #   to_port = 8888
-    #   protocol = "tcp"
-    #   cidr_blocks = [
-    #     "0.0.0.0/0"]
-    # }
+    ingress {
+      from_port = 8888
+      to_port = 8888
+      protocol = "tcp"
+      cidr_blocks = [
+        "0.0.0.0/0"]
+    }
+
+    ingress {
+      from_port = 80
+      to_port = 80
+      protocol = "tcp"
+      cidr_blocks = [
+        "0.0.0.0/0"]
+    }
 
     # for git clone
     egress {
@@ -177,103 +185,103 @@ resource "aws_default_security_group" "main_vpc_security_group" {
     }
 }
 
-resource "aws_spot_instance_request" "aws_dl_custom_spot" {
-    ami                         = "${var.ami_id}"
-    spot_price                  = "${var.spot_price}"
-    instance_type               = "${var.instance_type}"
-    key_name                    = "${var.my_key_pair_name}"
-    monitoring                  = true
-    associate_public_ip_address = true
-    instance_interruption_behavior = "stop"
-    count                       = "1"
-    security_groups             =["${aws_default_security_group.main_vpc_security_group.id}"]
-    subnet_id                   = "${aws_subnet.main_vpc_subnet.id}"
-    ebs_block_device            {
-                                    device_name = "/dev/sdh"
-                                    volume_size = "${var.ebs_volume_size}"
-                                    volume_type = "gp2"
-                                }
-
-    # root_block_device {
-    #     volume_size = "${var.root_volume_size}"
-    #     volume_type = "gp2"
-    #     delete_on_termination = true
-    # }
-
-    tags = {
-        Name = "aws_dl_custom_spot"
-    }
-}
-
-# resource "aws_instance" "aws_dl_custom_spot" {
+# resource "aws_spot_instance_request" "aws_dl_custom_spot" {
 #     ami                         = "${var.ami_id}"
+#     spot_price                  = "${var.spot_price}"
 #     instance_type               = "${var.instance_type}"
 #     key_name                    = "${var.my_key_pair_name}"
 #     monitoring                  = true
 #     associate_public_ip_address = true
+#     instance_interruption_behavior = "stop"
 #     count                       = "1"
-#     vpc_security_group_ids      = ["${aws_default_security_group.main_vpc_security_group.id}"]
+#     security_groups             =["${aws_default_security_group.main_vpc_security_group.id}"]
 #     subnet_id                   = "${aws_subnet.main_vpc_subnet.id}"
+#     ebs_block_device            {
+#                                     device_name = "/dev/sdh"
+#                                     volume_size = "${var.ebs_volume_size}"
+#                                     volume_type = "gp2"
+#                                 }
 
 #     # root_block_device {
-#     #     volume_size           = 50
+#     #     volume_size = "${var.root_volume_size}"
+#     #     volume_type = "gp2"
 #     #     delete_on_termination = true
 #     # }
-
-#     ebs_block_device            {
-#                                 device_name = "/dev/sdh"
-#                                 volume_size = "${var.ebs_volume_size}"
-#                                 volume_type = "gp2"
-#                                 }
 
 #     tags = {
 #         Name = "aws_dl_custom_spot"
 #     }
 # }
 
+resource "aws_instance" "aws_dl_custom_spot" {
+    ami                         = "${var.ami_id}"
+    instance_type               = "${var.instance_type}"
+    key_name                    = "${var.my_key_pair_name}"
+    monitoring                  = true
+    associate_public_ip_address = true
+    count                       = "1"
+    vpc_security_group_ids      = ["${aws_default_security_group.main_vpc_security_group.id}"]
+    subnet_id                   = "${aws_subnet.main_vpc_subnet.id}"
+
+    # root_block_device {
+    #     volume_size           = 50
+    #     delete_on_termination = true
+    # }
+
+    ebs_block_device            {
+                                device_name = "/dev/sdh"
+                                volume_size = "${var.ebs_volume_size}"
+                                volume_type = "gp2"
+                                }
+
+    tags = {
+        Name = "aws_dl_custom_spot"
+    }
+}
+
 
 
 ########### Outputs ###########
 
-output "id" {
-  value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.id}"]
-}
-
-output "key-name" {
-  value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.key_name}"]
-}
-
-output "spot_bid_status" {
-    description = "The bid status of the AWS EC2 Spot Instance request(s)."
-    value       = ["${aws_spot_instance_request.aws_dl_custom_spot.*.spot_bid_status}"]
-}
-
-output "spot_request_state" {
-    description = "The state of the AWS EC2 Spot Instance request(s)."
-    value       = ["${aws_spot_instance_request.aws_dl_custom_spot.*.spot_request_state}"]
-}
-
-output "instance-private-ip" {
-  value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.private_ip}"]
-}
-
-output "instance-public-ip" {
-  value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.public_ip}"]
-}
-
-
 # output "id" {
-#   value = ["${aws_instance.aws_dl_custom_spot.*.id}"]
+#   value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.id}"]
 # }
 
 # output "key-name" {
-#   value = ["${aws_instance.aws_dl_custom_spot.*.key_name}"]
+#   value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.key_name}"]
+# }
+
+# output "spot_bid_status" {
+#     description = "The bid status of the AWS EC2 Spot Instance request(s)."
+#     value       = ["${aws_spot_instance_request.aws_dl_custom_spot.*.spot_bid_status}"]
+# }
+
+# output "spot_request_state" {
+#     description = "The state of the AWS EC2 Spot Instance request(s)."
+#     value       = ["${aws_spot_instance_request.aws_dl_custom_spot.*.spot_request_state}"]
 # }
 
 # output "instance-private-ip" {
-#   value = ["${aws_instance.aws_dl_custom_spot.*.private_ip}"]
+#   value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.private_ip}"]
 # }
 
 # output "instance-public-ip" {
-#   value = ["${aws_instance.aws_dl_custom_spot.*.public_ip}"]
+#   value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.public_ip}"]
 # }
+
+
+output "id" {
+  value = ["${aws_instance.aws_dl_custom_spot.*.id}"]
+}
+
+output "key-name" {
+  value = ["${aws_instance.aws_dl_custom_spot.*.key_name}"]
+}
+
+output "instance-private-ip" {
+  value = ["${aws_instance.aws_dl_custom_spot.*.private_ip}"]
+}
+
+output "instance-public-ip" {
+  value = ["${aws_instance.aws_dl_custom_spot.*.public_ip}"]
+}

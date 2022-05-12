@@ -1,6 +1,12 @@
-## Helpful commands for setting up the google cloud server
+## Terraform commands
+```
+cd resources
+terraform init
+terraform validate
+terraform apply -auto-approve
+```
 
-
+## Helpful commands for setting up the cloud server
 Updating code on server:
 ``` 
 cd ~/dev/totalsegmentator
@@ -9,7 +15,13 @@ docker build -t totalsegmentator:master .
 ``` 
 
 # todo: put right starting command here (depends if we use nginx)
-Run docker on server for test
+
+Run docker TotalSegmentator for test
+``` 
+docker run --gpus 'device=0' --ipc=host -v /home/ubuntu/test:/workspace totalsegmentator:master TotalSegmentator -i /workspace/ct3mm_0000.nii.gz -o /workspace/test_output --fast --preview
+``` 
+
+Run docker flask server for test
 ``` 
 docker run -p 5000:5000 --gpus 'device=0' --ipc=host -v /home/jakob/dev/TotalSegmentator/store:/app/store totalsegmentator:master /app/run_server.sh
 ``` 
@@ -36,7 +48,6 @@ docker logs totalsegmentator-server-job
 
 
 ## Other commands
-
 Upload docker to server
 ``` 
 docker save totalsegmentator:master | ssh -C <username>@<URL_TODO> docker load
