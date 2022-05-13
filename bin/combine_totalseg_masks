@@ -15,7 +15,7 @@ if __name__ == "__main__":
     Works with any number of label files.
 
     Usage:
-    python combine_totalseg_masks.py -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
+    combine_totalseg_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
     """
     parser = argparse.ArgumentParser(description="Combine masks.",
                                         epilog="Written by Jakob Wasserthal. Please reference TODO")
@@ -28,7 +28,7 @@ if __name__ == "__main__":
                         help="Output directory for combined mask", 
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("-m", "--masks", type=str, choices=["lung", "vertebrae", "ribs"],
+    parser.add_argument("-m", "--masks", type=str, choices=["lung", "vertebrae", "ribs", "vertebrae_ribs"],
                         help="The type of masks you want to combine", required=True)
 
     args = parser.parse_args()
@@ -37,6 +37,8 @@ if __name__ == "__main__":
         masks = list(class_map_5_parts["class_map_part_ribs"].values)
     elif args.masks == "vertebrae":
         masks = list(class_map_5_parts["class_map_part_vertebrae"].values)
+    elif args.masks == "vertebrae_ribs":
+        masks = list(class_map_5_parts["class_map_part_vertebrae"].values) + list(class_map_5_parts["class_map_part_ribs"].values)
     elif args.masks == "lung":
         masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"]
