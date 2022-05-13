@@ -38,11 +38,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.masks == "ribs":
-        masks = list(class_map_5_parts["class_map_part_ribs"].values)
+        masks = list(class_map_5_parts["class_map_part_ribs"].values())
     elif args.masks == "vertebrae":
-        masks = list(class_map_5_parts["class_map_part_vertebrae"].values)
+        masks = list(class_map_5_parts["class_map_part_vertebrae"].values())
     elif args.masks == "vertebrae_ribs":
-        masks = list(class_map_5_parts["class_map_part_vertebrae"].values) + list(class_map_5_parts["class_map_part_ribs"].values)
+        masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + list(class_map_5_parts["class_map_part_ribs"].values())
     elif args.masks == "lung":
         masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"]
@@ -58,4 +58,3 @@ if __name__ == "__main__":
 
     if args.nora_tag != "None":
         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {args.output} --addtag mask", shell=True)
-        
