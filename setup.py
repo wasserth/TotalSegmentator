@@ -29,6 +29,6 @@ setup(name='TotalSegmentator',
             'Operating System :: MacOS'
         ],
         scripts=[
-            'bin/TotalSegmentator'
+            'bin/TotalSegmentator', 'bin/combine_totalseg_masks'
         ]
     )
