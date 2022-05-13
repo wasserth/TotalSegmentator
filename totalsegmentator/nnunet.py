@@ -132,8 +132,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
         # Run several tasks and combine results into one segmentation
         for tid in task_id:
-            # with nostdout():
-            nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
+            with nostdout():
+                nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
             (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
             seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
             for idx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
@@ -180,7 +180,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
     print(f"Saved in {time.time() - st:.2f}s")
             
-    shutil.rmtree(tmp_dir)
+    # todo important: change
+    # shutil.rmtree(tmp_dir)
 
     # todo: Add try except around everything and if fails, then remove nnunet_tmp dir
     #       Is there a smarter way to cleanup tmp files in error case?
