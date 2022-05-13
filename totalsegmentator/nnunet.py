@@ -17,7 +17,7 @@ with nostdout():
     from nnunet.inference.predict import predict_from_folder
     from nnunet.paths import default_plans_identifier, network_training_output_dir, default_trainer
 
-from totalsegmentator.map_to_binary import class_map
+from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_taskid_to_partname
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
@@ -126,8 +126,22 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
         print(f"from {img_in.shape} to {img_in_rsp.shape}")
 
-    # with nostdout():
-    nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+    if type(task_id) is list:  # if running multiple models 
+        class_map_inv = {v: k for k, v in class_map.items()}
+        (tmp_dir / "parts").mkdir(exist_ok=True)
+        seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
+        # Run several tasks and combine results into one segmentation
+        for tid in task_id:
+            # with nostdout():
+            nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
+            (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
+            seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
+            for idx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
+                seg_combined[seg == idx] = class_map_inv[class_name]
+        nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
+    else:
+        # with nostdout():
+        nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
 
     if preview:
         # Generate preview before upsampling so it is faster and still in canonical space 

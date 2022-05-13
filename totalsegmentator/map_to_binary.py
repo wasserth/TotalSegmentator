@@ -135,3 +135,152 @@ class_map = {
     103: "iliopsoas_right",
     104: "urinary_bladder"
 }
+
+
+class_map_5_parts = {
+
+    # 17 classes
+    "class_map_part_organs": {
+        0: "spleen",
+        1: "kidney_right",
+        2: "kidney_left",
+        3: "gallbladder",
+        4: "liver",
+        5: "stomach",
+        6: "aorta",
+        7: "inferior_vena_cava",
+        8: "portal_vein_and_splenic_vein",
+        9: "pancreas",
+        10: "adrenal_gland_right",
+        11: "adrenal_gland_left",
+        12: "upper_lobe_left",
+        13: "lower_lobe_left",
+        14: "upper_lobe_right",
+        15: "middle_lobe_right",
+        16: "lower_lobe_right"
+    },
+
+    # 24 classes
+    "class_map_part_vertebrae": {
+        0: 'vertebrae_L5',
+        1: 'vertebrae_L4',
+        2: 'vertebrae_L3',
+        3: 'vertebrae_L2',
+        4: 'vertebrae_L1',
+        5: 'vertebrae_T12',
+        6: 'vertebrae_T11',
+        7: 'vertebrae_T10',
+        8: 'vertebrae_T9',
+        9: 'vertebrae_T8',
+        10: 'vertebrae_T7',
+        11: 'vertebrae_T6',
+        12: 'vertebrae_T5',
+        13: 'vertebrae_T4',
+        14: 'vertebrae_T3',
+        15: 'vertebrae_T2',
+        16: 'vertebrae_T1',
+        17: 'vertebrae_C7',
+        18: 'vertebrae_C6',
+        19: 'vertebrae_C5',
+        20: 'vertebrae_C4',
+        21: 'vertebrae_C3',
+        22: 'vertebrae_C2',
+        23: 'vertebrae_C1'
+    },
+
+    # 18
+    "class_map_part_cardiac": {
+        0: 'esophagus',
+        1: 'trachea',
+        2: 'heart_myocardium',
+        3: 'heart_atrium_left',
+        4: 'heart_ventricle_left',
+        5: 'heart_atrium_right',
+        6: 'heart_ventricle_right',
+        7: 'pulmonary_artery',
+        8: 'brain',
+        9: 'iliac_artery_left',
+        10: 'iliac_artery_right',
+        11: 'iliac_vena_left',
+        12: 'iliac_vena_right',
+        13: 'small_bowel',
+        14: 'duodenum',
+        15: 'colon',
+        16: 'urinary_bladder',
+        17: 'face'
+    },
+
+    # 21
+    "class_map_part_muscles": {
+        0: 'humerus_left',
+        1: 'humerus_right',
+        2: 'scapula_left',
+        3: 'scapula_right',
+        4: 'clavicula_left',
+        5: 'clavicula_right',
+        6: 'femur_left',
+        7: 'femur_right',
+        8: 'hip_left',
+        9: 'hip_right',
+        10: 'sacrum',
+        11: 'gluteus_maximus_left',
+        12: 'gluteus_maximus_right',
+        13: 'gluteus_medius_left',
+        14: 'gluteus_medius_right',
+        15: 'gluteus_minimus_left',
+        16: 'gluteus_minimus_right',
+        17: 'autochthon_left',
+        18: 'autochthon_right',
+        19: 'iliopsoas_left',
+        20: 'iliopsoas_right'
+    },
+
+    # 24 classes
+    # 12. ribs start from vertebrae T12
+    # Small subset of population (roughly 8%) have 13. rib below 12. rib
+    #  (would start from L1 then)
+    #  -> this has label rib_12
+    # Even smaller subset (roughly 1%) has extra rib above 1. rib   ("Halsrippe")
+    #  (the extra rib would start from C7)
+    #  -> this has label rib_1
+    #
+    # Quite often only 11 ribs (12. ribs probably so small that not found). Those 
+    # cases often wrongly segmented. 
+    "class_map_part_ribs": {
+        0: 'rib_left_1',
+        1: 'rib_left_2',
+        2: 'rib_left_3',
+        3: 'rib_left_4',
+        4: 'rib_left_5',
+        5: 'rib_left_6',
+        6: 'rib_left_7',
+        7: 'rib_left_8',
+        8: 'rib_left_9',
+        9: 'rib_left_10',
+        10: 'rib_left_11',
+        11: 'rib_left_12',
+        12: 'rib_right_1',
+        13: 'rib_right_2',
+        14: 'rib_right_3',
+        15: 'rib_right_4',
+        16: 'rib_right_5',
+        17: 'rib_right_6',
+        18: 'rib_right_7',
+        19: 'rib_right_8',
+        20: 'rib_right_9',
+        21: 'rib_right_10',
+        22: 'rib_right_11',
+        23: 'rib_right_12'
+    }
+
+}
+
+map_taskid_to_partname = {
+    251: "class_map_part_organs",
+    252: "class_map_part_vertebrae",
+    253: "class_map_part_cardiac",
+    254: "class_map_part_muscles",
+    255: "class_map_part_ribs"
+}
+
+# pprint({idx:v for idx, (k, v) in enumerate(a.items())}, sort_dicts=False)

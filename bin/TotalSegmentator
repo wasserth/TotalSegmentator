@@ -39,6 +39,11 @@ def main():
     parser.add_argument("-p", "--preview", action="store_true", help="Generate a png preview of segmentation",
                         default=False)
 
+    # todo: implement this (prio2)
+    # for 15mm model only run the models which are needed for these rois
+    # parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
+    #                     help="Manually define only a subset of classes to predict")
+
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
 
@@ -69,8 +74,7 @@ def main():
         task_id = 256
         resample = 3.0
     else:
-        raise ValueError("The non-fast option is not implemented yet")
-        task_id = 251
+        task_id = [251, 252, 253, 254, 255]
         resample = 1.5
 
     folds = [0]  # None
