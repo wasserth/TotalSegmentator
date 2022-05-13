@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import argparse
+import subprocess
 
 import nibabel as nib
 import numpy as np
@@ -31,6 +32,9 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--masks", type=str, choices=["lung", "vertebrae", "ribs", "vertebrae_ribs"],
                         help="The type of masks you want to combine", required=True)
 
+    parser.add_argument("-t", "--nora_tag", type=str, help="tag in nora as mask. Pass nora project id as argument.",
+                        default="None")
+
     args = parser.parse_args()
 
     if args.masks == "ribs":
@@ -49,4 +53,9 @@ if __name__ == "__main__":
         if (args.mask_dir / f"{mask}.nii.gz").exists():
             img = nib.load(args.mask_dir / f"{mask}.nii.gz").get_fdata()
             combined[img > 0.5] = 1
+
     nib.save(nib.Nifti1Image(combined, ref_img.affine), args.output)
+
+    if args.nora_tag != "None":
+        subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {args.output} --addtag mask", shell=True)
+        
