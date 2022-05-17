@@ -151,13 +151,13 @@ class_map_5_parts = {
         8: "inferior_vena_cava",
         9: "portal_vein_and_splenic_vein",
         10: "pancreas",
-        12: "adrenal_gland_right",
-        13: "adrenal_gland_left",
-        14: "lung_upper_lobe_left",
-        15: "lung_lower_lobe_left",
-        16: "lung_upper_lobe_right",
-        17: "lung_middle_lobe_right",
-        18: "lung_lower_lobe_right"
+        11: "adrenal_gland_right",
+        12: "adrenal_gland_left",
+        13: "lung_upper_lobe_left",
+        14: "lung_lower_lobe_left",
+        15: "lung_upper_lobe_right",
+        16: "lung_middle_lobe_right",
+        17: "lung_lower_lobe_right"
     },
 
     # 24 classes

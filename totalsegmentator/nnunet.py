@@ -132,12 +132,13 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
         # Run several tasks and combine results into one segmentation
         for tid in task_id:
+            print(f"Predicting task {tid} ...")
             with nostdout():
                 nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
             (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
             seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
-            for idx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
-                seg_combined[seg == idx] = class_map_inv[class_name]
+            for jdx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
+                seg_combined[seg == jdx] = class_map_inv[class_name]
         nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
     else:
         # with nostdout():
@@ -150,7 +151,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         st = time.time()
         smoothing = 20
         roi_data = nib.load(tmp_dir / "s01.nii.gz").get_fdata()
-        generate_preview(file_in, file_out / "preview.png", roi_data, smoothing)
+        generate_preview(tmp_dir / "s01_0000.nii.gz", file_out / "preview.png", roi_data, smoothing)
         print("Preview generated in {:.2f}s".format(time.time() - st))
 
     if resample is not None:
