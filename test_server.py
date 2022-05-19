@@ -1,3 +1,4 @@
+import sys
 import os
 import requests
 import time
@@ -15,8 +16,10 @@ Steps to test the server:
 3. Then in another shell run `python test_server.py`. 
 """
 
-url_base = 'http://localhost:5000/'
-# url_base = 'http://184.72.210.75:80/'
+# Url needs to have a trailing slash!
+# url_base = 'http://localhost:5000/'
+# url_base = 'http://54.82.71.100:80/'
+url_base = f"http://{sys.argv[1]}/"  # read from command line
 
 
 print("------------- get_server_status ------------------")
