@@ -29,7 +29,7 @@ if __name__ == "__main__":
                         help="Output directory for combined mask", 
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("-m", "--masks", type=str, choices=["lung", "vertebrae", "ribs", "vertebrae_ribs"],
+    parser.add_argument("-m", "--masks", type=str, choices=["lung", "vertebrae", "ribs", "vertebrae_ribs", "heart"],
                         help="The type of masks you want to combine", required=True)
 
     parser.add_argument("-t", "--nora_tag", type=str, help="tag in nora as mask. Pass nora project id as argument.",
@@ -46,6 +46,9 @@ if __name__ == "__main__":
     elif args.masks == "lung":
         masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"]
+    elif args.masks == "heart":
+        masks = ["heart_myocardium", "heart_atrium_left", "heart_ventricle_left",
+                 "heart_atrium_right", "heart_ventricle_right"]
 
     ref_img = None
     for mask in masks:
