@@ -65,7 +65,7 @@ def upload_data():
 
     # Predict image
     seg_dir = img_dir / ('seg_' + img_id)
-    subprocess.call(f"TotalSegmentator -i {img_dir / img_fn} -o {seg_dir} --fast", shell=True)
+    subprocess.call(f"TotalSegmentator -i {img_dir / img_fn} -o {seg_dir} --fast --preview", shell=True)
     # subprocess.call(f"TotalSegmentator --help", shell=True)
     # Tmp test code
     # subprocess.call(f"mkdir -p {seg_dir}", shell=True)
