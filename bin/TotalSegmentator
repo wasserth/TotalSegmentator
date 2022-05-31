@@ -11,7 +11,7 @@ import nibabel as nib
 
 from totalsegmentator.libs import setup_nnunet
 from totalsegmentator.preview import generate_preview
-
+from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
 
 def main():
     parser = argparse.ArgumentParser(description="Segment X classes in CT images.",
@@ -43,6 +43,9 @@ def main():
     # for 15mm model only run the models which are needed for these rois
     # parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
     #                     help="Manually define only a subset of classes to predict")
+
+    parser.add_argument("-s", "--statistics", action="store_true", help="Calc statistics like volume, surface, mean intensity",
+                        default=False)
 
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
@@ -82,6 +85,11 @@ def main():
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
                          nora_tag=args.nora_tag, preview=args.preview, nr_cpus=args.nr_cpus, 
                          quiet=quiet, verbose=verbose)
+
+    if args.statistics:
+        get_basic_statistics_for_entire_dir(arg.input, args.output, args.output / "statistics.json")
+        # get_radiomics_features_for_entire_dir(arg.input, args.output, args.output / "statistics.json")
+
 
 if __name__ == "__main__":
     main()

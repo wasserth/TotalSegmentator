@@ -1,0 +1,90 @@
+from pathlib import Path
+import json
+from functools import partial
+
+import numpy as np
+import pandas as pd
+import nibabel as nib
+from tqdm import tqdm
+from p_tqdm import p_map
+
+
+def get_radiomics_features(seg_file, img_file="ct.nii.gz"):
+    # import SimpleITK as sitk
+    import radiomics
+    from radiomics import featureextractor
+
+    standard_features = ['shape_Elongation', 'shape_Flatness', 'shape_LeastAxisLength', 'shape_MajorAxisLength', 'shape_Maximum2DDiameterColumn', 'shape_Maximum2DDiameterRow', 'shape_Maximum2DDiameterSlice', 'shape_Maximum3DDiameter', 'shape_MeshVolume', 'shape_MinorAxisLength', 'shape_Sphericity', 'shape_SurfaceArea', 'shape_SurfaceVolumeRatio', 'shape_VoxelVolume', 'firstorder_10Percentile', 'firstorder_90Percentile', 'firstorder_Energy', 'firstorder_Entropy', 'firstorder_InterquartileRange', 'firstorder_Kurtosis', 'firstorder_Maximum', 'firstorder_MeanAbsoluteDeviation', 'firstorder_Mean', 'firstorder_Median', 'firstorder_Minimum', 'firstorder_Range', 'firstorder_RobustMeanAbsoluteDeviation', 'firstorder_RootMeanSquared', 'firstorder_Skewness', 'firstorder_TotalEnergy', 'firstorder_Uniformity', 'firstorder_Variance', 'glcm_Autocorrelation', 'glcm_ClusterProminence', 'glcm_ClusterShade', 'glcm_ClusterTendency', 'glcm_Contrast', 'glcm_Correlation', 'glcm_DifferenceAverage', 'glcm_DifferenceEntropy', 'glcm_DifferenceVariance', 'glcm_Id', 'glcm_Idm', 'glcm_Idmn', 'glcm_Idn', 'glcm_Imc1', 'glcm_Imc2', 'glcm_InverseVariance', 'glcm_JointAverage', 'glcm_JointEnergy', 'glcm_JointEntropy', 'glcm_MCC', 'glcm_MaximumProbability', 'glcm_SumAverage', 'glcm_SumEntropy', 'glcm_SumSquares', 'gldm_DependenceEntropy', 'gldm_DependenceNonUniformity', 'gldm_DependenceNonUniformityNormalized', 'gldm_DependenceVariance', 'gldm_GrayLevelNonUniformity', 'gldm_GrayLevelVariance', 'gldm_HighGrayLevelEmphasis', 'gldm_LargeDependenceEmphasis', 'gldm_LargeDependenceHighGrayLevelEmphasis', 'gldm_LargeDependenceLowGrayLevelEmphasis', 'gldm_LowGrayLevelEmphasis', 'gldm_SmallDependenceEmphasis', 'gldm_SmallDependenceHighGrayLevelEmphasis', 'gldm_SmallDependenceLowGrayLevelEmphasis', 'glrlm_GrayLevelNonUniformity', 'glrlm_GrayLevelNonUniformityNormalized', 'glrlm_GrayLevelVariance', 'glrlm_HighGrayLevelRunEmphasis', 'glrlm_LongRunEmphasis', 'glrlm_LongRunHighGrayLevelEmphasis', 'glrlm_LongRunLowGrayLevelEmphasis', 'glrlm_LowGrayLevelRunEmphasis', 'glrlm_RunEntropy', 'glrlm_RunLengthNonUniformity', 'glrlm_RunLengthNonUniformityNormalized', 'glrlm_RunPercentage', 'glrlm_RunVariance', 'glrlm_ShortRunEmphasis', 'glrlm_ShortRunHighGrayLevelEmphasis', 'glrlm_ShortRunLowGrayLevelEmphasis', 'glszm_GrayLevelNonUniformity', 'glszm_GrayLevelNonUniformityNormalized', 'glszm_GrayLevelVariance', 'glszm_HighGrayLevelZoneEmphasis', 'glszm_LargeAreaEmphasis', 'glszm_LargeAreaHighGrayLevelEmphasis', 'glszm_LargeAreaLowGrayLevelEmphasis', 'glszm_LowGrayLevelZoneEmphasis', 'glszm_SizeZoneNonUniformity', 'glszm_SizeZoneNonUniformityNormalized', 'glszm_SmallAreaEmphasis', 'glszm_SmallAreaHighGrayLevelEmphasis', 'glszm_SmallAreaLowGrayLevelEmphasis', 'glszm_ZoneEntropy', 'glszm_ZonePercentage', 'glszm_ZoneVariance', 'ngtdm_Busyness', 'ngtdm_Coarseness', 'ngtdm_Complexity', 'ngtdm_Contrast', 'ngtdm_Strength']
+    
+    try:
+        if len(np.unique(nib.load(seg_file).get_fdata())) > 1:
+            settings = {}
+            # settings["binWidth"] = 25
+            # settings["resampledPixelSpacing"] = None  # [3,3,3] is an example for defining resampling (voxels with size 3x3x3mm)
+            settings["resampledPixelSpacing"] = [3,3,3]
+            # settings["interpolator"] = sitk.sitkBSpline
+            settings["geometryTolerance"] = 1e-3  # default: 1e-6
+            settings["featureClass"] = ["shape"]
+            extractor = featureextractor.RadiomicsFeatureExtractor(**settings)
+            # Only use subset of features
+            extractor.disableAllFeatures()
+            extractor.enableFeatureClassByName("shape")
+            extractor.enableFeatureClassByName("firstorder")
+            features = extractor.execute(str(img_file), str(seg_file))
+            
+            features = {k.replace("original_", ""): v for k, v in features.items() if k.startswith("original_")}
+        else:
+            print("WARNING: Entire mask is 0 or 1. Setting all features to 0")
+            features = {feat: 0 for feat in standard_features}
+    except Exception as e:
+        print(f"WARNING: radiomics raised an exception (settings all features to 0): {e}")
+        features = {feat: 0 for feat in standard_features}
+
+    # only keep subset of features
+    # meaningful_features = ['shape_Elongation', 'shape_Flatness', 'shape_LeastAxisLength']
+    # features = {k: v for k, v in features.items() if k in meaningful_features}  
+
+    features = {k: round(float(v), 4) for k, v in features.items()}  # round to 4 decimals and cast to python float
+    
+    return seg_file.name.split(".")[0], features
+
+
+def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:Path):
+    masks = sorted(list(mask_dir.glob("*.nii.gz")))
+    stats = p_map(partial(get_radiomics_features, img_file=ct_file),
+                    masks, num_cpus=6, disable=False)
+    stats = {mask_name: stats for mask_name, stats in stats}
+    with open(file_out, "w") as f:
+        json.dump(stats, f, indent=4)
+
+
+def get_basic_statistics_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:Path):
+    ct = nib.load(ct_file).get_fdata()
+    masks = sorted(list(mask_dir.glob("*.nii.gz")))
+    stats = {}
+    for mask in tqdm(masks):
+        mask_name = mask.name.split(".")[0]
+        stats[mask_name] = {}
+        img = nib.load(mask)
+        data = img.get_fdata()
+        spacing = img.header.get_zooms()
+        vox_vol = spacing[0] * spacing[1] * spacing[2]
+        stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3
+        stats[mask_name]["intensity"] = ct[data > 0].mean().round(2)
+    
+    # For nora json is good
+    # For other people csv might be better -> not really because here only for one subject each -> use json
+    with open(file_out, "w") as f:
+        json.dump(stats, f, indent=4)
+    
+
+
+if __name__ == "__main__":
+    ct_img = Path("/home/jakob/Downloads/nnunet_test/ct3mm_0000.nii.gz")
+    mask_dir = Path("/home/jakob/Downloads/nnunet_test/test_output_3mm/")
+
+    # file_out = Path("/home/jakob/Downloads/nnunet_test/statistics_test.json")
+    # get_basic_statistics_for_entire_dir(ct_img, mask_dir, file_out)
+
+    file_out = Path("/home/jakob/Downloads/nnunet_test/statistics_radiomics_test.json")
+    get_radiomics_features_for_entire_dir(ct_img, mask_dir, file_out)
