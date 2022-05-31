@@ -12,6 +12,8 @@ Updating code on server:
 cd ~/dev/totalsegmentator
 git pull
 docker build -t totalsegmentator:master .
+# stop docker command
+# start container command
 ``` 
 
 # todo: put right starting command here (depends if we use nginx)

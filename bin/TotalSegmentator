@@ -87,7 +87,8 @@ def main():
                          quiet=quiet, verbose=verbose)
 
     if args.statistics:
-        get_basic_statistics_for_entire_dir(arg.input, args.output, args.output / "statistics.json")
+        print("Calculating statistics...")
+        get_basic_statistics_for_entire_dir(args.input, args.output, args.output / "statistics.json")
         # get_radiomics_features_for_entire_dir(arg.input, args.output, args.output / "statistics.json")
 
 

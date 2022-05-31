@@ -52,7 +52,7 @@ def get_radiomics_features(seg_file, img_file="ct.nii.gz"):
 def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:Path):
     masks = sorted(list(mask_dir.glob("*.nii.gz")))
     stats = p_map(partial(get_radiomics_features, img_file=ct_file),
-                    masks, num_cpus=6, disable=False)
+                    masks, num_cpus=1, disable=False)
     stats = {mask_name: stats for mask_name, stats in stats}
     with open(file_out, "w") as f:
         json.dump(stats, f, indent=4)
@@ -70,7 +70,7 @@ def get_basic_statistics_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:Pa
         spacing = img.header.get_zooms()
         vox_vol = spacing[0] * spacing[1] * spacing[2]
         stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3
-        stats[mask_name]["intensity"] = ct[data > 0].mean().round(2)
+        stats[mask_name]["intensity"] = ct[data > 0].mean().round(2) if (data > 0).sum() > 0 else 0.0
     
     # For nora json is good
     # For other people csv might be better -> not really because here only for one subject each -> use json
@@ -83,8 +83,8 @@ if __name__ == "__main__":
     ct_img = Path("/home/jakob/Downloads/nnunet_test/ct3mm_0000.nii.gz")
     mask_dir = Path("/home/jakob/Downloads/nnunet_test/test_output_3mm/")
 
-    # file_out = Path("/home/jakob/Downloads/nnunet_test/statistics_test.json")
-    # get_basic_statistics_for_entire_dir(ct_img, mask_dir, file_out)
+    file_out = Path("/home/jakob/Downloads/nnunet_test/statistics_test.json")
+    get_basic_statistics_for_entire_dir(ct_img, mask_dir, file_out)
 
-    file_out = Path("/home/jakob/Downloads/nnunet_test/statistics_radiomics_test.json")
-    get_radiomics_features_for_entire_dir(ct_img, mask_dir, file_out)
+    # file_out = Path("/home/jakob/Downloads/nnunet_test/statistics_radiomics_test.json")
+    # get_radiomics_features_for_entire_dir(ct_img, mask_dir, file_out)

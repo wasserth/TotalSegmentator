@@ -141,8 +141,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 seg_combined[seg == jdx] = class_map_inv[class_name]
         nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
     else:
-        # with nostdout():
-        nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+        with nostdout():
+            nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
 
     if preview:
         # Generate preview before upsampling so it is faster and still in canonical space 
