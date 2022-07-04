@@ -1,0 +1,15 @@
+# This is no used at the moment, because running the server via docker
+
+[Unit]
+Description=totalsegmentator server
+After=network.target
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+RestartSec=1
+ExecStart=docker run -p 80:5000 --gpus 'device=0' --ipc=host --name totalsegmentator-server-job -v /home/ubuntu/store:/app/store totalsegmentator:master /app/run_server.sh
+
+[Install]
+WantedBy=multi-user.target
