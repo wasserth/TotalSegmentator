@@ -9,7 +9,9 @@ from pathlib import Path
 from os.path import join
 import numpy as np
 import nibabel as nib
+from functools import partial
 from p_tqdm import p_map
+from multiprocessing import Pool
 
 from totalsegmentator.libs import nostdout
 
@@ -101,10 +103,22 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
+def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None):
+            k, v = class_map_item
+            # Have to load img inside of each thread. If passing it as argument a lot slower.
+            img = nib.load(tmp_dir / "s01.nii.gz")
+            img_data = img.get_fdata()
+            binary_img = img_data == k
+            output_path = str(file_out / f"{v}.nii.gz")
+            nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+            if nora_tag != "None":
+                subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+
+
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
-                         resample=None, nora_tag=None, preview=False, nr_cpus=1, 
-                         quiet=False, verbose=False):
+                         resample=None, nora_tag=None, preview=False, nr_threads_resampling=1, 
+                         nr_threads_saving=6, quiet=False, verbose=False):
     """
     resample: None or float  (target spacing for all dimensions)
     """
@@ -122,7 +136,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
         img_in_shape = img_in.shape
         img_in_rsp = change_spacing(img_in, [resample, resample, resample],
-                                    order=3, dtype=np.int32, nr_cpus=nr_cpus)  # 4 cpus instead of 1 makes it a bit slower
+                                    order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
         print(f"from {img_in.shape} to {img_in_rsp.shape}")
 
@@ -141,6 +155,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 seg_combined[seg == jdx] = class_map_inv[class_name]
         nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
     else:
+        print(f"Predicting...")
         with nostdout():
             nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
 
@@ -158,14 +173,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         print(f"Resampling back to original resolution: {img_in_shape}")
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
         img_pred_rsp = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
-                                      order=0, dtype=np.uint8, nr_cpus=nr_cpus)
+                                      order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
         nib.save(img_pred_rsp, tmp_dir / "s01.nii.gz")
 
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01.nii.gz")
 
     print("Saving segmentations...")
-    # todo: make saving faster with multithreading (see nnunet?). With p_map multicore it was a lot
-    # slower (probably because copying of big data is slow)
     st = time.time()
     if multilabel_image:
         shutil.copy(tmp_dir / "s01.nii.gz", file_out)
@@ -173,16 +186,33 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         file_out.mkdir(exist_ok=True, parents=True)
         img = nib.load(tmp_dir / "s01.nii.gz")
         img_data = img.get_fdata()
-        for k, v in class_map.items():
-            binary_img = img_data == k
-            output_path = str(file_out / f"{v}.nii.gz")
-            nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
-            if nora_tag != "None":
-                subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+
+        # Code for single threaded execution  (runtime:24s)
+        # for k, v in class_map.items():
+        #     binary_img = img_data == k
+        #     output_path = str(file_out / f"{v}.nii.gz")
+        #     nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+        #     if nora_tag != "None":
+        #         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+
+        # Code for multithreaded execution
+        #   Speed with different number of threads:
+        #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
+        _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
+                  class_map.items(), num_cpus=nr_threads_saving, disable=False)
+
+        # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
+        # pool = Pool(nr_threads_saving)
+        # results = []
+        # for k, v in class_map.items():
+        #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
+        # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
+        # pool.close()
+        # pool.join()
+
     print(f"Saved in {time.time() - st:.2f}s")
-            
-    # todo important: change
-    # shutil.rmtree(tmp_dir)
+
+    shutil.rmtree(tmp_dir)
 
     # todo: Add try except around everything and if fails, then remove nnunet_tmp dir
     #       Is there a smarter way to cleanup tmp files in error case?

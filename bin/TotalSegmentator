@@ -5,6 +5,7 @@ import argparse
 # import subprocess
 from pkg_resources import require
 from pathlib import Path
+import time
 
 import numpy as np
 import nibabel as nib
@@ -83,13 +84,15 @@ def main():
     folds = [0]  # None
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
-                         nora_tag=args.nora_tag, preview=args.preview, nr_cpus=args.nr_cpus, 
-                         quiet=quiet, verbose=verbose)
+                         nora_tag=args.nora_tag, preview=args.preview, nr_threads_resampling=args.nr_cpus, 
+                         nr_threads_saving=6, quiet=quiet, verbose=verbose)
 
     if args.statistics:
-        print("Calculating statistics...")
+        print("Calculating statistics...")  
+        st = time.time()
         get_basic_statistics_for_entire_dir(args.input, args.output, args.output / "statistics.json")
-        # get_radiomics_features_for_entire_dir(arg.input, args.output, args.output / "statistics.json")
+        # get_radiomics_features_for_entire_dir(args.input, args.output, args.output / "statistics_radiomics.json")
+        print(f"calculated in {time.time()-st:.2f}s")
 
 
 if __name__ == "__main__":
