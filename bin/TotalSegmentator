@@ -2,15 +2,15 @@
 import sys
 import os
 import argparse
-# import subprocess
 from pkg_resources import require
 from pathlib import Path
 import time
 
 import numpy as np
 import nibabel as nib
+import torch
 
-from totalsegmentator.libs import setup_nnunet
+from totalsegmentator.libs import setup_nnunet, download_pretrained_weights
 from totalsegmentator.preview import generate_preview
 from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
 
@@ -67,19 +67,28 @@ def main():
 
     quiet, verbose = args.quiet, args.verbose
 
+    if not torch.cuda.is_available():
+        raise ValueError("TotalSegmentator only works with a NVidia CUDA GPU. CUDA not found. " + 
+                         "If you do not have a GPU check out our online tool: www.totalsegmentator.ai")
+
     setup_nnunet()
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
-    # task_id = 224  # 17
-    # task_id = 800
-    trainer = "nnUNetTrainerV2_ep4000_nomirror"
 
     if args.fast:
         task_id = 256
         resample = 3.0
+        trainer = "nnUNetTrainerV2_ep8000_nomirror"
     else:
         task_id = [251, 252, 253, 254, 255]
         resample = 1.5
+        trainer = "nnUNetTrainerV2_ep4000_nomirror"
+
+    if type(task_id) is list:
+        for tid in task_id:
+            download_pretrained_weights(tid)
+    else:
+        download_pretrained_weights(task_id)
 
     folds = [0]  # None
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
