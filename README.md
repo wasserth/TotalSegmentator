@@ -1,23 +1,22 @@
 # TotalSegmentator
 
-Tool for segmentation of X classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images.
+Tool for segmentation of 104 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images.
+
+![Alt text](resources/imgs/overview_classes.png)
+
+If you use it please cite our paper: todo
+
 
 ### Installation
 
 Install dependencies
 ```
-pip install batchgenerators==0.21                             
-pip install https://github.com/wasserth/nnUNet_cust/archive/refs/heads/working_2022_03_18.zip
+install pytorch from pytorch.org
 ```
 
 Install Totalsegmentator
 ```
 pip install git+https://github.com/wasserth/TotalSegmentator.git
-```
-
-Copy nnUNet weights to
-```
-~/.totalsegmentator/nnunet/results/nnUNet/3d_fullres
 ```
 
 ### Usage
@@ -29,27 +28,22 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 TODO: Insert video/gif
 TODO: Add list
 
+
+### Advanced settings
+For faster runtime and less memory requirements you can use the option `--fast`. This will run a lower resolution model (3mm).
+TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: www.totalsegmentator.ai
+
+
+### Resource Requirements
+For a quite big CT image Totalsegmentator has the following memory requirements:  
+(1.5mm is the normal model and 3mm is the `--fast` model)
+
+![Alt text](resources/imgs/runtime_table.png)
+
+
 ### Reference 
 For more details see this paper (TODO).
 If you use this tool please cite the following paper
 ```
 Wasserthal et al. TODO
 ```
-
-### Advanced settings
-For faster runtime you can use the option TODO.
-For usage without a CPU we recommend the following settings for reasonable runtime: TODO.
-
-
-### Resource Requirements
-For a quite big CT image Totalsegmentator has the following memory requirements:  
-with option `--fast` (using 3mm model):  
-
-input 3mm image:  
-mode: normal: GPU: roughly 5GB, RAM: 15.3GB, runtime 130s
-mode: fastest: GPU: roughly 10GB, RAM: 7.0GB, runtime 25s
-
-input 1.5mm image:
-mode: normal: GPU: roughly 5GB, RAM: 15.6GB, runtime 140s
-mode: fastest: GPU: roughly 10GB, RAM: 7.3GB, runtime 48s
-

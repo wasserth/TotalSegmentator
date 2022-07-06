@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(name='TotalSegmentator',
         version='0.1',
-        description='Robust segmentation of X classes in CT images.',
+        description='Robust segmentation of 104 classes in CT images.',
         long_description="See Readme.md on github for more details.",
         url='https://github.com/wasserth/TotalSegmentator',
         author='Jakob Wasserthal',
@@ -18,7 +18,8 @@ setup(name='TotalSegmentator',
             'p_tqdm',
             'xvfbwrapper',
             'fury',
-            # 'nnunet'
+            'batchgenerators==0.21',
+            'nnunet @ git+https://github.com/wasserth/nnUNet_cust@working_2022_03_18#egg=nnUNet'
         ],
         zip_safe=False,
         classifiers=[

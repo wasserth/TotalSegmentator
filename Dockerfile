@@ -5,14 +5,14 @@ RUN apt-get update
 RUN apt-get install ffmpeg libsm6 libxext6 -y
 RUN apt-get install xvfb -y
 
-COPY requirements.txt /requirements.txt
+# COPY requirements.txt /requirements.txt
 
-RUN pip install -r /requirements.txt
+# RUN pip install -r /requirements.txt
 
 # Adapt when updated usage of fury
-RUN pip install xvfbwrapper dipy==1.2.0 fury==0.7.1
-RUN pip install batchgenerators==0.21                             
-RUN pip install https://github.com/wasserth/nnUNet_cust/archive/refs/heads/working_2022_03_18.zip
+# RUN pip install xvfbwrapper dipy==1.2.0 fury==0.7.1
+# RUN pip install batchgenerators==0.21                             
+# RUN pip install https://github.com/wasserth/nnUNet_cust/archive/refs/heads/working_2022_03_18.zip
 RUN pip install flask gunicorn
 
 # todo: download weights and copy into container
