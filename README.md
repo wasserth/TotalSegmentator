@@ -9,29 +9,28 @@ If you use it please cite our paper: todo
 
 ### Installation
 
-Install dependencies
-```
-install pytorch from pytorch.org
-```
+Install dependencies:  
+* [Pytorch](http://pytorch.org/)
+* You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own 
+custom installation.
 
 Install Totalsegmentator
 ```
 pip install git+https://github.com/wasserth/TotalSegmentator.git
 ```
 
+
 ### Usage
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 ```
-
-### List of classes
-TODO: Insert video/gif
-TODO: Add list
+> Note: TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: www.totalsegmentator.ai
 
 
 ### Advanced settings
-For faster runtime and less memory requirements you can use the option `--fast`. This will run a lower resolution model (3mm).
-TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: www.totalsegmentator.ai
+* `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm). 
+* `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed.
+* `--statistics`: This will generate a csv file with volume and mean intensity of each class.
 
 
 ### Resource Requirements
