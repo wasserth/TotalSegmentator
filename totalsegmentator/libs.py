@@ -14,12 +14,14 @@ class DummyFile(object):
     def write(self, x): pass
 
 @contextlib.contextmanager
-def nostdout():
-    save_stdout = sys.stdout
-    sys.stdout = DummyFile()
-    yield
-    sys.stdout = save_stdout
-
+def nostdout(verbose=False):
+    if not verbose:
+        save_stdout = sys.stdout
+        sys.stdout = DummyFile()
+        yield
+        sys.stdout = save_stdout
+    else:
+        yield
 
 
 def download_pretrained_weights(task_id):

@@ -58,11 +58,11 @@ def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:
         json.dump(stats, f, indent=4)
 
 
-def get_basic_statistics_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:Path):
+def get_basic_statistics_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:Path, quiet:bool=False):
     ct = nib.load(ct_file).get_fdata()
     masks = sorted(list(mask_dir.glob("*.nii.gz")))
     stats = {}
-    for mask in tqdm(masks):
+    for mask in tqdm(masks, disable=quiet):
         mask_name = mask.name.split(".")[0]
         stats[mask_name] = {}
         img = nib.load(mask)

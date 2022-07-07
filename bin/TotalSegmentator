@@ -97,11 +97,11 @@ def main():
                          nr_threads_saving=6, quiet=quiet, verbose=verbose)
 
     if args.statistics:
-        print("Calculating statistics...")  
+        if not quiet: print("Calculating statistics...")  
         st = time.time()
-        get_basic_statistics_for_entire_dir(args.input, args.output, args.output / "statistics.json")
+        get_basic_statistics_for_entire_dir(args.input, args.output, args.output / "statistics.json", quiet)
         # get_radiomics_features_for_entire_dir(args.input, args.output, args.output / "statistics_radiomics.json")
-        print(f"calculated in {time.time()-st:.2f}s")
+        if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
 
 if __name__ == "__main__":

@@ -132,22 +132,24 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     as_closest_canonical_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
     if resample is not None:
-        print(f"Resampling to: {resample}mm")
+        if not quiet: print(f"Resampling...")
         img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
         img_in_shape = img_in.shape
         img_in_rsp = change_spacing(img_in, [resample, resample, resample],
                                     order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
-        print(f"from {img_in.shape} to {img_in_rsp.shape}")
+        if verbose:
+            print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
 
+    st = time.time()
     if type(task_id) is list:  # if running multiple models 
         class_map_inv = {v: k for k, v in class_map.items()}
         (tmp_dir / "parts").mkdir(exist_ok=True)
         seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
         # Run several tasks and combine results into one segmentation
-        for tid in task_id:
-            print(f"Predicting task {tid} ...")
-            with nostdout():
+        for idx, tid in enumerate(task_id):
+            print(f"Predicting part {idx} of 5 ...")
+            with nostdout(verbose):
                 nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
             (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
             seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
@@ -155,9 +157,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 seg_combined[seg == jdx] = class_map_inv[class_name]
         nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
     else:
-        print(f"Predicting...")
-        with nostdout():
+        if not quiet: print(f"Predicting...")
+        with nostdout(verbose):
             nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+    if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
     if preview:
         # Generate preview before upsampling so it is faster and still in canonical space 
@@ -167,10 +170,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         smoothing = 20
         roi_data = nib.load(tmp_dir / "s01.nii.gz").get_fdata()
         generate_preview(tmp_dir / "s01_0000.nii.gz", file_out / "preview.png", roi_data, smoothing)
-        print("Preview generated in {:.2f}s".format(time.time() - st))
+        if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
 
     if resample is not None:
-        print(f"Resampling back to original resolution: {img_in_shape}")
+        if not quiet: print("Resampling...")
+        if verbose: print(f"  back to original shape: {img_in_shape}")
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
         img_pred_rsp = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
                                       order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
@@ -178,7 +182,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01.nii.gz")
 
-    print("Saving segmentations...")
+    if not quiet: print("Saving segmentations...")
     st = time.time()
     if multilabel_image:
         shutil.copy(tmp_dir / "s01.nii.gz", file_out)
@@ -199,7 +203,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         #   Speed with different number of threads:
         #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
         _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
-                  class_map.items(), num_cpus=nr_threads_saving, disable=False)
+                  class_map.items(), num_cpus=nr_threads_saving, disable=quiet)
 
         # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
         # pool = Pool(nr_threads_saving)
@@ -210,7 +214,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         # pool.close()
         # pool.join()
 
-    print(f"Saved in {time.time() - st:.2f}s")
+    if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
     shutil.rmtree(tmp_dir)
 
