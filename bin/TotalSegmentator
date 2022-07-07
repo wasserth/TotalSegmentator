@@ -15,7 +15,7 @@ from totalsegmentator.preview import generate_preview
 from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
 
 def main():
-    parser = argparse.ArgumentParser(description="Segment X classes in CT images.",
+    parser = argparse.ArgumentParser(description="Segment 104 anatomical structures in CT images.",
                                         epilog="Written by Jakob Wasserthal. Please reference TODO")
 
     parser.add_argument("-i", metavar="filepath", dest="input",

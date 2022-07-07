@@ -28,8 +28,8 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 
 
 ### Advanced settings
-* `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm). 
-* `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed.
+* `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm). 
+* `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--statistics`: This will generate a csv file with volume and mean intensity of each class.
 
 
@@ -39,6 +39,12 @@ For a quite big CT image Totalsegmentator has the following memory requirements:
 
 ![Alt text](resources/imgs/runtime_table.png)
 
+
+### Other commands
+If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
+```
+combine_totalseg_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
+```
 
 ### Reference 
 For more details see this paper (TODO).
