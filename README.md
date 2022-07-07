@@ -43,7 +43,7 @@ For a quite big CT image Totalsegmentator has the following memory requirements:
 ### Other commands
 If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
 ```
-combine_totalseg_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
+totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
 ### Reference 

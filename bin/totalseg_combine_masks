@@ -16,7 +16,7 @@ if __name__ == "__main__":
     Works with any number of label files.
 
     Usage:
-    combine_totalseg_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
+    totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
     """
     parser = argparse.ArgumentParser(description="Combine masks.",
                                         epilog="Written by Jakob Wasserthal. Please reference TODO")

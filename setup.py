@@ -30,6 +30,6 @@ setup(name='TotalSegmentator',
             'Operating System :: MacOS'
         ],
         scripts=[
-            'bin/TotalSegmentator', 'bin/combine_totalseg_masks'
+            'bin/TotalSegmentator', 'bin/totalseg_combine_masks'
         ]
     )
