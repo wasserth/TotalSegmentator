@@ -27,6 +27,7 @@ def nostdout(verbose=False):
 def download_pretrained_weights(task_id):
 
     config_dir = Path.home() / ".totalsegmentator/nnunet/results/nnUNet/3d_fullres"
+    config_dir.mkdir(exist_ok=True, parents=True)
 
     old_weights = [
         "Task223_my_test"
