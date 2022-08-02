@@ -18,14 +18,13 @@ Steps to test the server:
 
 # Url needs to have a trailing slash!
 # url_base = 'http://localhost:5000/'
-# url_base = 'http://54.82.71.100:80/'
 url_base = f"http://{sys.argv[1]}/"  # read from command line
-
+api_key = sys.argv[2]
 
 print("------------- get_server_status ------------------")
 
 r = requests.post(url_base + "get_server_status",
-                  json={"api_key": "abc123"})
+                  json={"api_key": api_key})
 if r.ok:
     print(f"status: {r.json()['status']}")
 else:
@@ -33,14 +32,14 @@ else:
     print(f"message: {r.json()['message']}")
 
 
-# print("------------- predict_image ------------------")
+# # print("------------- predict_image ------------------")
 
 # st = time.time()
 # test_data_dir = Path("/home/jakob/Downloads/nnunet_test")
 # filename = test_data_dir / "ct3mm_0000.nii.gz"
 # r = requests.post(url_base + "predict_image",
 #                   files={'data_binary': open(filename, 'rb')},
-#                   data={"api_key": "abc123"})
+#                   data={"api_key": api_key})
 # if r.ok:
 #     seg = r.content  # segmentation as bytes object
 #     with open(test_data_dir / 'seg.zip', 'wb') as f:

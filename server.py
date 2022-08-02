@@ -12,7 +12,7 @@ import numpy as np
 from flask import Flask, request, jsonify, send_file, send_from_directory, after_this_request
 from markupsafe import escape
 
-# On the server /mnt/data/server-store will be mounted to "store" when starting the docker container
+# On the server /home/ubuntu/store will be mounted to "store" when starting the docker container
 STORE_DIR = Path("store")
 
 

@@ -9,16 +9,14 @@ terraform apply -auto-approve
 ## Helpful commands for setting up the cloud server
 Updating code on server:
 ``` 
-cd ~/dev/totalsegmentator
+cd ~/dev/TotalSegmentator
 git pull
 docker build -t totalsegmentator:master .
 # stop docker command
 # start container command
 ``` 
 
-# todo: put right starting command here (depends if we use nginx)
-
-Run docker TotalSegmentator for test
+Run docker TotalSegmentator for test locally
 ``` 
 docker run --gpus 'device=0' --ipc=host -v /home/ubuntu/test:/workspace totalsegmentator:master TotalSegmentator -i /workspace/ct3mm_0000.nii.gz -o /workspace/test_output --fast --preview
 ``` 
@@ -77,3 +75,5 @@ Check status
 systemctl status totalsegmentator_server
 ``` 
 
+
+## Old commands

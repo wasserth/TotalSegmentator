@@ -8,6 +8,7 @@
 build/
 dist/
 tmp_weights/
+tmp_weights_DELETE/
 store/
 
 *.tfstate

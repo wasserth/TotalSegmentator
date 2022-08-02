@@ -16,8 +16,9 @@ RUN apt-get install xvfb -y
 RUN pip install flask gunicorn
 
 # todo: download weights and copy into container
-RUN mkdir -p /root/.totalsegmentator/nnunet/results/nnUNet/3d_fullres
-COPY tmp_weights /root/.totalsegmentator/nnunet/results/nnUNet/3d_fullres
+# RUN mkdir -p /root/.totalsegmentator/nnunet/results/nnUNet/3d_fullres
+# COPY tmp_weights /root/.totalsegmentator/nnunet/results/nnUNet/3d_fullres
+RUN python totalsegmentator/download_pretrained_weights.py
 
 COPY . /app
 RUN pip install /app
