@@ -24,7 +24,7 @@ pip install git+https://github.com/wasserth/TotalSegmentator.git
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 ```
-> Note: TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: www.totalsegmentator.ai
+> Note: TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: www.totalsegmentator.com
 
 
 ### Advanced settings

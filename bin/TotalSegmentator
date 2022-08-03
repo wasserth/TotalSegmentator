@@ -69,7 +69,7 @@ def main():
 
     if not torch.cuda.is_available():
         raise ValueError("TotalSegmentator only works with a NVidia CUDA GPU. CUDA not found. " + 
-                         "If you do not have a GPU check out our online tool: www.totalsegmentator.ai")
+                         "If you do not have a GPU check out our online tool: www.totalsegmentator.com")
 
     setup_nnunet()
 

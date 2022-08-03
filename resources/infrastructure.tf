@@ -154,15 +154,6 @@ resource "aws_default_security_group" "main_vpc_security_group" {
         "0.0.0.0/0"]
     }
 
-    # for Jupyter notebook
-    # ingress {
-    #   from_port = 8888
-    #   to_port = 8888
-    #   protocol = "tcp"
-    #   cidr_blocks = [
-    #     "0.0.0.0/0"]
-    # }
-
     ingress {
       from_port = 80
       to_port = 80
@@ -185,6 +176,8 @@ resource "aws_default_security_group" "main_vpc_security_group" {
     }
 }
 
+# Use this if want to get a spot instance
+#
 # resource "aws_spot_instance_request" "aws_dl_custom_spot" {
 #     ami                         = "${var.ami_id}"
 #     spot_price                  = "${var.spot_price}"
@@ -241,7 +234,7 @@ resource "aws_instance" "aws_dl_custom_spot" {
 
 
 
-########### Outputs ###########
+########### Outputs spot instance ###########
 
 # output "id" {
 #   value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.id}"]
@@ -269,6 +262,8 @@ resource "aws_instance" "aws_dl_custom_spot" {
 #   value = ["${aws_spot_instance_request.aws_dl_custom_spot.*.public_ip}"]
 # }
 
+
+########### Outputs normal instance ###########
 
 output "id" {
   value = ["${aws_instance.aws_dl_custom_spot.*.id}"]
