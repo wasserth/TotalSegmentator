@@ -1,10 +1,11 @@
 # TotalSegmentator
 
-Tool for segmentation of 104 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images.
+Tool for segmentation of 104 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. The training dataset with 1204 subjects can be downloaded here (TODO).
 
 ![Alt text](resources/imgs/overview_classes.png)
 
-If you use it please cite our paper: todo
+If you use it please cite our paper: todo  
+
 
 
 ### Installation
