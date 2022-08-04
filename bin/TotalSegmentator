@@ -54,12 +54,9 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Show more intermediate output",
                         default=False)
 
-    # per default run with 5 folds; add optional fast option to run on only one fold
-    # -> option "fast"
-
-    # add super fast and less memory option: train model on 3mm -> for many usecases probably fine
-    # -> option "very fast"
-    # Make this the default? -> not for GPU, but maybe for CPU
+    parser.add_argument("--test", metavar="0|1|2|3", choices=[0, 1, 2, 3], type=int,
+                        help="Only needed for unittesting.",
+                        default=0)
 
     parser.add_argument('--version', action='version', version=require("TotalSegmentator")[0].version)
 
