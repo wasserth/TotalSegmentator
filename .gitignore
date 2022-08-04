@@ -10,6 +10,7 @@ dist/
 tmp_weights/
 tmp_weights_DELETE/
 store/
+unittest_prediction
 
 *.tfstate
 *.tfstate.backup

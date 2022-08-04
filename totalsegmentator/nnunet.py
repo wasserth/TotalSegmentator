@@ -118,7 +118,7 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
                          resample=None, nora_tag=None, preview=False, nr_threads_resampling=1, 
-                         nr_threads_saving=6, quiet=False, verbose=False):
+                         nr_threads_saving=6, quiet=False, verbose=False, test=0):
     """
     resample: None or float  (target spacing for all dimensions)
     """
@@ -158,8 +158,13 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
     else:
         if not quiet: print(f"Predicting...")
-        with nostdout(verbose):
-            nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+        if test == 0:
+            with nostdout(verbose):
+                nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+        else:
+            print("WARNING: Using reference seg instead of prediction for testing.")
+            repo_dir = Path(__file__).absolute().parents[1]
+            shutil.copy(repo_dir / "tests" / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
     if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
     if preview:
