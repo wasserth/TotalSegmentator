@@ -11,4 +11,5 @@ git push
 git tag -a v1.5 -m "version 1.5"
 git push origin --tags
 python setup.py sdist bdist_wheel
+twine upload --skip-existing dist/*
 ```

@@ -12,12 +12,11 @@ If you use it please cite our paper: todo
 
 Install dependencies:  
 * [Pytorch](http://pytorch.org/)
-* You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own 
-custom installation.
+* You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
 
 Install Totalsegmentator
 ```
-pip install git+https://github.com/wasserth/TotalSegmentator.git
+pip install TotalSegmentator
 ```
 
 
