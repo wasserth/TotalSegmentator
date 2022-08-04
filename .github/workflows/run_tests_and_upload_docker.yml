@@ -27,8 +27,8 @@ jobs:
 
   upload-dockerhub:
     runs-on: ubuntu-latest
-    needs: run-tests
-    if: success() && github.ref == 'refs/heads/master'
+    # needs: run-tests
+    # if: success() && github.ref == 'refs/heads/master'
     strategy:
       matrix:
         python-version: [3.8]

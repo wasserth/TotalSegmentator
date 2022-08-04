@@ -33,6 +33,12 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 * `--statistics`: This will generate a csv file with volume and mean intensity of each class.
 
 
+### Run via docker
+We also provide a docker container which can be used the following way
+```
+docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/workspace totalsegmentator:master TotalSegmentator -i /workspace/ct.nii.gz -o /workspace/segmentations
+```
+
 ### Resource Requirements
 For a quite big CT image Totalsegmentator has the following memory requirements:  
 (1.5mm is the normal model and 3mm is the `--fast` model)
