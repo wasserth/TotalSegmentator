@@ -163,8 +163,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
         else:
             print("WARNING: Using reference seg instead of prediction for testing.")
-            repo_dir = Path(__file__).absolute().parents[1]
-            shutil.copy(repo_dir / "tests" / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
+            shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
     if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
     if preview:
