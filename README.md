@@ -52,9 +52,11 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
+
 ### Reference 
 For more details see this paper (TODO).
 If you use this tool please cite the following paper
 ```
 Wasserthal et al. TODO
 ```
+Moreover, we would really appreciate if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).
