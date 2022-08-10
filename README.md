@@ -1,6 +1,6 @@
 # TotalSegmentator
 
-Tool for segmentation of 104 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. The training dataset with 1204 subjects can be downloaded here (TODO).
+Tool for segmentation of 104 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. The training dataset with 1204 subjects can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.6802613). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
 
 ![Alt text](resources/imgs/overview_classes.png)
 
@@ -24,7 +24,7 @@ pip install TotalSegmentator
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 ```
-> Note: TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: www.totalsegmentator.com
+> Note: TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: [www.totalsegmentator.com](https://totalsegmentator.com/)
 
 
 ### Advanced settings

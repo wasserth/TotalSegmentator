@@ -32,11 +32,11 @@ else:
     print(f"message: {r.json()['message']}")
 
 
-# # print("------------- predict_image ------------------")
+# print("------------- predict_image ------------------")
 
 # st = time.time()
 # test_data_dir = Path("/home/jakob/Downloads/nnunet_test")
-# filename = test_data_dir / "ct3mm_0000.nii.gz"
+# filename = test_data_dir / "ct_0000.nii.gz"
 # r = requests.post(url_base + "predict_image",
 #                   files={'data_binary': open(filename, 'rb')},
 #                   data={"api_key": api_key})

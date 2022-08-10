@@ -8,4 +8,4 @@ set -e
 
 # Using gunicorn  (timeout is in seconds)
 cd /app
-gunicorn --bind 0.0.0.0:5000 --timeout 300 -w 1 server:app
+gunicorn --bind 0.0.0.0:5000 --timeout 1000 -w 1 server:app
