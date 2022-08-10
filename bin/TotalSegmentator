@@ -29,7 +29,10 @@ def main():
     parser.add_argument("--ml", action="store_true", help="Save one multilabel image for all classes",
                         default=False)
 
-    parser.add_argument("-c", "--nr_cpus", type=int, help="Nr of CPUs to use", default=1)
+    parser.add_argument("-nr", "--nr_thr_resamp", type=int, help="Nr of threads for resampling", default=1)
+
+    parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations", 
+                        default=6)
 
     parser.add_argument("-f", "--fast", action="store_true", help="Run faster lower resolution model",
                         default=False)
@@ -90,8 +93,8 @@ def main():
     folds = [0]  # None
     nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
-                         nora_tag=args.nora_tag, preview=args.preview, nr_threads_resampling=args.nr_cpus, 
-                         nr_threads_saving=6, quiet=quiet, verbose=verbose, test=args.test)
+                         nora_tag=args.nora_tag, preview=args.preview, nr_threads_resampling=args.nr_thr_resamp, 
+                         nr_threads_saving=args.nr_thr_saving, quiet=quiet, verbose=verbose, test=args.test)
 
     if args.statistics:
         if not quiet: print("Calculating statistics...")  

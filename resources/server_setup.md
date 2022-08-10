@@ -41,6 +41,11 @@ Then this docker container will always run
 docker run -d --restart always -p 80:5000 --gpus 'device=0' --ipc=host --name totalsegmentator-server-job -v /home/ubuntu/store:/app/store totalsegmentator:master /app/run_server.sh
 ``` 
 
+See running containers
+```
+docker container ls
+```
+
 Stop docker
 ```
 docker stop totalsegmentator-server-job

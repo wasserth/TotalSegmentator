@@ -65,7 +65,7 @@ def upload_data():
 
     # Predict image
     seg_dir = img_dir / ('seg_' + img_id)
-    subprocess.call(f"TotalSegmentator -i {img_dir / img_fn} -o {seg_dir} --fast --preview --statistics", shell=True)
+    subprocess.call(f"TotalSegmentator -i {img_dir / img_fn} -o {seg_dir} -f -p -s -ns 1", shell=True)
 
     shutil.make_archive(seg_dir, 'zip', seg_dir)
 

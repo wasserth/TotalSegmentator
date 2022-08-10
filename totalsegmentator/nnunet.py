@@ -196,27 +196,28 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         img_data = img.get_fdata()
 
         # Code for single threaded execution  (runtime:24s)
-        # for k, v in class_map.items():
-        #     binary_img = img_data == k
-        #     output_path = str(file_out / f"{v}.nii.gz")
-        #     nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
-        #     if nora_tag != "None":
-        #         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+        if nr_threads_saving == 1:
+            for k, v in class_map.items():
+                binary_img = img_data == k
+                output_path = str(file_out / f"{v}.nii.gz")
+                nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+                if nora_tag != "None":
+                    subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+        else:
+            # Code for multithreaded execution
+            #   Speed with different number of threads:
+            #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
+            _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
+                    class_map.items(), num_cpus=nr_threads_saving, disable=quiet)
 
-        # Code for multithreaded execution
-        #   Speed with different number of threads:
-        #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
-        _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
-                  class_map.items(), num_cpus=nr_threads_saving, disable=quiet)
-
-        # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
-        # pool = Pool(nr_threads_saving)
-        # results = []
-        # for k, v in class_map.items():
-        #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
-        # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
-        # pool.close()
-        # pool.join()
+            # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
+            # pool = Pool(nr_threads_saving)
+            # results = []
+            # for k, v in class_map.items():
+            #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
+            # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
+            # pool.close()
+            # pool.join()
 
     if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
