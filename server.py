@@ -53,7 +53,8 @@ def upload_data():
     if not has_valid_credentials(meta["api_key"]):
         return {"message": "invalid access code"}, 401
 
-    stats = "-s" if meta["statistics"] == 1 else ""
+    stats = "-s" if meta["statistics"] == "1" else ""
+    print(f"stats: {stats}")
 
     # Upload image
     img_id = str(int(time.time()))

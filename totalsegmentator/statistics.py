@@ -63,22 +63,6 @@ def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:
 
 
 def get_basic_statistics_for_entire_dir(seg: np.array, ct_file:Path, file_out:Path, quiet:bool=False):
-    # ct = nib.load(ct_file).get_fdata()
-    # masks = sorted(list(mask_dir.glob("*.nii.gz")))
-    # stats = {}
-    # for mask in tqdm(masks, disable=quiet):
-    #     mask_name = mask.name.split(".")[0]
-    #     stats[mask_name] = {}
-    #     img = nib.load(mask)
-    #     data = img.get_fdata()  # loading: 0.6s
-    #     spacing = img.header.get_zooms()
-    #     vox_vol = spacing[0] * spacing[1] * spacing[2]
-        
-    #     stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3; very fast (0.2s)
-    #     roi_mask = (data > 0).astype(np.uint8)  # 0.16s
-    #     # stats[mask_name]["intensity"] = ct[roi_mask > 0].mean().round(2) if roi_mask.sum() > 0 else 0.0  # 3.0s
-    #     stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s
-            
     ct_img = nib.load(ct_file)
     ct = ct_img.get_fdata()
     spacing = ct_img.header.get_zooms()

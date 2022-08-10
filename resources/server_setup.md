@@ -11,9 +11,13 @@ Updating code on server:
 ``` 
 cd ~/dev/TotalSegmentator
 git pull
+
+docker stop totalsegmentator-server-job
+docker rm $(sudo docker ps -a -q -f status=exited)  
+
 docker build -t totalsegmentator:master .
-# stop docker command
-# start container command
+
+docker run -d --restart always -p 80:5000 --gpus 'device=0' --ipc=host --name totalsegmentator-server-job -v /home/ubuntu/store:/app/store totalsegmentator:master /app/run_server.sh
 ``` 
 
 Run docker TotalSegmentator for test locally
