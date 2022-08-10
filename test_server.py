@@ -32,24 +32,24 @@ else:
     print(f"message: {r.json()['message']}")
 
 
-# print("------------- predict_image ------------------")
+print("------------- predict_image ------------------")
 
-# st = time.time()
-# test_data_dir = Path("/home/jakob/Downloads/nnunet_test")
-# # filename = test_data_dir / "ct3mm_0000.nii.gz"  # 56s
-# # filename = test_data_dir / "ct15mm_0000.nii.gz"  # 133s
-# # filename = test_data_dir / "ctmm_0000.nii.gz"  # timeout during saving of segmentations
-# r = requests.post(url_base + "predict_image",
-#                   files={'data_binary': open(filename, 'rb')},
-#                   data={"api_key": api_key})
-# if r.ok:
-#     seg = r.content  # segmentation as bytes object
-#     with open(test_data_dir / 'seg.zip', 'wb') as f:
-#         f.write(seg)
-#     print("Successfully received segmentation")
-# else:
-#     print(f"status code: {r.status_code}")
-#     print(f"message: {r.json()['message']}")
-# print(f"took: {time.time() - st:.2f}s")
-# # without preview:
-# # 3mm (145x145x274: 5.7M): 28s
+st = time.time()
+test_data_dir = Path("/home/jakob/Downloads/nnunet_test")
+# filename = test_data_dir / "ct3mm_0000.nii.gz"  # 56s
+# filename = test_data_dir / "ct15mm_0000.nii.gz"  # 133s
+filename = test_data_dir / "ct_0000.nii.gz"  # timeout during saving of segmentations
+r = requests.post(url_base + "predict_image",
+                  files={'data_binary': open(filename, 'rb')},
+                  data={"api_key": api_key, "statistics": 1})
+if r.ok:
+    seg = r.content  # segmentation as bytes object
+    with open(test_data_dir / 'seg.zip', 'wb') as f:
+        f.write(seg)
+    print("Successfully received segmentation")
+else:
+    print(f"status code: {r.status_code}")
+    print(f"message: {r.json()['message']}")
+print(f"took: {time.time() - st:.2f}s")
+# without preview:
+# 3mm (145x145x274: 5.7M): 28s

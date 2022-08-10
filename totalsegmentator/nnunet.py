@@ -222,6 +222,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
     shutil.rmtree(tmp_dir)
-
     # todo: Add try except around everything and if fails, then remove nnunet_tmp dir
     #       Is there a smarter way to cleanup tmp files in error case?
+
+    return img_data

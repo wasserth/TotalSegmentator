@@ -91,7 +91,7 @@ def main():
         download_pretrained_weights(task_id)
 
     folds = [0]  # None
-    nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
+    seg = nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
                          nora_tag=args.nora_tag, preview=args.preview, nr_threads_resampling=args.nr_thr_resamp, 
                          nr_threads_saving=args.nr_thr_saving, quiet=quiet, verbose=verbose, test=args.test)
@@ -99,7 +99,7 @@ def main():
     if args.statistics:
         if not quiet: print("Calculating statistics...")  
         st = time.time()
-        get_basic_statistics_for_entire_dir(args.input, args.output, args.output / "statistics.json", quiet)
+        get_basic_statistics_for_entire_dir(seg, args.input, args.output / "statistics.json", quiet)
         # get_radiomics_features_for_entire_dir(args.input, args.output, args.output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 

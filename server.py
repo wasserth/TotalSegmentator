@@ -53,6 +53,8 @@ def upload_data():
     if not has_valid_credentials(meta["api_key"]):
         return {"message": "invalid access code"}, 401
 
+    stats = "-s" if meta["statistics"] == 1 else ""
+
     # Upload image
     img_id = str(int(time.time()))
     img_fn = f"{img_id}.nii.gz"
@@ -65,7 +67,7 @@ def upload_data():
 
     # Predict image
     seg_dir = img_dir / ('seg_' + img_id)
-    subprocess.call(f"TotalSegmentator -i {img_dir / img_fn} -o {seg_dir} -f -p -s -ns 1", shell=True)
+    subprocess.call(f"TotalSegmentator -i {img_dir / img_fn} -o {seg_dir} -f -p {stats} -ns 1", shell=True)
 
     shutil.make_archive(seg_dir, 'zip', seg_dir)
 
