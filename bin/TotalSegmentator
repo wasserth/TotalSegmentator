@@ -14,9 +14,10 @@ from totalsegmentator.libs import setup_nnunet, download_pretrained_weights
 from totalsegmentator.preview import generate_preview
 from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
 
+
 def main():
     parser = argparse.ArgumentParser(description="Segment 104 anatomical structures in CT images.",
-                                        epilog="Written by Jakob Wasserthal. Please reference TODO")
+                                     epilog="Written by Jakob Wasserthal. If you use this tool please cite https://arxiv.org/abs/2208.05868")
 
     parser.add_argument("-i", metavar="filepath", dest="input",
                         help="CT nifti image", 
@@ -37,10 +38,12 @@ def main():
     parser.add_argument("-f", "--fast", action="store_true", help="Run faster lower resolution model",
                         default=False)
 
-    parser.add_argument("-t", "--nora_tag", type=str, help="tag in nora as mask. Pass nora project id as argument.",
+    parser.add_argument("-t", "--nora_tag", type=str, 
+                        help="tag in nora as mask. Pass nora project id as argument.",
                         default="None")
 
-    parser.add_argument("-p", "--preview", action="store_true", help="Generate a png preview of segmentation",
+    parser.add_argument("-p", "--preview", action="store_true", 
+                        help="Generate a png preview of segmentation",
                         default=False)
 
     # todo: implement this (prio2)
@@ -48,7 +51,12 @@ def main():
     # parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
     #                     help="Manually define only a subset of classes to predict")
 
-    parser.add_argument("-s", "--statistics", action="store_true", help="Calc statistics like volume, surface, mean intensity",
+    parser.add_argument("-s", "--statistics", action="store_true", 
+                        help="Calc volume and mean intensity. Results will be in statistics.json",
+                        default=False)
+
+    parser.add_argument("-r", "--radiomics", action="store_true", 
+                        help="Calc radiomics features. Requires pyradiomics. Results will be in statistics_radiomics.json",
                         default=False)
 
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
@@ -101,6 +109,12 @@ def main():
         st = time.time()
         get_basic_statistics_for_entire_dir(seg, args.input, args.output / "statistics.json", quiet)
         # get_radiomics_features_for_entire_dir(args.input, args.output, args.output / "statistics_radiomics.json")
+        if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
+
+    if args.radiomics:
+        if not quiet: print("Calculating radiomics...")  
+        st = time.time()
+        get_radiomics_features_for_entire_dir(args.input, args.output, args.output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
 

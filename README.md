@@ -4,7 +4,7 @@ Tool for segmentation of 104 classes in CT images. It was trained on a wide rang
 
 ![Alt text](resources/imgs/overview_classes.png)
 
-If you use it please cite our paper: todo  
+If you use it please cite our paper: [https://arxiv.org/abs/2208.05868](https://arxiv.org/abs/2208.05868).  
 
 
 
@@ -30,7 +30,8 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 ### Advanced settings
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm). 
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
-* `--statistics`: This will generate a csv file with volume and mean intensity of each class.
+* `--statistics`: This will generate a file `statistics.json` with volume and mean intensity of each class.
+* `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 
 
 ### Run via docker
@@ -54,9 +55,9 @@ totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m
 
 
 ### Reference 
-For more details see this paper (TODO).
-If you use this tool please cite the following paper
+For more details see this paper [https://arxiv.org/abs/2208.05868](https://arxiv.org/abs/2208.05868).
+If you use this tool please cite it as follows
 ```
-Wasserthal et al. TODO
+Wasserthal J., Meyer M., Breit H., Cyriac J., Yang S., Segeroth M. TotalSegmentator: robust segmentation of 104 anatomical structures in CT images, 2022. URL: https://arxiv.org/abs/2208.05868.  arXiv: 2208.05868
 ```
 Moreover, we would really appreciate if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).

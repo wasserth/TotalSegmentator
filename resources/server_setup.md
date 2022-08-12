@@ -13,7 +13,7 @@ cd ~/dev/TotalSegmentator
 git pull
 
 docker stop totalsegmentator-server-job
-docker rm $(sudo docker ps -a -q -f status=exited)  
+docker rm $(sudo docker ps -a -q -f status=exited)
 
 docker build -t totalsegmentator:master .
 
