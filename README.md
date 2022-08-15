@@ -41,10 +41,14 @@ docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/
 ```
 
 ### Resource Requirements
-For a quite big CT image Totalsegmentator has the following memory requirements:  
+Totalsegmentator has the following runtime and memory requirements:  
 (1.5mm is the normal model and 3mm is the `--fast` model)
 
 ![Alt text](resources/imgs/runtime_table.png)
+
+
+### Train / validation / test split
+The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.
 
 
 ### Other commands
