@@ -87,6 +87,7 @@ def main():
         task_id = 256
         resample = 3.0
         trainer = "nnUNetTrainerV2_ep8000_nomirror"
+        if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
     else:
         task_id = [251, 252, 253, 254, 255]
         resample = 1.5

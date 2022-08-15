@@ -126,7 +126,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     
     # do not set random seed because would lead to same random dir every time 
     # (np random seed is ok, because is separate from python random)
-    tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8)))
+    # We can avoid this by using random.Random().choices() instead of random.choices(). 
+    # This is not affected by global random.seed(xxxx).
+    tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
     (tmp_dir).mkdir(exist_ok=True)
 
     as_closest_canonical_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
