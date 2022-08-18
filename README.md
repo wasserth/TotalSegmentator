@@ -48,7 +48,8 @@ Totalsegmentator has the following runtime and memory requirements:
 
 
 ### Train / validation / test split
-The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.
+The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.  
+The exact numbers of the results for the high resolution model (1.5mm) can be found [here](resources/results_all_classes.json). The paper shown these numbers in the supplementary materials figure 11.
 
 
 ### Other commands
