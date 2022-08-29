@@ -13,6 +13,7 @@ If you use it please cite our paper: [https://arxiv.org/abs/2208.05868](https://
 Install dependencies:  
 * [Pytorch](http://pytorch.org/)
 * You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
+* TotalSegmentator was developed for Linux or Mac. It was not tested on windows.
 
 Install Totalsegmentator
 ```

@@ -192,6 +192,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     st = time.time()
     if multilabel_image:
         shutil.copy(tmp_dir / "s01.nii.gz", file_out)
+        img = nib.load(tmp_dir / "s01.nii.gz")
+        img_data = img.get_fdata()
     else:  # save each class as a separate binary image
         file_out.mkdir(exist_ok=True, parents=True)
         img = nib.load(tmp_dir / "s01.nii.gz")
