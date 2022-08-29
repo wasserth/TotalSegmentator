@@ -186,7 +186,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                                       order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
         nib.save(img_pred_rsp, tmp_dir / "s01.nii.gz")
 
-    undo_canonical_nifti(tmp_dir / "s01.nii.gz", tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01.nii.gz")
+    undo_canonical_nifti(tmp_dir / "s01.nii.gz", file_in, tmp_dir / "s01.nii.gz")
 
     if not quiet: print("Saving segmentations...")
     st = time.time()
