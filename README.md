@@ -34,7 +34,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 ### Advanced settings
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm). 
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
-* `--statistics`: This will generate a file `statistics.json` with volume and mean intensity of each class.
+* `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 
 

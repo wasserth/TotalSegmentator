@@ -52,7 +52,7 @@ def main():
     #                     help="Manually define only a subset of classes to predict")
 
     parser.add_argument("-s", "--statistics", action="store_true", 
-                        help="Calc volume and mean intensity. Results will be in statistics.json",
+                        help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
                         default=False)
 
     parser.add_argument("-r", "--radiomics", action="store_true", 
