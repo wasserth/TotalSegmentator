@@ -12,7 +12,9 @@ If you use it please cite our paper: [https://arxiv.org/abs/2208.05868](https://
 ### Installation
 
 Install dependencies:  
+* Python >= 3.7
 * [Pytorch](http://pytorch.org/)
+* if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
 * You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
 * TotalSegmentator was developed for Linux or Mac. It was not tested on windows.
 
@@ -52,6 +54,10 @@ Totalsegmentator has the following runtime and memory requirements:
 ### Train / validation / test split
 The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.  
 The exact numbers of the results for the high resolution model (1.5mm) can be found [here](resources/results_all_classes.json). The paper shown these numbers in the supplementary materials figure 11.
+
+
+### Retrain model on your own
+You have to download the data and then follow the instructions of [nnU-Net](https://github.com/MIC-DKFZ/nnUNet) how to train a nnU-Net. We trained a `3d_fullres` model and the only adaptation to the default training is setting the number of epochs to 4000 and deactivating mirror data augmentation. The adapted trainer can be found [here](https://github.com/wasserth/nnUNet_cust/blob/working_2022_03_18/nnunet/training/network_training/custom_trainers/nnUNetTrainerV2_ep4000_nomirror.py).
 
 
 ### Other commands
