@@ -137,6 +137,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if not quiet: print(f"Resampling...")
         img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
         img_in_shape = img_in.shape
+        img_in_zooms = img_in.header.get_zooms()
         img_in_rsp = change_spacing(img_in, [resample, resample, resample],
                                     order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
@@ -178,13 +179,18 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         generate_preview(tmp_dir / "s01_0000.nii.gz", file_out / "preview.png", roi_data, smoothing)
         if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
 
+    img_pred = nib.load(tmp_dir / "s01.nii.gz")
     if resample is not None:
         if not quiet: print("Resampling...")
-        if verbose: print(f"  back to original shape: {img_in_shape}")
-        img_pred = nib.load(tmp_dir / "s01.nii.gz")
-        img_pred_rsp = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
+        if verbose: print(f"  back to original shape: {img_in_shape}")    
+        img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
                                       order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
-        nib.save(img_pred_rsp, tmp_dir / "s01.nii.gz")
+    # Sometimes the output spacing does not completely match the input spacing but it is off
+    # by a very small amount (reason might be the resampling: we resample back to original 
+    # shape which might result in slightly different spacing). Here we just overwrite the 
+    # output spacing by the input spacing to make it match exactly.
+    img_pred.header.set_zooms(img_in_zooms)
+    nib.save(img_pred, tmp_dir / "s01.nii.gz")
 
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", file_in, tmp_dir / "s01.nii.gz")
 
