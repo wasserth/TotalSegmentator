@@ -1,3 +1,4 @@
+import io
 import os
 import contextlib
 import sys
@@ -65,16 +66,10 @@ def download_pretrained_weights(task_id):
     if WEIGHTS_URL is not None and not weights_path.exists():
         print(f"Downloading pretrained weights for Task {task_id} (~230MB) ...")
 
-        data = requests.get(WEIGHTS_URL).content
-        with open(config_dir / "tmp_download_file.zip", "wb") as weight_file:
-            weight_file.write(data)
-
-        with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
+        r = requests.get(WEIGHTS_URL)
+        with zipfile.ZipFile(io.BytesIO(r.content)) as zip_f:
             zip_f.extractall(config_dir)
-            print(config_dir)
-
-        # delete tmp file
-        (config_dir / "tmp_download_file.zip").unlink()
+            print(f"Saving to: {config_dir}")
 
 
 def setup_nnunet():
