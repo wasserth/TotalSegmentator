@@ -31,6 +31,13 @@ def nostdout(verbose=False):
         yield
 
 
+def download_url(url, save_path, chunk_size=128):
+    r = requests.get(url, stream=True)
+    with open(save_path, 'wb') as f:
+        for chunk in r.iter_content(chunk_size=chunk_size):
+            f.write(chunk)
+
+
 def download_pretrained_weights(task_id):
 
     config_dir = Path.home() / ".totalsegmentator/nnunet/results/nnUNet/3d_fullres"
@@ -66,10 +73,19 @@ def download_pretrained_weights(task_id):
     if WEIGHTS_URL is not None and not weights_path.exists():
         print(f"Downloading pretrained weights for Task {task_id} (~230MB) ...")
 
-        r = requests.get(WEIGHTS_URL)
-        with zipfile.ZipFile(io.BytesIO(r.content)) as zip_f:
+        # r = requests.get(WEIGHTS_URL)
+        # with zipfile.ZipFile(io.BytesIO(r.content)) as zip_f:
+        #     zip_f.extractall(config_dir)
+        #     print(f"Saving to: {config_dir}")
+
+        download_url(WEIGHTS_URL, config_dir / "tmp_download_file.zip")
+
+        with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
             zip_f.extractall(config_dir)
-            print(f"Saving to: {config_dir}")
+            print(config_dir)
+
+        # delete tmp file
+        (config_dir / "tmp_download_file.zip").unlink()
 
 
 def setup_nnunet():
