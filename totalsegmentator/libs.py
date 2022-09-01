@@ -4,7 +4,13 @@ import sys
 import shutil
 import zipfile
 from pathlib import Path
-from urllib.request import urlopen
+
+import requests
+import numpy as np
+import nibabel as nib
+
+from totalsegmentator.map_to_binary import class_map
+
 
 """
 Helpers to suppress stdout prints from nnunet
@@ -59,7 +65,7 @@ def download_pretrained_weights(task_id):
     if WEIGHTS_URL is not None and not weights_path.exists():
         print(f"Downloading pretrained weights for Task {task_id} (~230MB) ...")
 
-        data = urlopen(WEIGHTS_URL).read()
+        data = requests.get(WEIGHTS_URL).content
         with open(config_dir / "tmp_download_file.zip", "wb") as weight_file:
             weight_file.write(data)
 
@@ -85,3 +91,27 @@ def setup_nnunet():
     os.environ["nnUNet_raw_data_base"] = str(weights_dir)  # not needed, just needs to be an existing directory
     os.environ["nnUNet_preprocessed"] = str(weights_dir)  # not needed, just needs to be an existing directory
     os.environ["RESULTS_FOLDER"] = str(weights_dir)
+
+
+def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
+    """
+    Generate one multilabel nifti file from a directory of single binary masks of each class.
+    This multilabel file is needed to train a nnU-Net.
+
+    masks_dir: path to directory containing all the masks for one subject
+    multilabel_file: path of the output file (a nifti file)
+    """
+    masks_dir = Path(masks_dir)
+    ref_img = nib.load(masks_dir / "liver.nii.gz")
+    masks = class_map.values()
+    img_out = np.zeros(ref_img.shape).astype(np.uint8)
+
+    for idx, mask in enumerate(masks):
+        if os.path.exists(f"{masks_dir}/{mask}.nii.gz"):
+            img = nib.load(f"{masks_dir}/{mask}.nii.gz").get_fdata()
+        else:
+            print(f"Mask {mask} is missing. Filling with zeros.")
+            img = np.zeros(ref_img.shape)
+        img_out[img > 0.5] = idx+1
+
+    nib.save(nib.Nifti1Image(img_out, ref_img.affine), multilabel_file)

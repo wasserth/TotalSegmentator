@@ -16,7 +16,7 @@ Install dependencies:
 * [Pytorch](http://pytorch.org/)
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
 * You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
-* TotalSegmentator was developed for Linux or Mac. It was not tested on windows.
+* TotalSegmentator was developed for Linux or Mac. To make it work for windows see [this comment](https://github.com/wasserth/TotalSegmentator/issues/10#issuecomment-1234160460).
 
 Install Totalsegmentator
 ```
