@@ -2,6 +2,7 @@ import io
 import os
 import contextlib
 import sys
+import time
 import shutil
 import zipfile
 from pathlib import Path
@@ -48,6 +49,7 @@ def download_url_and_unpack(url, config_dir):
     tempfile = config_dir / "tmp_download_file.zip"
 
     try:
+        st = time.time()
         with open(tempfile, 'wb') as f:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
@@ -61,7 +63,7 @@ def download_url_and_unpack(url, config_dir):
         # call(['unzip', '-o', '-d', network_training_output_dir, tempfile])
         with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
             zip_f.extractall(config_dir)
-        print("Done")
+        print(f"  downloaded in {time.time()-st:.2f}s")
     except Exception as e:
         raise e
     finally:

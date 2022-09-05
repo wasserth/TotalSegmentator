@@ -61,6 +61,16 @@ See stdout of running docker container
 docker logs totalsegmentator-server-job
 ```
 
+Remove finished containers
+```
+docker rm $(docker ps -a -q -f status=exited)
+```
+
+Remove all untagged images
+```
+docker rmi $(docker images | grep "<none>" | awk '{print $3}')
+```
+
 
 ## Other commands
 
