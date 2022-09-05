@@ -17,7 +17,7 @@ setup(name='TotalSegmentator',
             # https://github.com/SimpleITK/SimpleITK/issues/1433
             'SimpleITK==2.0.2',
             'nibabel>=2.3.0',
-            'tqdm',
+            'tqdm>=4.45.0',
             'p_tqdm',
             'xvfbwrapper',
             'fury',
