@@ -53,7 +53,7 @@ def download_url_and_unpack(url, config_dir):
         with open(tempfile, 'wb') as f:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
-                for chunk in r.iter_content(chunk_size=8192 * 16):
+                for chunk in r.iter_content(chunk_size=1024 * 1024):
                     # If you have chunk encoded response uncomment if
                     # and set chunk_size parameter to None.
                     # if chunk:
