@@ -1,5 +1,6 @@
 ## Master
 * bugfixes
+* improve weights download
 
 
 ## Release 1.2
