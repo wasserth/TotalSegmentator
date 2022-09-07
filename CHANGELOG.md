@@ -1,5 +1,9 @@
 ## Master
 * bugfixes
+
+
+## Release 1.3
+* make output spacing exactly match input spacing
 * improve weights download
 
 
