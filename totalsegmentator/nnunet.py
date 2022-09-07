@@ -185,11 +185,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if verbose: print(f"  back to original shape: {img_in_shape}")    
         img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
                                       order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
-    # Sometimes the output spacing does not completely match the input spacing but it is off
-    # by a very small amount (reason might be the resampling: we resample back to original 
-    # shape which might result in slightly different spacing). Here we just overwrite the 
-    # output spacing by the input spacing to make it match exactly.
-    img_pred.header.set_zooms(img_in_zooms)
+        # Sometimes the output spacing does not completely match the input spacing but it is off
+        # by a very small amount (reason might be the resampling: we resample back to original 
+        # shape which might result in slightly different spacing). Here we just overwrite the 
+        # output affine by the input affine to make it match exactly. It must match exactly 
+        # because otherwise in undo_canonical_nifti it will result in differences also in offest.
+        img_pred = nib.Nifti1Image(img_pred.get_fdata(), img_in.affine)
     nib.save(img_pred, tmp_dir / "s01.nii.gz")
 
     undo_canonical_nifti(tmp_dir / "s01.nii.gz", file_in, tmp_dir / "s01.nii.gz")
