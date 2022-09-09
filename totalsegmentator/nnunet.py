@@ -127,13 +127,6 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     resample: None or float  (target spacing for all dimensions)
     """
     file_in, file_out = Path(file_in), Path(file_out)
-    
-    # do not set random seed because would lead to same random dir every time 
-    # (np random seed is ok, because is separate from python random)
-    # We can avoid this by using random.Random().choices() instead of random.choices(). 
-    # This is not affected by global random.seed(xxxx).
-    # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
-    # (tmp_dir).mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
         if verbose: print(f"tmp_dir: {tmp_dir}")
@@ -247,10 +240,5 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 # pool.join()
 
         if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
-
-    # shutil.rmtree(tmp_dir)
-    # todo: Add try except around everything and if fails, then remove nnunet_tmp dir
-    #       Is there a smarter way to cleanup tmp files in error case?
-    # Yes: Use tempfile.TemporaryDirectory context manager!
 
     return img_data
