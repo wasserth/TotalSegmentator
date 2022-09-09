@@ -12,6 +12,7 @@ import nibabel as nib
 from functools import partial
 from p_tqdm import p_map
 from multiprocessing import Pool
+import tempfile
 
 from totalsegmentator.libs import nostdout
 
@@ -131,120 +132,125 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     # (np random seed is ok, because is separate from python random)
     # We can avoid this by using random.Random().choices() instead of random.choices(). 
     # This is not affected by global random.seed(xxxx).
-    tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
-    (tmp_dir).mkdir(exist_ok=True)
-    compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
+    # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
+    # (tmp_dir).mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
+        tmp_dir = Path(tmp_folder)
+        if verbose: print(f"tmp_dir: {tmp_dir}")
 
-    if crop is not None:
-        combine_masks(file_out, file_out / f"{crop}.nii.gz", crop)
-        bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", file_out / f"{crop}.nii.gz",
-                                  tmp_dir / "s01_0000.nii.gz", addon=[10, 10, 10], dtype=np.int32)
+        compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
-    as_closest_canonical_nifti(tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01_0000.nii.gz")
+        if crop is not None:
+            combine_masks(file_out, file_out / f"{crop}.nii.gz", crop)
+            bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", file_out / f"{crop}.nii.gz",
+                                    tmp_dir / "s01_0000.nii.gz", addon=[10, 10, 10], dtype=np.int32)
 
-    if resample is not None:
-        if not quiet: print(f"Resampling...")
-        img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
-        img_in_shape = img_in.shape
-        img_in_zooms = img_in.header.get_zooms()
-        img_in_rsp = change_spacing(img_in, [resample, resample, resample],
-                                    order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
-        nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
-        if verbose:
-            print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
+        as_closest_canonical_nifti(tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01_0000.nii.gz")
 
-    st = time.time()
-    if type(task_id) is list:  # if running multiple models 
-        class_map_inv = {v: k for k, v in class_map["total"].items()}
-        (tmp_dir / "parts").mkdir(exist_ok=True)
-        seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
-        # Run several tasks and combine results into one segmentation
-        for idx, tid in enumerate(task_id):
-            print(f"Predicting part {idx} of 5 ...")
-            with nostdout(verbose):
-                nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
-            (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
-            seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
-            for jdx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
-                seg_combined[seg == jdx] = class_map_inv[class_name]
-        nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
-    else:
-        if not quiet: print(f"Predicting...")
-        if test == 0:
-            with nostdout(verbose):
-                nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
-        else:
-            print("WARNING: Using reference seg instead of prediction for testing.")
-            shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
-    if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
+        if resample is not None:
+            if not quiet: print(f"Resampling...")
+            img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
+            img_in_shape = img_in.shape
+            img_in_zooms = img_in.header.get_zooms()
+            img_in_rsp = change_spacing(img_in, [resample, resample, resample],
+                                        order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
+            nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
+            if verbose:
+                print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
 
-    if preview:
-        # Generate preview before upsampling so it is faster and still in canonical space 
-        # for better orientation.
-        if not quiet: print("Generating preview...")
         st = time.time()
-        smoothing = 20
-        roi_data = nib.load(tmp_dir / "s01.nii.gz").get_fdata()
-        generate_preview(tmp_dir / "s01_0000.nii.gz", file_out / f"preview_{task_name}.png", roi_data, smoothing, task_name)
-        if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
-
-    img_pred = nib.load(tmp_dir / "s01.nii.gz")
-    if resample is not None:
-        if not quiet: print("Resampling...")
-        if verbose: print(f"  back to original shape: {img_in_shape}")    
-        img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
-                                      order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
-        # Sometimes the output spacing does not completely match the input spacing but it is off
-        # by a very small amount (reason might be the resampling: we resample back to original 
-        # shape which might result in slightly different spacing). Here we just overwrite the 
-        # output affine by the input affine to make it match exactly. It must match exactly 
-        # because otherwise in undo_canonical_nifti it will result in differences also in offest.
-        img_pred = nib.Nifti1Image(img_pred.get_fdata(), img_in.affine)
-    nib.save(img_pred, tmp_dir / "s01.nii.gz")
-
-    undo_canonical_nifti(tmp_dir / "s01.nii.gz", file_in, tmp_dir / "s01.nii.gz")
-
-    if crop is not None:
-        undo_crop_nifti(tmp_dir / "s01.nii.gz", file_in, bbox, tmp_dir / "s01.nii.gz")
-
-    if not quiet: print("Saving segmentations...")
-    st = time.time()
-    if multilabel_image:
-        shutil.copy(tmp_dir / "s01.nii.gz", file_out)
-        img = nib.load(tmp_dir / "s01.nii.gz")
-        img_data = img.get_fdata()
-    else:  # save each class as a separate binary image
-        file_out.mkdir(exist_ok=True, parents=True)
-        img = nib.load(tmp_dir / "s01.nii.gz")
-        img_data = img.get_fdata()
-        # Code for single threaded execution  (runtime:24s)
-        if nr_threads_saving == 1:
-            for k, v in class_map[task_name].items():
-                binary_img = img_data == k
-                output_path = str(file_out / f"{v}.nii.gz")
-                nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
-                if nora_tag != "None":
-                    subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+        if type(task_id) is list:  # if running multiple models 
+            class_map_inv = {v: k for k, v in class_map["total"].items()}
+            (tmp_dir / "parts").mkdir(exist_ok=True)
+            seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
+            # Run several tasks and combine results into one segmentation
+            for idx, tid in enumerate(task_id):
+                print(f"Predicting part {idx} of 5 ...")
+                with nostdout(verbose):
+                    nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
+                (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
+                seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
+                for jdx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
+                    seg_combined[seg == jdx] = class_map_inv[class_name]
+            nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
         else:
-            # Code for multithreaded execution
-            #   Speed with different number of threads:
-            #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
-            _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
-                    class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
+            if not quiet: print(f"Predicting...")
+            if test == 0:
+                with nostdout(verbose):
+                    nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+            else:
+                print("WARNING: Using reference seg instead of prediction for testing.")
+                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
+        if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
-            # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
-            # pool = Pool(nr_threads_saving)
-            # results = []
-            # for k, v in class_map[task_name].items():
-            #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
-            # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
-            # pool.close()
-            # pool.join()
+        if preview:
+            # Generate preview before upsampling so it is faster and still in canonical space 
+            # for better orientation.
+            if not quiet: print("Generating preview...")
+            st = time.time()
+            smoothing = 20
+            roi_data = nib.load(tmp_dir / "s01.nii.gz").get_fdata()
+            generate_preview(tmp_dir / "s01_0000.nii.gz", file_out / f"preview_{task_name}.png", roi_data, smoothing, task_name)
+            if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
 
-    if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
+        img_pred = nib.load(tmp_dir / "s01.nii.gz")
+        if resample is not None:
+            if not quiet: print("Resampling...")
+            if verbose: print(f"  back to original shape: {img_in_shape}")    
+            img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
+                                        order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
+            # Sometimes the output spacing does not completely match the input spacing but it is off
+            # by a very small amount (reason might be the resampling: we resample back to original 
+            # shape which might result in slightly different spacing). Here we just overwrite the 
+            # output affine by the input affine to make it match exactly. It must match exactly 
+            # because otherwise in undo_canonical_nifti it will result in differences also in offest.
+            img_pred = nib.Nifti1Image(img_pred.get_fdata(), img_in.affine)
+        nib.save(img_pred, tmp_dir / "s01.nii.gz")
 
-    shutil.rmtree(tmp_dir)
+        undo_canonical_nifti(tmp_dir / "s01.nii.gz", file_in, tmp_dir / "s01.nii.gz")
+
+        if crop is not None:
+            undo_crop_nifti(tmp_dir / "s01.nii.gz", file_in, bbox, tmp_dir / "s01.nii.gz")
+
+        if not quiet: print("Saving segmentations...")
+        st = time.time()
+        if multilabel_image:
+            shutil.copy(tmp_dir / "s01.nii.gz", file_out)
+            img = nib.load(tmp_dir / "s01.nii.gz")
+            img_data = img.get_fdata()
+        else:  # save each class as a separate binary image
+            file_out.mkdir(exist_ok=True, parents=True)
+            img = nib.load(tmp_dir / "s01.nii.gz")
+            img_data = img.get_fdata()
+            # Code for single threaded execution  (runtime:24s)
+            if nr_threads_saving == 1:
+                for k, v in class_map[task_name].items():
+                    binary_img = img_data == k
+                    output_path = str(file_out / f"{v}.nii.gz")
+                    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+                    if nora_tag != "None":
+                        subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+            else:
+                # Code for multithreaded execution
+                #   Speed with different number of threads:
+                #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
+                _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
+                        class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
+
+                # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
+                # pool = Pool(nr_threads_saving)
+                # results = []
+                # for k, v in class_map[task_name].items():
+                #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
+                # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
+                # pool.close()
+                # pool.join()
+
+        if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
+
+    # shutil.rmtree(tmp_dir)
     # todo: Add try except around everything and if fails, then remove nnunet_tmp dir
     #       Is there a smarter way to cleanup tmp files in error case?
+    # Yes: Use tempfile.TemporaryDirectory context manager!
 
     return img_data
