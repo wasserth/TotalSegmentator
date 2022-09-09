@@ -133,6 +133,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     # (tmp_dir).mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
+        if verbose: print(f"tmp_dir: {tmp_dir}")
         as_closest_canonical_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
         if resample is not None:
