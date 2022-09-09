@@ -7,6 +7,7 @@ import nibabel as nib
 import numpy as np
 
 from totalsegmentator.map_to_binary import class_map_5_parts
+from totalsegmentator.libs import combine_masks
 
 
 if __name__ == "__main__":
@@ -37,34 +38,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.masks == "ribs":
-        masks = list(class_map_5_parts["class_map_part_ribs"].values())
-    elif args.masks == "vertebrae":
-        masks = list(class_map_5_parts["class_map_part_vertebrae"].values())
-    elif args.masks == "vertebrae_ribs":
-        masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + list(class_map_5_parts["class_map_part_ribs"].values())
-    elif args.masks == "lung":
-        masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                 "lung_middle_lobe_right", "lung_lower_lobe_right"]
-    elif args.masks == "heart":
-        masks = ["heart_myocardium", "heart_atrium_left", "heart_ventricle_left",
-                 "heart_atrium_right", "heart_ventricle_right"]
-
-    ref_img = None
-    for mask in masks:
-        if (args.mask_dir / f"{mask}.nii.gz").exists():
-            ref_img = nib.load(args.mask_dir / f"{masks[0]}.nii.gz")
-            break
-    if ref_img is None:
-        raise ValueError("All masks are not present in the directory")
-
-    combined = np.zeros(ref_img.shape, dtype=np.uint8)
-    for idx, mask in enumerate(masks):
-        if (args.mask_dir / f"{mask}.nii.gz").exists():
-            img = nib.load(args.mask_dir / f"{mask}.nii.gz").get_fdata()
-            combined[img > 0.5] = 1
-
-    nib.save(nib.Nifti1Image(combined, ref_img.affine), args.output)
+    combine_masks(args.mask_dir, args.output, args.masks)
 
     if args.nora_tag != "None":
         subprocess.call(f"/opt/nora/src/node/nora -p {args.nora_tag} --add {args.output} --addtag mask", shell=True)

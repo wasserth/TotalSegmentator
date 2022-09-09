@@ -99,6 +99,12 @@ def download_pretrained_weights(task_id):
     elif task_id == 256:
         weights_path = config_dir / "Task256_TotalSegmentator_3mm_1139subj"
         WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
+    elif task_id == 258:
+        weights_path = config_dir / "Task258_lung_vessels_248subj"
+        WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"
+    elif task_id == 115:
+        weights_path = config_dir / "Task258_lung_vessels_248subj"
+        WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"
 
     for old_weight in old_weights:
         if (config_dir / old_weight).exists():
@@ -148,7 +154,7 @@ def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
     """
     masks_dir = Path(masks_dir)
     ref_img = nib.load(masks_dir / "liver.nii.gz")
-    masks = class_map.values()
+    masks = class_map["total"].values()
     img_out = np.zeros(ref_img.shape).astype(np.uint8)
 
     for idx, mask in enumerate(masks):
@@ -160,3 +166,42 @@ def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
         img_out[img > 0.5] = idx+1
 
     nib.save(nib.Nifti1Image(img_out, ref_img.affine), multilabel_file)
+
+
+def combine_masks(mask_dir, output, class_type):
+    """
+    Combine classes to masks
+
+    mask_dir: directory of totalsegmetator masks
+    output: output path
+    class_type: ribs | vertebrae | vertebrae_ribs | lung | heart
+    """
+    if class_type == "ribs":
+        masks = list(class_map_5_parts["class_map_part_ribs"].values())
+    elif class_type == "vertebrae":
+        masks = list(class_map_5_parts["class_map_part_vertebrae"].values())
+    elif class_type == "vertebrae_ribs":
+        masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + list(class_map_5_parts["class_map_part_ribs"].values())
+    elif class_type == "lung":
+        masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
+                 "lung_middle_lobe_right", "lung_lower_lobe_right"]
+    elif class_type == "heart":
+        masks = ["heart_myocardium", "heart_atrium_left", "heart_ventricle_left",
+                 "heart_atrium_right", "heart_ventricle_right"]
+
+    ref_img = None
+    for mask in masks:
+        if (mask_dir / f"{mask}.nii.gz").exists():
+            ref_img = nib.load(mask_dir / f"{masks[0]}.nii.gz")
+            break
+    if ref_img is None:
+        raise ValueError("All masks are not present in the directory")
+
+    combined = np.zeros(ref_img.shape, dtype=np.uint8)
+    for idx, mask in enumerate(masks):
+        if (mask_dir / f"{mask}.nii.gz").exists():
+            img = nib.load(mask_dir / f"{mask}.nii.gz").get_fdata()
+            combined[img > 0.5] = 1
+
+    nib.save(nib.Nifti1Image(combined, ref_img.affine), output)
+

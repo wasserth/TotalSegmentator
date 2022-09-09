@@ -68,7 +68,7 @@ def get_basic_statistics_for_entire_dir(seg: np.array, ct_file:Path, file_out:Pa
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     stats = {}
-    for k, mask_name in tqdm(class_map.items(), disable=quiet):
+    for k, mask_name in tqdm(class_map["total"].items(), disable=quiet):
         stats[mask_name] = {}
         # data = nib.load(mask).get_fdata()  # loading: 0.6s
         data = seg == k  # 0.18s

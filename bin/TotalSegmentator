@@ -46,6 +46,10 @@ def main():
                         help="Generate a png preview of segmentation",
                         default=False)
 
+    parser.add_argument("-m", "--model", choices=["total", "lung_vessels"],
+                        help="Select which model to use. This determines what is predicted.",
+                        default="total")
+
     # todo: implement this (prio2)
     # for 15mm model only run the models which are needed for these rois
     # parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
@@ -83,15 +87,23 @@ def main():
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
-    if args.fast:
-        task_id = 256
-        resample = 3.0
-        trainer = "nnUNetTrainerV2_ep8000_nomirror"
-        if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
-    else:
-        task_id = [251, 252, 253, 254, 255]
-        resample = 1.5
-        trainer = "nnUNetTrainerV2_ep4000_nomirror"
+    if args.model == "total":
+        if args.fast:
+            task_id = 256
+            resample = 3.0
+            trainer = "nnUNetTrainerV2_ep8000_nomirror"
+            crop = None
+            if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
+        else:
+            task_id = [251, 252, 253, 254, 255]
+            resample = 1.5
+            trainer = "nnUNetTrainerV2_ep4000_nomirror"
+            crop = None
+    elif args.model == "lung_vessels":
+        task_id = 258
+        resample = None
+        trainer = "nnUNetTrainerV2"
+        crop = "lung"
 
     if type(task_id) is list:
         for tid in task_id:
@@ -102,8 +114,9 @@ def main():
     folds = [0]  # None
     seg = nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
-                         nora_tag=args.nora_tag, preview=args.preview, nr_threads_resampling=args.nr_thr_resamp, 
-                         nr_threads_saving=args.nr_thr_saving, quiet=quiet, verbose=verbose, test=args.test)
+                         crop=crop, task_name=args.model, nora_tag=args.nora_tag, preview=args.preview, 
+                         nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=args.nr_thr_saving, 
+                         quiet=quiet, verbose=verbose, test=args.test)
 
     if args.statistics:
         if not quiet: print("Calculating statistics...")  
