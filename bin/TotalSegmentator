@@ -46,7 +46,7 @@ def main():
                         help="Generate a png preview of segmentation",
                         default=False)
 
-    parser.add_argument("-m", "--model", choices=["total", "lung_vessels"],
+    parser.add_argument("-ta", "--task", choices=["total", "lung_vessels"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
@@ -87,7 +87,7 @@ def main():
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
-    if args.model == "total":
+    if args.task == "total":
         if args.fast:
             task_id = 256
             resample = 3.0
@@ -99,12 +99,16 @@ def main():
             resample = 1.5
             trainer = "nnUNetTrainerV2_ep4000_nomirror"
             crop = None
-    elif args.model == "lung_vessels":
+    elif args.task == "lung_vessels":
         task_id = 258
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "lung"
-    elif args.model == "covid":
+        if args.ml:
+            raise ValueError("task lung_vessel does not work with option --ml")
+        if args.fast:
+            raise ValueError("task lung_vessel does not work with option --fast")
+    elif args.task == "covid":
         task_id = 200
         resample = None
         trainer = "nnUNetTrainerV2"
@@ -120,7 +124,7 @@ def main():
     folds = [0]  # None
     seg = nnUNet_predict_image(args.input, args.output, task_id, model="3d_fullres", folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
-                         crop=crop, task_name=args.model, nora_tag=args.nora_tag, preview=args.preview, 
+                         crop=crop, task_name=args.task, nora_tag=args.nora_tag, preview=args.preview, 
                          nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=args.nr_thr_saving, 
                          quiet=quiet, verbose=verbose, test=args.test)
 

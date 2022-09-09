@@ -1,5 +1,6 @@
 ## Master
 * bugfixes
+* add lung_vessels model
 
 
 ## Release 1.3

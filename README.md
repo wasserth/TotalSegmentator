@@ -44,6 +44,16 @@ We also provide a docker container which can be used the following way
 docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/workspace wasserth/totalsegmentator_container:master TotalSegmentator -i /workspace/ct.nii.gz -o /workspace/segmentations
 ```
 
+### Subtasks
+We added some more models to TotalSegmentator beyond the default one. This allows segmentation of even 
+more classes in more detailed subparts of the image. First you have to run TotalSegmentator with the 
+normal settings to get the normal mask. These masks are required to crop the image to a subregion on 
+which the detailed model will run.
+```
+TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
+TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels --preview
+```
+
 ### Resource Requirements
 Totalsegmentator has the following runtime and memory requirements (using a Nvidia RTX 3090 GPU):  
 (1.5mm is the normal model and 3mm is the `--fast` model)

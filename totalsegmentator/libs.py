@@ -193,9 +193,8 @@ def combine_masks(mask_dir, output, class_type):
     for mask in masks:
         if (mask_dir / f"{mask}.nii.gz").exists():
             ref_img = nib.load(mask_dir / f"{masks[0]}.nii.gz")
-            break
-    if ref_img is None:
-        raise ValueError("All masks are not present in the directory")
+        else:
+            raise ValueError(f"Could not find {mask_dir / mask}.nii.gz. Did you run TotalSegmentator successfully?")
 
     combined = np.zeros(ref_img.shape, dtype=np.uint8)
     for idx, mask in enumerate(masks):

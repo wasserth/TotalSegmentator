@@ -26,6 +26,7 @@ from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
 from totalsegmentator.libs import combine_masks, compress_nifti
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
+from totalsegmentator.postprocessing import remove_outside_of_mask
 
 
 def _get_full_task_name(task_id: int, src: str="raw"):
@@ -238,7 +239,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
                 # pool.close()
                 # pool.join()
-
         if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
+
+        # Postprocessing
+        if task_name == "lung_vessels":
+            remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
 
     return img_data
