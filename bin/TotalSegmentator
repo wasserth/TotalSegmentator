@@ -104,6 +104,12 @@ def main():
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "lung"
+    elif args.model == "covid":
+        task_id = 200
+        resample = None
+        trainer = "nnUNetTrainerV2"
+        crop = "lung"
+        print("WARNING: The COVID model finds many types of lung infiltrate not only COVID. Use with care!")
 
     if type(task_id) is list:
         for tid in task_id:

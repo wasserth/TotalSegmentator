@@ -23,7 +23,7 @@ from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_tas
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
-from totalsegmentator.libs import combine_masks
+from totalsegmentator.libs import combine_masks, compress_nifti
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 
 
@@ -133,7 +133,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     # This is not affected by global random.seed(xxxx).
     tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
     (tmp_dir).mkdir(exist_ok=True)
-    shutil.copy(file_in, tmp_dir / "s01_0000.nii.gz")
+    compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
     if crop is not None:
         combine_masks(file_out, file_out / f"{crop}.nii.gz", crop)

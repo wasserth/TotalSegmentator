@@ -52,6 +52,9 @@ roi_groups = {
     "lung_vessels": [
         ["lung_trachea_bronchia"],
         ["lung_vessels"]
+    ],
+    "covid": [
+        ["lung_covid_infiltrate"]
     ]
 }
 

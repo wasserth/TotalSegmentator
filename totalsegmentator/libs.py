@@ -102,9 +102,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 258:
         weights_path = config_dir / "Task258_lung_vessels_248subj"
         WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"
-    elif task_id == 115:
-        weights_path = config_dir / "Task258_lung_vessels_248subj"
-        WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"
+    elif task_id == 200:
+        weights_path = config_dir / "Task200_covid_challenge"
+        WEIGHTS_URL = "TODO"
 
     for old_weight in old_weights:
         if (config_dir / old_weight).exists():
@@ -205,3 +205,9 @@ def combine_masks(mask_dir, output, class_type):
 
     nib.save(nib.Nifti1Image(combined, ref_img.affine), output)
 
+
+def compress_nifti(file_in, file_out, dtype=np.int32):
+    img = nib.load(file_in)
+    data = img.get_fdata()
+    new_image = nib.Nifti1Image(data.astype(dtype), img.affine)
+    nib.save(new_image, file_out)

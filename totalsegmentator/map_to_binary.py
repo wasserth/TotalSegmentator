@@ -105,10 +105,12 @@ class_map = {
         103: "iliopsoas_right",
         104: "urinary_bladder"
     },
-
     "lung_vessels": {
         1: "lung_vessels",
         2: "lung_trachea_bronchia"
+    },
+    "covid": {
+        1: "lung_covid_infiltrate",
     }
 }
 
