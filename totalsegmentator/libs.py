@@ -185,6 +185,10 @@ def combine_masks(mask_dir, output, class_type):
     elif class_type == "lung":
         masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"]
+    elif class_type == "lung_left":
+        masks = ["lung_upper_lobe_left", "lung_lower_lobe_left"]
+    elif class_type == "lung_right":
+        masks = ["lung_upper_lobe_right", "lung_middle_lobe_right", "lung_lower_lobe_right"]
     elif class_type == "heart":
         masks = ["heart_myocardium", "heart_atrium_left", "heart_ventricle_left",
                  "heart_atrium_right", "heart_ventricle_right"]
