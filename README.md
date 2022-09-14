@@ -50,8 +50,9 @@ more classes in more detailed subparts of the image. First you have to run Total
 normal settings to get the normal mask. These masks are required to crop the image to a subregion on 
 which the detailed model will run.
 ```
-TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
-TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels --preview
+TotalSegmentator -i ct.nii.gz -o segmentations --fast
+TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
+TotalSegmentator -i ct.nii.gz -o segmentations -ta cerebral_bleed
 ```
 
 ### Resource Requirements

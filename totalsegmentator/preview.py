@@ -55,6 +55,9 @@ roi_groups = {
     ],
     "covid": [
         ["lung_covid_infiltrate"]
+    ],
+    "cerebral_bleed": [
+        ["intracerebral_hemorrhage"]
     ]
 }
 

@@ -1,6 +1,7 @@
 ## Master
 * bugfixes
 * add lung_vessels model
+* add intracerebral hemorrhage model
 * preview file was renamed from `preview.png` to `preview_total.png`
 
 

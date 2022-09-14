@@ -83,8 +83,7 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     num_parts = 1
     disable_tta = not tta
     overwrite_existing = False
-    # mode = "normal"
-    mode = "fastest"
+    mode = "normal" if model == "2d" else "fastest"
     all_in_gpu = None
     step_size = 0.5
     chk = "model_final_checkpoint"
@@ -135,7 +134,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
 
         if crop is not None:
-            combine_masks(file_out, file_out / f"{crop}.nii.gz", crop)
+            if crop == "lung":
+                combine_masks(file_out, file_out / f"{crop}.nii.gz", crop)
             bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", file_out / f"{crop}.nii.gz",
                                     tmp_dir / "s01_0000.nii.gz", addon=[10, 10, 10], dtype=np.int32)
 

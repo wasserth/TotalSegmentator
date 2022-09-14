@@ -111,6 +111,9 @@ class_map = {
     },
     "covid": {
         1: "lung_covid_infiltrate",
+    },
+    "cerebral_bleed": {
+        1: "intracerebral_hemorrhage",
     }
 }
 
