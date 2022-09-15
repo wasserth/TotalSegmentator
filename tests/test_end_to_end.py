@@ -46,6 +46,12 @@ class test_end_to_end(unittest.TestCase):
         stats_equal = stats_ref == stats_new
         self.assertTrue(stats_equal, "statistics are not correct")
 
+    def test_radiomics(self):
+        stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics_radiomics.json", "r"))
+        stats_new = json.load(open("tests/unittest_prediction_fast/statistics_radiomics.json", "r"))
+        stats_equal = stats_ref == stats_new
+        self.assertTrue(stats_equal, "statistics are not correct")
+
 
 if __name__ == '__main__':
     unittest.main()
