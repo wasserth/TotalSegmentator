@@ -154,27 +154,31 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         st = time.time()
         if type(task_id) is list:  # if running multiple models 
-            class_map_inv = {v: k for k, v in class_map["total"].items()}
-            (tmp_dir / "parts").mkdir(exist_ok=True)
-            seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
-            # Run several tasks and combine results into one segmentation
-            for idx, tid in enumerate(task_id):
-                print(f"Predicting part {idx} of 5 ...")
-                with nostdout(verbose):
-                    nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
-                (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
-                seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
-                for jdx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
-                    seg_combined[seg == jdx] = class_map_inv[class_name]
-            nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
+            if test == 0:
+                class_map_inv = {v: k for k, v in class_map["total"].items()}
+                (tmp_dir / "parts").mkdir(exist_ok=True)
+                seg_combined = np.zeros(img_in_rsp.shape, dtype=np.uint8)
+                # Run several tasks and combine results into one segmentation
+                for idx, tid in enumerate(task_id):
+                    print(f"Predicting part {idx} of 5 ...")
+                    with nostdout(verbose):
+                        nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
+                    (tmp_dir / "s01.nii.gz").rename(tmp_dir / "parts" / f"s01_{tid}.nii.gz")
+                    seg = nib.load(tmp_dir / "parts" / f"s01_{tid}.nii.gz").get_fdata()
+                    for jdx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
+                        seg_combined[seg == jdx] = class_map_inv[class_name]
+                nib.save(nib.Nifti1Image(seg_combined, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
+            elif test == 1:
+                print("WARNING: Using reference seg instead of prediction for testing.")
+                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
         else:
             if not quiet: print(f"Predicting...")
             if test == 0:
                 with nostdout(verbose):
                     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
-            else:
+            elif test == 2:
                 print("WARNING: Using reference seg instead of prediction for testing.")
-                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
+                shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / "s01.nii.gz")
         if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
         if preview:

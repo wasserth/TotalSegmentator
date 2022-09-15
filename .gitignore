@@ -11,6 +11,7 @@ tmp_weights/
 tmp_weights_DELETE/
 store/
 unittest_prediction
+unittest_prediction_fast
 
 *.tfstate
 *.tfstate.backup
