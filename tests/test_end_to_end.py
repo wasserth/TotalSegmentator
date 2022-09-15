@@ -1,4 +1,5 @@
 import unittest
+import json
 import nibabel as nib
 import numpy as np
 import pandas as pd
@@ -32,6 +33,18 @@ class test_end_to_end(unittest.TestCase):
         img_new = nib.load("tests/unittest_prediction_fast/vertebrae_L1.nii.gz").get_fdata()
         images_equal = np.array_equal(img_ref, img_new)
         self.assertTrue(images_equal, "vertebrae fast prediction not correct")
+
+    def test_prediction_multilabel(self):
+        img_ref = nib.load("tests/reference_files/example_seg.nii.gz").get_fdata()
+        img_new = nib.load("tests/unittest_prediction.nii.gz").get_fdata()
+        images_equal = np.array_equal(img_ref, img_new)
+        self.assertTrue(images_equal, "multilabel prediction not correct")
+
+    def test_statistics(self):
+        stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics.json", "r"))
+        stats_new = json.load(open("tests/unittest_prediction_fast/statistics.json", "r"))
+        stats_equal = stats_ref == stats_new
+        self.assertTrue(stats_equal, "statistics are not correct")
 
 
 if __name__ == '__main__':
