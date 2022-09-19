@@ -127,6 +127,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     resample: None or float  (target spacing for all dimensions)
     """
     file_in, file_out = Path(file_in), Path(file_out)
+    multimodel = type(task_id) is list
+
+    # for debugging
+    # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
+    # (tmp_dir).mkdir(exist_ok=True)
+    # with tmp_dir as tmp_folder:
     with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
         if verbose: print(f"tmp_dir: {tmp_dir}")
@@ -154,29 +160,26 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         else:
             img_in_rsp = img_in
 
-        big_img_z = 1000
-        # big_img_z = 100
+        nr_voxels_thr = 512*512*900
         img_parts = ["s01"]
-        if img_in_rsp.shape[2] > big_img_z:
+        ss = img_in_rsp.shape
+        # If image to big then split into 3 parts along z axis. Also make sure that z-axis is at least 200px otherwise
+        # splitting along it does not really make sense.
+        if np.prod(ss) > nr_voxels_thr and ss[2] > 200 and multimodel:
+            if not quiet: print(f"Splitting into subparts...")
             img_parts = ["s01", "s02", "s03"]
             third = img_in_rsp.shape[2] // 3
+            margin = 20  # set margin with fixed values to avoid rounding problem if using percentage of third
             img_in_rsp_data = img_in_rsp.get_fdata()
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, :int(third*1.1)], img_in_rsp.affine),
+            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, :third+margin], img_in_rsp.affine),
                     tmp_dir / "s01_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, int(third*0.9):int(third*2.1)], img_in_rsp.affine),
+            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third+1-margin:third*2+margin], img_in_rsp.affine),
                     tmp_dir / "s02_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, int(third*1.9):], img_in_rsp.affine),
+            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third*2+1-margin:], img_in_rsp.affine),
                     tmp_dir / "s03_0000.nii.gz")
-            # print(tmp_dir)
-            # print(img_in_rsp.shape)
-            # print(img_in_rsp_data[:, :, :int(third*1.1)].shape)
-            # print(img_in_rsp_data[:, :, int(third*0.9):int(third*2.1)].shape)
-            # print(img_in_rsp_data[:, :, int(third*1.9):].shape)
-        # else:
-        #     print("no subparts")
 
         st = time.time()
-        if type(task_id) is list:  # if running multiple models 
+        if multimodel:  # if running multiple models 
             if test == 0:
                 class_map_inv = {v: k for k, v in class_map["total"].items()}
                 (tmp_dir / "parts").mkdir(exist_ok=True)
@@ -213,11 +216,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
         # Combine image subparts back to one image
-        if img_in_rsp.shape[2] > big_img_z:
+        if np.prod(ss) > nr_voxels_thr and ss[2] > 200 and multimodel:
             combined_img = np.zeros(img_in_rsp.shape, dtype=np.uint8)
-            combined_img[:,:,:third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:,:,:third]
-            combined_img[:,:,third:third*2] = nib.load(tmp_dir / "s02.nii.gz").get_fdata()[:,:,int(third*0.1):-int(third*0.1+1)]
-            combined_img[:,:,third*2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:,:,int(third*0.1+1):]
+            combined_img[:,:,:third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:,:,:-margin]
+            combined_img[:,:,third:third*2] = nib.load(tmp_dir / "s02.nii.gz").get_fdata()[:,:,margin-1:-margin]
+            combined_img[:,:,third*2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:,:,margin-1:]
             nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
 
         if preview:
