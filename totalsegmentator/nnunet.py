@@ -158,6 +158,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             if verbose:
                 print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
         else:
+            img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
             img_in_rsp = img_in
 
         nr_voxels_thr = 512*512*900
