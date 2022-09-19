@@ -151,6 +151,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
             if verbose:
                 print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
+        else:
+            img_in_rsp = img_in
 
         big_img_z = 1000
         # big_img_z = 100
@@ -179,6 +181,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 class_map_inv = {v: k for k, v in class_map["total"].items()}
                 (tmp_dir / "parts").mkdir(exist_ok=True)
                 seg_combined = {}
+                # iterate over subparts of image
                 for img_part in img_parts:
                     img_shape = nib.load(tmp_dir / f"{img_part}_0000.nii.gz").shape
                     seg_combined[img_part] = np.zeros(img_shape, dtype=np.uint8)
@@ -187,16 +190,18 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     print(f"Predicting part {idx} of 5 ...")
                     with nostdout(verbose):
                         nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
+                    # iterate over models (different sets of classes)
                     for img_part in img_parts:
                         (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
                         seg = nib.load(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz").get_fdata()
                         for jdx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
                             seg_combined[img_part][seg == jdx] = class_map_inv[class_name]
+                # iterate over subparts of image
                 for img_part in img_parts:
                     nib.save(nib.Nifti1Image(seg_combined[img_part], img_in_rsp.affine), tmp_dir / f"{img_part}.nii.gz")
             elif test == 1:
                 print("WARNING: Using reference seg instead of prediction for testing.")
-                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / f"{img_part}.nii.gz")
+                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / f"s01.nii.gz")
         else:
             if not quiet: print(f"Predicting...")
             if test == 0:
@@ -207,6 +212,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"{img_part}.nii.gz")
         if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
+        # Combine image subparts back to one image
         if img_in_rsp.shape[2] > big_img_z:
             combined_img = np.zeros(img_in_rsp.shape, dtype=np.uint8)
             combined_img[:,:,:third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:,:,:third]
