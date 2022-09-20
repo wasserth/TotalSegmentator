@@ -214,6 +214,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             elif test == 2:
                 print("WARNING: Using reference seg instead of prediction for testing.")
                 shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
+            elif test == 3:
+                print("WARNING: Using reference seg instead of prediction for testing.")
+                shutil.copy(Path("tests") / "reference_files" / "example_seg_lung_vessels.nii.gz", tmp_dir / f"s01.nii.gz")
         if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
         # Combine image subparts back to one image

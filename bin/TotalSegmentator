@@ -107,7 +107,7 @@ def main():
         trainer = "nnUNetTrainerV2"
         crop = "lung"
         if args.ml:
-            raise ValueError("task lung_vessel does not work with option --ml")
+            raise ValueError("task lung_vessel does not work with option --ml, because postprocessing is applied.")
         if args.fast:
             raise ValueError("task lung_vessel does not work with option --fast")
         model = "3d_fullres"

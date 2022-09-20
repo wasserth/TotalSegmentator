@@ -40,6 +40,12 @@ class test_end_to_end(unittest.TestCase):
         images_equal = np.array_equal(img_ref, img_new)
         self.assertTrue(images_equal, "multilabel prediction not correct")
 
+    def test_lung_vessels(self):
+        img_ref = nib.load("tests/reference_files/example_seg/lung_vessels.nii.gz").get_fdata()
+        img_new = nib.load("tests/unittest_prediction/lung_vessels.nii.gz").get_fdata()
+        images_equal = np.array_equal(img_ref, img_new)
+        self.assertTrue(images_equal, "lung_vessel prediction not correct")
+
     def test_statistics(self):
         stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics.json", "r"))
         stats_ref = pd.DataFrame(stats_ref)
