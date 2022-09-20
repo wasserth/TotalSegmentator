@@ -3,6 +3,7 @@
 * add lung_vessels model
 * add intracerebral hemorrhage model
 * preview file was renamed from `preview.png` to `preview_total.png`
+* Split very big images into 3 parts and process one by one to avoid memory problems
 
 
 ## Release 1.3
