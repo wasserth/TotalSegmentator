@@ -17,7 +17,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest Cython
+          pip install pytest Cython pyradiomics
           pip install torch==1.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
           pip install .
 
