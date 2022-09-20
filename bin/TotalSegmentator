@@ -112,7 +112,7 @@ def main():
             raise ValueError("task lung_vessel does not work with option --fast")
         model = "3d_fullres"
     elif args.task == "covid":
-        task_id = 200
+        task_id = 201
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "lung"

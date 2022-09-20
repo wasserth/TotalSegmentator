@@ -114,6 +114,10 @@ def download_pretrained_weights(task_id):
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task200_covid_challenge"
         WEIGHTS_URL = "TODO"
+    elif task_id == 201:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task201_covid"
+        WEIGHTS_URL = "TODO"
     # elif task_id == 152:
     #     config_dir = config_dir / "2d"
     #     weights_path = config_dir / "Task152_icbbig_TN"
