@@ -55,7 +55,7 @@ class test_end_to_end(unittest.TestCase):
                                   rtol=3e-2, atol=3e-2)
         self.assertTrue(stats_equal, "volume statistics are not correct")
         stats_equal = np.allclose(stats_ref.loc["intensity"].values, stats_new.loc["intensity"].values,
-                                  rtol=3e-3, atol=3e-3)
+                                  rtol=3e-2, atol=3e-2)
         self.assertTrue(stats_equal, "intensity statistics are not correct")
 
     def test_radiomics(self):

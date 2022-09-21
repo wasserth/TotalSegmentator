@@ -126,6 +126,10 @@ def download_pretrained_weights(task_id):
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task150_icb_v0"
         WEIGHTS_URL = "https://zenodo.org/record/7079161/files/Task150_icb_v0.zip?download=1"
+    elif task_id == 517:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task517_Bones40"
+        WEIGHTS_URL = "TODO"
 
     for old_weight in old_weights:
         if (config_dir / old_weight).exists():
