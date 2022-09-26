@@ -120,7 +120,7 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
-                         resample=None, crop=None, task_name="total", nora_tag=None, preview=False, 
+                         resample=None, crop=None, crop_path=None, task_name="total", nora_tag=None, preview=False, 
                          nr_threads_resampling=1, nr_threads_saving=6, quiet=False, 
                          verbose=False, test=0):
     """
@@ -130,10 +130,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     multimodel = type(task_id) is list
 
     # for debugging
-    # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
-    # (tmp_dir).mkdir(exist_ok=True)
-    # with tmp_dir as tmp_folder:
-    with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
+    tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
+    (tmp_dir).mkdir(exist_ok=True)
+    with tmp_dir as tmp_folder:
+    # with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
         if verbose: print(f"tmp_dir: {tmp_dir}")
 
@@ -141,11 +141,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if crop is not None:
             if crop == "lung":
-                combine_masks(file_out, file_out / f"{crop}.nii.gz", crop)
-            bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", file_out / f"{crop}.nii.gz",
-                                      tmp_dir / "s01_0000.nii.gz", addon=[10, 10, 10], dtype=np.int32)
+                combine_masks(crop_path, crop_path / f"{crop}.nii.gz", crop)
+            bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", crop_path / f"{crop}.nii.gz",
+                                      tmp_dir / "s01_0000.nii.gz", addon=[5, 5, 5], dtype=np.int32)
             if verbose:
-                print(f"  cropping from {nib.load(file_out / f'{crop}.nii.gz').shape} " + \
+                print(f"  cropping from {nib.load(crop_path / f'{crop}.nii.gz').shape} " + \
                       f"to {nib.load(tmp_dir / 's01_0000.nii.gz').shape}")
 
         as_closest_canonical_nifti(tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01_0000.nii.gz")
@@ -185,7 +185,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         st = time.time()
         if multimodel:  # if running multiple models 
             if test == 0:
-                class_map_inv = {v: k for k, v in class_map["total"].items()}
+                class_map_inv = {v: k for k, v in class_map[task_name].items()}
                 (tmp_dir / "parts").mkdir(exist_ok=True)
                 seg_combined = {}
                 # iterate over subparts of image
@@ -265,6 +265,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             shutil.copy(tmp_dir / "s01.nii.gz", file_out)
             img = nib.load(tmp_dir / "s01.nii.gz")
             img_data = img.get_fdata()
+            if nora_tag != "None":
+                subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
         else:  # save each class as a separate binary image
             file_out.mkdir(exist_ok=True, parents=True)
             img = nib.load(tmp_dir / "s01.nii.gz")

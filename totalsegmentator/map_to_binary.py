@@ -114,6 +114,28 @@ class_map = {
     },
     "cerebral_bleed": {
         1: "intracerebral_hemorrhage",
+    },
+    "test": {
+        1: "carpal",
+        2: "clavicula",
+        3: "femur",
+        4: "fibula",
+        5: "humerus",
+        6: "metacarpal",
+        7: "metatarsal",
+        8: "patella",
+        9: "hips",
+        10: "phalanges_hand",
+        11: "radius",
+        12: "ribs",
+        13: "scapula",
+        14: "skull",
+        15: "spine",
+        16: "sternum",
+        17: "tarsal",
+        18: "tibia",
+        19: "phalanges_feet",
+        20: "ulna"
     }
 }
 
@@ -252,8 +274,9 @@ class_map_5_parts = {
         22: "rib_right_10",
         23: "rib_right_11",
         24: "rib_right_12"
-    }
+    },
 
+    "test": class_map["test"]
 }
 
 
@@ -262,7 +285,9 @@ map_taskid_to_partname = {
     252: "class_map_part_vertebrae",
     253: "class_map_part_cardiac",
     254: "class_map_part_muscles",
-    255: "class_map_part_ribs"
+    255: "class_map_part_ribs",
+
+    517: "test"
 }
 
 # pprint({idx:v for idx, (k, v) in enumerate(a.items())}, sort_dicts=False)

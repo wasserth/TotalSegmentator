@@ -64,6 +64,9 @@ def main():
                         help="Calc radiomics features. Requires pyradiomics. Results will be in statistics_radiomics.json",
                         default=False)
 
+    parser.add_argument("-cp", "--crop_path", help="Custom path to masks used for cropping. If not set will use output directory.", 
+                        type=lambda p: Path(p).absolute(), default=None)
+
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
 
@@ -125,12 +128,13 @@ def main():
         crop = "brain"
         model = "3d_fullres"
     elif args.task == "test":
-        task_id = 517
+        task_id = [517]
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "body"
         model = "3d_fullres"
 
+    crop_path = args.output if args.crop_path is None else args.crop_path
 
     if type(task_id) is list:
         for tid in task_id:
@@ -141,7 +145,7 @@ def main():
     folds = [0]  # None
     seg = nnUNet_predict_image(args.input, args.output, task_id, model=model, folds=folds,
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
-                         crop=crop, task_name=args.task, nora_tag=args.nora_tag, preview=args.preview, 
+                         crop=crop, crop_path=crop_path, task_name=args.task, nora_tag=args.nora_tag, preview=args.preview, 
                          nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=args.nr_thr_saving, 
                          quiet=quiet, verbose=verbose, test=args.test)
 
