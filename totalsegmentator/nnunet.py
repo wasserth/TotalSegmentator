@@ -130,10 +130,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     multimodel = type(task_id) is list
 
     # for debugging
-    tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
-    (tmp_dir).mkdir(exist_ok=True)
-    with tmp_dir as tmp_folder:
-    # with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
+    # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
+    # (tmp_dir).mkdir(exist_ok=True)
+    # with tmp_dir as tmp_folder:
+    with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
         if verbose: print(f"tmp_dir: {tmp_dir}")
 
@@ -164,7 +164,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
             img_in_rsp = img_in
 
-        nr_voxels_thr = 512*512*900
+        # nr_voxels_thr = 512*512*900
+        nr_voxels_thr = 256*256*900
         img_parts = ["s01"]
         ss = img_in_rsp.shape
         # If image to big then split into 3 parts along z axis. Also make sure that z-axis is at least 200px otherwise
