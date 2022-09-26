@@ -117,7 +117,7 @@ def main():
         trainer = "nnUNetTrainerV2"
         crop = "lung"
         model = "3d_fullres"
-        print("WARNING: The COVID model finds many types of lung infiltrate not only COVID. Use with care!")
+        print("WARNING: The COVID model finds many types of lung opacity not only COVID. Use with care!")
     elif args.task == "cerebral_bleed":
         task_id = 150
         resample = None
@@ -128,7 +128,7 @@ def main():
         task_id = 517
         resample = None
         trainer = "nnUNetTrainerV2"
-        crop = None
+        crop = "body"
         model = "3d_fullres"
 
 
