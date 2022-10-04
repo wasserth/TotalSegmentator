@@ -58,6 +58,11 @@ roi_groups = {
     ],
     "cerebral_bleed": [
         ["intracerebral_hemorrhage"]
+    ],
+    "test": [
+        ["carpal", "clavicula", "femur", "fibula", "humerus", "metacarpal", "metatarsal", 
+        "patella", "hips", "phalanges_hand", "radius", "ribs", "scapula", "skull", "spine", 
+        "sternum", "tarsal", "tibia", "phalanges_feet", "ulna"]
     ]
 }
 
