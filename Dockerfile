@@ -5,7 +5,8 @@ RUN apt-get update
 RUN apt-get install ffmpeg libsm6 libxext6 -y
 RUN apt-get install xvfb -y
 
-RUN pip install flask gunicorn pyradiomics
+RUN pip install flask gunicorn
+RUN pip pyradiomics
 
 COPY . /app
 RUN pip install /app
