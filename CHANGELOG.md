@@ -4,6 +4,7 @@
 * add intracerebral hemorrhage model
 * preview file was renamed from `preview.png` to `preview_total.png`
 * Split very big images into 3 parts and process one by one to avoid memory problems
+* fix: check if input is 4d and then truncate to 3d
 
 
 ## Release 1.3
