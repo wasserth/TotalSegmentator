@@ -235,8 +235,11 @@ def combine_masks(mask_dir, output, class_type):
     nib.save(nib.Nifti1Image(combined, ref_img.affine), output)
 
 
-def compress_nifti(file_in, file_out, dtype=np.int32):
+def compress_nifti(file_in, file_out, dtype=np.int32, force_3d=True):
     img = nib.load(file_in)
     data = img.get_fdata()
+    if force_3d and len(data.shape) > 3:
+        print("Info: Input image contains more than 3 dimensions. Only keeping first 3 dimensions.")
+        data = data[:,:,:,0]
     new_image = nib.Nifti1Image(data.astype(dtype), img.affine)
     nib.save(new_image, file_out)

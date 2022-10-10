@@ -137,7 +137,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         tmp_dir = Path(tmp_folder)
         if verbose: print(f"tmp_dir: {tmp_dir}")
 
-        compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz")
+        compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz", force_3d=True)
 
         if crop is not None:
             if crop == "lung":
