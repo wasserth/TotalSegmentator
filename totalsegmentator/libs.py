@@ -74,7 +74,9 @@ def download_url_and_unpack(url, config_dir):
 
 def download_pretrained_weights(task_id):
 
-    config_dir = Path.home() / ".totalsegmentator/nnunet/results/nnUNet"
+    # in docker container finding home not properly working therefore map to /tmp
+    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+    config_dir = home_path / ".totalsegmentator/nnunet/results/nnUNet"
     (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
     (config_dir / "2d").mkdir(exist_ok=True, parents=True)
 
@@ -158,7 +160,9 @@ def setup_nnunet():
     if "TOTALSEG_WEIGHTS_PATH" in os.environ:
         weights_dir = os.environ["TOTALSEG_WEIGHTS_PATH"]
     else:
-        config_dir = Path.home() / ".totalsegmentator"
+        # in docker container finding home not properly working therefore map to /tmp
+        home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+        config_dir = home_path / ".totalsegmentator"
         (config_dir / "nnunet/results/nnUNet/3d_fullres").mkdir(exist_ok=True, parents=True)
         (config_dir / "nnunet/results/nnUNet/2d").mkdir(exist_ok=True, parents=True)
         weights_dir = config_dir / "nnunet/results"

@@ -41,7 +41,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
 ### Run via docker
 We also provide a docker container which can be used the following way
 ```
-docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/workspace wasserth/totalsegmentator_container:master TotalSegmentator -i /workspace/ct.nii.gz -o /workspace/segmentations
+docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator_container:master TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
 ```
 
 ### Subtasks
