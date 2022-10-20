@@ -36,8 +36,8 @@ print("------------- predict_image ------------------")
 
 st = time.time()
 test_data_dir = Path("/home/jakob/Downloads/nnunet_test")
-filename = test_data_dir / "ct3mm_0000.nii.gz"  # 50s
-# filename = test_data_dir / "ct15mm_0000.nii.gz"  # 100s
+filename = test_data_dir / "ct_3mm.nii.gz"  # 50s
+# filename = test_data_dir / "ct_15mm.nii.gz"  # 100s
 # filename = test_data_dir / "ct_0000.nii.gz"  # 400s
 r = requests.post(url_base + "predict_image",
                   files={'data_binary': open(filename, 'rb')},

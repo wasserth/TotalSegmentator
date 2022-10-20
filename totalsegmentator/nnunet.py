@@ -152,6 +152,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if resample is not None:
             if not quiet: print(f"Resampling...")
+            st = time.time()
             img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
@@ -160,6 +161,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
             if verbose:
                 print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
+            if not quiet: print(f"  Resampled in {time.time() - st:.2f}s")
         else:
             img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
             img_in_rsp = img_in
