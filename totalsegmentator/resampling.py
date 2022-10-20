@@ -1,6 +1,7 @@
 # pylint: disable=relative-beyond-top-level
 
 import os
+import time
 
 import numpy as np
 import nibabel as nib
@@ -49,6 +50,28 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
     if dim == 2:
         img_sm = img_sm[:,:,0,0]
     return img_sm
+
+
+def resample_img_cucim(img, zoom=0.5, order=0, nr_cpus=-1):
+    """
+    Completely speedup of resampling compare to non-gpu version not as big, because much time is lost in 
+    loading the file and then in copying to the GPU.
+
+    For small image no significant speedup.
+    For large images reducing resampling time by over 50%.
+
+    installation:
+    pip install cupy-cuda111
+    pip install cucim
+    """
+    import cupy as cp
+    from cucim.skimage.transform import resize
+
+    img = cp.asarray(img)  # slow
+    new_shape = (np.array(img.shape) * zoom).astype(np.int32)  # todo: this is rounding to lower. Is this producing problems??
+    resampled_img = resize(img, output_shape=new_shape, order=order, mode="edge", anti_aliasing=False)  # very fast
+    resampled_img = cp.asnumpy(resampled_img)  # Alternative: img_arr = cp.float32(resampled_img.get())   # very fast
+    return resampled_img
 
 
 def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.0):
@@ -118,7 +141,7 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
 
     Note: Only works properly if affine is all 0 except for diagonal and offset (=no rotation and sheering)
     """
-    data = img_in.get_fdata()
+    data = img_in.get_fdata()  # quite slow
     old_shape = np.array(data.shape)
     img_spacing = np.array(img_in.header.get_zooms())
 
@@ -161,6 +184,7 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
         new_data, _ = resample_img_nnunet(data, None, img_spacing, new_spacing)
     else:
         new_data = resample_img(data, zoom=zoom, order=order, nr_cpus=nr_cpus)
+        # new_data = resample_img_cucim(data, zoom=zoom, order=order, nr_cpus=nr_cpus)
 
     if dtype is not None:
         new_data = new_data.astype(dtype)
