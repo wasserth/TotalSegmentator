@@ -143,7 +143,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             if crop == "lung":
                 combine_masks(crop_path, crop_path / f"{crop}.nii.gz", crop)
             bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", crop_path / f"{crop}.nii.gz",
-                                      tmp_dir / "s01_0000.nii.gz", addon=[5, 5, 5], dtype=np.int32)
+                                      tmp_dir / "s01_0000.nii.gz", addon=[5, 5, 5], dtype=np.int32,
+                                      verbose=verbose)
             if verbose:
                 print(f"  cropping from {nib.load(crop_path / f'{crop}.nii.gz').shape} " + \
                       f"to {nib.load(tmp_dir / 's01_0000.nii.gz').shape}")

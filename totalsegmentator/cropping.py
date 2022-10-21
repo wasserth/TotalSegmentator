@@ -72,7 +72,7 @@ def crop_to_bbox_nifti(image: nib.Nifti1Image, bbox, dtype=None) -> nib.Nifti1Im
     return nib.Nifti1Image(data_cropped.astype(data_type), affine)
 
 
-def crop_to_mask_nifti(img_path, mask_path, out_path, addon=[0,0,0], dtype=None):
+def crop_to_mask_nifti(img_path, mask_path, out_path, addon=[0,0,0], dtype=None, verbose=False):
     """
     Crops a nifti image to a mask and adapts the affine accordingly.
 
@@ -85,8 +85,17 @@ def crop_to_mask_nifti(img_path, mask_path, out_path, addon=[0,0,0], dtype=None)
     Returns a nifti image.
     """
     img_in = nib.load(img_path)
-    mask = nib.load(mask_path).get_fdata()
+    mask_img = nib.load(mask_path)
 
+    # Not needed because output masks of totalsegmentator are always in original full resolution
+    # if verbose:
+    #     print("Transforming mask to img space:")
+    #     print(f"  before: {mask_img.shape}")
+    # mask_img = nibabel.processing.resample_from_to(mask_img, img_in, order=0)
+    # if verbose:
+    #     print(f"  after: {mask_img.shape}")
+
+    mask = mask_img.get_fdata()
     addon = (np.array(addon) / img_in.header.get_zooms()).astype(int)  # mm to voxels
     bbox = get_bbox_from_mask(mask, outside_value=0, addon=addon)
 
