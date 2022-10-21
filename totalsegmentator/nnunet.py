@@ -140,7 +140,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz", force_3d=True)
 
         if crop is not None:
-            if crop == "lung":
+            if crop == "lung" or crop == "pelvis" or crop == "heart":
                 combine_masks(crop_path, crop_path / f"{crop}.nii.gz", crop)
             bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", crop_path / f"{crop}.nii.gz",
                                       tmp_dir / "s01_0000.nii.gz", addon=[5, 5, 5], dtype=np.int32,
