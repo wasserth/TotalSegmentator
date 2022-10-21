@@ -30,7 +30,8 @@ if __name__ == "__main__":
                         help="Output directory for combined mask", 
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("-m", "--masks", type=str, choices=["lung", "lung_left", "lung_right", "vertebrae", "ribs", "vertebrae_ribs", "heart"],
+    parser.add_argument("-m", "--masks", type=str, choices=["lung", "lung_left", "lung_right", 
+                        "vertebrae", "ribs", "vertebrae_ribs", "heart", "pelvis"],
                         help="The type of masks you want to combine", required=True)
 
     parser.add_argument("-t", "--nora_tag", type=str, help="tag in nora as mask. Pass nora project id as argument.",

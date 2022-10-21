@@ -47,7 +47,8 @@ def main():
                         default=False)
 
     # cerebral_bleed: Intracerebral hemorrhage 
-    parser.add_argument("-ta", "--task", choices=["total", "lung_vessels", "cerebral_bleed", "test"],
+    parser.add_argument("-ta", "--task", choices=["total", "lung_vessels", "cerebral_bleed", 
+                        "hip_implant", "test"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
@@ -126,6 +127,18 @@ def main():
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "brain"
+        model = "3d_fullres"
+    elif args.task == "hip_implant":
+        task_id = 260
+        resample = None
+        trainer = "nnUNetTrainerV2"
+        crop = "pelvis"
+        model = "3d_fullres"
+    elif args.task == "coronary_arteries":
+        task_id = 503
+        resample = None
+        trainer = "nnUNetTrainerV2"
+        crop = "heart"
         model = "3d_fullres"
     elif args.task == "test":
         task_id = [517]

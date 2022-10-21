@@ -59,6 +59,12 @@ roi_groups = {
     "cerebral_bleed": [
         ["intracerebral_hemorrhage"]
     ],
+    "hip_implant": [
+        ["hip_implant"]
+    ],
+    "coronary_arteries": [
+        ["coronary_arteries"]
+    ],
     "test": [
         ["carpal", "clavicula", "femur", "fibula", "humerus", "metacarpal", "metatarsal", 
         "patella", "hips", "phalanges_hand", "radius", "ribs", "scapula", "skull", "spine", 

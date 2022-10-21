@@ -128,6 +128,14 @@ def download_pretrained_weights(task_id):
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task150_icb_v0"
         WEIGHTS_URL = "https://zenodo.org/record/7079161/files/Task150_icb_v0.zip?download=1"
+    elif task_id == 260:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task260_hip_implant_71subj"
+        WEIGHTS_URL = "https://zenodo.org/record/7234263/files/Task260_hip_implant_71subj.zip?download=1"
+    elif task_id == 503:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task503_cardiac_motion"
+        WEIGHTS_URL = "todo"
     elif task_id == 517:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task517_Bones40"
@@ -222,6 +230,8 @@ def combine_masks(mask_dir, output, class_type):
     elif class_type == "heart":
         masks = ["heart_myocardium", "heart_atrium_left", "heart_ventricle_left",
                  "heart_atrium_right", "heart_ventricle_right"]
+    elif class_type == "pelvis":
+        masks = ["femur_left", "femur_right", "hip_left", "hip_right"]
 
     ref_img = None
     for mask in masks:

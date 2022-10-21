@@ -115,6 +115,12 @@ class_map = {
     "cerebral_bleed": {
         1: "intracerebral_hemorrhage",
     },
+    "hip_implant": {
+        1: "hip_implant",
+    },
+    "coronary_arteries": {
+        1: "coronary_arteries",
+    },
     "test": {
         1: "carpal",
         2: "clavicula",
