@@ -24,7 +24,7 @@ from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_tas
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
-from totalsegmentator.libs import combine_masks, compress_nifti
+from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.postprocessing import remove_outside_of_mask
 
@@ -262,6 +262,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if crop is not None:
             undo_crop_nifti(tmp_dir / "s01.nii.gz", file_in, bbox, tmp_dir / "s01.nii.gz")
+
+        check_if_shape_and_affine_identical(file_in, tmp_dir / "s01.nii.gz")
 
         if not quiet: print("Saving segmentations...")
         st = time.time()

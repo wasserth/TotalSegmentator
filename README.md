@@ -17,6 +17,7 @@ Install dependencies:
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
 * You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
 * TotalSegmentator was developed for Linux or Mac. To make it work for windows see [this comment](https://github.com/wasserth/TotalSegmentator/issues/10#issuecomment-1234160460).
+* optionally: for faster resampling you can use `cucim` (`pip install cupy-cuda11x cucim`)
 
 Install Totalsegmentator
 ```
