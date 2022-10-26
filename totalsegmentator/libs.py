@@ -270,7 +270,6 @@ def check_if_shape_and_affine_identical(img_1_path, img_2_path):
         print(img_2.affine)
         print("Diff:")
         print(np.abs(img_1.affine-img_2.affine))
-        print(f"output path: {args.file_out}")
         print("WARNING: Output affine not equal to input affine. This should not happen.")
 
     if img_1.shape != img_2.shape:
@@ -278,5 +277,4 @@ def check_if_shape_and_affine_identical(img_1_path, img_2_path):
         print(img_1.shape)
         print("Shape out:")
         print(img_2.shape)
-        print(f"output path: {args.file_out}")
         print("WARNING: Output shape not equal to input shape. This should not happen.")
