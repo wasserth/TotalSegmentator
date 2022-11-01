@@ -48,7 +48,7 @@ def main():
 
     # cerebral_bleed: Intracerebral hemorrhage 
     parser.add_argument("-ta", "--task", choices=["total", "lung_vessels", "cerebral_bleed", 
-                        "hip_implant", "test"],
+                        "hip_implant", "coronary_arteries", "test"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
@@ -140,6 +140,7 @@ def main():
         trainer = "nnUNetTrainerV2"
         crop = "heart"
         model = "3d_fullres"
+        print("WARNING: The coronary artery model does not work very robust. Use with care!")
     elif args.task == "test":
         task_id = [517]
         resample = None
