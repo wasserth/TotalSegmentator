@@ -117,7 +117,7 @@ def undo_crop(img, ref_img, bbox):
     """
     Fit the image which was cropped by bbox back into the shape of ref_img.
     """
-    img_out = np.zeros(ref_img.shape, dtype=np.uint8)
+    img_out = np.zeros(ref_img.shape)
     img_out[bbox[0][0]:bbox[0][1], bbox[1][0]:bbox[1][1], bbox[2][0]:bbox[2][1]] = img.get_fdata()
     return nib.Nifti1Image(img_out, ref_img.affine)
 

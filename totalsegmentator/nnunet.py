@@ -268,9 +268,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if not quiet: print("Saving segmentations...")
         st = time.time()
-        img_data = img_pred.get_fdata()
+        img_data = img_pred.get_fdata().astype(np.uint8)
         if multilabel_image:
-            nib.save(img_pred.astype(np.uint8), file_out)
+            nib.save(nib.Nifti1Image(img_data, img_pred.affine), file_out)  # recreate nifti image to ensure uint8 dtype
             if nora_tag != "None":
                 subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
         else:  # save each class as a separate binary image
