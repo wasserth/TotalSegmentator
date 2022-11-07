@@ -72,6 +72,26 @@ def crop_to_bbox_nifti(image: nib.Nifti1Image, bbox, dtype=None) -> nib.Nifti1Im
     return nib.Nifti1Image(data_cropped.astype(data_type), affine)
 
 
+def crop_to_mask(img_in, mask_img, addon=[0,0,0], dtype=None, verbose=False):
+    """
+    Crops a nifti image to a mask and adapts the affine accordingly.
+
+    img_in: nifti image 
+    mask_img: nifti image 
+    addon = addon in mm along each axis
+    dtype: output dtype
+
+    Returns a nifti image.
+    """
+
+    mask = mask_img.get_fdata()
+    addon = (np.array(addon) / img_in.header.get_zooms()).astype(int)  # mm to voxels
+    bbox = get_bbox_from_mask(mask, outside_value=0, addon=addon)
+
+    img_out = crop_to_bbox_nifti(img_in, bbox, dtype)
+    return img_out, bbox
+
+
 def crop_to_mask_nifti(img_path, mask_path, out_path, addon=[0,0,0], dtype=None, verbose=False):
     """
     Crops a nifti image to a mask and adapts the affine accordingly.
@@ -82,26 +102,24 @@ def crop_to_mask_nifti(img_path, mask_path, out_path, addon=[0,0,0], dtype=None,
     addon = addon in mm along each axis
     dtype: output dtype
 
-    Returns a nifti image.
+    Returns bbox coordinates.
     """
     img_in = nib.load(img_path)
     mask_img = nib.load(mask_path)
 
-    # Not needed because output masks of totalsegmentator are always in original full resolution
-    # if verbose:
-    #     print("Transforming mask to img space:")
-    #     print(f"  before: {mask_img.shape}")
-    # mask_img = nibabel.processing.resample_from_to(mask_img, img_in, order=0)
-    # if verbose:
-    #     print(f"  after: {mask_img.shape}")
+    img_out, bbox = crop_to_mask(img_in, mask_img, addon, dtype, verbose)
 
-    mask = mask_img.get_fdata()
-    addon = (np.array(addon) / img_in.header.get_zooms()).astype(int)  # mm to voxels
-    bbox = get_bbox_from_mask(mask, outside_value=0, addon=addon)
-
-    img_out = crop_to_bbox_nifti(img_in, bbox, dtype)
     nib.save(img_out, out_path)
     return bbox
+
+
+def undo_crop(img, ref_img, bbox):
+    """
+    Fit the image which was cropped by bbox back into the shape of ref_img.
+    """
+    img_out = np.zeros(ref_img.shape, dtype=np.uint8)
+    img_out[bbox[0][0]:bbox[0][1], bbox[1][0]:bbox[1][1], bbox[2][0]:bbox[2][1]] = img.get_fdata()
+    return nib.Nifti1Image(img_out, ref_img.affine)
 
 
 def undo_crop_nifti(img_path, ref_img_path, bbox, out_path):
@@ -110,10 +128,8 @@ def undo_crop_nifti(img_path, ref_img_path, bbox, out_path):
     """
     img = nib.load(img_path)
     ref_img = nib.load(ref_img_path)
-    img_out = np.zeros(ref_img.shape, dtype=np.uint8)
 
-    img_out[bbox[0][0]:bbox[0][1], bbox[1][0]:bbox[1][1], bbox[2][0]:bbox[2][1]] = img.get_fdata()
+    img_out = undo_crop(img, ref_img, bbox)
 
-    img_out = nib.Nifti1Image(img_out, ref_img.affine)
     nib.save(img_out, out_path)
     

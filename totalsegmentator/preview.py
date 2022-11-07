@@ -72,8 +72,8 @@ roi_groups = {
     ]
 }
 
-def plot_roi_group(subject_path, scene, rois, x, y, smoothing, roi_data, affine, task_name):
-    ref_img = nib.load(subject_path)
+def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):
+    # ref_img = nib.load(subject_path)
     roi_actors = []
 
     for idx, roi in enumerate(rois):
@@ -91,7 +91,7 @@ def plot_roi_group(subject_path, scene, rois, x, y, smoothing, roi_data, affine,
             roi_actors.append(cont_actor)
 
 
-def plot_subject(subject_path, output_path, df=None, roi_data=None, smoothing=20,
+def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
                  task_name="total"):
     subject_width = 330
     # subject_height = 700
@@ -103,7 +103,7 @@ def plot_subject(subject_path, output_path, df=None, roi_data=None, smoothing=20
     showm = window.ShowManager(scene, size=window_size, reset_camera=False)
     showm.initialize()
 
-    ct_img = nib.load(subject_path)
+    # ct_img = nib.load(subject_path)
     data = ct_img.get_fdata()
     data = data.transpose(1, 2, 0)  # Show sagittal view
     data = data[::-1, :, :]
@@ -118,7 +118,7 @@ def plot_subject(subject_path, output_path, df=None, roi_data=None, smoothing=20
         x = (idx % nr_cols) * subject_width
         # y = (idx // nr_cols) * subject_height
         y = 0
-        plot_roi_group(subject_path, scene, roi_group, x, y, smoothing, roi_data, ct_img.affine,
+        plot_roi_group(ct_img, scene, roi_group, x, y, smoothing, roi_data, ct_img.affine,
                        task_name)
 
     # window.show(scene, size=(900, 700), reset_camera=False)

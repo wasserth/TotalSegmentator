@@ -259,9 +259,7 @@ def compress_nifti(file_in, file_out, dtype=np.int32, force_3d=True):
     nib.save(new_image, file_out)
 
 
-def check_if_shape_and_affine_identical(img_1_path, img_2_path):
-    img_1 = nib.load(img_1_path)
-    img_2 = nib.load(img_2_path)
+def check_if_shape_and_affine_identical(img_1, img_2):
     
     if not np.array_equal(img_1.affine, img_2.affine):
         print("Affine in:")

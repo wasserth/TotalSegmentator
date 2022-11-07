@@ -5,6 +5,13 @@ import nibabel as nib
 import nibabel.processing
 
 
+def as_closest_canonical(img_in):
+    """
+    Convert the given nifti file to the closest canonical nifti file.
+    """
+    return nib.as_closest_canonical(img_in)
+
+
 def as_closest_canonical_nifti(path_in, path_out):
     """
     Convert the given nifti file to the closest canonical nifti file.
@@ -40,7 +47,7 @@ def undo_canonical(img_can, img_orig):
 
 
 def undo_canonical_nifti(path_in_can, path_in_orig, path_out):
-    img_can = nib.load(path_in_can)
+    e = nib.load(path_in_can)
     img_orig = nib.load(path_in_orig)
     img_out = undo_canonical(img_can, img_orig)
     nib.save(img_out, path_out)

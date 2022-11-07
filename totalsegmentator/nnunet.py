@@ -22,10 +22,12 @@ with nostdout():
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_taskid_to_partname
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
+from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
 from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
+from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask
 
 
@@ -137,35 +139,34 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         tmp_dir = Path(tmp_folder)
         if verbose: print(f"tmp_dir: {tmp_dir}")
 
-        compress_nifti(file_in, tmp_dir / "s01_0000.nii.gz", force_3d=True)
+        img_in_orig = nib.load(file_in)
+        img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
 
         if crop is not None:
             if crop == "lung" or crop == "pelvis" or crop == "heart":
                 combine_masks(crop_path, crop_path / f"{crop}.nii.gz", crop)
-            bbox = crop_to_mask_nifti(tmp_dir / "s01_0000.nii.gz", crop_path / f"{crop}.nii.gz",
-                                      tmp_dir / "s01_0000.nii.gz", addon=[5, 5, 5], dtype=np.int32,
+            crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
+            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=[5, 5, 5], dtype=np.int32,
                                       verbose=verbose)
             if verbose:
-                print(f"  cropping from {nib.load(crop_path / f'{crop}.nii.gz').shape} " + \
-                      f"to {nib.load(tmp_dir / 's01_0000.nii.gz').shape}")
+                print(f"  cropping from {crop_mask_img.shape} to {img_in.shape}")
 
-        as_closest_canonical_nifti(tmp_dir / "s01_0000.nii.gz", tmp_dir / "s01_0000.nii.gz")
+        img_in = as_closest_canonical(img_in)
 
         if resample is not None:
             if not quiet: print(f"Resampling...")
             st = time.time()
-            img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
             img_in_rsp = change_spacing(img_in, [resample, resample, resample],
                                         order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
-            nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
             if verbose:
                 print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
             if not quiet: print(f"  Resampled in {time.time() - st:.2f}s")
         else:
-            img_in = nib.load(tmp_dir / "s01_0000.nii.gz")
             img_in_rsp = img_in
+
+        nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
 
         # nr_voxels_thr = 512*512*900
         nr_voxels_thr = 256*256*900
@@ -234,17 +235,18 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             combined_img[:,:,third*2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:,:,margin-1:]
             nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
 
+        st_a = time.time()
+
+        img_pred = nib.load(tmp_dir / "s01.nii.gz")
         if preview:
             # Generate preview before upsampling so it is faster and still in canonical space 
             # for better orientation.
             if not quiet: print("Generating preview...")
             st = time.time()
             smoothing = 20
-            roi_data = nib.load(tmp_dir / "s01.nii.gz").get_fdata()
-            generate_preview(tmp_dir / "s01_0000.nii.gz", file_out / f"preview_{task_name}.png", roi_data, smoothing, task_name)
+            generate_preview(img_in_rsp, file_out / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
             if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
 
-        img_pred = nib.load(tmp_dir / "s01.nii.gz")
         if resample is not None:
             if not quiet: print("Resampling...")
             if verbose: print(f"  back to original shape: {img_in_shape}")    
@@ -256,39 +258,37 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             # output affine by the input affine to make it match exactly. It must match exactly 
             # because otherwise in undo_canonical_nifti it will result in differences also in offest.
             img_pred = nib.Nifti1Image(img_pred.get_fdata(), img_in.affine)
-        nib.save(img_pred, tmp_dir / "s01.nii.gz")
 
-        undo_canonical_nifti(tmp_dir / "s01.nii.gz", file_in, tmp_dir / "s01.nii.gz")
+        img_pred = undo_canonical(img_pred, img_in_orig)
 
         if crop is not None:
-            undo_crop_nifti(tmp_dir / "s01.nii.gz", file_in, bbox, tmp_dir / "s01.nii.gz")
+            img_pred = undo_crop(img_pred, img_in_orig, bbox)
 
-        check_if_shape_and_affine_identical(file_in, tmp_dir / "s01.nii.gz")
+        check_if_shape_and_affine_identical(img_in_orig, img_pred)
 
         if not quiet: print("Saving segmentations...")
         st = time.time()
+        img_data = img_pred.get_fdata()
         if multilabel_image:
-            shutil.copy(tmp_dir / "s01.nii.gz", file_out)
-            img = nib.load(tmp_dir / "s01.nii.gz")
-            img_data = img.get_fdata()
+            nib.save(img_pred.astype(np.uint8), file_out)
             if nora_tag != "None":
                 subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
         else:  # save each class as a separate binary image
             file_out.mkdir(exist_ok=True, parents=True)
-            img = nib.load(tmp_dir / "s01.nii.gz")
-            img_data = img.get_fdata()
             # Code for single threaded execution  (runtime:24s)
             if nr_threads_saving == 1:
                 for k, v in class_map[task_name].items():
                     binary_img = img_data == k
                     output_path = str(file_out / f"{v}.nii.gz")
-                    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+                    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine, img_pred.header), output_path)
+                    # nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
                     if nora_tag != "None":
                         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
             else:
                 # Code for multithreaded execution
                 #   Speed with different number of threads:
                 #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
+                nib.save(img_pred, tmp_dir / "s01.nii.gz")
                 _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
                         class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
 
@@ -305,5 +305,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         # Postprocessing
         if task_name == "lung_vessels":
             remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
+
+        print(f"  Combining took {time.time() - st_a:.2f}s")
 
     return img_data
