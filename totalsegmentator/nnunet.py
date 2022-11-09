@@ -216,12 +216,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / f"s01.nii.gz")
         else:
             if not quiet: print(f"Predicting...")
-            if test == 0:
+            if test == 0 or test == 2:
                 with nostdout(verbose):
                     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
-            elif test == 2:
-                print("WARNING: Using reference seg instead of prediction for testing.")
-                shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
+            # elif test == 2:
+            #     print("WARNING: Using reference seg instead of prediction for testing.")
+            #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
             elif test == 3:
                 print("WARNING: Using reference seg instead of prediction for testing.")
                 shutil.copy(Path("tests") / "reference_files" / "example_seg_lung_vessels.nii.gz", tmp_dir / f"s01.nii.gz")
