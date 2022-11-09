@@ -235,8 +235,6 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             combined_img[:,:,third*2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:,:,margin-1:]
             nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
 
-        st_a = time.time()
-
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
         if preview:
             # Generate preview before upsampling so it is faster and still in canonical space 
@@ -305,7 +303,5 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         # Postprocessing
         if task_name == "lung_vessels":
             remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
-
-        print(f"  Combining took {time.time() - st_a:.2f}s")
 
     return img_data
