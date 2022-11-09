@@ -13,6 +13,7 @@ from functools import partial
 from p_tqdm import p_map
 from multiprocessing import Pool
 import tempfile
+import torch
 
 from totalsegmentator.libs import nostdout
 
@@ -85,7 +86,11 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     num_parts = 1
     disable_tta = not tta
     overwrite_existing = False
-    mode = "normal" if model == "2d" else "fastest"
+    # todo important: change
+    if torch.cuda.is_available():
+        mode = "normal" if model == "2d" else "fastest"
+    else:
+        mode = "normal"
     all_in_gpu = None
     step_size = 0.5
     chk = "model_final_checkpoint"
