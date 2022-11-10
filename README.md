@@ -11,12 +11,14 @@ If you use it please cite our paper: [https://arxiv.org/abs/2208.05868](https://
 
 ### Installation
 
+TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU (on CPU it is slow).
+
 Install dependencies:  
 * Python >= 3.7
 * [Pytorch](http://pytorch.org/)
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
 * You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
-* TotalSegmentator was developed for Linux or Mac. To make it work for windows see [this comment](https://github.com/wasserth/TotalSegmentator/issues/10#issuecomment-1234160460).
+
 * optionally: for faster resampling you can use `cucim` (`pip install cupy-cuda11x cucim`)
 
 Install Totalsegmentator
@@ -29,7 +31,9 @@ pip install TotalSegmentator
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations
 ```
-> Note: TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: [www.totalsegmentator.com](https://totalsegmentator.com/)
+> Note: If a CUDA compatible GPU is available TotalSegmentator will automatically use it. Otherwise it will use the CPU, which is a lot slower and should only be used with the `--fast` option.  
+
+> Note: You can also try it online: [www.totalsegmentator.com](https://totalsegmentator.com/)
 
 
 ### Advanced settings

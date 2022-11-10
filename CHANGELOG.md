@@ -1,10 +1,17 @@
 ## Master
+*
+
+
+## Release 1.4.0
 * bugfixes
 * add lung_vessels model
 * add intracerebral hemorrhage model
+* add coronary artery model
 * preview file was renamed from `preview.png` to `preview_total.png`
 * Split very big images into 3 parts and process one by one to avoid memory problems
 * fix: check if input is 4d and then truncate to 3d
+* make it work with windows
+* make it work with cpu
 
 
 ## Release 1.3
