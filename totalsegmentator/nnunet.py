@@ -116,7 +116,9 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
     img_data = img.get_fdata()
     binary_img = img_data == k
     output_path = str(file_out / f"{v}.nii.gz")
-    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+    # Save without setting the header from reference image, because this header often contains dtype float
+    # which would then save the mask as float
+    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine), output_path)
     if nora_tag != "None":
         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
 
@@ -279,8 +281,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 for k, v in class_map[task_name].items():
                     binary_img = img_data == k
                     output_path = str(file_out / f"{v}.nii.gz")
-                    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine, img_pred.header), output_path)
-                    # nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, img.header), output_path)
+                    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine), output_path)
                     if nora_tag != "None":
                         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
             else:
@@ -289,7 +290,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
                 nib.save(img_pred, tmp_dir / "s01.nii.gz")
                 _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
-                        class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
+                          class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
 
                 # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
                 # pool = Pool(nr_threads_saving)

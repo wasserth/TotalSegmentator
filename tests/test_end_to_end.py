@@ -23,13 +23,13 @@ class test_end_to_end(unittest.TestCase):
         self.assertTrue(images_equal, "vertebrae prediction not correct")
 
     def test_prediction_liver_fast(self):
-        img_ref = nib.load("tests/reference_files/example_seg_fast/liver.nii.gz").get_fdata()
+        img_ref = nib.load("tests/reference_files/example_seg_fast_cpu/liver.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_fast/liver.nii.gz").get_fdata()
         images_equal = np.array_equal(img_ref, img_new)
         self.assertTrue(images_equal, "liver fast prediction not correct")
 
     def test_prediction_vertebrae_fast(self):
-        img_ref = nib.load("tests/reference_files/example_seg_fast/vertebrae_L1.nii.gz").get_fdata()
+        img_ref = nib.load("tests/reference_files/example_seg_fast_cpu/vertebrae_L1.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_fast/vertebrae_L1.nii.gz").get_fdata()
         images_equal = np.array_equal(img_ref, img_new)
         self.assertTrue(images_equal, "vertebrae fast prediction not correct")
@@ -47,7 +47,7 @@ class test_end_to_end(unittest.TestCase):
         self.assertTrue(images_equal, "lung_vessel prediction not correct")
 
     def test_statistics(self):
-        stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics.json", "r"))
+        stats_ref = json.load(open("tests/reference_files/example_seg_fast_cpu/statistics.json", "r"))
         stats_ref = pd.DataFrame(stats_ref)
         stats_new = json.load(open("tests/unittest_prediction_fast/statistics.json", "r"))
         stats_new = pd.DataFrame(stats_new)
@@ -59,7 +59,7 @@ class test_end_to_end(unittest.TestCase):
         self.assertTrue(stats_equal, "intensity statistics are not correct")
 
     def test_radiomics(self):
-        stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics_radiomics.json", "r"))
+        stats_ref = json.load(open("tests/reference_files/example_seg_fast_cpu/statistics_radiomics.json", "r"))
         stats_ref = pd.DataFrame(stats_ref)
         stats_ref = stats_ref.fillna(0)
         stats_new = json.load(open("tests/unittest_prediction_fast/statistics_radiomics.json", "r"))
