@@ -27,7 +27,7 @@ pip install TotalSegmentator
 
 ### Usage
 ```
-TotalSegmentator -i ct.nii.gz -o segmentations --fast --preview
+TotalSegmentator -i ct.nii.gz -o segmentations
 ```
 > Note: TotalSegmentator only works with a NVidia GPU. If you do not have one you can try our online tool: [www.totalsegmentator.com](https://totalsegmentator.com/)
 
@@ -48,7 +48,7 @@ docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/
 ### Subtasks
 We added some more models to TotalSegmentator beyond the default one. This allows segmentation of even 
 more classes in more detailed subparts of the image. First you have to run TotalSegmentator with the 
-normal settings to get the normal mask. These masks are required to crop the image to a subregion on 
+normal settings to get the normal masks. These masks are required to crop the image to a subregion on 
 which the detailed model will run.
 This is only available in the latest master branch at the moment.
 ```
