@@ -164,7 +164,8 @@ def main():
         download_pretrained_weights(269)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
-        body_seg = nnUNet_predict_image(args.input, args.output / "body.nii.gz", 269, model="3d_fullres", folds=[0],
+        body_path = args.output.parent / "body.nii.gz" if args.ml else args.output / "body.nii.gz"
+        body_seg = nnUNet_predict_image(args.input, body_path, 269, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                             save_binary=True, nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=1, 
