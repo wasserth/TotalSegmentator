@@ -75,7 +75,7 @@ def download_url_and_unpack(url, config_dir):
 def download_pretrained_weights(task_id):
 
     if "TOTALSEG_WEIGHTS_PATH" in os.environ:
-        config_dir = os.environ["TOTALSEG_WEIGHTS_PATH"] / "nnUNet"
+        config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"]) / "nnUNet"
     else:
         # in docker container finding home not properly working therefore map to /tmp
         home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
