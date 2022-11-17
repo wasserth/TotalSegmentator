@@ -68,7 +68,7 @@ def resample_img_cucim(img, zoom=0.5, order=0, nr_cpus=-1):
     from cucim.skimage.transform import resize
 
     img = cp.asarray(img)  # slow
-    new_shape = (np.array(img.shape) * zoom).astype(np.int32)
+    new_shape = (np.array(img.shape) * zoom).round().astype(np.int32)
     resampled_img = resize(img, output_shape=new_shape, order=order, mode="edge", anti_aliasing=False)  # very fast
     resampled_img = cp.asnumpy(resampled_img)  # Alternative: img_arr = cp.float32(resampled_img.get())   # very fast
     return resampled_img
@@ -121,9 +121,9 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
 
 
 def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus=1,
-                   nnunet_resample=False, dtype=None):
+                   nnunet_resample=False, dtype=None, remove_negative=False, force_affine=None):
     """
-    Resample nifti image to the new spacing (uses resample_img internally).
+    Resample nifti image to the new spacing (uses resample_img() internally).
     
     img_in: nifti image
     new_spacing: float or sequence of float
@@ -131,6 +131,10 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     order: resample order (optional)
     nnunet_resample: nnunet resampling will use order=0 sampling for z if very anisotropic. Sometimes results 
                      in a little bit less blurry results
+    dtype: output datatype
+    remove_negative: set all negative values to 0. Useful if resampling introduced negative values.
+    force_affine: if you pass an affine then this will be used for the output image (useful if you have to make sure
+                  that the resampled has identical affine to some other image. In this case also set target_shape.)
 
     Works for 2D and 3D and 4D images.
 
@@ -138,6 +142,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     a shape which is +-1 compared to original shape, because of rounding of the shape to int.
     To avoid this the exact output shape can be provided. Then new_spacing will be ignored and the exact
     spacing will be calculated which is needed to get to target_shape.
+    In this case however the calculated spacing can be slighlty different from the desired new_spacing. This will
+    result in a slightly different affine. To avoid this the desired affine can be writen by force with "force_affine".
 
     Note: Only works properly if affine is all 0 except for diagonal and offset (=no rotation and sheering)
     """
@@ -188,9 +194,14 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
         else:
             new_data = resample_img(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # cpu resampling
         
+    if remove_negative:
+        new_data[new_data < 1e-4] = 0
 
     if dtype is not None:
         new_data = new_data.astype(dtype)
+
+    if force_affine is not None:
+        new_affine = force_affine
 
     return nib.Nifti1Image(new_data, new_affine)
 

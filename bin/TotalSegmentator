@@ -10,7 +10,7 @@ import numpy as np
 import nibabel as nib
 import torch
 
-from totalsegmentator.libs import setup_nnunet, download_pretrained_weights
+from totalsegmentator.libs import setup_nnunet, download_pretrained_weights, combine_masks
 from totalsegmentator.preview import generate_preview
 from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
 
@@ -27,7 +27,7 @@ def main():
                         help="Output directory for segmentation masks", 
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("--ml", action="store_true", help="Save one multilabel image for all classes",
+    parser.add_argument("-ml", "--ml", action="store_true", help="Save one multilabel image for all classes",
                         default=False)
 
     parser.add_argument("-nr", "--nr_thr_resamp", type=int, help="Nr of threads for resampling", default=1)
@@ -67,6 +67,10 @@ def main():
 
     parser.add_argument("-cp", "--crop_path", help="Custom path to masks used for cropping. If not set will use output directory.", 
                         type=lambda p: Path(p).absolute(), default=None)
+
+    parser.add_argument("-bs", "--body_seg", action="store_true", 
+                        help="Do initial rough body segmentation and crop image to body region",
+                        default=False)
 
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
@@ -154,6 +158,19 @@ def main():
             download_pretrained_weights(tid)
     else:
         download_pretrained_weights(task_id)
+
+    # Generate rough body segmentation (speedup for big images; not useful in combination with --fast option)
+    if args.task == "total" and args.body_seg:
+        download_pretrained_weights(269)
+        st = time.time()
+        if not quiet: print("Generating rough body segmentation...")
+        body_seg = nnUNet_predict_image(args.input, args.output / "body.nii.gz", 269, model="3d_fullres", folds=[0],
+                            trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=6.0,
+                            crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
+                            save_binary=True, nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=1, 
+                            quiet=quiet, verbose=verbose, test=0)
+        crop = "body"
+        if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
     folds = [0]  # None
     seg = nnUNet_predict_image(args.input, args.output, task_id, model=model, folds=folds,

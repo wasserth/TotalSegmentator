@@ -1,5 +1,6 @@
 ## Master
-*
+* bugfix in cucim resampling
+* add 6mm body model
 
 
 ## Release 1.4.0

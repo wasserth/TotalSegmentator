@@ -65,6 +65,9 @@ roi_groups = {
     "coronary_arteries": [
         ["coronary_arteries"]
     ],
+    "body": [
+        ["body_trunc", "body_extremities"]
+    ],
     "test": [
         ["carpal", "clavicula", "femur", "fibula", "humerus", "metacarpal", "metatarsal", 
         "patella", "hips", "phalanges_hand", "radius", "ribs", "scapula", "skull", "spine", 

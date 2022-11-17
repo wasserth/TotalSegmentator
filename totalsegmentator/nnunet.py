@@ -125,8 +125,8 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
-                         resample=None, crop=None, crop_path=None, task_name="total", nora_tag=None, preview=False, 
-                         nr_threads_resampling=1, nr_threads_saving=6, quiet=False, 
+                         resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
+                         save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, quiet=False, 
                          verbose=False, test=0):
     """
     resample: None or float  (target spacing for all dimensions)
@@ -151,7 +151,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
             img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=[5, 5, 5], dtype=np.int32,
                                       verbose=verbose)
-            if verbose:
+            if not quiet:
                 print(f"  cropping from {crop_mask_img.shape} to {img_in.shape}")
 
         img_in = as_closest_canonical(img_in)
@@ -251,14 +251,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if resample is not None:
             if not quiet: print("Resampling...")
             if verbose: print(f"  back to original shape: {img_in_shape}")    
+            # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
+            # by undo_canonical)
             img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
-                                        order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
-            # Sometimes the output spacing does not completely match the input spacing but it is off
-            # by a very small amount (reason might be the resampling: we resample back to original 
-            # shape which might result in slightly different spacing). Here we just overwrite the 
-            # output affine by the input affine to make it match exactly. It must match exactly 
-            # because otherwise in undo_canonical_nifti it will result in differences also in offest.
-            img_pred = nib.Nifti1Image(img_pred.get_fdata(), img_in.affine)
+                                        order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, 
+                                        force_affine=img_in.affine)
 
         img_pred = undo_canonical(img_pred, img_in_orig)
 
@@ -271,6 +268,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         st = time.time()
         img_data = img_pred.get_fdata().astype(np.uint8)
         if multilabel_image:
+            if save_binary:
+                img_data = (img_data > 0).astype(np.uint8)
             nib.save(nib.Nifti1Image(img_data, img_pred.affine), file_out)  # recreate nifti image to ensure uint8 dtype
             if nora_tag != "None":
                 subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)

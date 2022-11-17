@@ -121,6 +121,10 @@ class_map = {
     "coronary_arteries": {
         1: "coronary_arteries",
     },
+    "body": {
+        1: "body_trunc",
+        2: "body_extremities",
+    },
     "test": {
         1: "carpal",
         2: "clavicula",
