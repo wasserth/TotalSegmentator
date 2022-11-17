@@ -266,6 +266,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if not quiet: print("Saving segmentations...")
         st = time.time()
+        if multilabel_image:
+            file_out.parent.mkdir(exist_ok=True, parents=True)
+        else:
+            file_out.mkdir(exist_ok=True, parents=True)
         img_data = img_pred.get_fdata().astype(np.uint8)
         if multilabel_image:
             if save_binary:
