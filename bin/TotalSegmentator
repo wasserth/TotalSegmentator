@@ -164,6 +164,7 @@ def main():
         if args.ml:
             raise ValueError("The argument --body_seg can not be set together with --ml")
         download_pretrained_weights(269)
+        args.output.mkdir(exist_ok=True, parents=True)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
         body_seg = nnUNet_predict_image(args.input, args.output / "body.nii.gz", 269, model="3d_fullres", folds=[0],
