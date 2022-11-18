@@ -138,7 +138,7 @@ def download_pretrained_weights(task_id):
     elif task_id == 269:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task269_Body_extrem_6mm_1200subj"
-        WEIGHTS_URL = "TODO"
+        WEIGHTS_URL = "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1"
     elif task_id == 503:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task503_cardiac_motion"
