@@ -129,9 +129,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, quiet=False, 
                          verbose=False, test=0):
     """
+    crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
     """
-    file_in, file_out = Path(file_in), Path(file_out)
+    file_in = Path(file_in)
+    if file_out is not None:
+        file_out = Path(file_out)
     multimodel = type(task_id) is list
 
     # for debugging
@@ -148,8 +151,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if crop is not None:
             if crop == "lung" or crop == "pelvis" or crop == "heart":
                 combine_masks(crop_path, crop_path / f"{crop}.nii.gz", crop)
-            crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
-            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=[5, 5, 5], dtype=np.int32,
+            if type(crop) is str:
+                crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
+            else:
+                crop_mask_img = crop
+            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=[3, 3, 3], dtype=np.int32,
                                       verbose=verbose)
             if not quiet:
                 print(f"  cropping from {crop_mask_img.shape} to {img_in.shape}")
@@ -264,49 +270,51 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         check_if_shape_and_affine_identical(img_in_orig, img_pred)
 
-        if not quiet: print("Saving segmentations...")
-        st = time.time()
-        if multilabel_image:
-            file_out.parent.mkdir(exist_ok=True, parents=True)
-        else:
-            file_out.mkdir(exist_ok=True, parents=True)
         img_data = img_pred.get_fdata().astype(np.uint8)
-        if multilabel_image:
-            if save_binary:
-                img_data = (img_data > 0).astype(np.uint8)
-            nib.save(nib.Nifti1Image(img_data, img_pred.affine), file_out)  # recreate nifti image to ensure uint8 dtype
-            if nora_tag != "None":
-                subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
-        else:  # save each class as a separate binary image
-            file_out.mkdir(exist_ok=True, parents=True)
-            # Code for single threaded execution  (runtime:24s)
-            if nr_threads_saving == 1:
-                for k, v in class_map[task_name].items():
-                    binary_img = img_data == k
-                    output_path = str(file_out / f"{v}.nii.gz")
-                    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine), output_path)
-                    if nora_tag != "None":
-                        subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+        if save_binary:
+            img_data = (img_data > 0).astype(np.uint8)
+
+        if file_out is not None:
+            if not quiet: print("Saving segmentations...")
+            st = time.time()
+            if multilabel_image:
+                file_out.parent.mkdir(exist_ok=True, parents=True)
             else:
-                # Code for multithreaded execution
-                #   Speed with different number of threads:
-                #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
-                nib.save(img_pred, tmp_dir / "s01.nii.gz")
-                _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
-                          class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
+                file_out.mkdir(exist_ok=True, parents=True)
+            if multilabel_image:
+                nib.save(nib.Nifti1Image(img_data, img_pred.affine), file_out)  # recreate nifti image to ensure uint8 dtype
+                if nora_tag != "None":
+                    subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
+            else:  # save each class as a separate binary image
+                file_out.mkdir(exist_ok=True, parents=True)
+                # Code for single threaded execution  (runtime:24s)
+                if nr_threads_saving == 1:
+                    for k, v in class_map[task_name].items():
+                        binary_img = img_data == k
+                        output_path = str(file_out / f"{v}.nii.gz")
+                        nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine), output_path)
+                        if nora_tag != "None":
+                            subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+                else:
+                    # Code for multithreaded execution
+                    #   Speed with different number of threads:
+                    #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
+                    nib.save(img_pred, tmp_dir / "s01.nii.gz")
+                    _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
+                            class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
 
-                # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
-                # pool = Pool(nr_threads_saving)
-                # results = []
-                # for k, v in class_map[task_name].items():
-                #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
-                # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
-                # pool.close()
-                # pool.join()
-        if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
+                    # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
+                    # pool = Pool(nr_threads_saving)
+                    # results = []
+                    # for k, v in class_map[task_name].items():
+                    #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
+                    # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
+                    # pool.close()
+                    # pool.join()
+            if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
-        # Postprocessing
-        if task_name == "lung_vessels":
-            remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
+            # Postprocessing
+            if task_name == "lung_vessels":
+                remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
 
-    return img_data
+    return nib.Nifti1Image(img_data, img_pred.affine)
