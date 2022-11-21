@@ -126,8 +126,8 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
                          resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
-                         save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, quiet=False, 
-                         verbose=False, test=0):
+                         save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
+                         quiet=False, verbose=False, test=0):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -183,7 +183,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         ss = img_in_rsp.shape
         # If image to big then split into 3 parts along z axis. Also make sure that z-axis is at least 200px otherwise
         # splitting along it does not really make sense.
-        if np.prod(ss) > nr_voxels_thr and ss[2] > 200 and multimodel:
+        do_triple_split = np.prod(ss) > nr_voxels_thr and ss[2] > 200 and multimodel
+        if force_split:
+            do_triple_split = True
+        if do_triple_split:
             if not quiet: print(f"Splitting into subparts...")
             img_parts = ["s01", "s02", "s03"]
             third = img_in_rsp.shape[2] // 3
@@ -237,7 +240,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
 
         # Combine image subparts back to one image
-        if np.prod(ss) > nr_voxels_thr and ss[2] > 200 and multimodel:
+        if do_triple_split:
             combined_img = np.zeros(img_in_rsp.shape, dtype=np.uint8)
             combined_img[:,:,:third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:,:,:-margin]
             combined_img[:,:,third:third*2] = nib.load(tmp_dir / "s02.nii.gz").get_fdata()[:,:,margin-1:-margin]
@@ -263,9 +266,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, 
                                         force_affine=img_in.affine)
 
+        if verbose: print("Undoing canonical...")
         img_pred = undo_canonical(img_pred, img_in_orig)
 
         if crop is not None:
+            if verbose: print("Undoing cropping...")
             img_pred = undo_crop(img_pred, img_in_orig, bbox)
 
         check_if_shape_and_affine_identical(img_in_orig, img_pred)
