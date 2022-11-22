@@ -109,16 +109,14 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
-def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None):
+def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None):
     k, v = class_map_item
     # Have to load img inside of each thread. If passing it as argument a lot slower.
     img = nib.load(tmp_dir / "s01.nii.gz")
     img_data = img.get_fdata()
     binary_img = img_data == k
     output_path = str(file_out / f"{v}.nii.gz")
-    # Save without setting the header from reference image, because this header often contains dtype float
-    # which would then save the mask as float
-    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine), output_path)
+    nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img.affine, header), output_path)
     if nora_tag != "None":
         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
 
@@ -281,13 +279,19 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if file_out is not None:
             if not quiet: print("Saving segmentations...")
+            # Copy header to make output header exactly the same as input. But change dtype otherwise it will be 
+            # float or int and therefore the masks will need a lot more space.
+            # (infos on header: https://nipy.org/nibabel/nifti_images.html)
+            new_header = img_in_orig.header.copy()
+            new_header.set_data_dtype(np.uint8)
+
             st = time.time()
             if multilabel_image:
                 file_out.parent.mkdir(exist_ok=True, parents=True)
             else:
                 file_out.mkdir(exist_ok=True, parents=True)
             if multilabel_image:
-                nib.save(nib.Nifti1Image(img_data, img_pred.affine), file_out)  # recreate nifti image to ensure uint8 dtype
+                nib.save(nib.Nifti1Image(img_data, img_pred.affine, new_header), file_out)  # recreate nifti image to ensure uint8 dtype
                 if nora_tag != "None":
                     subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
             else:  # save each class as a separate binary image
@@ -297,7 +301,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     for k, v in class_map[task_name].items():
                         binary_img = img_data == k
                         output_path = str(file_out / f"{v}.nii.gz")
-                        nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine), output_path)
+                        nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine, new_header), output_path)
                         if nora_tag != "None":
                             subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
                 else:
@@ -305,7 +309,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     #   Speed with different number of threads:
                     #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
                     nib.save(img_pred, tmp_dir / "s01.nii.gz")
-                    _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag),
+                    _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag, header=new_header),
                             class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
 
                     # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
