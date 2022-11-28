@@ -7,7 +7,6 @@ import subprocess
 
 import nibabel as nib
 import numpy as np
-import xmltodict
 
 
 def add_label_map_to_nifti(img_in, label_map):
@@ -63,6 +62,7 @@ def load_multilabel_nifti(img_path):
         img: nifti image
         label_map: a dictionary with label ids and names
     """
+    import xmltodict
     img = nib.load(img_path)
     ext_header = img.header.extensions[0].get_content()
     ext_header = xmltodict.parse(ext_header)
