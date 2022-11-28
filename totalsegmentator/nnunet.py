@@ -30,6 +30,7 @@ from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask
+from totalsegmentator.nifti_ext_header import save_multilabel_nifti
 
 
 def _get_full_task_name(task_id: int, src: str="raw"):
@@ -291,7 +292,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             else:
                 file_out.mkdir(exist_ok=True, parents=True)
             if multilabel_image:
-                nib.save(nib.Nifti1Image(img_data, img_pred.affine, new_header), file_out)  # recreate nifti image to ensure uint8 dtype
+                # nib.save(nib.Nifti1Image(img_data, img_pred.affine, new_header), file_out)  # recreate nifti image to ensure uint8 dtype
+                img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
+                save_multilabel_nifti(img_out, file_out, class_map[task_name])
                 if nora_tag != "None":
                     subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
             else:  # save each class as a separate binary image
