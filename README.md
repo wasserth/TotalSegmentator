@@ -4,7 +4,7 @@ Tool for segmentation of 104 classes in CT images. It was trained on a wide rang
 
 ![Alt text](resources/imgs/overview_classes.png)
 
-Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/ueber-uns/departemente/theragnostik/kliniken/radiologie-und-nuklearmedizin/lehre-und-forschung/forschung/team-forschungskoordination).  
+Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung).  
 If you use it please cite our paper: [https://arxiv.org/abs/2208.05868](https://arxiv.org/abs/2208.05868).  
 
 
