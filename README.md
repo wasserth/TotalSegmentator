@@ -91,6 +91,17 @@ totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m
 pip install git+https://github.com/wasserth/TotalSegmentator.git
 ```
 
+### Typical problems
+When you get the following error message
+```
+ITK ERROR: ITK only supports orthonormal direction cosines. No orthonormal definition found!
+```
+you should do
+```
+pip install SimpleITK==2.0.2
+```
+
+
 ### Reference 
 For more details see this paper [https://arxiv.org/abs/2208.05868](https://arxiv.org/abs/2208.05868).
 If you use this tool please cite it as follows
