@@ -50,6 +50,11 @@ See running containers
 docker container ls
 ```
 
+Restart docker (e.g. if crashed)
+```
+docker restart totalsegmentator-server-job
+```
+
 Stop docker
 ```
 docker stop totalsegmentator-server-job
