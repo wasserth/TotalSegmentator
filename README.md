@@ -45,12 +45,6 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 
 
-### Run via docker
-We also provide a docker container which can be used the following way
-```
-docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator_container:master TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
-```
-
 ### Subtasks
 We added some more models to TotalSegmentator beyond the default one. This allows segmentation of even 
 more classes in more detailed subparts of the image. First you have to run TotalSegmentator with the 
@@ -62,6 +56,21 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast
 TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
 TotalSegmentator -i ct.nii.gz -o segmentations -ta cerebral_bleed
 ```
+Overview of available subtasks and the classes which they contain
+* **lung_vessels**: lung_vessels, lung_trachea_bronchia
+* **cerebral_bleed**: intracerebral_hemorrhage
+* **hip_implant**: hip_implant
+* **coronary_arteries**: coronary_arteries
+* **body**: body, body_trunc, body_extremities, skin
+* **pleural_pericard_effusion**: pleural_effusion, pericardial_effusion
+
+
+### Run via docker
+We also provide a docker container which can be used the following way
+```
+docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator_container:master TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
+```
+
 
 ### Resource Requirements
 Totalsegmentator has the following runtime and memory requirements (using a Nvidia RTX 3090 GPU):  

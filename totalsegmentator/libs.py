@@ -143,10 +143,15 @@ def download_pretrained_weights(task_id):
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task503_cardiac_motion"
         WEIGHTS_URL = "https://zenodo.org/record/7271576/files/Task503_cardiac_motion.zip?download=1"
-    elif task_id == 517:
+    elif task_id == 273:
         config_dir = config_dir / "3d_fullres"
-        weights_path = config_dir / "Task517_Bones40"
-        WEIGHTS_URL = "TODO"
+        weights_path = config_dir / "Task273_Body_extrem_1259subj"
+        WEIGHTS_URL = "https://zenodo.org/record/7510286/files/Task273_Body_extrem_1259subj.zip?download=1"
+    elif task_id == 315:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task315_thoraxCT"
+        WEIGHTS_URL = "https://zenodo.org/record/7510288/files/Task315_thoraxCT.zip?download=1"
+
 
     for old_weight in old_weights:
         if (config_dir / old_weight).exists():

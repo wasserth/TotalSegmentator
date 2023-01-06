@@ -2,6 +2,9 @@
 * bugfix in cucim resampling
 * add 6mm body model
 * multilabel files contain label names in extended header
+* add body model
+* add pleural effusion model
+* remove SimpleITK version requirement
 
 
 ## Release 1.4.0

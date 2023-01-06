@@ -48,7 +48,7 @@ def main():
 
     # cerebral_bleed: Intracerebral hemorrhage 
     parser.add_argument("-ta", "--task", choices=["total", "lung_vessels", "cerebral_bleed", 
-                        "hip_implant", "coronary_arteries", "test"],
+                        "hip_implant", "coronary_arteries", "body", "pleural_pericard_effusion", "test"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
@@ -98,6 +98,8 @@ def main():
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
+    crop_addon = [3, 3, 3]  # default value
+
     if args.task == "total":
         if args.fast:
             task_id = 256
@@ -111,6 +113,7 @@ def main():
             trainer = "nnUNetTrainerV2_ep4000_nomirror"
             crop = None
         model = "3d_fullres"
+        folds = [0]
     elif args.task == "lung_vessels":
         task_id = 258
         resample = None
@@ -121,12 +124,14 @@ def main():
         if args.fast:
             raise ValueError("task lung_vessel does not work with option --fast")
         model = "3d_fullres"
+        folds = [0]
     elif args.task == "covid":
         task_id = 201
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "lung"
         model = "3d_fullres"
+        folds = [0]
         print("WARNING: The COVID model finds many types of lung opacity not only COVID. Use with care!")
     elif args.task == "cerebral_bleed":
         task_id = 150
@@ -134,25 +139,46 @@ def main():
         trainer = "nnUNetTrainerV2"
         crop = "brain"
         model = "3d_fullres"
+        folds = [0]
     elif args.task == "hip_implant":
         task_id = 260
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "pelvis"
         model = "3d_fullres"
+        folds = [0]
     elif args.task == "coronary_arteries":
         task_id = 503
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "heart"
         model = "3d_fullres"
+        folds = [0]
         print("WARNING: The coronary artery model does not work very robust. Use with care!")
+    elif args.task == "body":
+        task_id = 273
+        resample = 1.5
+        trainer = "nnUNetTrainerV2"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if args.ml:
+            raise ValueError("task body does not work with option --ml, because postprocessing is applied.")
+    elif args.task == "pleural_pericard_effusion":
+        task_id = 315
+        resample = None
+        trainer = "nnUNetTrainerV2"
+        crop = "lung"
+        crop_addon = [50, 50, 50]
+        model = "3d_fullres"
+        folds = None
     elif args.task == "test":
         task_id = [517]
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "body"
         model = "3d_fullres"
+        folds = [0]
 
     crop_path = args.output if args.crop_path is None else args.crop_path
 
@@ -171,7 +197,7 @@ def main():
                             trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                             save_binary=True, nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=1, 
-                            quiet=quiet, verbose=verbose, test=0)
+                            crop_addon=crop_addon, quiet=quiet, verbose=verbose, test=0)
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
@@ -180,7 +206,8 @@ def main():
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
                          crop=crop, crop_path=crop_path, task_name=args.task, nora_tag=args.nora_tag, preview=args.preview, 
                          nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=args.nr_thr_saving, 
-                         force_split=args.force_split, quiet=quiet, verbose=verbose, test=args.test)
+                         force_split=args.force_split, crop_addon=crop_addon, 
+                         quiet=quiet, verbose=verbose, test=args.test)
     seg = seg.get_fdata().astype(np.uint8)
 
     if args.statistics:
