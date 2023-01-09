@@ -7,6 +7,7 @@ Increase version number in code and commit
 - Changelog
 
 ```
+commit changes
 git push
 git tag -a v1.5 -m "version 1.5"
 git push origin --tags
