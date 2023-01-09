@@ -1,7 +1,7 @@
 ## Master
 
 
-## Release 1.5.1
+## Release 1.5.2
 * bugfix in cucim resampling
 * add 6mm body model
 * multilabel files contain label names in extended header

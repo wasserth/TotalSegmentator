@@ -7,9 +7,9 @@ Increase version number in code and commit
 - Changelog
 
 ```
-commit changes
+comm "increase version to 1.5.1"
 git push
-git tag -a v1.5 -m "version 1.5"
+git tag -a v1.5.1 -m "version 1.5.1"
 git push origin --tags
 python setup.py sdist bdist_wheel
 twine upload --skip-existing dist/*
