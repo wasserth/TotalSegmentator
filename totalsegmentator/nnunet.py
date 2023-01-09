@@ -110,9 +110,11 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
-def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None):
+def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None):
     k, v = class_map_item
     # Have to load img inside of each thread. If passing it as argument a lot slower.
+    if task_name != "total":
+        print(f"Creating {v}.nii.gz")
     img = nib.load(tmp_dir / "s01.nii.gz")
     img_data = img.get_fdata()
     binary_img = img_data == k
@@ -312,7 +314,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     #   Speed with different number of threads:
                     #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
                     nib.save(img_pred, tmp_dir / "s01.nii.gz")
-                    _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag, header=new_header),
+                    _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag, header=new_header, task_name=task_name),
                             class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
 
                     # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
@@ -330,7 +332,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
 
             if task_name == "body":
+                print("Creating body.nii.gz")
                 combine_masks(file_out, file_out / "body.nii.gz", "body")
+                print("Creating skin.nii.gz")
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")
 

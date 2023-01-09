@@ -50,11 +50,9 @@ We added some more models to TotalSegmentator beyond the default one. This allow
 more classes in more detailed subparts of the image. First you have to run TotalSegmentator with the 
 normal settings to get the normal masks. These masks are required to crop the image to a subregion on 
 which the detailed model will run.
-This is only available in the latest master branch at the moment.
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations --fast
 TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
-TotalSegmentator -i ct.nii.gz -o segmentations -ta cerebral_bleed
 ```
 Overview of available subtasks and the classes which they contain
 * **lung_vessels**: lung_vessels, lung_trachea_bronchia
