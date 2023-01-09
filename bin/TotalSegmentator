@@ -91,6 +91,9 @@ def main():
 
     quiet, verbose = args.quiet, args.verbose
 
+    if not quiet: 
+        print("\nIf you use this tool please cite: https://doi.org/10.48550/arXiv.2208.05868\n")
+
     if not torch.cuda.is_available():
         print("No GPU detected. Running on CPU. This can be very slow. The '--fast' option can help to some extend.")
 
