@@ -104,6 +104,7 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
     nr_cols = 10
 
     window_size = (1800, 400)
+    # window_size = (1800, 1200)  # if we need higher res image of single class
 
     scene = window.Scene()
     showm = window.ShowManager(scene, size=window_size, reset_camera=False)

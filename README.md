@@ -43,9 +43,12 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
-
+ 
 
 ### Subtasks
+
+![Alt text](resources/imgs/overview_subclasses.png)
+
 We added some more models to TotalSegmentator beyond the default one. This allows segmentation of even 
 more classes in more detailed subparts of the image. First you have to run TotalSegmentator with the 
 normal settings to get the normal masks. These masks are required to crop the image to a subregion on 
@@ -55,12 +58,12 @@ TotalSegmentator -i ct.nii.gz -o segmentations --fast
 TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
 ```
 Overview of available subtasks and the classes which they contain
-* **lung_vessels**: lung_vessels, lung_trachea_bronchia
+* **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **cerebral_bleed**: intracerebral_hemorrhage
 * **hip_implant**: hip_implant
 * **coronary_arteries**: coronary_arteries
 * **body**: body, body_trunc, body_extremities, skin
-* **pleural_pericard_effusion**: pleural_effusion, pericardial_effusion
+* **pleural_pericard_effusion**: pleural_effusion (cite [paper](http://dx.doi.org/10.1097/RLI.0000000000000869)), pericardial_effusion (cite [paper](http://dx.doi.org/10.3390/diagnostics12051045))
 
 
 ### Run via docker
