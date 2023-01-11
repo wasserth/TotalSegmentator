@@ -224,7 +224,7 @@ class_map = {
         116: "subcutaneous_fat",
         117: "skeletal_muscle",
         118: "torso_fat",
-        119: "spinal_canal",
+        119: "spinal_cord",
     },
     # combine all ribs, vertebrae groups and left/right
     "total_v2_fast": {
@@ -290,7 +290,7 @@ class_map = {
         60: "subcutaneous_fat",
         61: "skeletal_muscle",
         62: "torso_fat",
-        63: "spinal_canal"
+        63: "spinal_cord"
     },
     "lung_vessels": {
         1: "lung_vessels",
@@ -518,7 +518,7 @@ class_map_5_parts = {
         16: "subcutaneous_fat",
         17: "skeletal_muscle",
         18: "torso_fat",
-        19: "spinal_canal"
+        19: "spinal_cord"
     },
 
     "test": class_map["test"]

@@ -126,6 +126,129 @@ Moreover, we would really appreciate if you let us know what you are using this 
 
 ### Class details
 
-|TotalSegmentator name|TA2 name|Notes|
-|:-----|:-----|:-----|
-|spleen||test|
+The following table shows a list of all classes.
+
+TA2 is a standardised way to name anatomy. Mostly the TotalSegmentator names follow this standard. 
+For some classes they differ which you can see in the table below.
+
+|TotalSegmentator name|TA2 name|
+|:-----|:-----|
+spleen ||
+kidney_right ||
+kidney_left ||
+gallbladder ||
+liver ||
+stomach ||
+aorta ||
+inferior_vena_cava ||
+portal_vein_and_splenic_vein | hepatic portal vein |
+pancreas ||
+adrenal_gland_right | suprarenal gland |
+adrenal_gland_left | suprarenal gland |
+lung_upper_lobe_left | superior lobe of left lung |
+lung_lower_lobe_left | inferior lobe of left lung |
+lung_upper_lobe_right | superior lobe of right lung |
+lung_middle_lobe_right | middle lobe of right lung |
+lung_lower_lobe_right | inferior lobe of right lung |
+vertebrae_L5 ||
+vertebrae_L4 ||
+vertebrae_L3 ||
+vertebrae_L2 ||
+vertebrae_L1 ||
+vertebrae_T12 ||
+vertebrae_T11 ||
+vertebrae_T10 ||
+vertebrae_T9 ||
+vertebrae_T8 ||
+vertebrae_T7 ||
+vertebrae_T6 ||
+vertebrae_T5 ||
+vertebrae_T4 ||
+vertebrae_T3 ||
+vertebrae_T2 ||
+vertebrae_T1 ||
+vertebrae_C7 ||
+vertebrae_C6 ||
+vertebrae_C5 ||
+vertebrae_C4 ||
+vertebrae_C3 ||
+vertebrae_C2 ||
+vertebrae_C1 ||
+esophagus ||
+trachea ||
+heart_myocardium ||
+heart_atrium_left ||
+heart_ventricle_left ||
+heart_atrium_right ||
+heart_ventricle_right ||
+pulmonary_artery | pulmonary arteries |
+brain ||
+iliac_artery_left | common iliac artery |
+iliac_artery_right | common iliac artery |
+iliac_vena_left | common iliac vein |
+iliac_vena_right | common iliac vein |
+small_bowel | small intestine |
+duodenum ||
+colon ||
+rib_left_1 ||
+rib_left_2 ||
+rib_left_3 ||
+rib_left_4 ||
+rib_left_5 ||
+rib_left_6 ||
+rib_left_7 ||
+rib_left_8 ||
+rib_left_9 ||
+rib_left_10 ||
+rib_left_11 ||
+rib_left_12 ||
+rib_right_1 ||
+rib_right_2 ||
+rib_right_3 ||
+rib_right_4 ||
+rib_right_5 ||
+rib_right_6 ||
+rib_right_7 ||
+rib_right_8 ||
+rib_right_9 ||
+rib_right_10 ||
+rib_right_11 ||
+rib_right_12 ||
+scapula_left ||
+scapula_right ||
+clavicula_left | clavicle |
+clavicula_right | clavicle |
+hip_left | hip bone |
+hip_right | hip bone |
+sacrum ||
+face ||
+gluteus_maximus_left | gluteus maximus muscle |
+gluteus_maximus_right | gluteus maximus muscle |
+gluteus_medius_left | gluteus medius muscle |
+gluteus_medius_right | gluteus medius muscle |
+gluteus_minimus_left | gluteus minimus muscle |
+gluteus_minimus_right | gluteus minimus muscle |
+autochthon_left ||
+autochthon_right ||
+iliopsoas_left | iliopsoas muscle |
+iliopsoas_right | iliopsoas muscle |
+urinary_bladder ||
+femur ||
+patella ||
+tibia ||
+fibula ||
+tarsal ||
+metatarsal ||
+phalanges_feet ||
+humerus ||
+ulna ||
+radius ||
+carpal ||
+metacarpal ||
+phalanges_hand ||
+sternum ||
+skull ||
+subcutaneous_fat ||
+skeletal_muscle ||
+torso_fat ||
+spinal_cord ||
