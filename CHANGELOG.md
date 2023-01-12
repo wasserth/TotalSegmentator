@@ -1,4 +1,5 @@
 ## Master
+* Correct wording in error messages
 
 
 ## Release 1.5.2

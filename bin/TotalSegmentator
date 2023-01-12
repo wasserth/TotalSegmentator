@@ -134,7 +134,7 @@ def main():
         model = "3d_fullres"
         folds = [0]
         print("WARNING: The COVID model finds many types of lung opacity not only COVID. Use with care!")
-        if args.fast: raise ValueError("task lung_vessel does not work with option --fast")
+        if args.fast: raise ValueError("task covid does not work with option --fast")
     elif args.task == "cerebral_bleed":
         task_id = 150
         resample = None
