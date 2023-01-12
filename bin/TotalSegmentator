@@ -122,8 +122,8 @@ def main():
         resample = None
         trainer = "nnUNetTrainerV2"
         crop = "lung"
-        if args.ml: raise ValueError("task lung_vessel does not work with option --ml, because of postprocessing.")
-        if args.fast: raise ValueError("task lung_vessel does not work with option --fast")
+        if args.ml: raise ValueError("task lung_vessels does not work with option --ml, because of postprocessing.")
+        if args.fast: raise ValueError("task lung_vessels does not work with option --fast")
         model = "3d_fullres"
         folds = [0]
     elif args.task == "covid":
@@ -142,7 +142,7 @@ def main():
         crop = "brain"
         model = "3d_fullres"
         folds = [0]
-        if args.fast: raise ValueError("task lung_vessel does not work with option --fast")
+        if args.fast: raise ValueError("task cerebral_bleed does not work with option --fast")
     elif args.task == "hip_implant":
         task_id = 260
         resample = None
@@ -150,7 +150,7 @@ def main():
         crop = "pelvis"
         model = "3d_fullres"
         folds = [0]
-        if args.fast: raise ValueError("task lung_vessel does not work with option --fast")
+        if args.fast: raise ValueError("task hip_implant does not work with option --fast")
     elif args.task == "coronary_arteries":
         task_id = 503
         resample = None
@@ -159,7 +159,7 @@ def main():
         model = "3d_fullres"
         folds = [0]
         print("WARNING: The coronary artery model does not work very robustly. Use with care!")
-        if args.fast: raise ValueError("task lung_vessel does not work with option --fast")
+        if args.fast: raise ValueError("task coronary_arteries does not work with option --fast")
     elif args.task == "body":
         if args.fast:
             task_id = 269
@@ -176,7 +176,7 @@ def main():
             crop = None
             model = "3d_fullres"
             folds = [0]
-        if args.ml: raise ValueError("task lung_vessel does not work with option --ml, because of postprocessing.")
+        if args.ml: raise ValueError("task body does not work with option --ml, because of postprocessing.")
     elif args.task == "pleural_pericard_effusion":
         task_id = 315
         resample = None
@@ -185,7 +185,7 @@ def main():
         crop_addon = [50, 50, 50]
         model = "3d_fullres"
         folds = None
-        if args.fast: raise ValueError("task lung_vessel does not work with option --fast")
+        if args.fast: raise ValueError("task pleural_pericard_effusion does not work with option --fast")
     elif args.task == "test":
         task_id = [517]
         resample = None
