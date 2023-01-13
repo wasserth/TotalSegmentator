@@ -28,7 +28,7 @@ if __name__ == "__main__":
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-o", metavar="filepath", dest="output",
-                        help="Output directory for combined mask", 
+                        help="Output path for combined mask", 
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-m", "--masks", type=str, choices=["lung", "lung_left", "lung_right", 
