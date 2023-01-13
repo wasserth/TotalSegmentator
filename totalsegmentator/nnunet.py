@@ -128,7 +128,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
                          resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
-                         crop_addon=[3,3,3], quiet=False, verbose=False, test=0):
+                         crop_addon=[3,3,3], roi_subset=None, quiet=False, verbose=False, test=0):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -301,9 +301,15 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
             else:  # save each class as a separate binary image
                 file_out.mkdir(exist_ok=True, parents=True)
+
+                # Select subset of classes if required
+                selected_classes = class_map[task_name]
+                if roi_subset is not None:
+                    selected_classes = {k:v for k, v in selected_classes.items() if v in roi_subset}
+
                 # Code for single threaded execution  (runtime:24s)
                 if nr_threads_saving == 1:
-                    for k, v in class_map[task_name].items():
+                    for k, v in selected_classes.items():
                         binary_img = img_data == k
                         output_path = str(file_out / f"{v}.nii.gz")
                         nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine, new_header), output_path)
@@ -315,12 +321,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
                     nib.save(img_pred, tmp_dir / "s01.nii.gz")
                     _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag, header=new_header, task_name=task_name, quiet=quiet),
-                            class_map[task_name].items(), num_cpus=nr_threads_saving, disable=quiet)
+                              selected_classes.items(), num_cpus=nr_threads_saving, disable=quiet)
 
                     # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
                     # pool = Pool(nr_threads_saving)
                     # results = []
-                    # for k, v in class_map[task_name].items():
+                    # for k, v in selected_classes.items():
                     #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
                     # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
                     # pool.close()

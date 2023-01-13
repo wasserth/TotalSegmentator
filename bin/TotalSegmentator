@@ -52,10 +52,9 @@ def main():
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
-    # todo: implement this (prio2)
-    # for 15mm model only run the models which are needed for these rois
-    # parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
-    #                     help="Manually define only a subset of classes to predict")
+    # todo: for 15mm model only run the models which are needed for these rois
+    parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
+                        help="Define a subset of classes to save (space separated list of class names)")
 
     parser.add_argument("-s", "--statistics", action="store_true", 
                         help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
@@ -220,7 +219,7 @@ def main():
                          trainer=trainer, tta=False, multilabel_image=args.ml, resample=resample,
                          crop=crop, crop_path=crop_path, task_name=args.task, nora_tag=args.nora_tag, preview=args.preview, 
                          nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=args.nr_thr_saving, 
-                         force_split=args.force_split, crop_addon=crop_addon, 
+                         force_split=args.force_split, crop_addon=crop_addon, roi_subset=args.roi_subset,
                          quiet=quiet, verbose=verbose, test=args.test)
     seg = seg.get_fdata().astype(np.uint8)
 

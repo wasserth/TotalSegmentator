@@ -1,5 +1,6 @@
 ## Master
 * Correct wording in error messages
+* add `--roi_subset` argument
 
 
 ## Release 1.5.2
