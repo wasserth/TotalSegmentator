@@ -295,7 +295,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 file_out.mkdir(exist_ok=True, parents=True)
             if multilabel_image:
                 # nib.save(nib.Nifti1Image(img_data, img_pred.affine, new_header), file_out)  # recreate nifti image to ensure uint8 dtype
-                output_path = str(file_out / f"full_segmentation.nii.gz")
+                output_path = str(file_out / f"segmentation.nii.gz")
                 img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
                 save_multilabel_nifti(img_out, output_path, class_map[task_name])
                 if nora_tag != "None":
