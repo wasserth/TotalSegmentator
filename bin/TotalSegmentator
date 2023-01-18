@@ -226,14 +226,16 @@ def main():
     if args.statistics:
         if not quiet: print("Calculating statistics...")  
         st = time.time()
-        get_basic_statistics_for_entire_dir(seg, args.input, args.output / "statistics.json", quiet)
+        stats_dir = args.output.parent if args.ml else args.output
+        get_basic_statistics_for_entire_dir(seg, args.input, stats_dir / "statistics.json", quiet)
         # get_radiomics_features_for_entire_dir(args.input, args.output, args.output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
     if args.radiomics:
         if not quiet: print("Calculating radiomics...")  
         st = time.time()
-        get_radiomics_features_for_entire_dir(args.input, args.output, args.output / "statistics_radiomics.json")
+        stats_dir = args.output.parent if args.ml else args.output
+        get_radiomics_features_for_entire_dir(args.input, args.output, stats_dir / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
 

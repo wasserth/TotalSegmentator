@@ -255,7 +255,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             if not quiet: print("Generating preview...")
             st = time.time()
             smoothing = 20
-            generate_preview(img_in_rsp, file_out / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
+            preview_dir = file_out.parent if multilabel_image else file_out
+            generate_preview(img_in_rsp, preview_dir / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
             if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
 
         if resample is not None:
