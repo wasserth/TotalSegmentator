@@ -105,6 +105,7 @@ totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m
 pip install git+https://github.com/wasserth/TotalSegmentator.git
 ```
 
+
 ### Typical problems
 When you get the following error message
 ```
@@ -123,6 +124,11 @@ If you use this tool please cite it as follows
 Wasserthal J., Meyer M., Breit H., Cyriac J., Yang S., Segeroth M. TotalSegmentator: robust segmentation of 104 anatomical structures in CT images, 2022. URL: https://arxiv.org/abs/2208.05868.  arXiv: 2208.05868
 ```
 Moreover, we would really appreciate if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).
+
+
+### Certification
+
+If you are interested in a CE certified version of TotalSegmentator please get in touch: jakob.wasserthal@usb.ch
 
 
 ### Class details
