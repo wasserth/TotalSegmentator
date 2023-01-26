@@ -47,8 +47,10 @@ def main():
                         default=False)
 
     # cerebral_bleed: Intracerebral hemorrhage 
+    # liver_vessels: hepatic vessels
     parser.add_argument("-ta", "--task", choices=["total", "lung_vessels", "cerebral_bleed", 
-                        "hip_implant", "coronary_arteries", "body", "pleural_pericard_effusion", "test"],
+                        "hip_implant", "coronary_arteries", "body", "pleural_pericard_effusion", 
+                        "liver_vessels", "test"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
@@ -185,6 +187,15 @@ def main():
         model = "3d_fullres"
         folds = None
         if args.fast: raise ValueError("task pleural_pericard_effusion does not work with option --fast")
+    elif args.task == "liver_vessels":
+        task_id = 8
+        resample = None
+        trainer = "nnUNetTrainerV2"
+        crop = "liver"
+        crop_addon = [20, 20, 20]
+        model = "3d_fullres"
+        folds = None
+        if args.fast: raise ValueError("task liver_vessels does not work with option --fast")
     elif args.task == "test":
         task_id = [517]
         resample = None

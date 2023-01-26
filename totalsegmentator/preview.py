@@ -71,6 +71,9 @@ roi_groups = {
     "pleural_pericard_effusion": [
         ["pleural_effusion", "pericardial_effusion"]
     ],
+    "liver_vessels": [
+        ["liver_vessels", "liver_tumor"]
+    ],
     "test": [
         ["carpal", "clavicula", "femur", "fibula", "humerus", "metacarpal", "metatarsal", 
         "patella", "hips", "phalanges_hand", "radius", "ribs", "scapula", "skull", "spine", 

@@ -317,6 +317,10 @@ class_map = {
         2: "pleural_effusion",
         3: "pericardial_effusion",
     },
+    "liver_vessels": {
+        1: "liver_vessels",
+        2: "liver_tumor"
+    },
     "test": {
         1: "carpal",
         2: "clavicula",
