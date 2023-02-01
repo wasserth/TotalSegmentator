@@ -21,7 +21,7 @@ setup(name='TotalSegmentator',
             'p_tqdm',
             'xvfbwrapper',
             'fury',
-            'batchgenerators==0.21',
+            'batchgenerators>=0.21',
             # This does not work if want to upload to pypi
             # 'nnunet @ git+https://github.com/wasserth/nnUNet_cust@working_2022_03_18#egg=nnUNet'
             'nnunet-customized==1.1',
