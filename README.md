@@ -8,7 +8,6 @@ Created by the department of [Research and Analysis at University Hospital Basel
 If you use it please cite our paper: [https://arxiv.org/abs/2208.05868](https://arxiv.org/abs/2208.05868). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
 
 
-
 ### Installation
 
 TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU (on CPU it is slow).
@@ -36,6 +35,8 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 > Note: If a CUDA compatible GPU is available TotalSegmentator will automatically use it. Otherwise it will use the CPU, which is a lot slower and should only be used with the `--fast` option.  
 
 > Note: You can also try it online: [www.totalsegmentator.com](https://totalsegmentator.com/) (supports dicom files)
+
+> Note: This is not a medical device and not intended for clinical usage.
 
 
 ### Advanced settings
@@ -134,7 +135,7 @@ Moreover, we would really appreciate if you let us know what you are using this 
 
 ### Certification
 
-If you are interested in a CE certified version of TotalSegmentator please get in touch: jakob.wasserthal@usb.ch
+We are working on a CE certified version of TotalSegmentator. If you are interested please get in touch: jakob.wasserthal@usb.ch
 
 
 ### Class details
