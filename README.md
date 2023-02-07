@@ -81,6 +81,10 @@ Totalsegmentator has the following runtime and memory requirements (using a Nvid
 
 ![Alt text](resources/imgs/runtime_table.png)
 
+If you want to reduce memory consumption you can use the following options:
+* `--body_seg`: This will crop the image to the body region before processing it
+* `--force_split`: This will split the image into 3 parts and process them one after another
+
 
 ### Train / validation / test split
 The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.  
