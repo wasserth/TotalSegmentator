@@ -151,6 +151,9 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     old_shape = np.array(data.shape)
     img_spacing = np.array(img_in.header.get_zooms())
 
+    if len(img_spacing) == 4:
+        img_spacing = img_spacing[:3]  # for 4D images only use spacing of first 3 dims
+
     if type(new_spacing) is float:
         new_spacing = [new_spacing,] * 3   # for 3D and 4D
     new_spacing = np.array(new_spacing)

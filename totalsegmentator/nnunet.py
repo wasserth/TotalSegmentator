@@ -147,6 +147,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if verbose: print(f"tmp_dir: {tmp_dir}")
 
         img_in_orig = nib.load(file_in)
+        if len(img_in_orig.shape) == 2:
+            raise ValueError("TotalSegmentator does not work for 2D images. Use a 3D image.")
+        if len(img_in_orig.shape) > 3:
+            print(f"WARNING: Input image has {len(img_in_orig.shape)} dimensions. Only using first three dimensions.")
+            img_in_orig = nib.Nifti1Image(img_in_orig.get_fdata()[:,:,:,0], img_in_orig.affine)
+        
         img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
 
         if crop is not None:
