@@ -60,13 +60,22 @@ which the detailed model will run.
 TotalSegmentator -i ct.nii.gz -o segmentations --fast
 TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
 ```
-Overview of available subtasks and the classes which they contain
+Overview of available subtasks and the classes which they contain.
+
+Openly available:  
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **cerebral_bleed**: intracerebral_hemorrhage
 * **hip_implant**: hip_implant
 * **coronary_arteries**: coronary_arteries
 * **body**: body, body_trunc, body_extremities, skin
 * **pleural_pericard_effusion**: pleural_effusion (cite [paper](http://dx.doi.org/10.1097/RLI.0000000000000869)), pericardial_effusion (cite [paper](http://dx.doi.org/10.3390/diagnostics12051045))
+
+Available after purchase of a license (free licenses available for academic projects). Contact jakob.wasserthal@usb.ch if you are interested:  
+* **bones_extremities**: femur, patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, humerus, ulna, radius, carpal, metacarpal, phalanges_hand, sternum, skull, spinal_cord
+* **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
+* **heartchambers_highres**: more precise heart chamber segmentation (trained on sub-millimeter resolution)
+* **head**:  mandible, teeth, brainstem, subarachnoid_cavity, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus, tyroid (trained on sub-millimeter resolution)
+* **aortic_branches**:  brachiocephalic_trunc, subclavian_artery_right, subclavian_artery_left, common_carotid_artery_right, common_carotid_artery_left, brachiocephalic_vein_left, brachiocephalic_vein_right, atrial_appendage_left, superior_vena_cava, pulmunary_vein, tyroid
 
 
 ### Run via docker
@@ -131,11 +140,6 @@ Wasserthal J., Meyer M., Breit H., Cyriac J., Yang S., Segeroth M. TotalSegmenta
 ```
 Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.  
 Moreover, we would really appreciate if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).
-
-
-### Certification
-
-We are working on a CE certified version of TotalSegmentator. If you are interested please get in touch: jakob.wasserthal@usb.ch
 
 
 ### Class details
