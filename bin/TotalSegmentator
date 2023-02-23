@@ -50,7 +50,8 @@ def main():
     # liver_vessels: hepatic vessels
     parser.add_argument("-ta", "--task", choices=["total", "lung_vessels", "cerebral_bleed", 
                         "hip_implant", "coronary_arteries", "body", "pleural_pericard_effusion", 
-                        "liver_vessels", "test"],
+                        "liver_vessels", "bones_extremities", "tissue_types",
+                        "heartchambers_highres", "head", "aortic_branches", "test"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
@@ -196,6 +197,11 @@ def main():
         model = "3d_fullres"
         folds = None
         if args.fast: raise ValueError("task liver_vessels does not work with option --fast")
+    elif args.task in ["bones_extremities", "tissue_types", "heartchambers_highres",
+                       "head", "aortic_branches"]:
+        print("\nThis model is only available upon purchase of a license (free licenses available for " +
+              "academic projects). \nContact jakob.wasserthal@usb.ch if you are interested.\n")
+        sys.exit()
     elif args.task == "test":
         task_id = [517]
         resample = None
