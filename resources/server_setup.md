@@ -50,11 +50,6 @@ See running containers
 docker container ls
 ```
 
-Restart docker (e.g. if crashed)
-```
-docker restart totalsegmentator-server-job
-```
-
 Stop docker
 ```
 docker stop totalsegmentator-server-job
@@ -74,6 +69,11 @@ docker rm $(docker ps -a -q -f status=exited)
 Remove all untagged images
 ```
 docker rmi $(docker images | grep "<none>" | awk '{print $3}')
+```
+
+Restart docker (e.g. if crashed)
+```
+docker restart totalsegmentator-server-job
 ```
 
 
