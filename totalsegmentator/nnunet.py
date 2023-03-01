@@ -208,6 +208,18 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         st = time.time()
         if multimodel:  # if running multiple models 
+            # only compute model parts containing the roi subset
+            if roi_subset is not None:
+                part_name = []
+                new_task_id = []
+                for part_key, part_map in class_map_5_parts.items():
+                    if any(organ in roi_subset for organ in part_map.values()):
+                        # get taskid associated to model part key
+                        new_task_id.append(list(map_taskid_to_partname.keys())[list(map_taskid_to_partname.values()).index(part_key)])
+                        part_name.append(part_key)
+                task_id = new_task_id
+                print(f"Computing parts: {part_name} based on the provided roi_subset")
+
             if test == 0:
                 class_map_inv = {v: k for k, v in class_map[task_name].items()}
                 (tmp_dir / "parts").mkdir(exist_ok=True)
@@ -218,7 +230,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     seg_combined[img_part] = np.zeros(img_shape, dtype=np.uint8)
                 # Run several tasks and combine results into one segmentation
                 for idx, tid in enumerate(task_id):
-                    print(f"Predicting part {idx} of 5 ...")
+                    print(f"Predicting part {idx+1} of {len(task_id)} ...")
                     with nostdout(verbose):
                         nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
                     # iterate over models (different sets of classes)
