@@ -1,6 +1,7 @@
 ## Master
 * Correct wording in error messages
 * add `--roi_subset` argument
+* Use newer nnunet-customized version to avoid sklearn import error
 
 
 ## Release 1.5.2
