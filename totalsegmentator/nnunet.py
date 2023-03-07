@@ -211,16 +211,17 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
             # only compute model parts containing the roi subset
             if roi_subset is not None:
-                part_name = []
+                part_names = []
                 new_task_id = []
-                for part_key, part_map in class_map_5_parts.items():
+                for part_name, part_map in class_map_5_parts.items():
                     if any(organ in roi_subset for organ in part_map.values()):
-                        # get taskid associated to model part key
-                        new_task_id.append(list(map_taskid_to_partname.keys())[list(map_taskid_to_partname.values()).index(part_key)])
-                        part_name.append(part_key)
+                        # get taskid associated to model part_name
+                        map_partname_to_taskid = {v:k for k,v in map_taskid_to_partname.items()}
+                        new_task_id.append(map_partname_to_taskid[part_name])
+                        part_names.append(part_name)
                 task_id = new_task_id
                 if verbose:
-                    print(f"Computing parts: {part_name} based on the provided roi_subset")
+                    print(f"Computing parts: {part_names} based on the provided roi_subset")
 
             if test == 0:
                 class_map_inv = {v: k for k, v in class_map[task_name].items()}
