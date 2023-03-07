@@ -57,7 +57,7 @@ def main():
 
     # todo: for 15mm model only run the models which are needed for these rois
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
-                        help="Define a subset of classes to save (space separated list of class names)")
+                        help="Define a subset of classes to save (space separated list of class names). If running 1.5mm model, will only run the appropriate models for these rois.")
 
     parser.add_argument("-s", "--statistics", action="store_true", 
                         help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
