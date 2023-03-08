@@ -36,6 +36,7 @@ setup(name='TotalSegmentator',
             'Operating System :: MacOS'
         ],
         scripts=[
-            'bin/TotalSegmentator', 'bin/totalseg_combine_masks', 'bin/crop_to_body'
+            'bin/TotalSegmentator', 'bin/totalseg_combine_masks', 'bin/crop_to_body', 
+            'bin/totalseg_import_weights'
         ]
     )

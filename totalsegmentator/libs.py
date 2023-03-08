@@ -192,7 +192,7 @@ def setup_nnunet():
         weights_dir = config_dir / "nnunet/results"
 
     # This variables will only be active during the python script execution. Therefore
-    # do not have to unset them in the end.
+    # we do not have to unset them in the end.
     os.environ["nnUNet_raw_data_base"] = str(weights_dir)  # not needed, just needs to be an existing directory
     os.environ["nnUNet_preprocessed"] = str(weights_dir)  # not needed, just needs to be an existing directory
     os.environ["RESULTS_FOLDER"] = str(weights_dir)
