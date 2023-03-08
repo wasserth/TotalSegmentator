@@ -115,6 +115,20 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
+Normally weights are automatically downloaded when running TotalSegmentator. If you want to manually download the weights (download links see [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/libs.py#L75)) and copy them into the right directory so TotalSegmentator can find them use this:
+```
+totalseg_import_weights -i my_downloaded_weights.zip
+```
+
+### Python API
+You can run totalsegmentator via python:
+```python
+from totalsegmentator.python_api import totalsegmentator
+
+totalsegmentator(input_path, output_path)
+```
+
+
 ### Install latest master branch (contains latest bug fixes)
 ```
 pip install git+https://github.com/wasserth/TotalSegmentator.git
