@@ -17,7 +17,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      force_split=False, quiet=False, verbose=False, test=0):
     """
     Run TotalSegmentator from within python. 
-    
+
     For explanation of the arguments see description of command line 
     arguments in bin/TotalSegmentator.
     """
@@ -126,6 +126,15 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         model = "3d_fullres"
         folds = None
         if fast: raise ValueError("task liver_vessels does not work with option --fast")
+    elif task == "heartchambers_test":
+        task_id = 415
+        resample = None
+        trainer = "nnUNetTrainerV2"
+        crop = "heart"
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = None
+        if fast: raise ValueError("task heartchambers_test does not work with option --fast")
     elif task in ["bones_extremities", "tissue_types", "heartchambers_highres",
                        "head", "aortic_branches"]:
         print("\nThis model is only available upon purchase of a license (free licenses available for " +

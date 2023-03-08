@@ -155,6 +155,10 @@ def download_pretrained_weights(task_id):
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task008_HepaticVessel"
         WEIGHTS_URL = "https://zenodo.org/record/7573746/files/Task008_HepaticVessel.zip?download=1"
+    elif task_id == 415:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task415_heart_964subj"
+        WEIGHTS_URL = "manually_download"
 
 
     for old_weight in old_weights:
