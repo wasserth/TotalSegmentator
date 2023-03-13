@@ -68,7 +68,8 @@ def contains_empty_img(imgs):
 
 
 def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
-                   trainer="nnUNetTrainerV2", tta=False):
+                   trainer="nnUNetTrainerV2", tta=False,
+                   num_threads_preprocessing=6, num_threads_nifti_save=2):
     """
     Identical to bash function nnUNet_predict
 
@@ -78,8 +79,8 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
             for only fold 0: [0]
     """
     save_npz = False
-    num_threads_preprocessing = 6
-    num_threads_nifti_save = 2
+    # num_threads_preprocessing = 6
+    # num_threads_nifti_save = 2
     # num_threads_preprocessing = 1
     # num_threads_nifti_save = 1
     lowres_segmentations = None
@@ -235,7 +236,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 for idx, tid in enumerate(task_id):
                     print(f"Predicting part {idx+1} of {len(task_id)} ...")
                     with nostdout(verbose):
-                        nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta)
+                        nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
+                                       nr_threads_resampling, nr_threads_saving)
                     # iterate over models (different sets of classes)
                     for img_part in img_parts:
                         (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
@@ -252,7 +254,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             if not quiet: print(f"Predicting...")
             if test == 0 or test == 2:
                 with nostdout(verbose):
-                    nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta)
+                    nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
+                                   nr_threads_resampling, nr_threads_saving)
             # elif test == 2:
             #     print("WARNING: Using reference seg instead of prediction for testing.")
             #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
