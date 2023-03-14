@@ -330,6 +330,27 @@ class_map = {
         6: "aorta", 
         7: "pulmonary_artery"
     },
+    "bones_tissue_test" : {
+        1: "femur",
+        2: "patella",
+        3: "tibia",
+        4: "fibula",
+        5: "tarsal",
+        6: "metatarsal",
+        7: "phalanges_feet",
+        8: "humerus",
+        9: "ulna",
+        10: "radius",
+        11: "carpal",
+        12: "metacarpal",
+        13: "phalanges_hand",
+        14: "sternum",
+        15: "skull",
+        16: "subcutaneous_fat",
+        17: "skeletal_muscle",
+        18: "torso_fat",
+        19: "spinal_cord"
+    },
     "test": {
         1: "carpal",
         2: "clavicula",

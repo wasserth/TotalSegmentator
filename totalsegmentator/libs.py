@@ -159,6 +159,10 @@ def download_pretrained_weights(task_id):
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task415_heart_964subj"
         WEIGHTS_URL = "manually_download"
+    elif task_id == 278:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task278_TotalSegmentator_part6_bones_1259subj"
+        WEIGHTS_URL = "manually_download"
 
 
     for old_weight in old_weights:

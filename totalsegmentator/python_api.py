@@ -135,6 +135,14 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         model = "3d_fullres"
         folds = None
         if fast: raise ValueError("task heartchambers_test does not work with option --fast")
+    elif task == "bones_tissue_test":
+        task_id = 278
+        resample = 1.5
+        trainer = "nnUNetTrainerV2_ep4000_nomirror"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task bones_tissue_test does not work with option --fast")
     elif task in ["bones_extremities", "tissue_types", "heartchambers_highres",
                        "head", "aortic_branches"]:
         print("\nThis model is only available upon purchase of a license (free licenses available for " +
