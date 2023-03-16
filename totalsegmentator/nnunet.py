@@ -27,7 +27,7 @@ from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
 from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical
-from totalsegmentator.dicom_io import dcm_to_nifti
+from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin
@@ -157,6 +157,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             if not quiet: print("Converting dicom to nifti...")
             (tmp_dir / "dcm").mkdir()  # make subdir otherwise this file would be included by nnUNet_predict
             dcm_to_nifti(file_in, tmp_dir / "dcm" / "converted_dcm.nii.gz", verbose=verbose)
+            file_in_dcm = file_in
             file_in = tmp_dir / "dcm" / "converted_dcm.nii.gz"
             if not multilabel_image:
                 shutil.copy(file_in, file_out / "input_file.nii.gz")
@@ -322,6 +323,15 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if file_out is not None:
             if not quiet: print("Saving segmentations...")
+
+            # Select subset of classes if required
+            selected_classes = class_map[task_name]
+            if roi_subset is not None:
+                selected_classes = {k:v for k, v in selected_classes.items() if v in roi_subset}
+
+            if img_type == "dicom":
+                save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out / "segmentations.dcm")
+
             # Copy header to make output header exactly the same as input. But change dtype otherwise it will be 
             # float or int and therefore the masks will need a lot more space.
             # (infos on header: https://nipy.org/nibabel/nifti_images.html)
@@ -341,11 +351,6 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
             else:  # save each class as a separate binary image
                 file_out.mkdir(exist_ok=True, parents=True)
-
-                # Select subset of classes if required
-                selected_classes = class_map[task_name]
-                if roi_subset is not None:
-                    selected_classes = {k:v for k, v in selected_classes.items() if v in roi_subset}
 
                 # Code for single threaded execution  (runtime:24s)
                 if nr_threads_saving == 1:

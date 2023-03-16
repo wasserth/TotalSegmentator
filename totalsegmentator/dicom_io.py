@@ -8,6 +8,7 @@ import subprocess
 import platform
 
 import numpy as np
+import nibabel as nib
 
 from totalsegmentator.libs import get_config_dir
 
@@ -66,3 +67,32 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
         # todo: have to rename first file to not contain any counter which is automatically added by dcm2niix
 
     os.remove(str(output_path)[:-7] + ".json")
+
+
+def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output_path):
+    """
+    dcm_reference_file: a directory with dcm slices ??
+    """
+    from rt_utils import RTStructBuilder
+
+    # todo: set lower logging level
+
+    print(f"Saving RT Struct ...")
+    # create new RT Struct - requires original DICOM
+    rtstruct = RTStructBuilder.create_new(dicom_series_path=dcm_reference_file)
+
+    # add mask to RT Struct
+    for class_idx, class_name in selected_classes.items():
+        binary_img = img_data == class_idx
+        # nii_img = nii.get_fdata().astype("uint16").astype("bool")  # match to DICOM datatype, convert to boolean
+
+        # rotate nii to match DICOM orientation
+        binary_img = np.rot90(binary_img, 1, (0, 1))  # rotate segmentation in-plane
+
+        # add segmentation to RT Struct
+        rtstruct.add_roi(
+            mask=binary_img,
+            name=class_name
+        )
+
+    rtstruct.save(str(output_path))
