@@ -26,7 +26,8 @@ from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonica
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
-from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical, dcm_to_nifti
+from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical
+from totalsegmentator.dicom_io import dcm_to_nifti
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin
