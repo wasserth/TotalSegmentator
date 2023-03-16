@@ -47,7 +47,7 @@ def remove_small_blobs(img: np.ndarray, interval=[10, 30], debug=False) -> np.nd
     return mask
 
 
-def remove_outside_of_mask(seg_path, mask_path):
+def remove_outside_of_mask(seg_path, mask_path, addon=1):
     """
     Remove all segmentations outside of mask.
 
@@ -57,7 +57,7 @@ def remove_outside_of_mask(seg_path, mask_path):
     seg_img = nib.load(seg_path)
     seg = seg_img.get_fdata()
     mask = nib.load(mask_path).get_fdata()
-    mask = binary_dilation(mask, iterations=1)
+    mask = binary_dilation(mask, iterations=addon)
     seg[mask == 0] = 0
     nib.save(nib.Nifti1Image(seg.astype(np.uint8), seg_img.affine), seg_path)
 
