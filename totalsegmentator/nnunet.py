@@ -26,7 +26,7 @@ from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonica
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.preview import generate_preview
-from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical
+from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical, dcm_to_nifti
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin
@@ -137,7 +137,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     file_in = Path(file_in)
     if file_out is not None:
         file_out = Path(file_out)
+    if not file_in.exists():
+        print("ERROR: The input file or directory does not exist.")
+        sys.exit()
     multimodel = type(task_id) is list
+
+    img_type = "nifti" if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz") else "dicom"
 
     # for debugging
     # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
@@ -146,6 +151,15 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     with tempfile.TemporaryDirectory(prefix="nnunet_tmp_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
         if verbose: print(f"tmp_dir: {tmp_dir}")
+
+        if img_type == "dicom":
+            if not quiet: print("Converting dicom to nifti...")
+            (tmp_dir / "dcm").mkdir()  # make subdir otherwise this file would be included by nnUNet_predict
+            dcm_to_nifti(file_in, tmp_dir / "dcm" / "converted_dcm.nii.gz", verbose=verbose)
+            file_in = tmp_dir / "dcm" / "converted_dcm.nii.gz"
+            if not multilabel_image:
+                shutil.copy(file_in, file_out / "input_file.nii.gz")
+            if not quiet: print(f"  found image with shape {nib.load(file_in).shape}")
 
         img_in_orig = nib.load(file_in)
         if len(img_in_orig.shape) == 2:

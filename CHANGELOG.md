@@ -1,4 +1,5 @@
 ## Master
+* support dicom input
 
 
 ## Release 1.5.3

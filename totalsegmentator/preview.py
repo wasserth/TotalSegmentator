@@ -74,6 +74,12 @@ roi_groups = {
     "liver_vessels": [
         ["liver_vessels", "liver_tumor"]
     ],
+    "bones_tissue_test": [
+        ["femur", "patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet", 
+        "humerus", "ulna", "radius", "carpal", "metacarpal", "phalanges_hand", "sternum", 
+        "skull", "spinal_cord"],
+        ["subcutaneous_fat", "skeletal_muscle", "torso_fat"]
+    ],
     "test": [
         ["carpal", "clavicula", "femur", "fibula", "humerus", "metacarpal", "metatarsal", 
         "patella", "hips", "phalanges_hand", "radius", "ribs", "scapula", "skull", "spine", 

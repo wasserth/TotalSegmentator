@@ -13,7 +13,7 @@ def main():
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://arxiv.org/abs/2208.05868")
 
     parser.add_argument("-i", metavar="filepath", dest="input",
-                        help="CT nifti image", 
+                        help="CT nifti image or folder of dicom slices", 
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-o", metavar="directory", dest="output",
