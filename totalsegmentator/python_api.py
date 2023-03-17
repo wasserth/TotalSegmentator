@@ -165,7 +165,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         download_pretrained_weights(task_id)
 
     # Generate rough body segmentation (speedup for big images; not useful in combination with --fast option)
-    if task == "total" and body_seg:
+    if crop is None and body_seg:
         download_pretrained_weights(269)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
