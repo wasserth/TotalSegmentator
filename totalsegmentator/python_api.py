@@ -14,7 +14,7 @@ from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get
 def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
-                     force_split=False, quiet=False, verbose=False, test=0):
+                     force_split=False, output_type="nifti", quiet=False, verbose=False, test=0):
     """
     Run TotalSegmentator from within python. 
 
@@ -173,7 +173,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                             trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
-                            crop_addon=crop_addon, quiet=quiet, verbose=verbose, test=0)
+                            crop_addon=crop_addon, output_type=output_type, quiet=quiet, 
+                            verbose=verbose, test=0)
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
@@ -183,11 +184,11 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview, 
                          nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
                          force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
-                         quiet=quiet, verbose=verbose, test=test)
+                         output_type=output_type, quiet=quiet, verbose=verbose, test=test)
     seg = seg.get_fdata().astype(np.uint8)
 
     if statistics:
-        if not quiet: print("Calculating statistics...")  
+        if not quiet: print("Calculating statistics...")
         st = time.time()
         stats_dir = output.parent if ml else output
         get_basic_statistics_for_entire_dir(seg, input, stats_dir / "statistics.json", quiet)

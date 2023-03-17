@@ -70,7 +70,7 @@ Openly available:
 * **body**: body, body_trunc, body_extremities, skin
 * **pleural_pericard_effusion**: pleural_effusion (cite [paper](http://dx.doi.org/10.1097/RLI.0000000000000869)), pericardial_effusion (cite [paper](http://dx.doi.org/10.3390/diagnostics12051045))
 
-Available after purchase of a license (free licenses available for academic projects). Contact jakob.wasserthal@usb.ch if you are interested:  
+Available after purchase of a license (free licenses possible for academic projects). Contact jakob.wasserthal@usb.ch if you are interested: 
 * **bones_extremities**: femur, patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, humerus, ulna, radius, carpal, metacarpal, phalanges_hand, sternum, skull, spinal_cord
 * **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (more precise heart chamber segmentation, trained on sub-millimeter resolution)

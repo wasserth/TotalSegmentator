@@ -20,6 +20,10 @@ def main():
                         help="Output directory for segmentation masks", 
                         type=lambda p: Path(p).absolute(), required=True)
 
+    parser.add_argument("-ot", "--output_type", choices=["nifti", "dicom"],
+                    help="Select if segmentations shall be saved as Nifti or as Dicom RT Struct image.",
+                    default="nifti")
+                    
     parser.add_argument("-ml", "--ml", action="store_true", help="Save one multilabel image for all classes",
                         default=False)
 
@@ -87,7 +91,7 @@ def main():
     totalsegmentator(args.input, args.output, args.ml, args.nr_thr_resamp, args.nr_thr_saving,
                      args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
-                     args.force_split, args.quiet, args.verbose, args.test)
+                     args.force_split, args.output_type, args.quiet, args.verbose, args.test)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 ## Master
 * support dicom input
+* support dicom rt struct output
 
 
 ## Release 1.5.3
