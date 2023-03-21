@@ -352,21 +352,21 @@ class_map = {
         19: "spinal_cord"
     },
     "aortic_branches_test": {
-        1: 'brachiocephalic_trunk',  # brachiocephalic_trunc
-        2: 'subclavian_artery_right',
-        3: 'subclavian_artery_left',
-        4: 'common_carotid_artery_right',
-        5: 'common_carotid_artery_left',
-        6: 'brachiocephalic_vein_left',
-        7: 'brachiocephalic_vein_right',
-        8: 'atrial_appendage_left',  # less common: auricle_of_heart_left ?
-        9: 'superior_vena_cava',
-        10: 'pulmunary_vein',
-        11: 'pulmunary_artery',
-        12: 'heart_atrium_left',
-        13: 'heart_artrium_right',
-        14: 'aorta',
-        15: 'thyroid_gland'  # thyroid
+        1: "brachiocephalic_trunk",  # brachiocephalic_trunc
+        2: "subclavian_artery_right",
+        3: "subclavian_artery_left",
+        4: "common_carotid_artery_right",
+        5: "common_carotid_artery_left",
+        6: "brachiocephalic_vein_left",
+        7: "brachiocephalic_vein_right",
+        8: "atrial_appendage_left",  # less common: auricle_of_heart_left 
+        9: "superior_vena_cava",
+        10: "pulmunary_vein",
+        11: "pulmunary_artery",
+        12: "heart_atrium_left",
+        13: "heart_atrium_right",
+        14: "aorta",
+        15: "thyroid_gland"  # thyroid
     },
     "test": {
         1: "carpal",
