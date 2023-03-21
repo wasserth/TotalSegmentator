@@ -49,7 +49,7 @@ def main():
                         "hip_implant", "coronary_arteries", "body", "pleural_pericard_effusion", 
                         "liver_vessels", "bones_extremities", "tissue_types",
                         "heartchambers_highres", "head", "aortic_branches", "heartchambers_test", 
-                        "bones_tissue_test", "test"],
+                        "bones_tissue_test", "aortic_branches_test", "test"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 

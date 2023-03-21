@@ -13,9 +13,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Import manually downloaded weights.",
                                      epilog="Written by Jakob Wasserthal.")
 
-    parser.add_argument("-i", metavar="file", dest="weights_file",
+    parser.add_argument("-i", "--weights_file",
                         help="path to the weights zip file", 
                         type=lambda p: Path(p).absolute(), required=True)
+    parser.add_argument("-t", "--model_type", choices=["3d_fullres", "3d_lowres", "2d"],
+                        help="Type of model", default="3d_fullres")
 
     args = parser.parse_args()
 
@@ -27,9 +29,10 @@ if __name__ == "__main__":
         home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
         config_dir = home_path / ".totalsegmentator/nnunet/results/nnUNet"
     (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
+    (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
     (config_dir / "2d").mkdir(exist_ok=True, parents=True)
 
-    config_dir = config_dir / "3d_fullres"
+    config_dir = config_dir / args.model_type
 
     print(f"Extracting file {args.weights_file} to {config_dir}")
 

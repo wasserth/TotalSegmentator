@@ -86,6 +86,7 @@ def download_pretrained_weights(task_id):
 
     config_dir = get_config_dir()
     (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
+    (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
     (config_dir / "2d").mkdir(exist_ok=True, parents=True)
 
     old_weights = [
@@ -160,13 +161,17 @@ def download_pretrained_weights(task_id):
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task008_HepaticVessel"
         WEIGHTS_URL = "https://zenodo.org/record/7573746/files/Task008_HepaticVessel.zip?download=1"
-    elif task_id == 415:
-        config_dir = config_dir / "3d_fullres"
-        weights_path = config_dir / "Task415_heart_964subj"
+    elif task_id == 417:
+        config_dir = config_dir / "3d_lowres"
+        weights_path = config_dir / "Task417_heart_mixed_317subj"
         WEIGHTS_URL = "manually_download"
     elif task_id == 278:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task278_TotalSegmentator_part6_bones_1259subj"
+        WEIGHTS_URL = "manually_download"
+    elif task_id == 435:
+        config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Task435_Heart_vessels_118subj"
         WEIGHTS_URL = "manually_download"
 
 

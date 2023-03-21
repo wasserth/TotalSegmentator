@@ -46,7 +46,15 @@ def _get_full_task_name(task_id: int, src: str="raw"):
         if f"Task{task_id:03d}" in dir:
             return dir
 
-    # If not found in 3d_fullres, search in 2d
+    # If not found in 3d_fullres, search in 3d_lowres
+    if src == "results":
+        base = Path(os.environ['RESULTS_FOLDER']) / "nnUNet" / "3d_lowres"
+        dirs = [str(dir).split("/")[-1] for dir in base.glob("*")]
+        for dir in dirs:
+            if f"Task{task_id:03d}" in dir:
+                return dir
+
+    # If not found in 3d_lowres, search in 2d
     if src == "results":
         base = Path(os.environ['RESULTS_FOLDER']) / "nnUNet" / "2d"
         dirs = [str(dir).split("/")[-1] for dir in base.glob("*")]
