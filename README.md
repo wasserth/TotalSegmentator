@@ -94,6 +94,7 @@ Totalsegmentator has the following runtime and memory requirements (using a Nvid
 If you want to reduce memory consumption you can use the following options:
 * `--body_seg`: This will crop the image to the body region before processing it
 * `--force_split`: This will split the image into 3 parts and process them one after another
+* `--nr_thr_saving 1`: Saving big images with several threads will take a lot of memory
 
 
 ### Train / validation / test split

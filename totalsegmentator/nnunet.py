@@ -365,6 +365,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 else:  # save each class as a separate binary image
                     file_out.mkdir(exist_ok=True, parents=True)
 
+                    if np.prod(img_data.shape) > 512*512*1000:
+                        print(f"Shape of output image is very big. Setting nr_threads_saving=1 to save memory.")
+                        nr_threads_saving = 1
+
                     # Code for single threaded execution  (runtime:24s)
                     if nr_threads_saving == 1:
                         for k, v in selected_classes.items():
