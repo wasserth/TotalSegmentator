@@ -10,7 +10,8 @@ import numpy as np
 import nibabel as nib
 import torch
 
-from totalsegmentator.libs import setup_nnunet, download_pretrained_weights, combine_masks
+from totalsegmentator.libs import download_pretrained_weights, combine_masks
+from totalsegmentator.config import setup_nnunet
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 
 

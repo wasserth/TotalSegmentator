@@ -147,6 +147,10 @@ pip install SimpleITK==2.0.2
 ```
 
 
+### Other
+TotalSegmentator (starting in v1.5.4) sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
+
+
 ### Reference 
 For more details see this paper [https://arxiv.org/abs/2208.05868](https://arxiv.org/abs/2208.05868).
 If you use this tool please cite it as follows

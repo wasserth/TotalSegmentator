@@ -2,7 +2,10 @@ import io
 import os
 import contextlib
 import sys
+import random
+import json
 import time
+import string
 import shutil
 import zipfile
 from pathlib import Path
@@ -195,25 +198,6 @@ def download_pretrained_weights(task_id):
         # (config_dir / "tmp_download_file.zip").unlink()
 
         download_url_and_unpack(WEIGHTS_URL, config_dir)
-
-
-def setup_nnunet():
-    # check if environment variable totalsegmentator_config is set
-    if "TOTALSEG_WEIGHTS_PATH" in os.environ:
-        weights_dir = os.environ["TOTALSEG_WEIGHTS_PATH"]
-    else:
-        # in docker container finding home not properly working therefore map to /tmp
-        home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-        config_dir = home_path / ".totalsegmentator"
-        (config_dir / "nnunet/results/nnUNet/3d_fullres").mkdir(exist_ok=True, parents=True)
-        (config_dir / "nnunet/results/nnUNet/2d").mkdir(exist_ok=True, parents=True)
-        weights_dir = config_dir / "nnunet/results"
-
-    # This variables will only be active during the python script execution. Therefore
-    # we do not have to unset them in the end.
-    os.environ["nnUNet_raw_data_base"] = str(weights_dir)  # not needed, just needs to be an existing directory
-    os.environ["nnUNet_preprocessed"] = str(weights_dir)  # not needed, just needs to be an existing directory
-    os.environ["RESULTS_FOLDER"] = str(weights_dir)
 
 
 def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
