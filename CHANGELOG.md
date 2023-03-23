@@ -1,6 +1,7 @@
 ## Master
 * support dicom input
 * support dicom rt struct output
+* add usage stats
 
 
 ## Release 1.5.3
