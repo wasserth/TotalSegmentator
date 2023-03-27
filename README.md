@@ -30,7 +30,7 @@ pip install TotalSegmentator
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations
 ```
-> Note: Only nifti files are supported. To convert dicom files to nifti we recommend [dcm2niix](https://github.com/rordenlab/dcm2niix).  
+> Note: A Nifti file or a folder of Dicom images is allowed as input
 
 > Note: If a CUDA compatible GPU is available TotalSegmentator will automatically use it. Otherwise it will use the CPU, which is a lot slower and should only be used with the `--fast` option.  
 

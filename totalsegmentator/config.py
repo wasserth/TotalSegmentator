@@ -79,4 +79,5 @@ def send_usage_stats(config, params):
             #     print(f"status code: {r.status_code}")
             #     print(f"message: {r.json()['message']}")
         except Exception as e:
+            # print(f"An Exception occured: {e}")
             pass
