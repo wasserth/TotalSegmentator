@@ -181,6 +181,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             print(f"WARNING: Input image has {len(img_in_orig.shape)} dimensions. Only using first three dimensions.")
             img_in_orig = nib.Nifti1Image(img_in_orig.get_fdata()[:,:,:,0], img_in_orig.affine)
         
+        # takes ~0.9s for medium image
         img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
 
         if crop is not None:

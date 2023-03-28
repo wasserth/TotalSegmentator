@@ -188,13 +188,13 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
     folds = [0]  # None
-    seg = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
+    seg_img = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
                          trainer=trainer, tta=False, multilabel_image=ml, resample=resample,
                          crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview, 
                          nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
                          force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
                          output_type=output_type, quiet=quiet, verbose=verbose, test=test)
-    seg = seg.get_fdata().astype(np.uint8)
+    seg = seg_img.get_fdata().astype(np.uint8)
 
     config = setup_totalseg()
     increase_prediction_counter()
@@ -216,3 +216,5 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         stats_dir = output.parent if ml else output
         get_radiomics_features_for_entire_dir(input, output, stats_dir / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
+
+    return seg_img
