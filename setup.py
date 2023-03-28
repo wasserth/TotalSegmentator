@@ -38,6 +38,6 @@ setup(name='TotalSegmentator',
         ],
         scripts=[
             'bin/TotalSegmentator', 'bin/totalseg_combine_masks', 'bin/crop_to_body', 
-            'bin/totalseg_import_weights'
+            'bin/totalseg_import_weights', 'bin/totalseg_download_weights'
         ]
     )
