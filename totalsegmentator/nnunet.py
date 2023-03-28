@@ -25,7 +25,6 @@ from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_tas
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
-from totalsegmentator.preview import generate_preview
 from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical
 from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
@@ -302,6 +301,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
         if preview:
+            from totalsegmentator.preview import generate_preview
             # Generate preview before upsampling so it is faster and still in canonical space 
             # for better orientation.
             if not quiet: print("Generating preview...")
