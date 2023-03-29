@@ -1,5 +1,7 @@
 ## Master
 * add independent script to download weights
+* bugfixes
+
 
 ## Release 1.5.4
 * support dicom input

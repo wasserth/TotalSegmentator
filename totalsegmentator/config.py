@@ -72,7 +72,7 @@ def send_usage_stats(config, params):
                                     "multilabel": params["multilabel"],
                                     "roi_subset": params["roi_subset"],
                                     "statistics": params["statistics"],
-                                    "radiomics": params["radiomics"]})
+                                    "radiomics": params["radiomics"]}, timeout=2)
             # if r.ok:
             #     print(f"status: {r.json()['status']}")
             # else:
