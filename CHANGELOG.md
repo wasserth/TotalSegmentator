@@ -1,4 +1,5 @@
 ## Master
+* remove verbose print outs not needed
 
 
 ## Release 1.5.5
