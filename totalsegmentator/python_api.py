@@ -22,6 +22,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     For explanation of the arguments see description of command line 
     arguments in bin/TotalSegmentator.
     """
+    input = Path(input)
+    output = Path(output)
 
     if not quiet: 
         print("\nIf you use this tool please cite: https://doi.org/10.48550/arXiv.2208.05868\n")

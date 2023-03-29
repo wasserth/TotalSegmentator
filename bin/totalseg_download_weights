@@ -34,4 +34,5 @@ if __name__ == "__main__":
     }
 
     for task_id in task_to_id[args.task]:
+        print(f"Processing {task_id}...")
         download_pretrained_weights(task_id)
