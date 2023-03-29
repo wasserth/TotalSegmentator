@@ -196,10 +196,14 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
                          force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
                          output_type=output_type, quiet=quiet, verbose=verbose, test=test)
+    if verbose: print("Predict returned...")
     seg = seg_img.get_fdata().astype(np.uint8)
 
+    if verbose: print("Setting up config...")
     config = setup_totalseg()
+    if verbose: print("Increasing counter...")
     increase_prediction_counter()
+    if verbose: print("Sending stats...")
     send_usage_stats(config, {"task": task, "fast": fast, "preview": preview,
                               "multilabel": ml, "roi_subset": roi_subset, 
                               "statistics": statistics, "radiomics": radiomics})
