@@ -69,8 +69,6 @@ def get_basic_statistics_for_entire_dir(seg: np.array, ct_file, file_out:Path, q
     """
     ct_img = nib.load(ct_file) if type(ct_file) == pathlib.PosixPath else ct_file
     ct = ct_img.get_fdata()
-    print(f"ct.shape: {ct.shape}")
-    print(f"seg.shape: {seg.shape}")
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     stats = {}
