@@ -64,6 +64,7 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
     if len(nii_files) > 1:
         print("WARNING: Dicom to nifti resulted in several nifti files. Skipping files which contain ROI in filename.")
         for nii_file in nii_files:
+            # output file name is "converted_dcm.nii.gz" so if ROI in name, then this can be deleted
             if "ROI" in nii_file.name:
                 os.remove(nii_file)
                 print(f"Skipped: {nii_file.name}")

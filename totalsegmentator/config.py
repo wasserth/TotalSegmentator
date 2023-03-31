@@ -27,7 +27,7 @@ def setup_nnunet():
     os.environ["RESULTS_FOLDER"] = str(weights_dir)
 
 
-def setup_totalseg():
+def setup_totalseg(totalseg_id=None):
     home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
     totalseg_path = home_path / ".totalsegmentator"
     totalseg_path.mkdir(exist_ok=True)
@@ -36,7 +36,8 @@ def setup_totalseg():
     if totalseg_config_file.exists():
         config = json.load(open(totalseg_config_file, "r"))
     else:
-        totalseg_id = "totalseg_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8))
+        if totalseg_id is None:
+            totalseg_id = "totalseg_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8))
         config = {
             "totalseg_id": totalseg_id,
             "send_usage_stats": True,
