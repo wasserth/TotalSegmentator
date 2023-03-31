@@ -1,3 +1,4 @@
+import pathlib
 from pathlib import Path
 import json
 from functools import partial
@@ -62,9 +63,14 @@ def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:
         json.dump(stats, f, indent=4)
 
 
-def get_basic_statistics_for_entire_dir(seg: np.array, ct_file:Path, file_out:Path, quiet:bool=False):
-    ct_img = nib.load(ct_file)
+def get_basic_statistics_for_entire_dir(seg: np.array, ct_file, file_out:Path, quiet:bool=False):
+    """
+    ct_file: path to a ct_file or a nifti file object
+    """
+    ct_img = nib.load(ct_file) if type(ct_file) == pathlib.PosixPath else ct_file
     ct = ct_img.get_fdata()
+    print(f"ct.shape: {ct.shape}")
+    print(f"seg.shape: {seg.shape}")
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     stats = {}

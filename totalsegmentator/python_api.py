@@ -169,6 +169,13 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     crop_path = output if crop_path is None else crop_path
 
+    # fast statistics are calculated on the downsampled image
+    if statistics and fast:
+        statistics_fast = True  
+        statistics = False
+    else:
+        statistics_fast = False
+
     if type(task_id) is list:
         for tid in task_id:
             download_pretrained_weights(tid)
@@ -184,8 +191,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                             trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
-                            crop_addon=crop_addon, output_type=output_type, quiet=quiet, 
-                            verbose=verbose, test=0)
+                            crop_addon=crop_addon, output_type=output_type, statistics=False,
+                            quiet=quiet, verbose=verbose, test=0)
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
@@ -195,7 +202,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview, 
                          nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
                          force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
-                         output_type=output_type, quiet=quiet, verbose=verbose, test=test)
+                         output_type=output_type, statistics=statistics_fast, 
+                         quiet=quiet, verbose=verbose, test=test)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     config = setup_totalseg()

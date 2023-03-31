@@ -31,6 +31,7 @@ from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin
 from totalsegmentator.nifti_ext_header import save_multilabel_nifti
+from totalsegmentator.statistics import get_basic_statistics_for_entire_dir
 
 
 def _get_full_task_name(task_id: int, src: str="raw"):
@@ -138,7 +139,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti", 
-                         quiet=False, verbose=False, test=0):
+                         statistics=False, quiet=False, verbose=False, test=0):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -311,6 +312,21 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             preview_dir = file_out.parent if multilabel_image else file_out
             generate_preview(img_in_rsp, preview_dir / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
             if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
+
+        # Statistics calculated on the 3mm downsampled image are very similar to statistics
+        # calculated on the original image. Volume often completely identical. For intensity
+        # some more change but still minor.
+        #
+        # Speed: 
+        # stats on 1.5mm: 37s
+        # stats on 3.0mm: 4s    -> great improvement
+        if statistics:
+            if not quiet: print("Calculating statistics fast...")
+            st = time.time()
+            stats_dir = file_out.parent if multilabel_image else file_out
+            stats_dir.mkdir(exist_ok=True)
+            get_basic_statistics_for_entire_dir(img_pred.get_fdata(), img_in_rsp, stats_dir / "statistics.json", quiet)
+            if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
         if resample is not None:
             if not quiet: print("Resampling...")
