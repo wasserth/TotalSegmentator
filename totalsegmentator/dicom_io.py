@@ -60,6 +60,16 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
     subprocess.call(f"{dcm2niix} -o {output_path.parent} -z y -f {output_path.name[:-7]} {input_path} {verbose_str}", shell=True)
 
     nii_files = list(output_path.parent.glob("*.nii.gz"))
+
+    if len(nii_files) > 1:
+        print("WARNING: Dicom to nifti resulted in several nifti files. Skipping files which contain ROI in filename.")
+        for nii_file in nii_files:
+            if "ROI" in nii_file.name:
+                os.remove(nii_file)
+                print(f"Skipped: {nii_file.name}")
+
+    nii_files = list(output_path.parent.glob("*.nii.gz"))
+
     if len(nii_files) > 1:
         print("WARNING: Dicom to nifti resulted in several nifti files. Only using first one.")
         print([f.name for f in nii_files])
