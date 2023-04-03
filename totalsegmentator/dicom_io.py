@@ -14,6 +14,11 @@ import nibabel as nib
 from totalsegmentator.libs import get_config_dir
 
 
+
+def command_exists(command):
+    return shutil.which(command) is not None
+
+
 def download_dcm2niix():
     import urllib.request
     print("  Downloading dcm2niix...")
@@ -21,10 +26,13 @@ def download_dcm2niix():
     if platform.system() == "Windows":
         url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_win.zip"
     elif platform.system() == "Darwin":  # Mac
-        if platform.machine().startswith("arm") or platform.machine().startswith("aarch"):  # arm
-            url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_mac_arm.pkg"
-        else:  # intel
-            url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_mac.zip"
+        raise ValueError("For MacOS automatic installation of dcm2niix not possible. Install it manually.")
+        # Problem: not zip files
+        # if platform.machine().startswith("arm") or platform.machine().startswith("aarch"):  # arm
+        #     url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/macos_dcm2niix.pkg"
+        # else:  # intel
+        #     # unclear if this is the right link (is the same as for arm)
+        #     url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/macos_dcm2niix.pkg"
     elif platform.system() == "Linux":
         url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip"
     else:
@@ -52,10 +60,13 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
     verbose_str = "" if verbose else "> /dev/null"
 
     config_dir = get_config_dir()
-    dcm2niix = config_dir / "dcm2niix"
 
-    if not dcm2niix.exists():
-        download_dcm2niix()
+    if command_exists("dcm2niix"):
+        dcm2niix = "dcm2niix"
+    else:
+        dcm2niix = config_dir / "dcm2niix"
+        if not dcm2niix.exists():
+            download_dcm2niix()
 
     subprocess.call(f"{dcm2niix} -o {output_path.parent} -z y -f {output_path.name[:-7]} {input_path} {verbose_str}", shell=True)
 

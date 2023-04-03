@@ -15,10 +15,13 @@ TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU (on CPU it 
 Install dependencies:  
 * Python >= 3.7
 * [Pytorch](http://pytorch.org/)
-* if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
 * You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
 
-* optionally: for faster resampling you can use `cucim` (`pip install cupy-cuda11x cucim`)
+optionally:
+* if you input DICOM images and run on MacOS you have to install [dcm2niix](https://github.com/rordenlab/dcm2niix)
+* if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
+* for faster resampling you can use `cucim` (`pip install cupy-cuda11x cucim`)
+
 
 Install Totalsegmentator
 ```
@@ -30,7 +33,7 @@ pip install TotalSegmentator
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations
 ```
-> Note: A Nifti file or a folder of Dicom images is allowed as input
+> Note: A Nifti file or a folder of DICOM images is allowed as input
 
 > Note: If a CUDA compatible GPU is available TotalSegmentator will automatically use it. Otherwise it will use the CPU, which is a lot slower and should only be used with the `--fast` option.  
 
