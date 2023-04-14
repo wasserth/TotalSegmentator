@@ -63,6 +63,8 @@ def resample_img_cucim(img, zoom=0.5, order=0, nr_cpus=-1):
 
     For small image no significant speedup.
     For large images reducing resampling time by over 50%.
+
+    On our slurm gpu cluster it is actually slower with cucim than without it.
     """
     import cupy as cp
     from cucim.skimage.transform import resize

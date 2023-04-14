@@ -281,7 +281,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / f"s01.nii.gz")
         else:
             if not quiet: print(f"Predicting...")
-            if test == 0 or test == 2:
+            if test == 0:
                 with nostdout(verbose):
                     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                                    nr_threads_resampling, nr_threads_saving)
