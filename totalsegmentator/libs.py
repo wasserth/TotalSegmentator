@@ -103,27 +103,33 @@ def download_pretrained_weights(task_id):
     if task_id == 251:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task251_TotalSegmentator_part1_organs_1139subj"
-        WEIGHTS_URL = "https://zenodo.org/record/6802342/files/Task251_TotalSegmentator_part1_organs_1139subj.zip?download=1"
+        # WEIGHTS_URL = "https://zenodo.org/record/6802342/files/Task251_TotalSegmentator_part1_organs_1139subj.zip?download=1"
+        WEIGHTS_URL = "http://94.16.105.223/static/Task251_TotalSegmentator_part1_organs_1139subj.zip"
     elif task_id == 252:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task252_TotalSegmentator_part2_vertebrae_1139subj"
-        WEIGHTS_URL = "https://zenodo.org/record/6802358/files/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip?download=1"
+        # WEIGHTS_URL = "https://zenodo.org/record/6802358/files/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip?download=1"
+        WEIGHTS_URL = "http://94.16.105.223/static/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip"
     elif task_id == 253:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task253_TotalSegmentator_part3_cardiac_1139subj"
-        WEIGHTS_URL = "https://zenodo.org/record/6802360/files/Task253_TotalSegmentator_part3_cardiac_1139subj.zip?download=1"
+        # WEIGHTS_URL = "https://zenodo.org/record/6802360/files/Task253_TotalSegmentator_part3_cardiac_1139subj.zip?download=1"
+        WEIGHTS_URL = "http://94.16.105.223/static/Task253_TotalSegmentator_part3_cardiac_1139subj.zip"
     elif task_id == 254:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task254_TotalSegmentator_part4_muscles_1139subj"
-        WEIGHTS_URL = "https://zenodo.org/record/6802366/files/Task254_TotalSegmentator_part4_muscles_1139subj.zip?download=1"
+        # WEIGHTS_URL = "https://zenodo.org/record/6802366/files/Task254_TotalSegmentator_part4_muscles_1139subj.zip?download=1"
+        WEIGHTS_URL = "http://94.16.105.223/static/Task254_TotalSegmentator_part4_muscles_1139subj.zip"
     elif task_id == 255:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task255_TotalSegmentator_part5_ribs_1139subj"
-        WEIGHTS_URL = "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1"
+        # WEIGHTS_URL = "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1"
+        WEIGHTS_URL = "http://94.16.105.223/static/Task255_TotalSegmentator_part5_ribs_1139subj.zip"
     elif task_id == 256:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task256_TotalSegmentator_3mm_1139subj"
-        WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
+        # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
+        WEIGHTS_URL = "http://94.16.105.223/static/Task256_TotalSegmentator_3mm_1139subj.zip"
     elif task_id == 258:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task258_lung_vessels_248subj"
@@ -151,7 +157,8 @@ def download_pretrained_weights(task_id):
     elif task_id == 269:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task269_Body_extrem_6mm_1200subj"
-        WEIGHTS_URL = "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1"
+        # WEIGHTS_URL = "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1"
+        WEIGHTS_URL = "http://94.16.105.223/static/Task269_Body_extrem_6mm_1200subj.zip"
     elif task_id == 503:
         config_dir = config_dir / "3d_fullres"
         weights_path = config_dir / "Task503_cardiac_motion"
