@@ -64,7 +64,10 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
     if command_exists("dcm2niix"):
         dcm2niix = "dcm2niix"
     else:
-        dcm2niix = config_dir / "dcm2niix"
+        if platform.system() == "Windows":
+            dcm2niix = config_dir / "dcm2niix.exe"
+        else:
+            dcm2niix = config_dir / "dcm2niix"
         if not dcm2niix.exists():
             download_dcm2niix()
 

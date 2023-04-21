@@ -2,6 +2,7 @@
 * remove verbose print outs not needed
 * add helper script for manual setup
 * add fast statistics
+* download weights from different server for faster and more stable download
 
 
 ## Release 1.5.5
