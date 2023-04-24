@@ -20,7 +20,6 @@ jobs:
           pip install pytest Cython
           pip install torch==1.12.1 -f https://download.pytorch.org/whl/cpu
           pip install .
-          pip install pyradiomics
 
       - name: Run test script
         run: ./tests.sh
