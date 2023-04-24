@@ -491,26 +491,27 @@ class_map_5_parts = {
         21: "iliopsoas_right"
     },
 
+    # --roi_subset does not work anymore with this
     # without humerus and femur
-    "class_map_part_muscles_v2": {
-        1: "scapula_left",
-        2: "scapula_right",
-        3: "clavicula_left",
-        4: "clavicula_right",
-        5: "hip_left",
-        6: "hip_right",
-        7: "sacrum",
-        8: "gluteus_maximus_left",
-        9: "gluteus_maximus_right",
-        10: "gluteus_medius_left",
-        11: "gluteus_medius_right",
-        12: "gluteus_minimus_left",
-        13: "gluteus_minimus_right",
-        14: "autochthon_left",
-        15: "autochthon_right",
-        16: "iliopsoas_left",
-        17: "iliopsoas_right"
-    },
+    # "class_map_part_muscles_v2": {
+    #     1: "scapula_left",
+    #     2: "scapula_right",
+    #     3: "clavicula_left",
+    #     4: "clavicula_right",
+    #     5: "hip_left",
+    #     6: "hip_right",
+    #     7: "sacrum",
+    #     8: "gluteus_maximus_left",
+    #     9: "gluteus_maximus_right",
+    #     10: "gluteus_medius_left",
+    #     11: "gluteus_medius_right",
+    #     12: "gluteus_minimus_left",
+    #     13: "gluteus_minimus_right",
+    #     14: "autochthon_left",
+    #     15: "autochthon_right",
+    #     16: "iliopsoas_left",
+    #     17: "iliopsoas_right"
+    # },
 
     # 24 classes
     # 12. ribs start from vertebrae T12
@@ -550,27 +551,28 @@ class_map_5_parts = {
         24: "rib_right_12"
     },
 
-    "class_map_part_bones" : {
-        1: "femur",
-        2: "patella",
-        3: "tibia",
-        4: "fibula",
-        5: "tarsal",
-        6: "metatarsal",
-        7: "phalanges_feet",
-        8: "humerus",
-        9: "ulna",
-        10: "radius",
-        11: "carpal",
-        12: "metacarpal",
-        13: "phalanges_hand",
-        14: "sternum",
-        15: "skull",
-        16: "subcutaneous_fat",
-        17: "skeletal_muscle",
-        18: "torso_fat",
-        19: "spinal_cord"
-    },
+    # --roi_subset does not work anymore with this
+    # "class_map_part_bones" : {
+    #     1: "femur",
+    #     2: "patella",
+    #     3: "tibia",
+    #     4: "fibula",
+    #     5: "tarsal",
+    #     6: "metatarsal",
+    #     7: "phalanges_feet",
+    #     8: "humerus",
+    #     9: "ulna",
+    #     10: "radius",
+    #     11: "carpal",
+    #     12: "metacarpal",
+    #     13: "phalanges_hand",
+    #     14: "sternum",
+    #     15: "skull",
+    #     16: "subcutaneous_fat",
+    #     17: "skeletal_muscle",
+    #     18: "torso_fat",
+    #     19: "spinal_cord"
+    # },
 
     "test": class_map["test"]
 }
