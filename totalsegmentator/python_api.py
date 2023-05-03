@@ -221,6 +221,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
     if radiomics:
+        if ml:
+            raise ValueError("Radiomics not supported for multilabel segmentation. Use without --ml option.")
         if not quiet: print("Calculating radiomics...")  
         st = time.time()
         stats_dir = output.parent if ml else output
