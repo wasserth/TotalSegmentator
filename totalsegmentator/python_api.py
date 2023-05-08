@@ -25,6 +25,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     input = Path(input)
     output = Path(output)
 
+    nora_tag = "None" if nora_tag is None else nora_tag
+
     if not quiet: 
         print("\nIf you use this tool please cite: https://doi.org/10.48550/arXiv.2208.05868\n")
 
