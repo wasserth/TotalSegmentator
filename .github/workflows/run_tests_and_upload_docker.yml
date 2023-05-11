@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.10]
+        python-version: ["3.8", "3.10"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{matrix.python-version}}
@@ -31,7 +31,7 @@ jobs:
     # if: success() && github.ref == 'refs/heads/master'
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: ["3.8"]
     steps:
       - uses: actions/checkout@v2
       - name: Login to Docker Hub

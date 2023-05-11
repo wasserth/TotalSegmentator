@@ -5,7 +5,8 @@ if sys.version_info < (3, 10):
     # Specify the fixed version for Python < 3.10. Because using the latest
     # requests would also install the latest urllib3 which does not work
     # properly on python < 3.10.
-    requests_version = '==2.28.1'  #requires: urllib3>=1.21.1,<1.27 
+    requests_version = '==2.27.1'  #requires: urllib3>=1.21.1,<1.27 
+    # 2.27.1 somehow not available in dockerfile
 else:
     requests_version = ''  # No fixed version for Python 3.10 and higher
 
