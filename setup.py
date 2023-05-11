@@ -1,4 +1,14 @@
+import sys
 from setuptools import setup, find_packages
+
+if sys.version_info < (3, 10):
+    # Specify the fixed version for Python < 3.10. Because using the latest
+    # requests would also install the latest urllib3 which does not work
+    # properly on python < 3.10.
+    requests_version = '==2.28.1'  #requires: urllib3>=1.21.1,<1.27 
+else:
+    requests_version = ''  # No fixed version for Python 3.10 and higher
+
 
 setup(name='TotalSegmentator',
         version='1.5.5',
@@ -25,7 +35,7 @@ setup(name='TotalSegmentator',
             # This does not work if want to upload to pypi
             # 'nnunet @ git+https://github.com/wasserth/nnUNet_cust@working_2022_03_18#egg=nnUNet'
             'nnunet-customized==1.2',
-            'requests',
+            f'requests{requests_version}',
             'rt_utils'
         ],
         zip_safe=False,
