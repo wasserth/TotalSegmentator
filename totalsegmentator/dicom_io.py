@@ -45,11 +45,16 @@ def download_dcm2niix():
         zip_ref.extractall(config_dir)
 
     # Give execution permission to the script
-    os.chmod(config_dir / "dcm2niix", 0o755)
+    if platform.system() == "Windows":
+        os.chmod(config_dir / "dcm2niix.exe", 0o755)
+    else:
+        os.chmod(config_dir / "dcm2niix", 0o755)
 
     # Clean up
-    os.remove(config_dir / "dcm2niix.zip")
-    os.remove(config_dir / "dcm2niibatch")
+    if (config_dir / "dcm2niix.zip").exists():
+        os.remove(config_dir / "dcm2niix.zip")
+    if (config_dir / "dcm2niibatch").exists():
+        os.remove(config_dir / "dcm2niibatch")
 
 
 def dcm_to_nifti(input_path, output_path, verbose=False):
