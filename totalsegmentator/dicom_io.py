@@ -76,7 +76,7 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
         if not dcm2niix.exists():
             download_dcm2niix()
 
-    subprocess.call(f"{dcm2niix} -o {output_path.parent} -z y -f {output_path.name[:-7]} {input_path} {verbose_str}", shell=True)
+    subprocess.call(f"\"{dcm2niix}\" -o {output_path.parent} -z y -f {output_path.name[:-7]} {input_path} {verbose_str}", shell=True)
 
     nii_files = list(output_path.parent.glob("*.nii.gz"))
 
