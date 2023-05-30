@@ -74,6 +74,10 @@ def main():
     parser.add_argument("-fs", "--force_split", action="store_true", help="Process image in 3 chunks for less memory consumption",
                         default=False)
 
+    parser.add_argument("-ss", "--skip_saving", action="store_true", 
+                        help="Skip saving of segmentations for faster runtime if you are only interested in statistics.",
+                        default=False)
+
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
 
@@ -96,7 +100,7 @@ def main():
     totalsegmentator(args.input, args.output, args.ml, args.nr_thr_resamp, args.nr_thr_saving,
                      args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
-                     args.force_split, args.output_type, args.quiet, args.verbose, args.test)
+                     args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving)
 
 
 if __name__ == "__main__":

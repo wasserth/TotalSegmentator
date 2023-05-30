@@ -1,4 +1,6 @@
 ## Master
+* bugfixes in dicom io
+* add `--skip_saving` argument
 
 
 ## Release 1.5.6

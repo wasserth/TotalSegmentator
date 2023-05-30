@@ -15,7 +15,8 @@ from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_predi
 def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
-                     force_split=False, output_type="nifti", quiet=False, verbose=False, test=0):
+                     force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
+                     skip_saving=False):
     """
     Run TotalSegmentator from within python. 
 
@@ -194,7 +195,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
-                            quiet=quiet, verbose=verbose, test=0)
+                            quiet=quiet, verbose=verbose, test=0, skip_saving=False)
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
@@ -205,7 +206,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
                          force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
                          output_type=output_type, statistics=statistics_fast, 
-                         quiet=quiet, verbose=verbose, test=test)
+                         quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     config = setup_totalseg()

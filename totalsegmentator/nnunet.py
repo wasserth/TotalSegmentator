@@ -139,7 +139,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti", 
-                         statistics=False, quiet=False, verbose=False, test=0):
+                         statistics=False, quiet=False, verbose=False, test=0, skip_saving=False):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -349,7 +349,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if save_binary:
             img_data = (img_data > 0).astype(np.uint8)
 
-        if file_out is not None:
+        if file_out is not None and skip_saving is False:
             if not quiet: print("Saving segmentations...")
 
             # Select subset of classes if required
