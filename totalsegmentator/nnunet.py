@@ -148,8 +148,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     if file_out is not None:
         file_out = Path(file_out)
     if not file_in.exists():
-        print("ERROR: The input file or directory does not exist.")
-        sys.exit()
+        sys.exit("ERROR: The input file or directory does not exist.")
     multimodel = type(task_id) is list
 
     img_type = "nifti" if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz") else "dicom"
