@@ -14,7 +14,7 @@ TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU (on CPU it 
 
 Install dependencies:  
 * Python >= 3.7
-* [Pytorch](http://pytorch.org/)
+* [Pytorch](http://pytorch.org/) >= 1.12.1
 * You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
 
 optionally:
@@ -67,7 +67,7 @@ Overview of available subtasks and the classes which they contain.
 
 Openly available:  
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
-* **cerebral_bleed**: intracerebral_hemorrhage
+* **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))
 * **hip_implant**: hip_implant
 * **coronary_arteries**: coronary_arteries
 * **body**: body, body_trunc, body_extremities, skin

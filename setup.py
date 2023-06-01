@@ -22,6 +22,7 @@ setup(name='TotalSegmentator',
         license='Apache 2.0',
         packages=find_packages(),
         install_requires=[
+            'torch>=1.12.1',
             'numpy',
             'psutil',
             # Any version <2.1.0 because of this issue: 
