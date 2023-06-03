@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:20.10-py3
+FROM nvcr.io/nvidia/pytorch:23.05-py3
 
 RUN apt-get update
 # Needed for fury vtk. ffmpeg also needed
