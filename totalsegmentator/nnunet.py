@@ -3,6 +3,7 @@ import sys
 import random
 import string
 import time
+import platform
 import shutil
 import subprocess
 from pathlib import Path
@@ -170,6 +171,12 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             dcm_to_nifti(file_in, tmp_dir / "dcm" / "converted_dcm.nii.gz", verbose=verbose)
             file_in_dcm = file_in
             file_in = tmp_dir / "dcm" / "converted_dcm.nii.gz"
+
+            # Workaround to be able to access file_in on windows (see issue #106)
+            # if platform.system() == "Windows":
+            #     file_in = file_in.NamedTemporaryFile(delete = False)
+            #     file_in.close() 
+
             # if not multilabel_image:
             #     shutil.copy(file_in, file_out / "input_file.nii.gz")
             if not quiet: print(f"  found image with shape {nib.load(file_in).shape}")
