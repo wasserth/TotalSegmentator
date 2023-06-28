@@ -4,8 +4,11 @@ import random
 import json
 import string
 from pathlib import Path
+import pkg_resources
+import platform
 
 import requests
+import torch
 
 
 def setup_nnunet():
@@ -57,6 +60,13 @@ def increase_prediction_counter():
         json.dump(config, open(totalseg_config_file, "w"), indent=4)
 
 
+def get_version():
+    try:
+        return pkg_resources.get_distribution("TotalSegmentator").version
+    except pkg_resources.DistributionNotFound:
+        return "unknown"
+
+
 def send_usage_stats(config, params):
     if config["send_usage_stats"]:
         
@@ -73,7 +83,13 @@ def send_usage_stats(config, params):
                                     "multilabel": params["multilabel"],
                                     "roi_subset": params["roi_subset"],
                                     "statistics": params["statistics"],
-                                    "radiomics": params["radiomics"]}, timeout=2)
+                                    "radiomics": params["radiomics"],
+                                    "platform": platform.system(),
+                                    "machine": platform.machine(),
+                                    "version": get_version(),
+                                    "python_version": sys.version,
+                                    "cuda_available": torch.cuda.is_available()
+                                    }, timeout=2)
             # if r.ok:
             #     print(f"status: {r.json()['status']}")
             # else:

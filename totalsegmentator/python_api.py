@@ -185,6 +185,9 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     else:
         download_pretrained_weights(task_id)
 
+    if roi_subset is not None and type(roi_subset) is not list:
+        raise ValueError("roi_subset must be a list of strings")
+
     # Generate rough body segmentation (speedup for big images; not useful in combination with --fast option)
     if crop is None and body_seg:
         download_pretrained_weights(269)
