@@ -3,6 +3,7 @@ import sys
 import random
 import json
 import string
+import time
 from pathlib import Path
 import pkg_resources
 import platform
@@ -73,6 +74,7 @@ def send_usage_stats(config, params):
         params["roi_subset"] = "" if params["roi_subset"] is None else "-".join(params["roi_subset"])
 
         try:
+            st = time.time()
             url = f"http://94.16.105.223:80/"
             r = requests.post(url + "log_totalseg_run",
                               json={"totalseg_id": config["totalseg_id"],
@@ -95,6 +97,7 @@ def send_usage_stats(config, params):
             # else:
             #     print(f"status code: {r.status_code}")
             #     print(f"message: {r.json()['message']}")
+            # print(f"Request took {time.time()-st:.3f}s")
         except Exception as e:
             # print(f"An Exception occured: {e}")
             pass
