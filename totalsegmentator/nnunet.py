@@ -121,6 +121,69 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
+def nnunetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
+                     trainer="nnUNetTrainer", tta=False,
+                     num_threads_preprocessing=3, num_threads_nifti_save=2,
+                     plans="nnUNetPlans", device="cuda"):
+
+    config = model
+
+    if folds is None:  # from me
+        folds = "all"
+    folds = [i if i == 'all' else int(i) for i in folds]  # from fabian
+
+    model_folder = get_output_folder(task_id, trainer, plans, config)
+
+    # if not isdir(dir_out):
+    #     maybe_mkdir_p(dir_out)
+
+    assert args.device in ['cpu', 'cuda',
+                           'mps'], f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {args.device}.'
+    if args.device == 'cpu':
+        # let's allow torch to use hella threads
+        import multiprocessing
+        torch.set_num_threads(multiprocessing.cpu_count())
+        device = torch.device('cpu')
+    elif args.device == 'cuda':
+        # multithreading in torch doesn't help nnU-Net if run on GPU
+        torch.set_num_threads(1)
+        torch.set_num_interop_threads(1)
+        device = torch.device('cuda')
+    else:
+        device = torch.device('mps')
+
+    step_size = 0.5
+    disable_tta = not tta
+    verbose = False
+    save_probabilities = False
+    continue_prediction = False
+    chk = "checkpoint_final.pth"
+    npp = num_threads_preprocessing
+    nps = num_threads_nifti_save
+    prev_stage_predictions = None
+    num_parts = 1
+    part_id = 0
+
+    predict_from_raw_data(dir_in,
+                          dir_out,
+                          model_folder,
+                          folds,
+                          step_size,
+                          use_gaussian=True,
+                          use_mirroring=not disable_tta,
+                          perform_everything_on_gpu=True,
+                          verbose=verbose,
+                          save_probabilities=save_probabilities,
+                          overwrite=not continue_prediction,
+                          checkpoint_name=chk,
+                          num_processes_preprocessing=npp,
+                          num_processes_segmentation_export=nps,
+                          folder_with_segs_from_prev_stage=prev_stage_predictions,
+                          num_parts=num_parts,
+                          part_id=part_id,
+                          device=device)
+
+
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
     k, v = class_map_item
     # Have to load img inside of each thread. If passing it as argument a lot slower.
@@ -289,6 +352,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             if not quiet: print(f"Predicting...")
             if test == 0:
                 with nostdout(verbose):
+                    # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
+                    #                nr_threads_resampling, nr_threads_saving)
                     nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                                    nr_threads_resampling, nr_threads_saving)
             # elif test == 2:

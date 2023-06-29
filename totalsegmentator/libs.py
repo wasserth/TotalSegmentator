@@ -37,11 +37,13 @@ def nostdout(verbose=False):
 
 def get_config_dir():
     if "TOTALSEG_WEIGHTS_PATH" in os.environ:
-        config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"]) / "nnUNet"
+        # config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"]) / "nnUNet"
+        config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"])
     else:
         # in docker container finding home not properly working therefore map to /tmp
         home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-        config_dir = home_path / ".totalsegmentator/nnunet/results/nnUNet"
+        # config_dir = home_path / ".totalsegmentator/nnunet/results/nnUNet"
+        config_dir = home_path / ".totalsegmentator/nnunet/results"
     return config_dir
 
 
@@ -92,9 +94,9 @@ def download_url_and_unpack(url, config_dir):
 def download_pretrained_weights(task_id):
 
     config_dir = get_config_dir()
-    (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
-    (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
-    (config_dir / "2d").mkdir(exist_ok=True, parents=True)
+    # (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
+    # (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
+    # (config_dir / "2d").mkdir(exist_ok=True, parents=True)
 
     old_weights = [
         "Task223_my_test"
@@ -125,9 +127,9 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Task255_TotalSegmentator_part5_ribs_1139subj"
         # WEIGHTS_URL = "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1"
         WEIGHTS_URL = "http://94.16.105.223/static/Task255_TotalSegmentator_part5_ribs_1139subj.zip"
-    elif task_id == 256:
-        config_dir = config_dir / "3d_fullres"
-        weights_path = config_dir / "Task256_TotalSegmentator_3mm_1139subj"
+    elif task_id == 297:
+        # config_dir = config_dir / "3d_fullres"
+        weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj"
         # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
         WEIGHTS_URL = "http://94.16.105.223/static/Task256_TotalSegmentator_3mm_1139subj.zip"
     elif task_id == 258:
