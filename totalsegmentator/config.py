@@ -3,9 +3,13 @@ import sys
 import random
 import json
 import string
+import time
 from pathlib import Path
+import pkg_resources
+import platform
 
 import requests
+import torch
 
 
 def setup_nnunet():
@@ -57,12 +61,20 @@ def increase_prediction_counter():
         json.dump(config, open(totalseg_config_file, "w"), indent=4)
 
 
+def get_version():
+    try:
+        return pkg_resources.get_distribution("TotalSegmentator").version
+    except pkg_resources.DistributionNotFound:
+        return "unknown"
+
+
 def send_usage_stats(config, params):
     if config["send_usage_stats"]:
         
         params["roi_subset"] = "" if params["roi_subset"] is None else "-".join(params["roi_subset"])
 
         try:
+            st = time.time()
             url = f"http://94.16.105.223:80/"
             r = requests.post(url + "log_totalseg_run",
                               json={"totalseg_id": config["totalseg_id"],
@@ -73,12 +85,19 @@ def send_usage_stats(config, params):
                                     "multilabel": params["multilabel"],
                                     "roi_subset": params["roi_subset"],
                                     "statistics": params["statistics"],
-                                    "radiomics": params["radiomics"]}, timeout=2)
+                                    "radiomics": params["radiomics"],
+                                    "platform": platform.system(),
+                                    "machine": platform.machine(),
+                                    "version": get_version(),
+                                    "python_version": sys.version,
+                                    "cuda_available": torch.cuda.is_available()
+                                    }, timeout=2)
             # if r.ok:
             #     print(f"status: {r.json()['status']}")
             # else:
             #     print(f"status code: {r.status_code}")
             #     print(f"message: {r.json()['message']}")
+            # print(f"Request took {time.time()-st:.3f}s")
         except Exception as e:
             # print(f"An Exception occured: {e}")
             pass
