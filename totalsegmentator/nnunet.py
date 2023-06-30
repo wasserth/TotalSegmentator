@@ -126,6 +126,19 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
+# class PyTorchThreadConfig:
+#     def __init__(self):
+#         self.interop_threads_set = False
+
+#     def set_num_interop_threads(self, num_threads):
+#         if not self.interop_threads_set:
+#             torch.set_num_interop_threads(num_threads)
+#             self.interop_threads_set = True
+
+# config = PyTorchThreadConfig()
+# config.set_num_interop_threads(1)
+
+
 def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
@@ -155,11 +168,10 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     elif device == 'cuda':
         # multithreading in torch doesn't help nnU-Net if run on GPU
         torch.set_num_threads(1)
-        torch.set_num_interop_threads(1)
+        # torch.set_num_interop_threads(1)  # throws error if setting the second time
         device = torch.device('cuda')
     else:
         device = torch.device('mps')
-
     step_size = 0.5
     disable_tta = not tta
     verbose = False
@@ -195,7 +207,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
     k, v = class_map_item
     # Have to load img inside of each thread. If passing it as argument a lot slower.
-    if task_name != "total" and not quiet:
+    if not task_name.startswith("total") and not quiet:
         print(f"Creating {v}.nii.gz")
     img = nib.load(tmp_dir / "s01.nii.gz")
     img_data = img.get_fdata()
@@ -343,8 +355,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 for idx, tid in enumerate(task_id):
                     print(f"Predicting part {idx+1} of {len(task_id)} ...")
                     with nostdout(verbose):
-                        nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                                       nr_threads_resampling, nr_threads_saving)
+                        # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
+                        #                nr_threads_resampling, nr_threads_saving)
+                        nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
+                                         nr_threads_resampling, nr_threads_saving, device=device)
                     # iterate over models (different sets of classes)
                     for img_part in img_parts:
                         (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")

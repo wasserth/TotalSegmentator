@@ -3,6 +3,7 @@ import os
 import itertools
 import pickle
 from pathlib import Path
+from pprint import pprint
 
 import nibabel as nib
 import numpy as np
@@ -21,19 +22,19 @@ roi_groups = {
     "total": [
         ["humerus_left", "humerus_right", "scapula_left", "scapula_right", "clavicula_left",
          "clavicula_right", "femur_left", "femur_right", "hip_left", "hip_right", "sacrum",
-         "colon", "prostate", "trachea", "skull"],
+         "colon", "trachea", "skull", "patella", "tibia", "fibula", "tarsal",
+         "metatarsal", "phalanges_feet", "ulna", "radius", "carpal", "metacarpal", "phalanges_hand"],
         ["spleen", "kidney_right", "kidney_left", "gallbladder",
          "adrenal_gland_right", "adrenal_gland_left",
          "gluteus_medius_left", "gluteus_medius_right",
          "heart_atrium_left", "heart_atrium_right", "heart_myocardium",
-         "kidney_cyst_left", "kidney_cyst_right"],
+         "kidney_cyst_left", "kidney_cyst_right", "spinal_cord", "prostate", "thyroid_gland"],
         ["iliac_artery_left", "iliac_artery_right", "iliac_vena_left", "iliac_vena_right",
          "aorta", "inferior_vena_cava",
-         "portal_vein_and_splenic_vein", "esophagus", "thyroid_gland",
+         "portal_vein_and_splenic_vein", "esophagus",
          "brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left", 
-         "common_carotid_artery_right", "common_carotid_artery_left", "superior_vena_cava", 
-         "brachiocephalic_vein_left", "brachiocephalic_vein_right", "atrial_appendage_left",
-         "pulmonary_vein", "pulmonary_artery"],
+         "common_carotid_artery_right", "common_carotid_artery_left",  
+         "atrial_appendage_left"],
         ["small_bowel", "stomach", "lung_upper_lobe_left",
          "lung_upper_lobe_right", "face"],
         ["lung_lower_lobe_left", "lung_middle_lobe_right", "lung_lower_lobe_right",
@@ -49,10 +50,12 @@ roi_groups = {
          "rib_right_1", "rib_right_2", "rib_right_3", "rib_right_4", "rib_right_5", "rib_right_6",
          "rib_right_7", "rib_right_8", "rib_right_9", "rib_right_10", "rib_right_11",
          "rib_right_12", "urinary_bladder", "duodenum",
-         "gluteus_minimus_left", "gluteus_minimus_right", "spinal_cord"],
+         "gluteus_minimus_left", "gluteus_minimus_right", "sternum", "costal_cartilages"],
         ["liver", "autochthon_left", "autochthon_right", "iliopsoas_left", "iliopsoas_right",
-         "heart_ventricle_left", "heart_ventricle_right", "pulmonary_artery"]
+         "heart_ventricle_left", "heart_ventricle_right", "pulmonary_artery", "pulmonary_vein",
+         "superior_vena_cava", "brachiocephalic_vein_left", "brachiocephalic_vein_right"]
     ],
+    # total_fast defined afterwards automatically
     "lung_vessels": [
         ["lung_trachea_bronchia"],
         ["lung_vessels"]
@@ -104,6 +107,15 @@ roi_groups = {
         "sternum", "tarsal", "tibia", "phalanges_feet", "ulna"]
     ]
 }
+
+# add total_fast (removing every from total which is not in total_fast class_map)
+roi_groups["total_fast"] = [[] for _ in range(len(roi_groups["total"]))]
+for idx, group in enumerate(roi_groups["total"]):
+    for roi in group:
+        if roi in class_map["total_fast"].values():
+            roi_groups["total_fast"][idx].append(roi)
+roi_groups["total_fast"][6].append("ribs")
+
 
 def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):
     # ref_img = nib.load(subject_path)

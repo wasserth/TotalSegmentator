@@ -20,15 +20,15 @@ def setup_nnunet():
         # in docker container finding home not properly working therefore map to /tmp
         home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
         config_dir = home_path / ".totalsegmentator"
-        (config_dir / "nnunet/results/nnUNet/3d_fullres").mkdir(exist_ok=True, parents=True)
-        (config_dir / "nnunet/results/nnUNet/2d").mkdir(exist_ok=True, parents=True)
+        # (config_dir / "nnunet/results/nnUNet/3d_fullres").mkdir(exist_ok=True, parents=True)
+        # (config_dir / "nnunet/results/nnUNet/2d").mkdir(exist_ok=True, parents=True)
         weights_dir = config_dir / "nnunet/results"
 
     # This variables will only be active during the python script execution. Therefore
     # we do not have to unset them in the end.
-    os.environ["nnUNet_raw_data_base"] = str(weights_dir)  # not needed, just needs to be an existing directory
+    os.environ["nnUNet_raw"] = str(weights_dir)  # not needed, just needs to be an existing directory
     os.environ["nnUNet_preprocessed"] = str(weights_dir)  # not needed, just needs to be an existing directory
-    os.environ["RESULTS_FOLDER"] = str(weights_dir)
+    os.environ["nnUNet_results"] = str(weights_dir)
 
 
 def setup_totalseg(totalseg_id=None):

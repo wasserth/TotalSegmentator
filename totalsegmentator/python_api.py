@@ -47,14 +47,16 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast:
             task_id = 297
             resample = 3.0
+            # trainer = "nnUNetTrainer_4000epochs_NoMirroring"
             trainer = "nnUNetTrainerNoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
             task = "total_fast"
         else:
-            task_id = [251, 252, 253, 254, 255]
+            task_id = [291, 292, 293, 294, 295, 296]
             resample = 1.5
-            trainer = "nnUNetTrainerV2_ep4000_nomirror"
+            # trainer = "nnUNetTrainer_4000epochs_NoMirroring"
+            trainer = "nnUNetTrainerNoMirroring"
             crop = None
         model = "3d_fullres"
         folds = [0]
