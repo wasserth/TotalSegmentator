@@ -63,7 +63,7 @@ def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:
         json.dump(stats, f, indent=4)
 
 
-def get_basic_statistics_for_entire_dir(seg: np.array, ct_file, file_out:Path, quiet:bool=False):
+def get_basic_statistics_for_entire_dir(seg: np.array, ct_file, file_out:Path, quiet:bool=False, task:str="total"):
     """
     ct_file: path to a ct_file or a nifti file object
     """
@@ -72,7 +72,7 @@ def get_basic_statistics_for_entire_dir(seg: np.array, ct_file, file_out:Path, q
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     stats = {}
-    for k, mask_name in tqdm(class_map["total"].items(), disable=quiet):
+    for k, mask_name in tqdm(class_map[task].items(), disable=quiet):
         stats[mask_name] = {}
         # data = nib.load(mask).get_fdata()  # loading: 0.6s
         data = seg == k  # 0.18s

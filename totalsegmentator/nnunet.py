@@ -18,9 +18,10 @@ import torch
 
 from totalsegmentator.libs import nostdout
 
-with nostdout():
-    from nnunet.inference.predict import predict_from_folder
-    from nnunet.paths import default_plans_identifier, network_training_output_dir, default_trainer
+# todo important: change
+# with nostdout():
+from nnunetv2.inference.predict_from_raw_data import predict_from_raw_data
+from nnunetv2.utilities.file_path_utilities import get_output_folder
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_taskid_to_partname
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
@@ -88,6 +89,10 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
             for all folds: None
             for only fold 0: [0]
     """
+    with nostdout():
+        from nnunet.inference.predict import predict_from_folder
+        from nnunet.paths import default_plans_identifier, network_training_output_dir, default_trainer
+
     save_npz = False
     # num_threads_preprocessing = 6
     # num_threads_nifti_save = 2
@@ -121,10 +126,13 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
-def nnunetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
+def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
                      plans="nnUNetPlans", device="cuda"):
+
+    dir_in = str(dir_in)
+    dir_out = str(dir_out)
 
     config = model
 
@@ -137,14 +145,14 @@ def nnunetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     # if not isdir(dir_out):
     #     maybe_mkdir_p(dir_out)
 
-    assert args.device in ['cpu', 'cuda',
-                           'mps'], f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {args.device}.'
-    if args.device == 'cpu':
+    assert device in ['cpu', 'cuda',
+                           'mps'], f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {device}.'
+    if device == 'cpu':
         # let's allow torch to use hella threads
         import multiprocessing
         torch.set_num_threads(multiprocessing.cpu_count())
         device = torch.device('cpu')
-    elif args.device == 'cuda':
+    elif device == 'cuda':
         # multithreading in torch doesn't help nnU-Net if run on GPU
         torch.set_num_threads(1)
         torch.set_num_interop_threads(1)
@@ -203,7 +211,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti", 
-                         statistics=False, quiet=False, verbose=False, test=0, skip_saving=False):
+                         statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
+                         device="cuda"):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -354,8 +363,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 with nostdout(verbose):
                     # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                     #                nr_threads_resampling, nr_threads_saving)
-                    nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                                   nr_threads_resampling, nr_threads_saving)
+                    nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
+                                     nr_threads_resampling, nr_threads_saving, device=device)
             # elif test == 2:
             #     print("WARNING: Using reference seg instead of prediction for testing.")
             #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
@@ -396,7 +405,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             st = time.time()
             stats_dir = file_out.parent if multilabel_image else file_out
             stats_dir.mkdir(exist_ok=True)
-            get_basic_statistics_for_entire_dir(img_pred.get_fdata(), img_in_rsp, stats_dir / "statistics.json", quiet)
+            get_basic_statistics_for_entire_dir(img_pred.get_fdata(), img_in_rsp, stats_dir / "statistics.json", quiet, task_name)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
         if resample is not None:
