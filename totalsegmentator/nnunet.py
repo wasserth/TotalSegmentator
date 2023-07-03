@@ -126,37 +126,22 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
-# class PyTorchThreadConfig:
-#     def __init__(self):
-#         self.interop_threads_set = False
-
-#     def set_num_interop_threads(self, num_threads):
-#         if not self.interop_threads_set:
-#             torch.set_num_interop_threads(num_threads)
-#             self.interop_threads_set = True
-
-# config = PyTorchThreadConfig()
-# config.set_num_interop_threads(1)
-
-
 def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
                      plans="nnUNetPlans", device="cuda"):
+    """
+    Identical to bash function nnUNetv2_predict
 
+    folds:  folds to use for prediction. Default is None which means that folds will be detected 
+            automatically in the model output folder.
+            for all folds: None
+            for only fold 0: [0]
+    """
     dir_in = str(dir_in)
     dir_out = str(dir_out)
 
-    config = model
-
-    if folds is None:  # from me
-        folds = "all"
-    folds = [i if i == 'all' else int(i) for i in folds]  # from fabian
-
-    model_folder = get_output_folder(task_id, trainer, plans, config)
-
-    # if not isdir(dir_out):
-    #     maybe_mkdir_p(dir_out)
+    model_folder = get_output_folder(task_id, trainer, plans, model)
 
     assert device in ['cpu', 'cuda',
                            'mps'], f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {device}.'

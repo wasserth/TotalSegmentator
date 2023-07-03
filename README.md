@@ -90,7 +90,8 @@ docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/
 
 ### Resource Requirements
 Totalsegmentator has the following runtime and memory requirements (using a Nvidia RTX 3090 GPU):  
-(1.5mm is the normal model and 3mm is the `--fast` model)
+(1.5mm is the normal model and 3mm is the `--fast` model. With v2 the runtimes have increased a bit since
+we added more classes.)
 
 ![Alt text](resources/imgs/runtime_table.png)
 
