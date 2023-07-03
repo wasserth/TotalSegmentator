@@ -3,6 +3,11 @@
 * add `--skip_saving` argument
 
 
+## Release 2.0.0
+* train models with nnU-Net v2 (nnunet_cust dependency no longer needed)
+* roi_subset a lot faster, because cropping with 6mm low res model to roi first
+
+
 ## Release 1.5.6
 * remove verbose print outs not needed
 * add helper script for manual setup

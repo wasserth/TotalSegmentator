@@ -130,6 +130,10 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj"
         # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
         WEIGHTS_URL = "http://94.16.105.223/static/Task256_TotalSegmentator_3mm_1139subj.zip"
+    elif task_id == 298:
+        weights_path = config_dir / "Dataset298_TotalSegmentator_total_6mm_1559subj"
+        # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
+        WEIGHTS_URL = "todo"
 
     elif task_id == 258:
         config_dir = config_dir / "3d_fullres"
