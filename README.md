@@ -132,6 +132,7 @@ from totalsegmentator.python_api import totalsegmentator
 
 totalsegmentator(input_path, output_path)
 ```
+You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py).
 
 
 ### Install latest master branch (contains latest bug fixes)
