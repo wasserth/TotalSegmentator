@@ -17,7 +17,7 @@ from totalsegmentator.cropping import crop_to_mask, undo_crop
 
 def main():
     parser = argparse.ArgumentParser(description="Crop input image to body.",
-                                     epilog="Written by Jakob Wasserthal. If you use this tool please cite https://arxiv.org/abs/2208.05868")
+                                     epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
 
     parser.add_argument("-i", metavar="filepath", dest="input",
                         help="CT nifti image", 
