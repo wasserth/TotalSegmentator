@@ -5,7 +5,7 @@ from pathlib import Path
 import argparse
 
 from totalsegmentator.libs import download_pretrained_weights
-
+from totalsegmentator.config import setup_totalseg
 
 if __name__ == "__main__":
     """
@@ -32,6 +32,8 @@ if __name__ == "__main__":
         "pleural_pericard_effusion": [315],
         "liver_vessels": [8]
     }
+
+    setup_totalseg()
 
     for task_id in task_to_id[args.task]:
         print(f"Processing {task_id}...")
