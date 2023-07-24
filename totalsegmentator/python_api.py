@@ -212,8 +212,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving)
     seg = seg_img.get_fdata().astype(np.uint8)
 
-    config = setup_totalseg()
-    increase_prediction_counter()
+    setup_totalseg()
+    config = increase_prediction_counter()
     send_usage_stats(config, {"task": task, "fast": fast, "preview": preview,
                               "multilabel": ml, "roi_subset": roi_subset, 
                               "statistics": statistics, "radiomics": radiomics})

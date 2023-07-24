@@ -59,6 +59,7 @@ def increase_prediction_counter():
         config = json.load(open(totalseg_config_file, "r"))
         config["prediction_counter"] += 1
         json.dump(config, open(totalseg_config_file, "w"), indent=4)
+        return config
 
 
 def get_version():
@@ -69,7 +70,7 @@ def get_version():
 
 
 def send_usage_stats(config, params):
-    if config["send_usage_stats"]:
+    if config is not None and config["send_usage_stats"]:
         
         params["roi_subset"] = "" if params["roi_subset"] is None else "-".join(params["roi_subset"])
 
