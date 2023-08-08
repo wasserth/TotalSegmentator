@@ -17,7 +17,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
-                     skip_saving=False, device="gpu"):
+                     skip_saving=False, device="gpu", license_number=None):
     """
     Run TotalSegmentator from within python. 
 
@@ -39,6 +39,9 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         print("No GPU detected. Running on CPU. This can be very slow. The '--fast' option can help to some extend.")
 
     setup_nnunet()
+    setup_totalseg()
+    if license_number is not None:
+        set_license_number(license_number)
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
@@ -241,8 +244,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device)
     seg = seg_img.get_fdata().astype(np.uint8)
 
-    config = setup_totalseg()
-    increase_prediction_counter()
+    config = increase_prediction_counter()
     send_usage_stats(config, {"task": task, "fast": fast, "preview": preview,
                               "multilabel": ml, "roi_subset": roi_subset, 
                               "statistics": statistics, "radiomics": radiomics})

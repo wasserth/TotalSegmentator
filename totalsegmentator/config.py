@@ -52,6 +52,18 @@ def setup_totalseg(totalseg_id=None):
     return config
 
 
+def set_license_number(license_number):
+    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        config["license_number"] = license_number
+        json.dump(config, open(totalseg_config_file, "w"), indent=4)
+    else:
+        print(f"ERROR: Could not find config file: {totalseg_config_file}")
+
+
 def increase_prediction_counter():
     home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
     totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
@@ -59,6 +71,7 @@ def increase_prediction_counter():
         config = json.load(open(totalseg_config_file, "r"))
         config["prediction_counter"] += 1
         json.dump(config, open(totalseg_config_file, "w"), indent=4)
+        return config
 
 
 def get_version():

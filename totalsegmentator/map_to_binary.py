@@ -290,7 +290,13 @@ class_map = {
 }
 
 
-commercial_models = ["heartchambers_highres", "appendicular_bones", "tissue", "face"]
+# name: task_id
+commercial_models = {
+    "heartchambers_highres": 301,
+    "appendicular_bones": 296, 
+    "tissue": 481, 
+    "face": 303
+}
 
 
 class_map_5_parts_v1 = {

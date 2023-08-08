@@ -88,6 +88,9 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Show more intermediate output",
                         default=False)
 
+    parser.add_argument("-l", "--license_number", help="Set license number. Needed for some tasks. Only needed once, then stored in config file.", 
+                        type=str, default=None)
+
     # Tests:
     # 0: no testing behaviour activated
     # 1: total normal
@@ -105,7 +108,7 @@ def main():
                      args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
-                     args.device)
+                     args.device, args.license_number)
 
 
 if __name__ == "__main__":

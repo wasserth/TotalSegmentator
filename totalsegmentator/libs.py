@@ -14,8 +14,8 @@ import requests
 import numpy as np
 import nibabel as nib
 
-from totalsegmentator.map_to_binary import class_map
-from totalsegmentator.map_to_binary import class_map_5_parts
+from totalsegmentator.map_to_binary import class_map, class_map_5_parts, commercial_models
+
 
 """
 Helpers to suppress stdout prints from nnunet
@@ -52,6 +52,31 @@ def get_config_dir():
 #     with open(save_path, 'wb') as f:
 #         for chunk in r.iter_content(chunk_size=chunk_size):
 #             f.write(chunk)
+
+
+def has_valid_license():
+    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        license_number = config["license_number"]
+    else:
+        print(f"ERROR: Could not find config file: {totalseg_config_file}")
+        return False
+
+    try:
+        url = f"http://backend.totalsegmentator.com:80/"
+        r = requests.post(url + "is_valid_license_number",
+                          json={"license_number": license_number}, timeout=2)
+        if r.ok:
+            return r.json()['status'] == valid_license
+        else:
+            print(f"An internal server error occured. status code: {r.status_code}")
+            print(f"message: {r.json()['message']}")
+            return False
+    except Exception as e:
+        print(f"An Exception occured: {e}")
+        return False
 
 
 def download_url_and_unpack(url, config_dir):
@@ -199,6 +224,12 @@ def download_pretrained_weights(task_id):
             shutil.rmtree(config_dir / old_weight)
 
     if WEIGHTS_URL is not None and not weights_path.exists():
+
+        if task_id in commercial_models.values():
+            if not has_valid_license():
+                print("This model requires a license. You do not have a valid license number. Please visit TODO for more information.")
+                return
+
         print(f"Downloading pretrained weights for Task {task_id} (~230MB) ...")
 
         # r = requests.get(WEIGHTS_URL)
