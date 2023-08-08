@@ -4,6 +4,8 @@ cd resources
 terraform init
 terraform validate
 terraform apply -auto-approve
+
+terraform destroy -auto-approve
 ```
 
 ## Helpful commands for setting up the cloud server

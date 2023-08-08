@@ -537,7 +537,7 @@ class_map_5_parts = {
         18: "iliac_vena_right"
     },
 
-    # 22
+    # 23
     "class_map_part_muscles": {
         1: "humerus_left",
         2: "humerus_right",
@@ -561,7 +561,7 @@ class_map_5_parts = {
         20: "iliopsoas_left",
         21: "iliopsoas_right",
         22: "brain",
-        22: "skull"
+        23: "skull"
     },
 
     # 26 classes
