@@ -12,11 +12,6 @@ from totalsegmentator.map_to_binary import class_map_5_parts
 
 
 def generate_json_from_dir_v2(foldername, subjects_train, subjects_val, labels):
-    """
-    foldername: nnUNet dataset name
-    labels: class names 
-    train_all: make fold 0 have 100% of the data in the training data (good for very small datasets)
-    """
     print("Creating dataset.json...")
     out_base = Path(os.environ['nnUNet_raw']) / foldername
 
@@ -60,7 +55,6 @@ def combine_labels(ref_img, file_out, masks):
             combined[img.get_fdata() > 0] = idx+1
         else:
             print(f"Missing: {file_in}")
-
     nib.save(nib.Nifti1Image(combined.astype(np.uint8), ref_img.affine), file_out)
 
 
@@ -112,6 +106,8 @@ if __name__ == "__main__":
 
 
 """
+# todo: add overview of dataset distribution figure to this explanation
+
 nnUNet commands for preprocessing and training:
 
 nnUNetv2_plan_and_preprocess -d <your_dataset_id> -pl ExperimentPlanner -c 3d_fullres
