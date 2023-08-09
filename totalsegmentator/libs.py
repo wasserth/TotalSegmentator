@@ -10,6 +10,7 @@ import shutil
 import zipfile
 from pathlib import Path
 
+from tqdm import tqdm
 import requests
 import numpy as np
 import nibabel as nib
@@ -69,7 +70,7 @@ def has_valid_license():
         r = requests.post(url + "is_valid_license_number",
                           json={"license_number": license_number}, timeout=2)
         if r.ok:
-            return r.json()['status'] == valid_license
+            return r.json()['status'] == "valid_license"
         else:
             print(f"An internal server error occured. status code: {r.status_code}")
             print(f"message: {r.json()['message']}")
@@ -77,6 +78,58 @@ def has_valid_license():
     except Exception as e:
         print(f"An Exception occured: {e}")
         return False
+
+
+def download_model_with_license_and_unpack(task_name, config_dir):
+    # Get License Number
+    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        license_number = config["license_number"]
+    else:
+        print(f"ERROR: Could not find config file: {totalseg_config_file}")
+        return False
+
+    tempfile = config_dir / "tmp_download_file.zip"
+    url = f"http://backend.totalsegmentator.com:80/"
+
+    # Download
+    try:
+        st = time.time()
+        r = requests.post(url + "download_weights",
+                          json={"license_number": license_number,
+                                "task": task_name}, 
+                          timeout=300,
+                          stream=True)
+        r.raise_for_status()  # Raise an exception for HTTP errors (4xx, 5xx)
+        
+        if r.ok:
+            with open(tempfile, "wb") as f:
+                # without progress bar
+                # f.write(r.content)
+
+                total_size = int(r.headers.get('content-length', 0))
+                progress_bar = tqdm(total=total_size, unit='B', unit_scale=True, desc="Downloading")
+                for chunk in r.iter_content(chunk_size=8192 * 16):
+                    progress_bar.update(len(chunk))
+                    f.write(chunk)
+                progress_bar.close()
+
+            print("Download finished. Extracting...")
+            with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
+                zip_f.extractall(config_dir)
+            print(f"  downloaded in {time.time()-st:.2f}s")
+        else:
+            if r.json()['status'] == "invalid_license":
+                print(f"Invalid license number ({license_number}). Please check your license number or contact support.")
+                sys.exit(1)
+            
+    except Exception as e:
+        raise e
+    finally:
+        if tempfile.exists():
+            os.remove(tempfile)
 
 
 def download_url_and_unpack(url, config_dir):
@@ -96,13 +149,24 @@ def download_url_and_unpack(url, config_dir):
         st = time.time()
         with open(tempfile, 'wb') as f:
             # session = requests.Session()  # making it slower
+            
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
+
+                # Without progress bar
+                # for chunk in r.iter_content(chunk_size=8192 * 16):
+                #     # If you have chunk encoded response uncomment if
+                #     # and set chunk_size parameter to None.
+                #     # if chunk:
+                #     f.write(chunk)
+
+                # With progress bar
+                total_size = int(r.headers.get('content-length', 0))
+                progress_bar = tqdm(total=total_size, unit='B', unit_scale=True, desc="Downloading")
                 for chunk in r.iter_content(chunk_size=8192 * 16):
-                    # If you have chunk encoded response uncomment if
-                    # and set chunk_size parameter to None.
-                    # if chunk:
+                    progress_bar.update(len(chunk))
                     f.write(chunk)
+                progress_bar.close()
 
         print("Download finished. Extracting...")
         # call(['unzip', '-o', '-d', network_training_output_dir, tempfile])
@@ -225,26 +289,27 @@ def download_pretrained_weights(task_id):
 
     if WEIGHTS_URL is not None and not weights_path.exists():
 
-        if task_id in commercial_models.values():
-            if not has_valid_license():
-                print("This model requires a license. You do not have a valid license number. Please visit TODO for more information.")
-                return
-
         print(f"Downloading pretrained weights for Task {task_id} (~230MB) ...")
 
-        # r = requests.get(WEIGHTS_URL)
-        # with zipfile.ZipFile(io.BytesIO(r.content)) as zip_f:
-        #     zip_f.extractall(config_dir)
-        #     print(f"Saving to: {config_dir}")
+        commercial_models_inv = {v: k for k, v in commercial_models.items()}
+        if task_id in commercial_models_inv:
+            # if not has_valid_license():
+            #     print("This model requires a license. You do not have a valid license number. Please visit TODO for more information.")
+            download_model_with_license_and_unpack(commercial_models_inv[task_id], config_dir)
+        else:
+            # r = requests.get(WEIGHTS_URL)
+            # with zipfile.ZipFile(io.BytesIO(r.content)) as zip_f:
+            #     zip_f.extractall(config_dir)
+            #     print(f"Saving to: {config_dir}")
 
-        # download_url(WEIGHTS_URL, config_dir / "tmp_download_file.zip")
-        # with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
-        #     zip_f.extractall(config_dir)
-        #     print(config_dir)
-        # delete tmp file
-        # (config_dir / "tmp_download_file.zip").unlink()
+            # download_url(WEIGHTS_URL, config_dir / "tmp_download_file.zip")
+            # with zipfile.ZipFile(config_dir / "tmp_download_file.zip", 'r') as zip_f:
+            #     zip_f.extractall(config_dir)
+            #     print(config_dir)
+            # delete tmp file
+            # (config_dir / "tmp_download_file.zip").unlink()
 
-        download_url_and_unpack(WEIGHTS_URL, config_dir)
+            download_url_and_unpack(WEIGHTS_URL, config_dir)
 
 
 def combine_masks_to_multilabel_file(masks_dir, multilabel_file):

@@ -88,7 +88,7 @@ def send_usage_stats(config, params):
 
         try:
             st = time.time()
-            url = f"http://94.16.105.223:80/"
+            url = f"http://backend.totalsegmentator.com:80/"
             r = requests.post(url + "log_totalseg_run",
                               json={"totalseg_id": config["totalseg_id"],
                                     "prediction_counter": config["prediction_counter"],
