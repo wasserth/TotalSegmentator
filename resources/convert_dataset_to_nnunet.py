@@ -104,18 +104,3 @@ if __name__ == "__main__":
 
     generate_json_from_dir_v2(nnunet_path.name, subjects_train, subjects_val, class_map.values())
 
-
-"""
-# todo: add overview of dataset distribution figure to this explanation
-
-nnUNet commands for preprocessing and training:
-
-nnUNetv2_plan_and_preprocess -d <your_dataset_id> -pl ExperimentPlanner -c 3d_fullres
-nnUNetv2_train <your_dataset_id> 3d_fullres 0 -tr nnUNetTrainer_4000epochs_NoMirroring
-
-After training:
-use nnUNet_predict to predict the images in imagesTs to a directory called labelsTs_predicted
-
-Then run evaluation:
-python totalsegmentator/resources/evaluate.py path_to_labelsTs path_to_labelsTs_predicted 
-"""

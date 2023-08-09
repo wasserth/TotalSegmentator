@@ -1,0 +1,17 @@
+# Guide how to train your own nnU-Net on the TotalSegmentator dataset
+
+1. Setup nnU-Net as described [here](https://github.com/MIC-DKFZ/nnUNet)
+2. Download the data
+3. Convert the data to nnU-Net format using `resources/convert_dataset_to_nnunet.py`
+4. Preprocess `nnUNetv2_plan_and_preprocess -d <your_dataset_id> -pl ExperimentPlanner -c 3d_fullres`
+5. Train `nnUNetv2_train <your_dataset_id> 3d_fullres 0 -tr nnUNetTrainer_4000epochs_NoMirroring` (takes several days)
+6. Predict test set `nnUNetv2_predict -i path/to/imagesTs -o path/to/labelsTs_predicted -d <your_dataset_id> -c 3d_fullres --disable_tta -f 0`
+7. Evaluate `python resources/evaluate.py path/to/labelsTs path/to/labelsTs_predicted`
+8. Done
+
+> Note: This will not give you the same results are TotalSegmentator for two reasons:
+1. TotalSegmentator v2 uses a [bigger dataset](resources/improvements_in_v2.md) which is not completely public
+2. TotalSegmentator is trained on images without blurred faces. Your dataset contains blurred faces.
+
+I trained a nnU-Net on the public dataset and got the following results: TODO
+You should get similar results.
