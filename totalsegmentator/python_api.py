@@ -11,6 +11,7 @@ from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get
 from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter, send_usage_stats
 from totalsegmentator.map_to_binary import class_map
+from totalsegmentator.map_to_total import map_to_total
 
 
 def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
@@ -200,25 +201,27 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     # Generate rough organ segmentation (6mm) for speed up if roi_subset is used
     if roi_subset is not None and len(roi_subset) < 10:
-        body_seg = False  # can not be used together with body_seg
-        download_pretrained_weights(298)
-        st = time.time()
-        if not quiet: print("Generating rough body segmentation...")
-        # todo: switch to ep4000 model!
-        organ_seg = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
-                            trainer="nnUNetTrainerNoMirroring", tta=False, multilabel_image=True, resample=6.0,
-                            crop=None, crop_path=None, task_name="total_fast", nora_tag="None", preview=False, 
-                            save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
-                            crop_addon=crop_addon, output_type=output_type, statistics=False,
-                            quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
-        class_map_inv = {v: k for k, v in class_map["total_fast"].items()}
-        crop = np.zeros(organ_seg.shape, dtype=np.uint8)
-        organ_seg_data = organ_seg.get_fdata()
-        for roi in roi_subset:
-            crop[organ_seg_data == class_map_inv[roi]] = 1
-        crop = nib.Nifti1Image(crop, organ_seg.affine)
-        crop_addon = [20,20,20]
-        if verbose: print(f"Rough organ segmentation generated in {time.time()-st:.2f}s")
+        if task != "appendicular_bones" and task != "tissue":
+            body_seg = False  # can not be used together with body_seg
+            download_pretrained_weights(298)
+            st = time.time()
+            if not quiet: print("Generating rough body segmentation...")
+            # todo: switch to ep4000 model!
+            organ_seg = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
+                                trainer="nnUNetTrainerNoMirroring", tta=False, multilabel_image=True, resample=6.0,
+                                crop=None, crop_path=None, task_name="total_fast", nora_tag="None", preview=False, 
+                                save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
+                                crop_addon=crop_addon, output_type=output_type, statistics=False,
+                                quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
+            class_map_inv = {v: k for k, v in class_map["total_fast"].items()}
+            crop = np.zeros(organ_seg.shape, dtype=np.uint8)
+            organ_seg_data = organ_seg.get_fdata()
+            roi_subset_crop = [map_to_total[roi] if roi in map_to_total else roi for roi in roi_subset]
+            for roi in roi_subset_crop:
+                crop[organ_seg_data == class_map_inv[roi]] = 1
+            crop = nib.Nifti1Image(crop, organ_seg.affine)
+            crop_addon = [20,20,20]
+            if verbose: print(f"Rough organ segmentation generated in {time.time()-st:.2f}s")
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
     if crop is None and body_seg:
