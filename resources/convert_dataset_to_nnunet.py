@@ -2,6 +2,7 @@ import sys
 import os
 from pathlib import Path
 import shutil
+import json
 
 import numpy as np
 import nibabel as nib
@@ -22,12 +23,12 @@ def generate_json_from_dir_v2(foldername, subjects_train, subjects_val, labels):
     json_dict['licence'] = "Apache 2.0"
     json_dict['release'] = "2.0"
     json_dict['channel_names'] = {"0": "CT"}
-    json_dict['labels'] = {val:idx for idx,val in enumerate(["background",] + labels)}
+    json_dict['labels'] = {val:idx for idx,val in enumerate(["background",] + list(labels))}
     json_dict['numTraining'] = len(subjects_train + subjects_val)
     json_dict['file_ending'] = '.nii.gz'
     json_dict['overwrite_image_reader_writer'] = 'NibabelIOWithReorient'
 
-    save_json(json_dict, os.path.join(out_base, "dataset.json"), sort_keys=False)
+    json.dump(json_dict, open(out_base / "dataset.json", "w"), sort_keys=False, indent=4)
 
     print("Creating split_final.json...")
     output_folder_pkl = Path(os.environ['nnUNet_preprocessed']) / foldername
@@ -35,18 +36,19 @@ def generate_json_from_dir_v2(foldername, subjects_train, subjects_val, labels):
 
     splits = []
     splits.append({
-        "train": list(subjects_train),
-        "val": list(subjects_val)
+        "train": subjects_train,
+        "val": subjects_val
     })
 
     print(f"nr of folds: {len(splits)}")
     print(f"nr train subjects (fold 0): {len(splits[0]['train'])}")
     print(f"nr val subjects (fold 0): {len(splits[0]['val'])}")
 
-    save_json(splits, output_folder_pkl / "splits_final.json", sort_keys=False)
+    json.dump(splits, open(output_folder_pkl / "splits_final.json", "w"), sort_keys=False, indent=4)
 
 
 def combine_labels(ref_img, file_out, masks):
+    ref_img = nib.load(ref_img)
     combined = np.zeros(ref_img.shape).astype(np.uint8)
     for idx, arg in enumerate(masks):
         file_in = Path(arg)  
@@ -83,11 +85,12 @@ if __name__ == "__main__":
     (nnunet_path / "imagesTs").mkdir(parents=True, exist_ok=True)
     (nnunet_path / "labelsTs").mkdir(parents=True, exist_ok=True)
 
-    meta = pd.read_csv(dataset_path / "meta.csv")
-    subjects_train = meta[meta["split"] == "train"]["image_id"].values
-    subjects_val = meta[meta["split"] == "val"]["image_id"].values
-    subjects_test = meta[meta["split"] == "test"]["image_id"].values
+    meta = pd.read_csv(dataset_path / "meta.csv", sep=";")
+    subjects_train = list(meta[meta["split"] == "train"]["image_id"].values)
+    subjects_val = list(meta[meta["split"] == "val"]["image_id"].values)
+    subjects_test = list(meta[meta["split"] == "test"]["image_id"].values)
 
+    print("Copying train data...")
     for subject in tqdm(subjects_train + subjects_val):
         subject_path = dataset_path / subject
         shutil.copy(subject_path / "ct.nii.gz", nnunet_path / "imagesTr" / f"{subject}_0000.nii.gz")
@@ -95,6 +98,7 @@ if __name__ == "__main__":
                        nnunet_path / "labelsTr" / f"{subject}.nii.gz",
                        [subject_path / "segmentations" / f"{roi}.nii.gz" for roi in class_map.values()])
 
+    print("Copying test data...")
     for subject in tqdm(subjects_test):
         subject_path = dataset_path / subject
         shutil.copy(subject_path / "ct.nii.gz", nnunet_path / "imagesTs" / f"{subject}_0000.nii.gz")

@@ -41,6 +41,7 @@ Still open problems:
 * No more corrupted files
 * example code for converting to nnU-Net format
 * example code for evaluation
-* same subjects as in v1 (we did not publish the additional subjects we used for TotalSegmentator v2 training)
+* same subjects as in v1 for training and validation (we did not publish the additional subjects we used for TotalSegmentator v2 training)
+* a few more subjects as in v1 for testing
 * labels are additional tasks are not included
 
