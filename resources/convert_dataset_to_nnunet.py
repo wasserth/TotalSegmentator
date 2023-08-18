@@ -62,7 +62,8 @@ def combine_labels(ref_img, file_out, masks):
 
 if __name__ == "__main__":    
     """
-    Convert the downloaded TotalSegmentator dataset to nnUNet format and generate dataset.json and splits_final.json
+    Convert the downloaded TotalSegmentator dataset (after unzipping it) to nnUNet format and 
+    generate dataset.json and splits_final.json
 
     example usage: 
     python convert_dataset_to_nnunet.py /my_downloads/TotalSegmentator_dataset /nnunet/raw/Dataset100_TotalSegmentator_part1
