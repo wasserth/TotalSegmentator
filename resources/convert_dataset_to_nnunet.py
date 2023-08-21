@@ -66,20 +66,18 @@ if __name__ == "__main__":
     generate dataset.json and splits_final.json
 
     example usage: 
-    python convert_dataset_to_nnunet.py /my_downloads/TotalSegmentator_dataset /nnunet/raw/Dataset100_TotalSegmentator_part1
+    python convert_dataset_to_nnunet.py /my_downloads/TotalSegmentator_dataset /nnunet/raw/Dataset100_TotalSegmentator_part1 class_map_part_organs
 
     You must set nnUNet_raw and nnUNet_preprocessed environment variables before running this (see nnUNet documentation).
     """
 
-    # TotalSegmentator is made up of 5 models. Choose which one you want to produce.
-    class_map = class_map_5_parts["class_map_part_organs"]
-    # class_map = class_map_5_parts["class_map_part_vertebrae"]
-    # class_map = class_map_5_parts["class_map_part_cardiac"]
-    # class_map = class_map_5_parts["class_map_part_muscles"]
-    # class_map = class_map_5_parts["class_map_part_ribs"]
-
     dataset_path = Path(sys.argv[1])  # directory containining all the subjects
     nnunet_path = Path(sys.argv[2])  # directory of the new nnunet dataset
+    # TotalSegmentator is made up of 5 models. Choose which one you want to produce. Choose from: 
+    # class_map_part_organs | class_map_part_vertebrae | class_map_part_cardiac | class_map_part_muscles | class_map_part_ribs
+    class_map_name = sys.argv[3]  
+
+    class_map = class_map_5_parts[class_map_name]
 
     (nnunet_path / "imagesTr").mkdir(parents=True, exist_ok=True)
     (nnunet_path / "labelsTr").mkdir(parents=True, exist_ok=True)
