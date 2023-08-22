@@ -74,7 +74,11 @@ if __name__ == "__main__":
     dataset_path = Path(sys.argv[1])  # directory containining all the subjects
     nnunet_path = Path(sys.argv[2])  # directory of the new nnunet dataset
     # TotalSegmentator is made up of 5 models. Choose which one you want to produce. Choose from: 
-    # class_map_part_organs | class_map_part_vertebrae | class_map_part_cardiac | class_map_part_muscles | class_map_part_ribs
+    #   class_map_part_organs
+    #   class_map_part_vertebrae 
+    #   class_map_part_cardiac 
+    #   class_map_part_muscles 
+    #   class_map_part_ribs
     class_map_name = sys.argv[3]  
 
     class_map = class_map_5_parts[class_map_name]
