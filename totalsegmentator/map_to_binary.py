@@ -291,13 +291,16 @@ class_map = {
 }
 
 
-# name: task_id
 commercial_models = {
     "heartchambers_highres": 301,
     "appendicular_bones": 296, 
     "tissue": 481, 
     "face": 303
 }
+# future
+# - brain subparts
+# - head subparts
+# - everything highres?
 
 
 class_map_5_parts_v1 = {
