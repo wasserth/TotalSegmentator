@@ -8,10 +8,24 @@ import nibabel as nib
 import torch
 
 from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
-from totalsegmentator.libs import download_pretrained_weights
-from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter, send_usage_stats
+from totalsegmentator.libs import download_pretrained_weights, has_valid_license
+from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
+from totalsegmentator.config import send_usage_stats, set_license_number
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.map_to_total import map_to_total
+
+
+def show_license_info():
+    if not has_valid_license():
+        print("""
+              In contrast to the other tasks this task is not openly available. 
+              It requires a license. For academic usage a free license can be 
+              acquired here: 
+              https://totalsegmentator-academic.streamlit.app
+
+              For commercial usage see:
+              https://totalsegmentator-commercial.streamlit.app
+              """)
 
 
 def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
@@ -52,15 +66,13 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast:
             task_id = 297
             resample = 3.0
-            # trainer = "nnUNetTrainer_4000epochs_NoMirroring"
             trainer = "nnUNetTrainerNoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
             task = "total_fast"
         else:
-            task_id = [291, 292, 293, 294, 295, 296]
+            task_id = [291, 292, 293, 294, 295]
             resample = 1.5
-            # trainer = "nnUNetTrainer_4000epochs_NoMirroring"
             trainer = "nnUNetTrainerNoMirroring"
             crop = None
         model = "3d_fullres"
@@ -68,7 +80,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "lung_vessels":
         task_id = 258
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "lung"
         if ml: raise ValueError("task lung_vessels does not work with option --ml, because of postprocessing.")
         if fast: raise ValueError("task lung_vessels does not work with option --fast")
@@ -77,7 +89,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "covid":
         task_id = 201
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "lung"
         model = "3d_fullres"
         folds = [0]
@@ -86,7 +98,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "cerebral_bleed":
         task_id = 150
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "brain"
         model = "3d_fullres"
         folds = [0]
@@ -94,7 +106,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "hip_implant":
         task_id = 260
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "pelvis"
         model = "3d_fullres"
         folds = [0]
@@ -102,7 +114,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "coronary_arteries":
         task_id = 503
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "heart"
         model = "3d_fullres"
         folds = [0]
@@ -110,17 +122,17 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast: raise ValueError("task coronary_arteries does not work with option --fast")
     elif task == "body":
         if fast:
-            task_id = 269
+            task_id = 300
             resample = 6.0
-            trainer = "nnUNetTrainerV2"
+            trainer = "nnUNetTrainer"
             crop = None
             model = "3d_fullres"
             folds = [0]
             if not quiet: print("Using 'fast' option: resampling to lower resolution (6mm)")
         else:
-            task_id = 273
+            task_id = 299
             resample = 1.5
-            trainer = "nnUNetTrainerV2"
+            trainer = "nnUNetTrainer"
             crop = None
             model = "3d_fullres"
             folds = [0]
@@ -128,7 +140,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "pleural_pericard_effusion":
         task_id = 315
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "lung"
         crop_addon = [50, 50, 50]
         model = "3d_fullres"
@@ -137,37 +149,60 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "liver_vessels":
         task_id = 8
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "liver"
         crop_addon = [20, 20, 20]
         model = "3d_fullres"
         folds = None
         if fast: raise ValueError("task liver_vessels does not work with option --fast")
-    elif task == "heartchambers_test":
-        task_id = 417
+    elif task == "vertebrae_body":
+        task_id = 302
+        resample = 1.5
+        trainer = "nnUNetTrainer"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task vertebrae_body does not work with option --fast")
+
+    # Commercial models
+    elif task == "heartchambers_highres":
+        task_id = 301
         resample = None
-        trainer = "nnUNetTrainerV2"
+        trainer = "nnUNetTrainer"
         crop = "heart"
         crop_addon = [5, 5, 5]
-        model = "3d_lowres"
+        model = "3d_fullres"
         folds = None
-        if fast: raise ValueError("task heartchambers_test does not work with option --fast")
-    elif task == "bones_tissue_test":
-        task_id = 278
+        if fast: raise ValueError("task heartchambers_highres does not work with option --fast")
+        show_license_info()
+    elif task == "appendicular_bones":
+        task_id = 296
         resample = 1.5
-        trainer = "nnUNetTrainerV2_ep4000_nomirror"
+        trainer = "nnUNetTrainer"
         crop = None
         model = "3d_fullres"
         folds = [0]
-        if fast: raise ValueError("task bones_tissue_test does not work with option --fast")
-    elif task == "aortic_branches_test":
-        task_id = 435
+        if fast: raise ValueError("task appendicular_bones does not work with option --fast")
+        show_license_info()
+    elif task == "tissue_types":
+        task_id = 481
         resample = 1.5
-        trainer = "nnUNetTrainerV2_nomirror"
+        trainer = "nnUNetTrainer"
         crop = None
         model = "3d_fullres"
         folds = [0]
-        if fast: raise ValueError("task aortic_branches_test does not work with option --fast")
+        if fast: raise ValueError("task tissue_types does not work with option --fast")
+        show_license_info()
+    elif task == "face":
+        task_id = 303
+        resample = 1.5
+        trainer = "nnUNetTrainer"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task face does not work with option --fast")
+        show_license_info()
+
     elif task in ["bones_extremities", "tissue_types", "heartchambers_highres",
                        "head", "aortic_branches"]:
         print("\nThis model is only available upon purchase of a license (free licenses available for " +

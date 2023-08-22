@@ -81,30 +81,37 @@ roi_groups = {
     "liver_vessels": [
         ["liver_vessels", "liver_tumor"]
     ],
-    "heartchambers_test": [
+    "vertebrae_body": [
+        ["vertebrae_body"]
+    ],
+    "heartchambers_highres": [
         ["heart_myocardium"],
         ["heart_atrium_left", "heart_ventricle_left"],
         ["heart_atrium_right", "heart_ventricle_right"],
         ["aorta", "pulmonary_artery"]
     ],
-    "bones_tissue_test": [
-        ["femur", "patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet", 
-        "humerus", "ulna", "radius", "carpal", "metacarpal", "phalanges_hand", "sternum", 
-        "skull", "spinal_cord"],
-        ["subcutaneous_fat", "skeletal_muscle", "torso_fat"]
+    "appendicular_bones": [
+        ["patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet", 
+         "ulna", "radius", "carpal", "metacarpal", "phalanges_hand"]
     ],
-    "aortic_branches_test": [
-        ["brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left", "aorta",
-        "common_carotid_artery_right", "common_carotid_artery_left"],
-        ["superior_vena_cava", 
-        "brachiocephalic_vein_left", "brachiocephalic_vein_right", "atrial_appendage_left"],
-        ["pulmonary_vein", "pulmonary_artery"],
-        ["heart_atrium_left", "heart_atrium_right", "thyroid_gland"]
+    "tissue_types": [
+        ["subcutaneous_fat"],
+        ["torso_fat"],
+        ["skeletal_muscle"]
     ],
+    "face": [
+        ["face"]
+    ],
+    # "aortic_branches_test": [
+    #     ["brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left", "aorta",
+    #     "common_carotid_artery_right", "common_carotid_artery_left"],
+    #     ["superior_vena_cava", 
+    #     "brachiocephalic_vein_left", "brachiocephalic_vein_right", "atrial_appendage_left"],
+    #     ["pulmonary_vein", "pulmonary_artery"],
+    #     ["heart_atrium_left", "heart_atrium_right", "thyroid_gland"]
+    # ],
     "test": [
-        ["carpal", "clavicula", "femur", "fibula", "humerus", "metacarpal", "metatarsal", 
-        "patella", "hips", "phalanges_hand", "radius", "ribs", "scapula", "skull", "spine", 
-        "sternum", "tarsal", "tibia", "phalanges_feet", "ulna"]
+        ["ulna"]
     ]
 }
 

@@ -55,16 +55,7 @@ def get_config_dir():
 #             f.write(chunk)
 
 
-def has_valid_license():
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
-    if totalseg_config_file.exists():
-        config = json.load(open(totalseg_config_file, "r"))
-        license_number = config["license_number"]
-    else:
-        print(f"ERROR: Could not find config file: {totalseg_config_file}")
-        return False
-
+def is_valid_license(license_number):
     try:
         url = f"http://backend.totalsegmentator.com:80/"
         r = requests.post(url + "is_valid_license_number",
@@ -78,6 +69,23 @@ def has_valid_license():
     except Exception as e:
         print(f"An Exception occured: {e}")
         return False
+    
+
+def has_valid_license():
+    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        if "license_number" in config:
+            license_number = config["license_number"]
+        else:
+            # print(f"ERROR: A license number has not been set so far.")
+            return False
+    else:
+        # print(f"ERROR: Could not find config file: {totalseg_config_file}")
+        return False
+    
+    return is_valid_license(license_number)
 
 
 def download_model_with_license_and_unpack(task_name, config_dir):
@@ -122,7 +130,7 @@ def download_model_with_license_and_unpack(task_name, config_dir):
             print(f"  downloaded in {time.time()-st:.2f}s")
         else:
             if r.json()['status'] == "invalid_license":
-                print(f"Invalid license number ({license_number}). Please check your license number or contact support.")
+                print(f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support.")
                 sys.exit(1)
             
     except Exception as e:
@@ -188,25 +196,25 @@ def download_pretrained_weights(task_id):
     # (config_dir / "2d").mkdir(exist_ok=True, parents=True)
 
     old_weights = [
-        "Task251_TotalSegmentator_part1_organs_1139subj",
-        "Task252_TotalSegmentator_part2_vertebrae_1139subj",
-        "Task253_TotalSegmentator_part3_cardiac_1139subj",
-        "Task254_TotalSegmentator_part4_muscles_1139subj",
-        "Task255_TotalSegmentator_part5_ribs_1139subj",
-        "Task256_TotalSegmentator_3mm_1139subj",
-        "Task258_lung_vessels_248subj",
-        "Task200_covid_challenge",
-        "Task201_covid",
-        "Task150_icb_v0",
-        "Task260_hip_implant_71subj",
-        "Task269_Body_extrem_6mm_1200subj",
-        "Task503_cardiac_motion",
-        "Task273_Body_extrem_1259subj",
-        "Task315_thoraxCT",
-        "Task008_HepaticVessel",
-        "Task417_heart_mixed_317subj",
-        "Task278_TotalSegmentator_part6_bones_1259subj",
-        "Task435_Heart_vessels_118subj"
+        "nnUNet/3d_fullres/Task251_TotalSegmentator_part1_organs_1139subj",
+        "nnUNet/3d_fullres/Task252_TotalSegmentator_part2_vertebrae_1139subj",
+        "nnUNet/3d_fullres/Task253_TotalSegmentator_part3_cardiac_1139subj",
+        "nnUNet/3d_fullres/Task254_TotalSegmentator_part4_muscles_1139subj",
+        "nnUNet/3d_fullres/Task255_TotalSegmentator_part5_ribs_1139subj",
+        "nnUNet/3d_fullres/Task256_TotalSegmentator_3mm_1139subj",
+        "nnUNet/3d_fullres/Task258_lung_vessels_248subj",
+        "nnUNet/3d_fullres/Task200_covid_challenge",
+        "nnUNet/3d_fullres/Task201_covid",
+        "nnUNet/3d_fullres/Task150_icb_v0",
+        "nnUNet/3d_fullres/Task260_hip_implant_71subj",
+        "nnUNet/3d_fullres/Task269_Body_extrem_6mm_1200subj",
+        "nnUNet/3d_fullres/Task503_cardiac_motion",
+        "nnUNet/3d_fullres/Task273_Body_extrem_1259subj",
+        "nnUNet/3d_fullres/Task315_thoraxCT",
+        "nnUNet/3d_fullres/Task008_HepaticVessel",
+        "nnUNet/3d_fullres/Task417_heart_mixed_317subj",
+        "nnUNet/3d_fullres/Task278_TotalSegmentator_part6_bones_1259subj",
+        "nnUNet/3d_fullres/Task435_Heart_vessels_118subj"
     ]
 
     url = "http://backend.totalsegmentator.com"

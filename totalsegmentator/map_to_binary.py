@@ -277,7 +277,7 @@ class_map = {
         10: "metacarpal",
         11: "phalanges_hand"
     },
-    "tissue": {
+    "tissue_types": {
         1: "subcutaneous_fat",
         2: "skeletal_muscle",
         3: "torso_fat"
@@ -294,7 +294,7 @@ class_map = {
 commercial_models = {
     "heartchambers_highres": 301,
     "appendicular_bones": 296, 
-    "tissue": 481, 
+    "tissue_types": 481, 
     "face": 303
 }
 # future

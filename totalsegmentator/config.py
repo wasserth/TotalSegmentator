@@ -11,6 +11,8 @@ import platform
 import requests
 import torch
 
+from totalsegmentator.libs import is_valid_license
+
 
 def setup_nnunet():
     # check if environment variable totalsegmentator_config is set
@@ -53,6 +55,10 @@ def setup_totalseg(totalseg_id=None):
 
 
 def set_license_number(license_number):
+    if not is_valid_license(license_number):
+        print("ERROR: Invalid license number. Please check your license number or contact support.")
+        sys.exit(1)
+
     home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
     totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
 
