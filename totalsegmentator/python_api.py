@@ -2,6 +2,7 @@ import sys
 import os
 from pathlib import Path
 import time
+import textwrap
 
 import numpy as np
 import nibabel as nib
@@ -17,7 +18,8 @@ from totalsegmentator.map_to_total import map_to_total
 
 def show_license_info():
     if not has_valid_license():
-        print("""
+        # textwarp needed to remove the indentation of the multiline string
+        print(textwrap.dedent("""\
               In contrast to the other tasks this task is not openly available. 
               It requires a license. For academic usage a free license can be 
               acquired here: 
@@ -25,7 +27,8 @@ def show_license_info():
 
               For commercial usage see:
               https://totalsegmentator-commercial.streamlit.app
-              """)
+              """))
+        sys.exit(1)
 
 
 def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
@@ -66,7 +69,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast:
             task_id = 297
             resample = 3.0
-            trainer = "nnUNetTrainerNoMirroring"
+            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
             task = "total_fast"
