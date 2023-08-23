@@ -70,6 +70,17 @@ def set_license_number(license_number):
         print(f"ERROR: Could not find config file: {totalseg_config_file}")
 
 
+def get_license_number():
+    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        license_number = config["license_number"] if "license_number" in config else ""
+    else:
+        license_number = ""
+    return license_number
+
+
 def increase_prediction_counter():
     home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
     totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
@@ -91,6 +102,7 @@ def send_usage_stats(config, params):
     if config is not None and config["send_usage_stats"]:
         
         params["roi_subset"] = "" if params["roi_subset"] is None else "-".join(params["roi_subset"])
+        license_number = get_license_number()
 
         try:
             st = time.time()
@@ -109,7 +121,8 @@ def send_usage_stats(config, params):
                                     "machine": platform.machine(),
                                     "version": get_version(),
                                     "python_version": sys.version,
-                                    "cuda_available": torch.cuda.is_available()
+                                    "cuda_available": torch.cuda.is_available(),
+                                    "license_number": license_number
                                     }, timeout=2)
             # if r.ok:
             #     print(f"status: {r.json()['status']}")
