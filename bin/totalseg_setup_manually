@@ -18,7 +18,7 @@ if __name__ == "__main__":
     totalseg_setup_manually -id totalseg_12345678
     """
     parser = argparse.ArgumentParser(description="Combine masks.",
-                                     epilog="Written by Jakob Wasserthal. If you use this tool please cite https://arxiv.org/abs/2208.05868")
+                                     epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
 
     parser.add_argument("-id", "--totalseg_id", type=str, help="totalseg_id. Must start with totalseg_.",
                         required=True)

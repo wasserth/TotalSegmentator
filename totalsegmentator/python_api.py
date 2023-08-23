@@ -51,7 +51,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     nora_tag = "None" if nora_tag is None else nora_tag
 
     if not quiet: 
-        print("\nIf you use this tool please cite: https://doi.org/10.48550/arXiv.2208.05868\n")
+        print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
 
     if not torch.cuda.is_available():
         print("No GPU detected. Running on CPU. This can be very slow. The '--fast' option can help to some extend.")

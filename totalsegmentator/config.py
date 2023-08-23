@@ -88,7 +88,7 @@ def get_version():
 
 
 def send_usage_stats(config, params):
-    if config["send_usage_stats"]:
+    if config is not None and config["send_usage_stats"]:
         
         params["roi_subset"] = "" if params["roi_subset"] is None else "-".join(params["roi_subset"])
 
