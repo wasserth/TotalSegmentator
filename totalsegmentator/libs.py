@@ -79,13 +79,14 @@ def has_valid_license():
         if "license_number" in config:
             license_number = config["license_number"]
         else:
-            # print(f"ERROR: A license number has not been set so far.")
-            return False
+            return "missing_license", "ERROR: A license number has not been set so far."
     else:
-        # print(f"ERROR: Could not find config file: {totalseg_config_file}")
-        return False
+        return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
     
-    return is_valid_license(license_number)
+    if is_valid_license(license_number):
+        return "yes", "SUCCESS: License is valid."
+    else: 
+        return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
 
 
 def download_model_with_license_and_unpack(task_name, config_dir):
@@ -375,9 +376,6 @@ def combine_masks(mask_dir, output, class_type):
         masks = ["lung_upper_lobe_left", "lung_lower_lobe_left"]
     elif class_type == "lung_right":
         masks = ["lung_upper_lobe_right", "lung_middle_lobe_right", "lung_lower_lobe_right"]
-    elif class_type == "heart":
-        masks = ["heart_myocardium", "heart_atrium_left", "heart_ventricle_left",
-                 "heart_atrium_right", "heart_ventricle_right"]
     elif class_type == "pelvis":
         masks = ["femur_left", "femur_right", "hip_left", "hip_right"]
     elif class_type == "body":

@@ -17,7 +17,8 @@ from totalsegmentator.map_to_total import map_to_total
 
 
 def show_license_info():
-    if not has_valid_license():
+    status, message = has_valid_license()
+    if status == "missing_license":
         # textwarp needed to remove the indentation of the multiline string
         print(textwrap.dedent("""\
               In contrast to the other tasks this task is not openly available. 
@@ -28,6 +29,12 @@ def show_license_info():
               For commercial usage see:
               https://totalsegmentator-commercial.streamlit.app
               """))
+        sys.exit(1)
+    elif status == "invalid_license":
+        print(message)
+        sys.exit(1)
+    elif status == "missing_config_file":
+        print(message)
         sys.exit(1)
 
 
@@ -198,7 +205,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "face":
         task_id = 303
         resample = 1.5
-        trainer = "nnUNetTrainer"
+        trainer = "nnUNetTrainerNoMirroring"
         crop = None
         model = "3d_fullres"
         folds = [0]

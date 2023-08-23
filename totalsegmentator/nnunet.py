@@ -261,7 +261,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
 
         if crop is not None:
-            if crop == "lung" or crop == "pelvis" or crop == "heart":
+            if crop == "lung" or crop == "pelvis":
                 combine_masks(crop_path, crop_path / f"{crop}.nii.gz", crop)
             if type(crop) is str:
                 crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
