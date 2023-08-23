@@ -21,13 +21,14 @@ random_colors = np.random.rand(100, 4)
 roi_groups = {
     "total": [
         ["humerus_left", "humerus_right", "scapula_left", "scapula_right", "clavicula_left",
-         "clavicula_right", "femur_left", "femur_right", "hip_left", "hip_right", "sacrum",
-         "colon", "trachea", "skull", "patella", "tibia", "fibula", "tarsal",
-         "metatarsal", "phalanges_feet", "ulna", "radius", "carpal", "metacarpal", "phalanges_hand"],
+         "clavicula_right", "femur_left", "femur_right", "hip_left", "hip_right", "sacrum",         
+        #  "patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet", "ulna", "radius", "carpal", "metacarpal", "phalanges_hand",
+         "colon", "trachea", "skull"],
         ["spleen", "kidney_right", "kidney_left", "gallbladder",
          "adrenal_gland_right", "adrenal_gland_left",
          "gluteus_medius_left", "gluteus_medius_right",
-         "heart_atrium_left", "heart_atrium_right", "heart_myocardium",
+         "heart",
+        #  "heart_atrium_left", "heart_atrium_right", "heart_myocardium",
          "kidney_cyst_left", "kidney_cyst_right", "spinal_cord", "prostate", "thyroid_gland"],
         ["iliac_artery_left", "iliac_artery_right", "iliac_vena_left", "iliac_vena_right",
          "aorta", "inferior_vena_cava",
@@ -36,7 +37,7 @@ roi_groups = {
          "common_carotid_artery_right", "common_carotid_artery_left",  
          "atrial_appendage_left"],
         ["small_bowel", "stomach", "lung_upper_lobe_left",
-         "lung_upper_lobe_right", "face"],
+         "lung_upper_lobe_right"],
         ["lung_lower_lobe_left", "lung_middle_lobe_right", "lung_lower_lobe_right",
          "pancreas", "brain"],
         ["vertebrae_S1", "vertebrae_L5", "vertebrae_L4", "vertebrae_L3", "vertebrae_L2",
@@ -52,10 +53,10 @@ roi_groups = {
          "rib_right_12", "urinary_bladder", "duodenum",
          "gluteus_minimus_left", "gluteus_minimus_right", "sternum", "costal_cartilages"],
         ["liver", "autochthon_left", "autochthon_right", "iliopsoas_left", "iliopsoas_right",
-         "heart_ventricle_left", "heart_ventricle_right", "pulmonary_artery", "pulmonary_vein",
+        #  "heart_ventricle_left", "heart_ventricle_right", "pulmonary_artery", 
+        "pulmonary_vein",
          "superior_vena_cava", "brachiocephalic_vein_left", "brachiocephalic_vein_right"]
     ],
-    # total_fast defined afterwards automatically
     "lung_vessels": [
         ["lung_trachea_bronchia"],
         ["lung_vessels"]
@@ -114,14 +115,6 @@ roi_groups = {
         ["ulna"]
     ]
 }
-
-# add total_fast (removing every from total which is not in total_fast class_map)
-roi_groups["total_fast"] = [[] for _ in range(len(roi_groups["total"]))]
-for idx, group in enumerate(roi_groups["total"]):
-    for roi in group:
-        if roi in class_map["total_fast"].values():
-            roi_groups["total_fast"][idx].append(roi)
-roi_groups["total_fast"][6].append("ribs")
 
 
 def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):

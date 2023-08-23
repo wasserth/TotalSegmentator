@@ -224,8 +224,7 @@ class_map = {
         116: "sternum",
         117: "costal_cartilages"
     },
-    # total_fast removed, because easier to use just "total" for fast model
-    # "total_fast": class_map["total"],
+    # total_fast not extra class map, because easier to use just "total" for fast model
     "lung_vessels": {
         1: "lung_vessels",
         2: "lung_trachea_bronchia"

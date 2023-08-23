@@ -3,6 +3,7 @@
 *.pyc
 *.npz
 .DS_Store
+._.DS_Store
 *.egg-info
 .pytest_cache/*
 build/

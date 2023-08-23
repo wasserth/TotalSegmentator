@@ -82,8 +82,10 @@ def main():
                         help="Skip saving of segmentations for faster runtime if you are only interested in statistics.",
                         default=False)
 
-    parser.add_argument("-d", "--device", choices=["gpu", "cpu", "mps"],
-                        help="Device to run on. mps is for apple silicon (default: gpu).",
+    # "mps" is for apple silicon; but does not support 3D Conv at the moment. Therefore do not allow here.
+    # https://github.com/pytorch/pytorch/issues/77818
+    parser.add_argument("-d", "--device", choices=["gpu", "cpu"],
+                        help="Device to run on (default: gpu).",
                         default="gpu")
 
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",

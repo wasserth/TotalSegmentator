@@ -72,7 +72,6 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
             trainer = "nnUNetTrainer_4000epochs_NoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
-            task = "total_fast"
         else:
             task_id = [291, 292, 293, 294, 295]
             resample = 1.5
@@ -181,7 +180,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     elif task == "appendicular_bones":
         task_id = 296
         resample = 1.5
-        trainer = "nnUNetTrainer"
+        trainer = "nnUNetTrainerNoMirroring"
         crop = None
         model = "3d_fullres"
         folds = [0]
@@ -247,11 +246,11 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
             # todo: switch to ep4000 model!
             organ_seg = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
                                 trainer="nnUNetTrainerNoMirroring", tta=False, multilabel_image=True, resample=6.0,
-                                crop=None, crop_path=None, task_name="total_fast", nora_tag="None", preview=False, 
+                                crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                                 save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
                                 crop_addon=crop_addon, output_type=output_type, statistics=False,
                                 quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
-            class_map_inv = {v: k for k, v in class_map["total_fast"].items()}
+            class_map_inv = {v: k for k, v in class_map["total"].items()}
             crop = np.zeros(organ_seg.shape, dtype=np.uint8)
             organ_seg_data = organ_seg.get_fdata()
             roi_subset_crop = [map_to_total[roi] if roi in map_to_total else roi for roi in roi_subset]
