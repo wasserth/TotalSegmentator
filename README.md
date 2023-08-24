@@ -67,7 +67,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
 ```
 Overview of available subtasks and the classes which they contain.
 
-Openly available:  
+Openly available for any usage:  
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))
 * **hip_implant**: hip_implant
@@ -75,12 +75,12 @@ Openly available:
 * **body**: body, body_trunc, body_extremities, skin
 * **pleural_pericard_effusion**: pleural_effusion (cite [paper](http://dx.doi.org/10.1097/RLI.0000000000000869)), pericardial_effusion (cite [paper](http://dx.doi.org/10.3390/diagnostics12051045))
 
-Available after purchase of a license (free licenses possible for academic projects). Contact jakob.wasserthal@usb.ch if you are interested: 
-* **bones_extremities**: femur, patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, humerus, ulna, radius, carpal, metacarpal, phalanges_hand, sternum, skull, spinal_cord
+Available with a license. Free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch. 
+* **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
+* **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
-* **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (more precise heart chamber segmentation, trained on sub-millimeter resolution)
-* **head**:  mandible, teeth, brainstem, subarachnoid_cavity, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus, tyroid (trained on sub-millimeter resolution)
-* **aortic_branches**:  brachiocephalic_trunc, subclavian_artery_right, subclavian_artery_left, common_carotid_artery_right, common_carotid_artery_left, brachiocephalic_vein_left, brachiocephalic_vein_right, atrial_appendage_left, superior_vena_cava, pulmunary_vein, tyroid
+* **face**: face_region
+
 
 
 ### Run via docker

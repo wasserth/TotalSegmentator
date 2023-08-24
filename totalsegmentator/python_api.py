@@ -22,12 +22,11 @@ def show_license_info():
         # textwarp needed to remove the indentation of the multiline string
         print(textwrap.dedent("""\
               In contrast to the other tasks this task is not openly available. 
-              It requires a license. For academic usage a free license can be 
+              It requires a license. For non-commercial usage a free license can be 
               acquired here: 
-              https://totalsegmentator-academic.streamlit.app
+              https://backend.totalsegmentator.com/license-academic/
 
-              For commercial usage see:
-              https://totalsegmentator-commercial.streamlit.app
+              For commercial usage contact: jakob.wasserthal@usb.ch
               """))
         sys.exit(1)
     elif status == "invalid_license":
