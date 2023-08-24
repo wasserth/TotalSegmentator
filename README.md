@@ -37,7 +37,8 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 ```
 > Note: A Nifti file or a folder of DICOM images is allowed as input
 
-> Note: If a CUDA compatible GPU is available TotalSegmentator will automatically use it. Otherwise it will use the CPU, which is a lot slower and should only be used with the `--fast` option.  
+> Note: If you run on CPU you can use the option `--fast` or `--roi_subset liver` to greatly decrease 
+runtime.
 
 > Note: You can also try it online: [www.totalsegmentator.com](https://totalsegmentator.com/) (supports dicom files)
 
@@ -45,10 +46,11 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 
 
 ### Advanced settings
+* `--device`: Choose `cpu` or `gpu`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm). 
+* `--roi_subset`: Takes a space separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory.
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
-* `--roi_subset`: Takes a space separated list of class names (e.g. `spleen colon brain`) and only saves those classes. Saves runtime during saving of nifti files.
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
  

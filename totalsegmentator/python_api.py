@@ -251,7 +251,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
             if not quiet: print("Generating rough body segmentation...")
             # todo: switch to ep4000 model!
             organ_seg = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
-                                trainer="nnUNetTrainerNoMirroring", tta=False, multilabel_image=True, resample=6.0,
+                                trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=6.0,
                                 crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                                 save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
                                 crop_addon=crop_addon, output_type=output_type, statistics=False,
@@ -271,8 +271,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         download_pretrained_weights(300)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
-        body_seg = nnUNet_predict_image(input, None, 269, model="3d_fullres", folds=[0],
-                            trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=6.0,
+        body_seg = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
+                            trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
