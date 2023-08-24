@@ -126,6 +126,11 @@ Normally weights are automatically downloaded when running TotalSegmentator. If 
 totalseg_import_weights -i my_downloaded_weights.zip
 ```
 
+After acquiring a license number for the non-open tasks you can set it with the following command:
+```
+totalseg_set_license -l aca_12345678910
+```
+
 ### Python API
 You can run totalsegmentator via python:
 ```python
@@ -154,7 +159,7 @@ pip install SimpleITK==2.0.2
 
 
 ### Other
-TotalSegmentator (starting in v1.5.4) sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
+TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
 
 
 ### Reference 
