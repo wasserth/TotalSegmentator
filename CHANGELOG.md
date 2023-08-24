@@ -6,7 +6,7 @@
 ## Release 2.0.0
 * train models with nnU-Net v2 (nnunet_cust dependency no longer needed)
 * roi_subset a lot faster, because cropping with 6mm low res model to roi first
-* improved training dataset (for details see `resources/improvements_in_v2.md`)
+* more classes and improved training dataset (for details see `resources/improvements_in_v2.md`)
 
 
 ## Release 1.5.6

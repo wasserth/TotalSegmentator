@@ -254,6 +254,9 @@ class_map = {
         1: "liver_vessels",
         2: "liver_tumor"
     },
+    "vertebrae_body": {
+        1: "vertebrae_body"
+    },
     "heartchambers_highres": {
         1: "heart_myocardium", 
         2: "heart_atrium_left", 
