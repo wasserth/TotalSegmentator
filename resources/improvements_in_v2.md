@@ -73,5 +73,5 @@ Still open problems:
 * example code for evaluation
 * same subjects as in v1 for training and validation (we did not publish the additional subjects we used for TotalSegmentator v2 training)
 * a few more subjects as in v1 for testing
-* labels are additional tasks are not included
+* NOTE: labels for additional tasks are not included
 

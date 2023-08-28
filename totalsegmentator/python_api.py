@@ -9,7 +9,7 @@ import nibabel as nib
 import torch
 
 from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
-from totalsegmentator.libs import download_pretrained_weights, has_valid_license
+from totalsegmentator.libs import download_pretrained_weights, has_valid_license_offline
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
 from totalsegmentator.config import send_usage_stats, set_license_number
 from totalsegmentator.map_to_binary import class_map
@@ -17,7 +17,7 @@ from totalsegmentator.map_to_total import map_to_total
 
 
 def show_license_info():
-    status, message = has_valid_license()
+    status, message = has_valid_license_offline()
     if status == "missing_license":
         # textwarp needed to remove the indentation of the multiline string
         print(textwrap.dedent("""\
@@ -75,7 +75,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast:
             task_id = 297
             resample = 3.0
-            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
+            # trainer = "nnUNetTrainer_4000epochs_NoMirroring"
+            trainer = "nnUNetTrainerNoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
         else:

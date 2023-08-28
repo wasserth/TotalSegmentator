@@ -89,6 +89,25 @@ def has_valid_license():
         return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
 
 
+# Online check if license number is in config; do not do web request
+def has_valid_license_offline():
+    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        if "license_number" in config:
+            license_number = config["license_number"]
+        else:
+            return "missing_license", "ERROR: A license number has not been set so far."
+    else:
+        return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
+    
+    if len(license_number) == 18:
+        return "yes", "SUCCESS: License is valid."
+    else: 
+        return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
+
+
 def download_model_with_license_and_unpack(task_name, config_dir):
     # Get License Number
     home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
@@ -192,6 +211,7 @@ def download_url_and_unpack(url, config_dir):
 def download_pretrained_weights(task_id):
 
     config_dir = get_config_dir()
+    config_dir.mkdir(exist_ok=True, parents=True)
     # (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
     # (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
     # (config_dir / "2d").mkdir(exist_ok=True, parents=True)
