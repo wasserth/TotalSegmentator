@@ -9,9 +9,9 @@ import nibabel as nib
 import torch
 
 from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
-from totalsegmentator.libs import download_pretrained_weights, has_valid_license_offline
+from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
-from totalsegmentator.config import send_usage_stats, set_license_number
+from totalsegmentator.config import send_usage_stats, set_license_number, has_valid_license_offline
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.map_to_total import map_to_total
 

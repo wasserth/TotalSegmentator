@@ -11,7 +11,7 @@ from tqdm import tqdm
 import numpy as np
 import nibabel as nib
 
-from totalsegmentator.libs import get_config_dir
+from totalsegmentator.config import get_config_dir
 
 
 

@@ -5,6 +5,8 @@ from pathlib import Path
 import argparse
 import zipfile
 
+from totalsegmentator.config import get_totalseg_dir
+
 
 if __name__ == "__main__":
     """
@@ -25,9 +27,8 @@ if __name__ == "__main__":
     if "TOTALSEG_WEIGHTS_PATH" in os.environ:
         config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"]) / "nnUNet"
     else:
-        # in docker container finding home not properly working therefore map to /tmp
-        home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-        config_dir = home_path / ".totalsegmentator/nnunet/results/nnUNet"
+        totalseg_dir = get_totalseg_dir()
+        config_dir = totalseg_dir / "nnunet/results/nnUNet"
     (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
     (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
     (config_dir / "2d").mkdir(exist_ok=True, parents=True)

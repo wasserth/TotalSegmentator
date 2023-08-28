@@ -16,7 +16,7 @@ import numpy as np
 import nibabel as nib
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, commercial_models
-
+from totalsegmentator.config import get_totalseg_dir, get_config_dir, is_valid_license, has_valid_license, has_valid_license_offline
 
 """
 Helpers to suppress stdout prints from nnunet
@@ -36,82 +36,10 @@ def nostdout(verbose=False):
         yield
 
 
-def get_config_dir():
-    if "TOTALSEG_WEIGHTS_PATH" in os.environ:
-        # config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"]) / "nnUNet"
-        config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"])
-    else:
-        # in docker container finding home not properly working therefore map to /tmp
-        home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-        # config_dir = home_path / ".totalsegmentator/nnunet/results/nnUNet"
-        config_dir = home_path / ".totalsegmentator/nnunet/results"
-    return config_dir
-
-
-# def download_url(url, save_path, chunk_size=128):
-#     r = requests.get(url, stream=True)
-#     with open(save_path, 'wb') as f:
-#         for chunk in r.iter_content(chunk_size=chunk_size):
-#             f.write(chunk)
-
-
-def is_valid_license(license_number):
-    try:
-        url = f"http://backend.totalsegmentator.com:80/"
-        r = requests.post(url + "is_valid_license_number",
-                          json={"license_number": license_number}, timeout=2)
-        if r.ok:
-            return r.json()['status'] == "valid_license"
-        else:
-            print(f"An internal server error occured. status code: {r.status_code}")
-            print(f"message: {r.json()['message']}")
-            return False
-    except Exception as e:
-        print(f"An Exception occured: {e}")
-        return False
-    
-
-def has_valid_license():
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
-    if totalseg_config_file.exists():
-        config = json.load(open(totalseg_config_file, "r"))
-        if "license_number" in config:
-            license_number = config["license_number"]
-        else:
-            return "missing_license", "ERROR: A license number has not been set so far."
-    else:
-        return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
-    
-    if is_valid_license(license_number):
-        return "yes", "SUCCESS: License is valid."
-    else: 
-        return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
-
-
-# Online check if license number is in config; do not do web request
-def has_valid_license_offline():
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
-    if totalseg_config_file.exists():
-        config = json.load(open(totalseg_config_file, "r"))
-        if "license_number" in config:
-            license_number = config["license_number"]
-        else:
-            return "missing_license", "ERROR: A license number has not been set so far."
-    else:
-        return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
-    
-    if len(license_number) == 18:
-        return "yes", "SUCCESS: License is valid."
-    else: 
-        return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
-
-
 def download_model_with_license_and_unpack(task_name, config_dir):
     # Get License Number
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
         config = json.load(open(totalseg_config_file, "r"))
         license_number = config["license_number"]

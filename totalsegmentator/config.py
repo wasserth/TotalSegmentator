@@ -11,7 +11,25 @@ import platform
 import requests
 import torch
 
-from totalsegmentator.libs import is_valid_license
+
+def get_totalseg_dir():
+    if "TOTALSEG_HOME_DIR" in os.environ:
+        totalseg_dir = Path(os.environ["TOTALSEG_HOME_DIR"])
+    else:
+        # in docker container finding home not properly working therefore map to /tmp
+        home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
+        totalseg_dir = home_path / ".totalsegmentator"
+    return totalseg_dir
+
+
+def get_config_dir():
+    if "TOTALSEG_WEIGHTS_PATH" in os.environ:
+        # config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"]) / "nnUNet"
+        config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"])
+    else:
+        totalseg_dir = get_totalseg_dir()
+        config_dir = totalseg_dir / "nnunet/results"
+    return config_dir
 
 
 def setup_nnunet():
@@ -20,8 +38,7 @@ def setup_nnunet():
         weights_dir = os.environ["TOTALSEG_WEIGHTS_PATH"]
     else:
         # in docker container finding home not properly working therefore map to /tmp
-        home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-        config_dir = home_path / ".totalsegmentator"
+        config_dir = get_totalseg_dir()
         # (config_dir / "nnunet/results/nnUNet/3d_fullres").mkdir(exist_ok=True, parents=True)
         # (config_dir / "nnunet/results/nnUNet/2d").mkdir(exist_ok=True, parents=True)
         weights_dir = config_dir / "nnunet/results"
@@ -34,10 +51,9 @@ def setup_nnunet():
 
 
 def setup_totalseg(totalseg_id=None):
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_path = home_path / ".totalsegmentator"
-    totalseg_path.mkdir(exist_ok=True)
-    totalseg_config_file = totalseg_path / "config.json"
+    totalseg_dir = get_totalseg_dir()
+    totalseg_dir.mkdir(exist_ok=True)
+    totalseg_config_file = totalseg_dir / "config.json"
 
     if totalseg_config_file.exists():
         config = json.load(open(totalseg_config_file, "r"))
@@ -59,8 +75,8 @@ def set_license_number(license_number):
         print("ERROR: Invalid license number. Please check your license number or contact support.")
         sys.exit(1)
 
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
 
     if totalseg_config_file.exists():
         config = json.load(open(totalseg_config_file, "r"))
@@ -71,8 +87,8 @@ def set_license_number(license_number):
 
 
 def get_license_number():
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
         config = json.load(open(totalseg_config_file, "r"))
         license_number = config["license_number"] if "license_number" in config else ""
@@ -81,9 +97,62 @@ def get_license_number():
     return license_number
 
 
+def is_valid_license(license_number):
+    try:
+        url = f"http://backend.totalsegmentator.com:80/"
+        r = requests.post(url + "is_valid_license_number",
+                          json={"license_number": license_number}, timeout=2)
+        if r.ok:
+            return r.json()['status'] == "valid_license"
+        else:
+            print(f"An internal server error occured. status code: {r.status_code}")
+            print(f"message: {r.json()['message']}")
+            return False
+    except Exception as e:
+        print(f"An Exception occured: {e}")
+        return False
+    
+
+def has_valid_license():
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        if "license_number" in config:
+            license_number = config["license_number"]
+        else:
+            return "missing_license", "ERROR: A license number has not been set so far."
+    else:
+        return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
+    
+    if is_valid_license(license_number):
+        return "yes", "SUCCESS: License is valid."
+    else: 
+        return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
+
+
+# Online check if license number is in config; do not do web request
+def has_valid_license_offline():
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
+    if totalseg_config_file.exists():
+        config = json.load(open(totalseg_config_file, "r"))
+        if "license_number" in config:
+            license_number = config["license_number"]
+        else:
+            return "missing_license", "ERROR: A license number has not been set so far."
+    else:
+        return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
+    
+    if len(license_number) == 18:
+        return "yes", "SUCCESS: License is valid."
+    else: 
+        return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
+
+
 def increase_prediction_counter():
-    home_path = Path("/tmp") if str(Path.home()) == "/" else Path.home()
-    totalseg_config_file = home_path / ".totalsegmentator" / "config.json"
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
         config = json.load(open(totalseg_config_file, "r"))
         config["prediction_counter"] += 1
