@@ -41,7 +41,8 @@ def download_model_with_license_and_unpack(task_name, config_dir):
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        config = json.load(open(totalseg_config_file, "r"))
+        with open(totalseg_config_file, "r") as f:
+            config = json.load(f)
         license_number = config["license_number"]
     else:
         print(f"ERROR: Could not find config file: {totalseg_config_file}")
