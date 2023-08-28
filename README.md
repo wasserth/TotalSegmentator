@@ -191,101 +191,114 @@ For some classes they differ which you can see in the table below.
 4 | gallbladder ||
 5 | liver ||
 6 | stomach ||
-7 | aorta ||
-8 | inferior_vena_cava ||
-9 | portal_vein_and_splenic_vein | hepatic portal vein |
-10 | pancreas ||
-11 | adrenal_gland_right | suprarenal gland |
-12 | adrenal_gland_left | suprarenal gland |
-13 | lung_upper_lobe_left | superior lobe of left lung |
-14 | lung_lower_lobe_left | inferior lobe of left lung |
-15 | lung_upper_lobe_right | superior lobe of right lung |
-16 | lung_middle_lobe_right | middle lobe of right lung |
-17 | lung_lower_lobe_right | inferior lobe of right lung |
-18 | vertebrae_L5 ||
-19 | vertebrae_L4 ||
-20 | vertebrae_L3 ||
-21 | vertebrae_L2 ||
-22 | vertebrae_L1 ||
-23 | vertebrae_T12 ||
-24 | vertebrae_T11 ||
-25 | vertebrae_T10 ||
-26 | vertebrae_T9 ||
-27 | vertebrae_T8 ||
-28 | vertebrae_T7 ||
-29 | vertebrae_T6 ||
-30 | vertebrae_T5 ||
-31 | vertebrae_T4 ||
-32 | vertebrae_T3 ||
-33 | vertebrae_T2 ||
-34 | vertebrae_T1 ||
-35 | vertebrae_C7 ||
-36 | vertebrae_C6 ||
-37 | vertebrae_C5 ||
-38 | vertebrae_C4 ||
-39 | vertebrae_C3 ||
-40 | vertebrae_C2 ||
-41 | vertebrae_C1 ||
-42 | esophagus ||
-43 | trachea ||
-44 | heart_myocardium ||
-45 | heart_atrium_left ||
-46 | heart_ventricle_left ||
-47 | heart_atrium_right ||
-48 | heart_ventricle_right ||
-49 | pulmonary_artery | pulmonary arteries |
-50 | brain ||
-51 | iliac_artery_left | common iliac artery |
-52 | iliac_artery_right | common iliac artery |
-53 | iliac_vena_left | common iliac vein |
-54 | iliac_vena_right | common iliac vein |
-55 | small_bowel | small intestine |
-56 | duodenum ||
-57 | colon ||
-58 | rib_left_1 ||
-59 | rib_left_2 ||
-60 | rib_left_3 ||
-61 | rib_left_4 ||
-62 | rib_left_5 ||
-63 | rib_left_6 ||
-64 | rib_left_7 ||
-65 | rib_left_8 ||
-66 | rib_left_9 ||
-67 | rib_left_10 ||
-68 | rib_left_11 ||
-69 | rib_left_12 ||
-70 | rib_right_1 ||
-71 | rib_right_2 ||
-72 | rib_right_3 ||
-73 | rib_right_4 ||
-74 | rib_right_5 ||
-75 | rib_right_6 ||
-76 | rib_right_7 ||
-77 | rib_right_8 ||
-78 | rib_right_9 ||
-79 | rib_right_10 ||
-80 | rib_right_11 ||
-81 | rib_right_12 ||
-82 | humerus left ||
-83 | humerus right ||
-84 | scapula_left ||
-85 | scapula_right ||
-86 | clavicula_left | clavicle |
-87 | clavicula_right | clavicle |
-88 | femur left ||
-89 | femur right ||
-90 | hip_left | hip bone |
-91 | hip_right | hip bone |
-92 | sacrum ||
-93 | face ||
-94 | gluteus_maximus_left | gluteus maximus muscle |
-95 | gluteus_maximus_right | gluteus maximus muscle |
-96 | gluteus_medius_left | gluteus medius muscle |
-97 | gluteus_medius_right | gluteus medius muscle |
-98 | gluteus_minimus_left | gluteus minimus muscle |
-99 | gluteus_minimus_right | gluteus minimus muscle |
-100 | autochthon_left ||
-101 | autochthon_right ||
-102 | iliopsoas_left | iliopsoas muscle |
-103 | iliopsoas_right | iliopsoas muscle |
-104 | urinary_bladder ||
+7 | pancreas ||
+8 | adrenal_gland_right | suprarenal gland |
+9 | adrenal_gland_left | suprarenal gland |
+10 | lung_upper_lobe_left | superior lobe of left lung |
+11 | lung_lower_lobe_left | inferior lobe of left lung |
+12 | lung_upper_lobe_right | superior lobe of right lung |
+13 | lung_middle_lobe_right | middle lobe of right lung |
+14 | lung_lower_lobe_right | inferior lobe of right lung |
+15 | esophagus ||
+16 | trachea ||
+17 | thyroid_gland ||
+18 | small_bowel | small intestine |
+19 | duodenum ||
+20 | colon ||
+21 | urinary_bladder ||
+22 | prostate ||
+23 | kidney_cyst_left ||
+24 | kidney_cyst_right ||
+25 | sacrum ||
+26 | vertebrae_S1 ||
+27 | vertebrae_L5 ||
+28 | vertebrae_L4 ||
+29 | vertebrae_L3 ||
+30 | vertebrae_L2 ||
+31 | vertebrae_L1 ||
+32 | vertebrae_T12 ||
+33 | vertebrae_T11 ||
+34 | vertebrae_T10 ||
+35 | vertebrae_T9 ||
+36 | vertebrae_T8 ||
+37 | vertebrae_T7 ||
+38 | vertebrae_T6 ||
+39 | vertebrae_T5 ||
+40 | vertebrae_T4 ||
+41 | vertebrae_T3 ||
+42 | vertebrae_T2 ||
+43 | vertebrae_T1 ||
+44 | vertebrae_C7 ||
+45 | vertebrae_C6 ||
+46 | vertebrae_C5 ||
+47 | vertebrae_C4 ||
+48 | vertebrae_C3 ||
+49 | vertebrae_C2 ||
+50 | vertebrae_C1 ||
+51 | heart ||
+52 | aorta ||
+53 | pulmonary_vein ||
+54 | brachiocephalic_trunk ||
+55 | subclavian_artery_right ||
+56 | subclavian_artery_left ||
+57 | common_carotid_artery_right ||
+58 | common_carotid_artery_left ||
+59 | brachiocephalic_vein_left ||suprarenal gland
+60 | brachiocephalic_vein_right ||
+61 | atrial_appendage_left ||
+62 | superior_vena_cava ||
+63 | inferior_vena_cava ||
+64 | portal_vein_and_splenic_vein | hepatic portal vein |
+65 | iliac_artery_left | common iliac artery |
+66 | iliac_artery_right | common iliac artery |
+67 | iliac_vena_left | common iliac vein |
+68 | iliac_vena_right | common iliac vein |
+69 | humerus_left ||
+70 | humerus_right ||
+71 | scapula_left ||
+72 | scapula_right ||
+73 | clavicula_left | clavicle |
+74 | clavicula_right | clavicle |
+75 | femur_left ||
+76 | femur_right ||
+77 | hip_left ||
+78 | hip_right ||
+79 | spinal_cord ||
+80 | gluteus_maximus_left | gluteus maximus muscle |
+81 | gluteus_maximus_right | gluteus maximus muscle |
+82 | gluteus_medius_left | gluteus medius muscle |
+83 | gluteus_medius_right | gluteus medius muscle |
+84 | gluteus_minimus_left | gluteus minimus muscle |
+85 | gluteus_minimus_right | gluteus minimus muscle |
+86 | autochthon_left ||
+87 | autochthon_right ||
+88 | iliopsoas_left | iliopsoas muscle |
+89 | iliopsoas_right | iliopsoas muscle |
+90 | brain ||
+91 | skull ||
+92 | rib_right_4 ||
+93 | rib_right_3 ||
+94 | rib_left_1 ||
+95 | rib_left_2 ||
+96 | rib_left_3 ||
+97 | rib_left_4 ||
+98 | rib_left_5 ||
+99 | rib_left_6 ||
+100 | rib_left_7 ||
+101 | rib_left_8 ||
+102 | rib_left_9 ||
+103 | rib_left_10 ||
+104 | rib_left_11 ||
+105 | rib_left_12 ||
+106 | rib_right_1 ||
+107 | rib_right_2 ||
+108 | rib_right_5 ||
+109 | rib_right_6 ||
+110 | rib_right_7 ||
+111 | rib_right_8 ||
+112 | rib_right_9 ||
+113 | rib_right_10 ||
+114 | rib_right_11 ||
+115 | rib_right_12 ||
+116 | sternum ||
+117 | costal_cartilages ||
