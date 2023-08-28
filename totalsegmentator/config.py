@@ -22,7 +22,7 @@ def get_totalseg_dir():
     return totalseg_dir
 
 
-def get_config_dir():
+def get_weights_dir():
     if "TOTALSEG_WEIGHTS_PATH" in os.environ:
         # config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"]) / "nnUNet"
         config_dir = Path(os.environ["TOTALSEG_WEIGHTS_PATH"])

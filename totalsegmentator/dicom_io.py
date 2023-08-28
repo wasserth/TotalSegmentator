@@ -11,7 +11,7 @@ from tqdm import tqdm
 import numpy as np
 import nibabel as nib
 
-from totalsegmentator.config import get_config_dir
+from totalsegmentator.config import get_weights_dir
 
 
 
@@ -38,7 +38,7 @@ def download_dcm2niix():
     else:
         raise ValueError("Unknown operating system. Can not download the right version of dcm2niix.")
 
-    config_dir = get_config_dir()
+    config_dir = get_weights_dir()
 
     urllib.request.urlretrieve(url, config_dir / "dcm2niix.zip")
     with zipfile.ZipFile(config_dir / "dcm2niix.zip", 'r') as zip_ref:
@@ -64,7 +64,7 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
     """
     verbose_str = "" if verbose else "> /dev/null"
 
-    config_dir = get_config_dir()
+    config_dir = get_weights_dir()
 
     if command_exists("dcm2niix"):
         dcm2niix = "dcm2niix"

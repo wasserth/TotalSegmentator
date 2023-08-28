@@ -16,7 +16,7 @@ import numpy as np
 import nibabel as nib
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, commercial_models
-from totalsegmentator.config import get_totalseg_dir, get_config_dir, is_valid_license, has_valid_license, has_valid_license_offline
+from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_license, has_valid_license, has_valid_license_offline
 
 """
 Helpers to suppress stdout prints from nnunet
@@ -138,7 +138,7 @@ def download_url_and_unpack(url, config_dir):
 
 def download_pretrained_weights(task_id):
 
-    config_dir = get_config_dir()
+    config_dir = get_weights_dir()
     config_dir.mkdir(exist_ok=True, parents=True)
     # (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
     # (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
