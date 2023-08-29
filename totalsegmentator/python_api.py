@@ -96,16 +96,16 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast: raise ValueError("task lung_vessels does not work with option --fast")
         model = "3d_fullres"
         folds = [0]
-    elif task == "covid":
-        task_id = 201
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        model = "3d_fullres"
-        folds = [0]
-        print("WARNING: The COVID model finds many types of lung opacity not only COVID. Use with care!")
-        if fast: raise ValueError("task covid does not work with option --fast")
+    # elif task == "covid":
+    #     task_id = 201
+    #     resample = None
+    #     trainer = "nnUNetTrainer"
+    #     crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
+    #             "lung_middle_lobe_right", "lung_lower_lobe_right"]
+    #     model = "3d_fullres"
+    #     folds = [0]
+    #     print("WARNING: The COVID model finds many types of lung opacity not only COVID. Use with care!")
+    #     if fast: raise ValueError("task covid does not work with option --fast")
     elif task == "cerebral_bleed":
         task_id = 150
         resample = None
