@@ -492,8 +492,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
             # Postprocessing
-            if task_name == "lung_vessels":
-                remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
+
+            # Lung mask does not exist since I use 6mm model. Would have to save lung mask from 6mm seg.
+            # if task_name == "lung_vessels":
+            #     remove_outside_of_mask(file_out / "lung_vessels.nii.gz", file_out / "lung.nii.gz")
 
             # if task_name == "heartchambers_test":
             #     remove_outside_of_mask(file_out / "heart_myocardium.nii.gz", file_out / "heart.nii.gz", addon=5)

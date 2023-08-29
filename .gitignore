@@ -14,6 +14,7 @@ store/
 unittest_prediction
 unittest_prediction_fast
 unittest_prediction_roi_subset
+unittest_prediction_fast.nii.gz
 
 *.tfstate
 *.tfstate.backup

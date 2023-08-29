@@ -60,11 +60,8 @@ runtime.
 ![Alt text](resources/imgs/overview_subclasses.png)
 
 We added some more models to TotalSegmentator beyond the default one. This allows segmentation of even 
-more classes in more detailed subparts of the image. First you have to run TotalSegmentator with the 
-normal settings to get the normal masks. These masks are required to crop the image to a subregion on 
-which the detailed model will run.
+more classes in more detailed subparts of the image.
 ```
-TotalSegmentator -i ct.nii.gz -o segmentations --fast
 TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
 ```
 Overview of available subtasks and the classes which they contain.
