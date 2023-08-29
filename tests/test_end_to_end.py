@@ -37,7 +37,7 @@ class test_end_to_end(unittest.TestCase):
             self.assertTrue(images_equal, f"{roi} fast prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
 
     def test_preview(self):
-        preview_exists = os.path.exists(f"tests/reference_files/example_seg_fast/preview_total.png")
+        preview_exists = os.path.exists(f"tests/unittest_prediction_fast/preview_total.png")
         self.assertTrue(preview_exists, f"Preview was not generated")
 
     def test_prediction_multilabel_fast(self):
