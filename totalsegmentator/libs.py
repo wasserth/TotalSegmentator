@@ -252,6 +252,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 481:
         weights_path = config_dir / "Dataset481_tissue_1559subj"
 
+    else:
+        raise ValueError(f"For task_id {task_id} no download path was found.")
+
 
     for old_weight in old_weights:
         if (config_dir / old_weight).exists():
