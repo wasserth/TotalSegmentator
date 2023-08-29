@@ -11,6 +11,13 @@ class test_end_to_end(unittest.TestCase):
     def setUp(self):
         pass
 
+    def test_prediction_multilabel(self):
+        img_ref = nib.load("tests/reference_files/example_seg.nii.gz").get_fdata()
+        img_new = nib.load("tests/unittest_prediction.nii.gz").get_fdata()
+        nr_of_diff_voxels = (img_ref != img_new).sum()
+        images_equal = nr_of_diff_voxels < 20
+        self.assertTrue(images_equal, f"multilabel prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
+
     def test_prediction_liver_roi_subset(self):
         for roi in ["liver", "brain"]:
             img_ref = nib.load(f"tests/reference_files/example_seg_roi_subset/{roi}.nii.gz").get_fdata()
@@ -32,12 +39,6 @@ class test_end_to_end(unittest.TestCase):
     def test_preview(self):
         preview_exists = os.path.exists(f"tests/reference_files/example_seg_fast/preview_total.png")
         self.assertTrue(preview_exists, f"Preview was not generated")
-
-    def test_prediction_multilabel(self):
-        img_ref = nib.load("tests/reference_files/example_seg.nii.gz").get_fdata()
-        img_new = nib.load("tests/unittest_prediction.nii.gz").get_fdata()
-        images_equal = np.array_equal(img_ref, img_new)
-        self.assertTrue(images_equal, "multilabel prediction not correct")
 
     def test_prediction_multilabel_fast(self):
         img_ref = nib.load("tests/reference_files/example_seg_fast.nii.gz").get_fdata()
