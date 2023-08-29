@@ -34,6 +34,9 @@ def main():
 
     parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations", 
                         default=6)
+    
+    parser.add_argument("-d", "--device", choices=["gpu", "cpu"], help="Device to run on (default: gpu).",
+                        default="gpu")
 
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
@@ -45,23 +48,25 @@ def main():
 
     quiet, verbose = args.quiet, args.verbose
 
-    if not torch.cuda.is_available():
-        print("No GPU detected. Running on CPU. This can be very slow. The '--fast' option can help to some extend.")
+    device = "cuda" if args.device == "gpu" else "cpu"
+    if device == "cuda" and not torch.cuda.is_available():
+        print("No GPU detected. Running on CPU.")
+        device = "cpu"
 
     setup_nnunet()
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
     crop_addon = [3, 3, 3]  # default value
-    download_pretrained_weights(269)
+    download_pretrained_weights(300)
 
     st = time.time()
     if not quiet: print("Generating rough body segmentation...")
-    body_seg = nnUNet_predict_image(args.input, None, 269, model="3d_fullres", folds=[0],
-                        trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, resample=6.0,
+    body_seg = nnUNet_predict_image(args.input, None, 300, model="3d_fullres", folds=[0],
+                        trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
                         crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                         save_binary=False, nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=1, 
-                        crop_addon=crop_addon, quiet=quiet, verbose=verbose, test=0)
+                        crop_addon=crop_addon, quiet=quiet, verbose=verbose, test=0, device=device)
     if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
     body_seg_data = body_seg.get_fdata()

@@ -51,16 +51,16 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     input = Path(input)
     output = Path(output)
 
-    # available devices: gpu | cpu | mps
-    if device == "gpu": device = "cuda"
-
     nora_tag = "None" if nora_tag is None else nora_tag
 
     if not quiet: 
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
 
-    if not torch.cuda.is_available():
-        print("No GPU detected. Running on CPU. This can be very slow. The '--fast' option can help to some extend.")
+    # available devices: gpu | cpu | mps
+    if device == "gpu": device = "cuda"
+    if device == "cuda" and not torch.cuda.is_available():
+        print("No GPU detected. Running on CPU. This can be very slow. The '--fast' or the `--roi_subset` option can help to reduce runtime.")
+        device = "cpu"
 
     setup_nnunet()
     setup_totalseg()
