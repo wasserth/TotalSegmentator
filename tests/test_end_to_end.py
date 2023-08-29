@@ -46,6 +46,12 @@ class test_end_to_end(unittest.TestCase):
         images_equal = np.array_equal(img_ref, img_new)
         self.assertTrue(images_equal, "multilabel prediction fast not correct")
 
+    def test_prediction_multilabel_fast_force_split(self):
+        img_ref = nib.load("tests/reference_files/example_seg_fast_force_split.nii.gz").get_fdata()
+        img_new = nib.load("tests/unittest_prediction_fast_force_split.nii.gz").get_fdata()
+        images_equal = np.array_equal(img_ref, img_new)
+        self.assertTrue(images_equal, "force_split prediction not correct")
+
     def test_prediction_multilabel_fast_body_seg(self):
         img_ref = nib.load("tests/reference_files/example_seg_fast_body_seg.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_fast_body_seg.nii.gz").get_fdata()

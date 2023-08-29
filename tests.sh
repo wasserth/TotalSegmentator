@@ -28,6 +28,10 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_preview
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_fast.nii.gz --fast --ml -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast
 
+# Test organ predictions - fast - multilabel - force split
+TotalSegmentator -i tests/reference_files/example_ct.nii.gz -o tests/unittest_prediction_fast_force_split.nii.gz --fast --ml -fs -d cpu
+pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast_force_split
+
 # Test organ predictions - fast - multilabel - body_seg
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_fast_body_seg.nii.gz --fast --ml -bs -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast_body_seg
@@ -39,3 +43,8 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_lung_vessels
 # Test tissue types (with license) + body_seg
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta tissue_types -d cpu -l $1
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_tissue_types
+
+# Cleanup generated files and directories
+rm -rf tests/unittest_prediction*
+rm tests/unittest_prediction*
+rm tests/statistics.json
