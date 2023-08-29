@@ -52,8 +52,6 @@ def setup_nnunet():
 
 def setup_totalseg(totalseg_id=None):
     totalseg_dir = get_totalseg_dir()
-    print(f"SETUP TOTALSEG: ")
-    print(f"  totalseg_dir: {totalseg_dir}")
     totalseg_dir.mkdir(exist_ok=True)
     totalseg_config_file = totalseg_dir / "config.json"
 

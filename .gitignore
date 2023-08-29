@@ -13,6 +13,7 @@ tmp_weights_DELETE/
 store/
 unittest_prediction
 unittest_prediction_fast
+unittest_prediction_roi_subset
 
 *.tfstate
 *.tfstate.backup
