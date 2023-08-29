@@ -1,5 +1,6 @@
 import os
 import unittest
+import pytest
 import json
 import nibabel as nib
 import numpy as np
@@ -98,4 +99,4 @@ class test_end_to_end(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main(["-v", "tests/test_end_to_end.py::test_end_to_end::test_prediction_fast"])
