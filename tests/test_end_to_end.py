@@ -42,10 +42,8 @@ class test_end_to_end(unittest.TestCase):
         self.assertTrue(preview_exists, f"Preview was not generated")
 
     def test_prediction_multilabel_fast(self):
-        img_ref_path = os.path.join("tests", "reference_files", "example_seg_fast.nii.gz")  # makes correct path for windows and linux
-        img_new_path = os.path.join("tests", "unittest_prediction_fast.nii.gz")
-        img_ref = nib.load(img_ref_path).get_fdata()
-        img_new = nib.load(img_new_path).get_fdata()
+        img_ref = nib.load("tests/reference_files/example_seg_fast.nii.gz").get_fdata()
+        img_new = nib.load("tests/unittest_prediction_fast.nii.gz").get_fdata()
         images_equal = np.array_equal(img_ref, img_new)
         self.assertTrue(images_equal, "multilabel prediction fast not correct")
 
