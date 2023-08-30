@@ -25,7 +25,7 @@ jobs:
         pip install torch==1.12.1 -f https://download.pytorch.org/whl/cpu
         pip install .
     
-    - name: Install dependencies on Windows
+    - name: Install dependencies on Windows / MacOS
       if: runner.os == 'Windows' || runner.os == 'macOS'
       run: |
         python -m pip install --upgrade pip
@@ -34,4 +34,4 @@ jobs:
         pip install .
 
     - name: Run test script
-      run: python tests_win.py
+      run: python tests/tests_win.py
