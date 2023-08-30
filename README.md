@@ -1,8 +1,8 @@
 # TotalSegmentator
 
-Tool for segmentation of 104 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. The training dataset with 1204 subjects can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.6802613). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
+Tool for segmentation of over 117 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.6802613) (1204 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
 
-Overview of [changes and improvements](resources/improvements_in_v2.md) in TotalSegmentator v2.
+**Overview of [changes and improvements](resources/improvements_in_v2.md) in TotalSegmentator v2.**
 
 ![Alt text](resources/imgs/overview_classes.png)
 
@@ -17,9 +17,8 @@ TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU (on CPU it 
 Install dependencies:  
 * Python >= 3.7
 * [Pytorch](http://pytorch.org/) >= 1.12.1
-* You should not have any nnU-Net installation in your python environment since TotalSegmentator will install its own custom installation.
 
-optionally:
+Optionally:
 * if you input DICOM images and run on MacOS you have to install [dcm2niix](https://github.com/rordenlab/dcm2niix)
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
 * for faster resampling you can use `cucim` (`pip install cupy-cuda11x cucim`)
@@ -35,12 +34,11 @@ pip install TotalSegmentator
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations
 ```
-> Note: A Nifti file or a folder of DICOM images is allowed as input
+> Note: A Nifti file or a folder with all DICOM slices of one patient is allowed as input
 
-> Note: If you run on CPU you can use the option `--fast` or `--roi_subset liver` to greatly decrease 
-runtime.
+> Note: If you run on CPU use the option `--fast` or `--roi_subset` to greatly improve runtime.
 
-> Note: You can also try it online: [www.totalsegmentator.com](https://totalsegmentator.com/) (supports dicom files)
+> Note: You can also try it online: [www.totalsegmentator.com](https://totalsegmentator.com/)
 
 > Note: This is not a medical device and not intended for clinical usage.
 
@@ -68,11 +66,13 @@ Overview of available subtasks and the classes which they contain.
 
 Openly available for any usage:  
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
-* **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))
-* **hip_implant**: hip_implant
-* **coronary_arteries**: coronary_arteries
 * **body**: body, body_trunc, body_extremities, skin
-* **pleural_pericard_effusion**: pleural_effusion (cite [paper](http://dx.doi.org/10.1097/RLI.0000000000000869)), pericardial_effusion (cite [paper](http://dx.doi.org/10.3390/diagnostics12051045))
+* **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))*
+* **hip_implant**: hip_implant*
+* **coronary_arteries**: coronary_arteries*
+* **pleural_pericard_effusion**: pleural_effusion (cite [paper](http://dx.doi.org/10.1097/RLI.0000000000000869)), pericardial_effusion (cite [paper](http://dx.doi.org/10.3390/diagnostics12051045))*
+
+*: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
 Available with a license. Free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch. 
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
@@ -85,7 +85,7 @@ Available with a license. Free licenses available for non-commercial usage [here
 ### Run via docker
 We also provide a docker container which can be used the following way
 ```
-docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator_container:master TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
+docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.0.0 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
 ```
 
 

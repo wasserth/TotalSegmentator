@@ -75,3 +75,6 @@ Still open problems:
 * a few more subjects as in v1 for testing
 * NOTE: labels for additional tasks are not included
 
+
+## Speed improvements
+* when using the option `--roi_subset` first a very low resolution model is run (very fast runtime) to locate the rois you have specified. Then the image is cropped to this region and the full resolution model is run. This can save a lot of runtime and memory especially on CPU. (e.g. in a fully body CT image you are only interested in the left kidney. By using `--roi_subset left_kidney` the runtime on GPU is 5x faster and on CPU 32x faster. Memory consumption is 40% lower.)

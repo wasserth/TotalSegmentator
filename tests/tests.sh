@@ -45,6 +45,11 @@ TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_tissue_types
 
 # Cleanup generated files and directories
-rm -rf tests/unittest_prediction*
-rm tests/unittest_prediction*
+rm -rf tests/unittest_prediction_roi_subset
+rm -rf tests/unittest_prediction_fast
+rm -rf tests/unittest_prediction
+rm tests/unittest_prediction.nii.gz
+rm tests/unittest_prediction_fast.nii.gz
+rm tests/unittest_prediction_fast_force_split.nii.gz
+rm tests/unittest_prediction_fast_body_seg.nii.gz
 # rm tests/statistics.json
