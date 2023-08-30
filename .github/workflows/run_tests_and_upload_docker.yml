@@ -3,19 +3,11 @@ on: [push]
 jobs:
 
   run-tests:
-
-    # runs-on: ubuntu-latest
-    # strategy:
-    #   matrix:
-    #     python-version: ["3.8", "3.10"]
-    #     # python-version: ["3.10"]  # save action minutes; not relevant: for open source unlimited minutes
-
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.8"]
-    runs-on: ${{ matrix.os }}
-
+        python-version: ["3.8", "3.10"]
+        # python-version: ["3.10"]  # save action minutes; not relevant: for open source unlimited minutes
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{matrix.python-version}}

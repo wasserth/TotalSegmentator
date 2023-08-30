@@ -33,5 +33,5 @@ jobs:
         pip install torch==1.12.1
         pip install .
 
-    - name: Run test script on Ubuntu
-      run: python tests.py ${{ secrets.TOTALSEGMENTATOR_LICENSE }}
+    - name: Run test script
+      run: python tests_win.py
