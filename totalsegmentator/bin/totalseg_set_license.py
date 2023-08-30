@@ -6,7 +6,7 @@ import argparse
 from totalsegmentator.config import setup_totalseg, set_license_number
 
 
-if __name__ == "__main__":
+def main():
     """
     Set your totalsegmentator license number
 
@@ -28,3 +28,7 @@ if __name__ == "__main__":
 
     setup_totalseg()  # create config file if not exists
     set_license_number(args.license_number)
+
+
+if __name__ == "__main__":
+    main()

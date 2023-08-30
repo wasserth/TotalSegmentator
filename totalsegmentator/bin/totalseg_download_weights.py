@@ -7,7 +7,8 @@ import argparse
 from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.config import setup_totalseg
 
-if __name__ == "__main__":
+
+def main():
     """
     Download totalsegmentator weights
 
@@ -49,3 +50,7 @@ if __name__ == "__main__":
     for task_id in task_to_id[args.task]:
         print(f"Processing {task_id}...")
         download_pretrained_weights(task_id)
+
+
+if __name__ == "__main__":
+    main()

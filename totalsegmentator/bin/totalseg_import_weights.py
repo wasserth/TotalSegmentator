@@ -8,7 +8,7 @@ import zipfile
 from totalsegmentator.config import get_totalseg_dir
 
 
-if __name__ == "__main__":
+def main():
     """
     Import manually downloaded weights (zip file) to the right folder.
     """
@@ -40,3 +40,6 @@ if __name__ == "__main__":
     with zipfile.ZipFile(args.weights_file, 'r') as zip_f:
         zip_f.extractall(config_dir)
 
+
+if __name__ == "__main__":
+    main()

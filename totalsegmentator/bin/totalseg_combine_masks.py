@@ -11,7 +11,7 @@ from totalsegmentator.map_to_binary import class_map_5_parts
 from totalsegmentator.libs import combine_masks
 
 
-if __name__ == "__main__":
+def main():
     """
     Combine binary labels into a binary file.
 
@@ -44,3 +44,7 @@ if __name__ == "__main__":
 
     if args.nora_tag != "None":
         subprocess.call(f"/opt/nora/src/node/nora -p {args.nora_tag} --add {args.output} --addtag mask", shell=True)
+
+
+if __name__ == "__main__":
+    main()

@@ -10,7 +10,7 @@ import numpy as np
 from totalsegmentator.config import setup_totalseg
 
 
-if __name__ == "__main__":
+def main():
     """
     Manually setup totalsegmentator config file
 
@@ -31,3 +31,7 @@ if __name__ == "__main__":
         raise ValueError("totalseg_id must have exactly 17 characters.")
 
     setup_totalseg(args.totalseg_id)
+
+
+if __name__ == "__main__":
+    main()

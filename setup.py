@@ -49,14 +49,15 @@ setup(name='TotalSegmentator',
             'Operating System :: Unix',
             'Operating System :: MacOS'
         ],
-        scripts=[
-            'bin/TotalSegmentator', 'bin/totalseg_combine_masks', 'bin/crop_to_body', 
-            'bin/totalseg_import_weights', 'bin/totalseg_download_weights',
-            'bin/totalseg_setup_manually', 'bin/totalseg_set_license'
-        ],
-        # entry_points={
-        #     'console_scripts': [
-        #         'TotalSegmentator=totalsegmentator:main'
-        #     ],
-        # },
+        entry_points={
+            'console_scripts': [
+                'TotalSegmentator=totalsegmentator.bin.TotalSegmentator:main',
+                'totalseg_combine_masks=totalsegmentator.bin.totalseg_combine_masks:main',
+                'crop_to_body=totalsegmentator.bin.crop_to_body:main',
+                'totalseg_import_weights=totalsegmentator.bin.totalseg_import_weights:main',
+                'totalseg_download_weights=totalsegmentator.bin.totalseg_download_weights:main',
+                'totalseg_setup_manually=totalsegmentator.bin.totalseg_setup_manually:main',
+                'totalseg_set_license=totalsegmentator.bin.totalseg_set_license:main'
+            ],
+        },
     )
