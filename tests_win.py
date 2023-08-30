@@ -7,6 +7,13 @@ import subprocess
 
 
 if __name__ == "__main__":
+
+    # Test python api
+    # Test organ predictions - fast - statistics
+    totalsegmentator('tests/reference_files/example_ct_sm.nii.gz', 'tests/unittest_prediction_fast', fast=True, device="cpu")
+    pytest.main(['-v', 'tests/test_end_to_end.py::test_end_to_end::test_prediction_fast'])
+
+    # Test terminal
     # Test organ predictions - fast - multilabel
     # makes correct path for windows and linux. Only required for terminal call. Within python
     # I can always / and i will correctly be interpreted on windows
