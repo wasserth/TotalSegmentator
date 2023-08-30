@@ -1,12 +1,15 @@
 ## Master
-* bugfixes in dicom io
-* add `--skip_saving` argument
+* 
 
 
 ## Release 2.0.0
 * train models with nnU-Net v2 (nnunet_cust dependency no longer needed)
 * roi_subset a lot faster, because cropping with 6mm low res model to roi first
 * more classes and improved training dataset (for details see `resources/improvements_in_v2.md`)
+* bugfix to make cli available on windows
+* bugfixes in dicom io
+* add `--skip_saving` argument
+* automatic tests on windows, linux and mac
 
 
 ## Release 1.5.6

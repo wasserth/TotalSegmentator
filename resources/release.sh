@@ -1,0 +1,41 @@
+#!/bin/bash
+set -e  # Exit on error
+
+# Info: Have to run from within the resources directory otherwise pathes incorrect
+
+# go to root of package
+cd ..
+
+echo "Reminder: First update CHANGELOG.md"
+
+# Function to update the version in setup.py
+update_version() {
+  old_version=$(grep -oP "(?<=version=')[^']*(?=')" setup.py)
+  echo "Current version: ${old_version}"
+  read -p "Enter new version: " new_version
+
+  # Replace old version with new version in setup.py
+  sed -i "s/version='${old_version}'/version='${new_version}'/g" setup.py
+}
+
+# Step 1: Update version in setup.py
+update_version
+
+# Step 2: Commit the version update and tag it
+git add setup.py
+git commit -m "Bump version to ${new_version}"
+git tag "v${new_version}"
+
+# Step 3: Push commits and tags to GitHub
+git push origin master
+git push origin "v${new_version}"
+
+# Step 4: Publish the package to PyPI
+python setup.py sdist bdist_wheel
+twine upload --skip-existing dist/*
+
+# Step 5: Build and Push Docker Image
+docker build -t wasserth/TotalSegmentator:${new_version} .
+docker push wasserth/TotalSegmentator:${new_version}
+
+echo "Release process completed."

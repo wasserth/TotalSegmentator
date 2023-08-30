@@ -40,11 +40,11 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta lung_vessels -d cpu  # ~1min
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_lung_vessels
 
-# Test tissue types (with license) + body_seg
+# Test tissue types (with license)
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta tissue_types -d cpu -l $1
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_tissue_types
 
 # Cleanup generated files and directories
-# rm -rf tests/unittest_prediction*
-# rm tests/unittest_prediction*
+rm -rf tests/unittest_prediction*
+rm tests/unittest_prediction*
 # rm tests/statistics.json

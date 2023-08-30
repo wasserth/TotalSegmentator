@@ -14,3 +14,5 @@ git push origin --tags
 python setup.py sdist bdist_wheel
 twine upload --skip-existing dist/*
 ```
+
+INFO: Now all done by `release.sh`
