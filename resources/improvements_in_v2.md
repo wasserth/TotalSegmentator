@@ -1,5 +1,10 @@
 # Changes and improvements in TotalSegmentator v2
 
+
+## Breaking changes from v1 to v2
+The order of the classes has changed in the multilabel output file. If you use the option `--ml` checkout the new order [here](https://github.com/wasserth/TotalSegmentator#class-details). Everything else should be identical.
+
+
 ## New classes (n=33)
 
 List of new classes by task:
@@ -35,7 +40,7 @@ Some of these new classes were available in some preliminary version as addition
 
 ## Improvements in training dataset
 
-List of classes where we corrected some systemic errors in the labels (e.g. myocardium always slightly misaligned) or corrected several errors (e.g. bleedings in the liver sometimes not correctly labeled). For these classes you can expect a bit better segmentations now:
+List of classes where we corrected some systemic errors in the labels (e.g. myocardium always slightly misaligned) or corrected several errors (e.g. bleedings in the liver sometimes not correctly labeled). For these classes you can expect slightly better segmentations now:
 * femur
 * humerus
 * hip

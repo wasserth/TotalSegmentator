@@ -8,7 +8,7 @@ import numpy as np
 import nibabel as nib
 import torch
 
-from totalsegmentator.statistics import get_basic_statistics_for_entire_dir, get_radiomics_features_for_entire_dir
+from totalsegmentator.statistics import get_basic_statistics, get_radiomics_features_for_entire_dir
 from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
 from totalsegmentator.config import send_usage_stats, set_license_number, has_valid_license_offline
@@ -301,7 +301,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if not quiet: print("Calculating statistics...")
         st = time.time()
         stats_dir = output.parent if ml else output
-        get_basic_statistics_for_entire_dir(seg, input, stats_dir / "statistics.json", quiet, task)
+        get_basic_statistics(seg, input, stats_dir / "statistics.json", quiet, task)
         # get_radiomics_features_for_entire_dir(input, output, output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
