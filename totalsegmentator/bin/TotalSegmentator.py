@@ -71,6 +71,10 @@ def main():
                         help="Calc radiomics features. Requires pyradiomics. Results will be in statistics_radiomics.json",
                         default=False)
 
+    parser.add_argument("-sii", "--stats_include_incomplete", action="store_true", 
+                        help="Normally statistics are only calculated for ROIs which are not cut off by the beginning or end of image. Use this option to calc anyways.",
+                        default=False)
+
     parser.add_argument("-cp", "--crop_path", help="Custom path to masks used for cropping. If not set will use output directory.", 
                         type=lambda p: Path(p).absolute(), default=None)
 
@@ -117,7 +121,7 @@ def main():
                      args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
-                     args.device, args.license_number)
+                     args.device, args.license_number, not args.stats_include_incomplete)
 
 
 if __name__ == "__main__":

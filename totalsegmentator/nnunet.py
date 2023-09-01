@@ -209,7 +209,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti", 
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
-                         device="cuda"):
+                         device="cuda", exclude_masks_at_border=True):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -404,7 +404,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             st = time.time()
             stats_dir = file_out.parent if multilabel_image else file_out
             stats_dir.mkdir(exist_ok=True)
-            get_basic_statistics(img_pred.get_fdata(), img_in_rsp, stats_dir / "statistics.json", quiet, task_name)
+            get_basic_statistics(img_pred.get_fdata(), img_in_rsp, stats_dir / "statistics.json", quiet, task_name,
+                                 exclude_masks_at_border)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
         if resample is not None:

@@ -10,6 +10,7 @@
 * bugfixes in dicom io
 * add `--skip_saving` argument
 * automatic tests on windows, linux and mac
+* statistics are not calculated anymore for ROIs which are cut off by the top or bottom of the image (use `stats_include_incomplete` to change this behaviour)
 
 
 ## Release 1.5.6

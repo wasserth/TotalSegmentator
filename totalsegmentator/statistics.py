@@ -63,7 +63,20 @@ def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:
         json.dump(stats, f, indent=4)
 
 
-def get_basic_statistics(seg: np.array, ct_file, file_out:Path, quiet:bool=False, task:str="total"):
+def is_in_first_or_last_slice(mask):
+    """
+    Check if a mask is in the first or last slice of the image.
+    Then we do not calc any statistics for it because the mask
+    is incomplete.
+    """
+    # in first or last slice segmentation of bad. Therefore they one slice before and after.
+    first_slice = mask[:, :, 1]
+    last_slice = mask[:, :, -2]
+    return (first_slice.sum() > 0) or (last_slice.sum() > 0)
+
+
+def get_basic_statistics(seg: np.array, ct_file, file_out: Path, quiet: bool = False,
+                         task: str = "total", exclude_masks_at_border: bool = True):
     """
     ct_file: path to a ct_file or a nifti file object
     """
@@ -76,10 +89,14 @@ def get_basic_statistics(seg: np.array, ct_file, file_out:Path, quiet:bool=False
         stats[mask_name] = {}
         # data = nib.load(mask).get_fdata()  # loading: 0.6s
         data = seg == k  # 0.18s
-        stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3; 0.2s
-        roi_mask = (data > 0).astype(np.uint8)  # 0.16s
-        # stats[mask_name]["intensity"] = ct[roi_mask > 0].mean().round(2) if roi_mask.sum() > 0 else 0.0  # 3.0s
-        stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s
+        if is_in_first_or_last_slice(data) and exclude_masks_at_border:
+            stats[mask_name]["volume"] = 0.0
+            stats[mask_name]["intensity"] = 0.0
+        else:
+            stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3; 0.2s
+            roi_mask = (data > 0).astype(np.uint8)  # 0.16s
+            # stats[mask_name]["intensity"] = ct[roi_mask > 0].mean().round(2) if roi_mask.sum() > 0 else 0.0  # 3.0s
+            stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s
     
     # For nora json is good
     # For other people csv might be better -> not really because here only for one subject each -> use json

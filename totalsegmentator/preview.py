@@ -4,6 +4,7 @@ import itertools
 import pickle
 from pathlib import Path
 from pprint import pprint
+import gc
 
 import nibabel as nib
 import numpy as np
@@ -119,7 +120,7 @@ roi_groups = {
 
 def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):
     # ref_img = nib.load(subject_path)
-    roi_actors = []
+    # roi_actors = []
 
     for idx, roi in enumerate(rois):
         color = random_colors[idx]
@@ -133,7 +134,7 @@ def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task
             cont_actor = plot_mask(scene, data, affine, x, y, smoothing=smoothing,
                                 color=color, opacity=1)
             scene.add(cont_actor)
-            roi_actors.append(cont_actor)
+            # roi_actors.append(cont_actor)
 
 
 def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,

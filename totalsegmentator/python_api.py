@@ -41,7 +41,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
-                     skip_saving=False, device="gpu", license_number=None):
+                     skip_saving=False, device="gpu", license_number=None,
+                     statistics_exclude_masks_at_border=True):
     """
     Run TotalSegmentator from within python. 
 
@@ -289,7 +290,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
                          force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
                          output_type=output_type, statistics=statistics_fast, 
-                         quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device)
+                         quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
+                         exclude_masks_at_border=statistics_exclude_masks_at_border)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     config = increase_prediction_counter()
@@ -301,7 +303,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if not quiet: print("Calculating statistics...")
         st = time.time()
         stats_dir = output.parent if ml else output
-        get_basic_statistics(seg, input, stats_dir / "statistics.json", quiet, task)
+        get_basic_statistics(seg, input, stats_dir / "statistics.json", quiet, task, statistics_exclude_masks_at_border)
         # get_radiomics_features_for_entire_dir(input, output, output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
