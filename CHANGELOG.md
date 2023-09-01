@@ -11,6 +11,7 @@
 * add `--skip_saving` argument
 * automatic tests on windows, linux and mac
 * statistics are not calculated anymore for ROIs which are cut off by the top or bottom of the image (use `stats_include_incomplete` to change this behaviour)
+* add postprocessing for body segmentation: remove small blobs
 
 
 ## Release 1.5.6
