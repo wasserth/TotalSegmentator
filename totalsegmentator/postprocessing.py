@@ -2,6 +2,7 @@ import time
 from pathlib import Path
 import numpy as np
 import nibabel as nib
+from tqdm import tqdm
 
 from scipy.ndimage import binary_dilation, binary_erosion, binary_closing
 from scipy import ndimage
@@ -14,6 +15,28 @@ def keep_largest_blob(data, debug=False):
     if debug: print(f"size of second largest blob: {sorted(counts)[-2]}")
     key_second = counts.index(sorted(counts)[-2])
     return (blob_map == key_second).astype(np.uint8)
+
+
+def keep_largest_blob_multilabel(data, class_map, rois):
+    """
+    Keep the largest blob for the classes defined in rois.
+
+    data: multilabel image (np.array)
+    class_map: class map {label_idx: label_name}
+    rois: list of labels where to filter for the largest blob
+
+    return multilabel image (np.array)
+    """
+    st = time.time()
+    class_map_inv = {v: k for k, v in class_map.items()}
+    for roi in tqdm(rois):
+        idx = class_map_inv[roi]
+        data_roi = data == idx
+        cleaned_roi = keep_largest_blob(data_roi) > 0.5
+        data[data_roi] = 0   # Clear the original ROI in data
+        data[cleaned_roi] = idx   # Write back the cleaned ROI into data
+    # print(f"  keep_largest_blob_multilabel took {time.time() - st:.2f}s")
+    return data
 
 
 def remove_small_blobs(img: np.ndarray, interval=[10, 30], debug=False) -> np.ndarray:
@@ -45,6 +68,30 @@ def remove_small_blobs(img: np.ndarray, interval=[10, 30], debug=False) -> np.nd
         print('Number of blobs after: ' + str(number_of_blobs_after))
 
     return mask
+
+
+def remove_small_blobs_multilabel(data, class_map, rois, interval=[10, 30], debug=False):
+    """
+    Remove small blobs for the classes defined in rois.
+
+    data: multilabel image (np.array)
+    class_map: class map {label_idx: label_name}
+    rois: list of labels where to filter for the largest blob
+
+    return multilabel image (np.array)
+    """
+    st = time.time()
+    class_map_inv = {v: k for k, v in class_map.items()}
+
+    for roi in tqdm(rois):
+        idx = class_map_inv[roi]
+        data_roi = (data == idx)
+        cleaned_roi = remove_small_blobs(data_roi, interval, debug) > 0.5  # Remove small blobs from this ROI
+        data[data_roi] = 0  # Clear the original ROI in data
+        data[cleaned_roi] = idx  # Write back the cleaned ROI into data
+
+    # print(f"  remove_small_blobs_multilabel took {time.time() - st:.2f}s")
+    return data
 
 
 def remove_outside_of_mask(seg_path, mask_path, addon=1):

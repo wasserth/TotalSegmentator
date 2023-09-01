@@ -32,6 +32,7 @@ from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin
+from totalsegmentator.postprocessing import keep_largest_blob_multilabel, remove_small_blobs_multilabel
 from totalsegmentator.nifti_ext_header import save_multilabel_nifti
 from totalsegmentator.statistics import get_basic_statistics
 
@@ -381,6 +382,21 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
 
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
+
+        # Postprocessing multilabel (run here on lower resolution)
+        if task_name == "body":
+            img_pred_pp = keep_largest_blob_multilabel(img_pred.get_fdata().astype(np.uint8),
+                                                       class_map[task_name], ["body_trunc"])
+            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+
+        if task_name == "body":
+            vox_vol = np.prod(img_pred.header.get_zooms())
+            size_thr_mm3 = 50000 / vox_vol
+            img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
+                                                        class_map[task_name], ["body_extremities"],
+                                                        interval=[size_thr_mm3, 1e10], debug=True)
+            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+
         if preview:
             from totalsegmentator.preview import generate_preview
             # Generate preview before upsampling so it is faster and still in canonical space 
@@ -492,7 +508,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                         # pool.join()
             if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
-            # Postprocessing
+            # Postprocessing single files
+            #    (these not directly transferable to multilabel)
 
             # Lung mask does not exist since I use 6mm model. Would have to save lung mask from 6mm seg.
             # if task_name == "lung_vessels":
