@@ -176,6 +176,31 @@ def get_version():
         return "unknown"
 
 
+def get_config_key(key_name):
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
+    if totalseg_config_file.exists():
+        with open(totalseg_config_file, "r") as f:
+            config = json.load(f)
+        if key_name in config:
+            return config[key_name]
+    return None
+
+
+def set_config_key(key_name, value):
+    totalseg_dir = get_totalseg_dir()
+    totalseg_config_file = totalseg_dir / "config.json"
+    if totalseg_config_file.exists():
+        with open(totalseg_config_file, "r") as f:
+            config = json.load(f)
+        config[key_name] = value
+        with open(totalseg_config_file, "w") as f:
+            json.dump(config, f, indent=4)
+        return config
+    else:
+        print("WARNING: Could not set config key, because config file not found.")
+
+
 def send_usage_stats(config, params):
     if config is not None and config["send_usage_stats"]:
         

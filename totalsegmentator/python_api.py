@@ -12,6 +12,7 @@ from totalsegmentator.statistics import get_basic_statistics, get_radiomics_feat
 from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
 from totalsegmentator.config import send_usage_stats, set_license_number, has_valid_license_offline
+from totalsegmentator.config import get_config_key, set_config_key
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.map_to_total import map_to_total
 
@@ -56,6 +57,10 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     if not quiet: 
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
+
+    if not get_config_key("statistics_disclaimer_shown"):  # Evaluates to True is variable not set (None) or set to False
+        print("TotalSegmentator sends anonymous usage statistics. If you want to disable it check the documentation.")
+        set_config_key("statistics_disclaimer_shown", True)
 
     # available devices: gpu | cpu | mps
     if device == "gpu": device = "cuda"
