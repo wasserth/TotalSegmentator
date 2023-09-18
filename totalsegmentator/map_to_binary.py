@@ -279,6 +279,13 @@ class_map = {
         10: "metacarpal",
         11: "phalanges_hand"
     },
+    # those classes need to be removed
+    "appendicular_bones_auxiliary": {
+        12: "humerus",
+        13: "femur",
+        14: "liver",
+        15: "spleen"
+    },
     "tissue_types": {
         1: "subcutaneous_fat",
         2: "skeletal_muscle",
