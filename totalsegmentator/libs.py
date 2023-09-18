@@ -243,8 +243,8 @@ def download_pretrained_weights(task_id):
         WEIGHTS_URL = "todo"
 
     # Commercial models
-    elif task_id == 296:
-        weights_path = config_dir / "Dataset296_appendicular_bones_1559subj"
+    elif task_id == 304:
+        weights_path = config_dir / "Dataset304_appendicular_bones_ext_1559subj"
     elif task_id == 301:
         weights_path = config_dir / "Dataset301_heart_highres_1559subj"
     elif task_id == 303:

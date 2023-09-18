@@ -81,8 +81,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast:
             task_id = 297
             resample = 3.0
-            # trainer = "nnUNetTrainer_4000epochs_NoMirroring"
-            trainer = "nnUNetTrainerNoMirroring"
+            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
+            # trainer = "nnUNetTrainerNoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
         else:
@@ -194,7 +194,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast: raise ValueError("task heartchambers_highres does not work with option --fast")
         show_license_info()
     elif task == "appendicular_bones":
-        task_id = 296
+        task_id = 304
         resample = 1.5
         trainer = "nnUNetTrainerNoMirroring"
         crop = None
@@ -257,7 +257,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
         organ_seg = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
-                            trainer="nnUNetTrainerNoMirroring", tta=False, multilabel_image=True, resample=6.0,
+                            trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
                             crop_addon=crop_addon, output_type=output_type, statistics=False,

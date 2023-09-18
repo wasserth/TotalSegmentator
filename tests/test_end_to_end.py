@@ -30,7 +30,7 @@ class test_end_to_end(unittest.TestCase):
 
     def test_prediction_fast(self):
         for roi in ["liver", "vertebrae_L1"]:
-            img_ref = nib.load(f"tests/reference_files/example_seg_fast/{roi}.nii.gz").get_fdata()
+            img_ref = nib.load(f"tests/reference_files/e/{roi}.nii.gz").get_fdata()
             img_new = nib.load(f"tests/unittest_prediction_fast/{roi}.nii.gz").get_fdata()
             # prediction is not completely deterministic therefore allow for small differences
             nr_of_diff_voxels = (img_ref != img_new).sum()
