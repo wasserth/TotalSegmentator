@@ -31,7 +31,7 @@ from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_
 from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
-from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin
+from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin, remove_auxiliary_labels
 from totalsegmentator.postprocessing import keep_largest_blob_multilabel, remove_small_blobs_multilabel
 from totalsegmentator.nifti_ext_header import save_multilabel_nifti
 from totalsegmentator.statistics import get_basic_statistics
@@ -382,6 +382,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
 
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
+
+        # Currently only relevant for T304 (appendicular bones)
+        img_pred = remove_auxiliary_labels(img_pred, task_name)
 
         # Postprocessing multilabel (run here on lower resolution)
         if task_name == "body":

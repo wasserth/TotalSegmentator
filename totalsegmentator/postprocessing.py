@@ -7,6 +7,8 @@ from tqdm import tqdm
 from scipy.ndimage import binary_dilation, binary_erosion, binary_closing
 from scipy import ndimage
 
+from totalsegmentator.map_to_binary import class_map
+
 
 def keep_largest_blob(data, debug=False):
     blob_map, _ = ndimage.label(data)
@@ -140,3 +142,16 @@ def extract_skin(ct_img, body_img):
     skin = remove_small_blobs(skin>0.5, interval=[5,1e10])
 
     return nib.Nifti1Image(skin.astype(np.uint8), ct_img.affine)
+
+
+def remove_auxiliary_labels(img, task_name):
+    task_name_aux = task_name + "_auxiliary"
+    if task_name_aux in class_map:
+        class_map_aux = class_map[task_name]
+        data = img.get_fdata()
+        # remove auxiliary labels
+        for idx in class_map_aux.keys():
+            data[data == idx] = 0
+        return nib.Nifti1Image(data.astype(np.uint8), img.affine)
+    else:
+        return img
