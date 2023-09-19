@@ -7,8 +7,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         # python-version: ["3.8", "3.10"]
-        # Download does not work properly with python 3.8 on non-linux OS
-        python-version: ["3.10"] 
+        # Download does not work properly with python 3.8 on non-linux OS ????
+        python-version: ["3.8"]
     runs-on: ${{ matrix.os }}
     
     steps:
