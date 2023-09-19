@@ -58,10 +58,6 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     if not quiet: 
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
 
-    if not get_config_key("statistics_disclaimer_shown"):  # Evaluates to True is variable not set (None) or set to False
-        print("TotalSegmentator sends anonymous usage statistics. If you want to disable it check the documentation.")
-        set_config_key("statistics_disclaimer_shown", True)
-
     # available devices: gpu | cpu | mps
     if device == "gpu": device = "cuda"
     if device == "cuda" and not torch.cuda.is_available():
@@ -72,6 +68,10 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     setup_totalseg()
     if license_number is not None:
         set_license_number(license_number)
+
+    if not get_config_key("statistics_disclaimer_shown"):  # Evaluates to True is variable not set (None) or set to False
+        print("TotalSegmentator sends anonymous usage statistics. If you want to disable it check the documentation.")
+        set_config_key("statistics_disclaimer_shown", True)
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 

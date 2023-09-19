@@ -5,7 +5,7 @@ from pathlib import Path
 import argparse
 
 from totalsegmentator.libs import download_pretrained_weights
-from totalsegmentator.config import setup_totalseg
+from totalsegmentator.config import setup_totalseg, set_config_key
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
 
     task_to_id = {
         "total": [291, 292, 293, 294, 295],
-        "total_fast": [297],
+        "total_fast": [297, 298],
         "lung_vessels": [258],
         "cerebral_bleed": [150],
         "hip_implant": [260],
@@ -38,7 +38,7 @@ def main():
         "vertebrae_body": [302],
 
         "heartchambers_highres": [301],
-        "appendicular_bones": [296],
+        "appendicular_bones": [304],
         "tissue_types": [481],
         "face": [303],
 
@@ -46,6 +46,7 @@ def main():
     }
 
     setup_totalseg()
+    set_config_key("statistics_disclaimer_shown", True)
 
     for task_id in task_to_id[args.task]:
         print(f"Processing {task_id}...")
