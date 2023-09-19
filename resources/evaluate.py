@@ -31,8 +31,8 @@ def calc_metrics(subject, gt_dir=None, pred_dir=None, class_map=None):
 
     r = {"subject": subject}
     for idx, roi_name in class_map.items():
-        gt = (gt_all == idx).astype(np.uint8)
-        pred = (pred_all == idx).astype(np.uint8)
+        gt = gt_all == idx
+        pred = pred_all == idx
     
         if gt.max() > 0 and pred.max() == 0:
             r[f"dice-{roi_name}"] = 0
@@ -58,24 +58,25 @@ if __name__ == "__main__":
     gt_dir = Path(sys.argv[1])  # directory containining all the subjects
     pred_dir = Path(sys.argv[2])  # directory of the new nnunet dataset
 
-    class_map = class_map_5_parts["class_map_part_organs"]
+    # class_map = class_map_5_parts["class_map_part_organs"]
     # class_map = class_map_5_parts["class_map_part_vertebrae"]
     # class_map = class_map_5_parts["class_map_part_cardiac"]
     # class_map = class_map_5_parts["class_map_part_muscles"]
     # class_map = class_map_5_parts["class_map_part_ribs"]
+    class_map_name = sys.argv[3]  
+    class_map = class_map_5_parts[class_map_name]
 
-    subjects = [x.stem for x in gt_dir.glob("*.nii.gz")]
+    subjects = [x.stem.split(".")[0] for x in gt_dir.glob("*.nii.gz")]
 
     # Use multiple threads to calculate the metrics
-    res = p_map(partial(calc_metrics, gt_dir=data_dir, pred_dir=data_dir,
-                        class_map=class_map), subjects, num_cpus=8)
+    res = p_map(partial(calc_metrics, gt_dir=gt_dir, pred_dir=pred_dir,
+                        class_map=class_map), subjects, num_cpus=8, disable=True)
     res = pd.DataFrame(res)
-    print(f"result shape: {res.shape}")
     
-    print("\n------Overall mean------")
     for metric in ["dice", "surface_dice_3"]:
         res_all_rois = []
         for roi_name in class_map.values():
             row_wo_nan = res[f"{metric}-{roi_name}"].dropna()
             res_all_rois.append(row_wo_nan.mean())
-        print(f"{metric}: {np.array(res_all_rois).mean():.3f}")
+            print(f"{roi_name} {metric}: {row_wo_nan.mean():.3f}")
+        # print(f"{metric}: {np.array(res_all_rois).mean():.3f}")
