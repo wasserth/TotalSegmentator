@@ -5,7 +5,7 @@
 3. Convert the data to nnU-Net format using `resources/convert_dataset_to_nnunet.py` (see `resources/train_nnunet.sh` for usage example)
 4. Preprocess `nnUNetv2_plan_and_preprocess -d <your_dataset_id> -pl ExperimentPlanner -c 3d_fullres -np 2`
 5. Train `nnUNetv2_train <your_dataset_id> 3d_fullres 0 -tr nnUNetTrainerNoMirroring` (takes several days)
-6. Predict test set `nnUNetv2_predict -i path/to/imagesTs -o path/to/labelsTs_predicted -d <your_dataset_id> -c 3d_fullres --disable_tta -f 0`
+6. Predict test set `nnUNetv2_predict -i path/to/imagesTs -o path/to/labelsTs_predicted -d <your_dataset_id> -c 3d_fullres -tr nnUNetTrainerNoMirroring --disable_tta -f 0`
 7. Evaluate `python resources/evaluate.py path/to/labelsTs path/to/labelsTs_predicted`
 8. Done
 
