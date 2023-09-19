@@ -3,6 +3,8 @@ set -e  # Exit on error
 
 # Info: Have to run from within the resources directory otherwise pathes incorrect
 
+# Usage: ./release.sh -> will ask for new version number
+
 # go to root of package
 cd ..
 

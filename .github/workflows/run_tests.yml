@@ -1,4 +1,4 @@
-name: Run tests and upload to docker hub
+name: Run detailed tests
 on: [push]
 jobs:
 

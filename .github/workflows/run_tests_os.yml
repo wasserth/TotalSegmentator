@@ -1,4 +1,4 @@
-name: Run tests and upload to docker hub WINDOWS
+name: Run basic tests on all OS
 on: [push]
 jobs:
 
@@ -34,4 +34,4 @@ jobs:
         pip install .
 
     - name: Run test script
-      run: python tests/tests_win.py
+      run: python tests/tests_os.py
