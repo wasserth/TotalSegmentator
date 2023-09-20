@@ -65,6 +65,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
 Overview of available subtasks and the classes which they contain.
 
 Openly available for any usage:  
+* **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator/tree/add_nnunetv2#class-details) for list of classes)
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **body**: body, body_trunc, body_extremities, skin
 * **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))*
