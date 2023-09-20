@@ -37,6 +37,9 @@ heart_myocardium, heart_atrium_left, heart_ventricle_left, heart_atrium_right, h
 
 Some of these new classes were available in some preliminary version as additional tasks in v1. Now they are properly added.
 
+The following tasks are freely available only for non-commercial usage (all other tasks can be used commercially for free):
+`appendicular_bones`, `tissue_types`, `face`, `heartchambers_highres`
+
 
 ## Improvements in training dataset
 
