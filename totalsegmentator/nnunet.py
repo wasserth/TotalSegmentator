@@ -20,7 +20,8 @@ from totalsegmentator.libs import nostdout
 
 # todo important: change
 # with nostdout():
-from nnunetv2.inference.predict_from_raw_data import predict_from_raw_data
+# from nnunetv2.inference.predict_from_raw_data import predict_from_raw_data
+from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 from nnunetv2.utilities.file_path_utilities import get_output_folder
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_taskid_to_partname
@@ -170,24 +171,46 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     num_parts = 1
     part_id = 0
 
-    predict_from_raw_data(dir_in,
-                          dir_out,
-                          model_folder,
-                          folds,
-                          step_size,
-                          use_gaussian=True,
-                          use_mirroring=not disable_tta,
-                          perform_everything_on_gpu=True,
-                          verbose=verbose,
-                          save_probabilities=save_probabilities,
-                          overwrite=not continue_prediction,
-                          checkpoint_name=chk,
-                          num_processes_preprocessing=npp,
-                          num_processes_segmentation_export=nps,
-                          folder_with_segs_from_prev_stage=prev_stage_predictions,
-                          num_parts=num_parts,
-                          part_id=part_id,
-                          device=device)
+    # predict_from_raw_data(dir_in,
+    #                       dir_out,
+    #                       model_folder,
+    #                       folds,
+    #                       step_size,
+    #                       use_gaussian=True,
+    #                       use_mirroring=not disable_tta,
+    #                       perform_everything_on_gpu=True,
+    #                       verbose=verbose,
+    #                       save_probabilities=save_probabilities,
+    #                       overwrite=not continue_prediction,
+    #                       checkpoint_name=chk,
+    #                       num_processes_preprocessing=npp,
+    #                       num_processes_segmentation_export=nps,
+    #                       folder_with_segs_from_prev_stage=prev_stage_predictions,
+    #                       num_parts=num_parts,
+    #                       part_id=part_id,
+    #                       device=device)
+
+    
+    predictor = nnUNetPredictor(
+        tile_step_size=step_size,
+        use_gaussian=True,
+        use_mirroring=not disable_tta,
+        perform_everything_on_gpu=True,
+        device=device,
+        verbose=verbose,
+        verbose_preprocessing=verbose,
+        allow_tqdm=True
+    )
+    predictor.initialize_from_trained_model_folder(
+        model_folder,
+        use_folds=folds,
+        checkpoint_name=chk,
+    )
+    predictor.predict_from_files(dir_in, dir_out,
+                                 save_probabilities=save_probabilities, overwrite=not continue_prediction,
+                                 num_processes_preprocessing=npp, num_processes_segmentation_export=nps,
+                                 folder_with_segs_from_prev_stage=prev_stage_predictions, 
+                                 num_parts=num_parts, part_id=part_id)
 
 
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):

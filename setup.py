@@ -37,7 +37,7 @@ setup(name='TotalSegmentator',
             # This does not work if want to upload to pypi
             # 'nnunet @ git+https://github.com/wasserth/nnUNet_cust@working_2022_03_18#egg=nnUNet'
             # 'nnunet-customized==1.2',
-            'nnunetv2==2.1',
+            'nnunetv2==2.2',
             f'requests{requests_version}',
             'rt_utils'
         ],
