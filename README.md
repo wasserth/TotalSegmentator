@@ -4,7 +4,7 @@ Tool for segmentation of over 117 classes in CT images. It was trained on a wide
 
 **Overview of [changes and improvements](resources/improvements_in_v2.md) in TotalSegmentator v2.**
 
-![Alt text](resources/imgs/overview_classes.png)
+![Alt text](resources/imgs/overview_classes_2.png)
 
 Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung-radiologie-nuklearmedizin).  
 If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
@@ -55,7 +55,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 
 ### Subtasks
 
-![Alt text](resources/imgs/overview_subclasses.png)
+![Alt text](resources/imgs/overview_subclasses_2.png)
 
 We added some more models to TotalSegmentator beyond the default one. This allows segmentation of even 
 more classes in more detailed subparts of the image.
