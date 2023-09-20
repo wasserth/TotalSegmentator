@@ -210,7 +210,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti", 
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
-                         device="cuda", exclude_masks_at_border=True):
+                         device="cuda", exclude_masks_at_border=True, no_derived_masks=False):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -262,10 +262,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
 
         if crop is not None:
-            if crop == "lung" or crop == "pelvis":
-                combine_masks(crop_path, crop_path / f"{crop}.nii.gz", crop)
             if type(crop) is str:
-                crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
+                if crop == "lung" or crop == "pelvis":
+                    crop_mask_img = combine_masks(crop_path, crop)
+                else:
+                    crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
             else:
                 crop_mask_img = crop
             img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32,
@@ -527,9 +528,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             #     remove_outside_of_mask(file_out / "aorta.nii.gz", file_out / "heart.nii.gz", addon=5)
             #     remove_outside_of_mask(file_out / "pulmonary_artery.nii.gz", file_out / "heart.nii.gz", addon=5)
 
-            if task_name == "body":
+            if task_name == "body" and not no_derived_masks:
                 if not quiet: print("Creating body.nii.gz")
-                combine_masks(file_out, file_out / "body.nii.gz", "body")
+                body_img = combine_masks(file_out, "body")
+                nib.save(body_img, file_out / "body.nii.gz")
                 if not quiet: print("Creating skin.nii.gz")
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")

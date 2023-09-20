@@ -40,7 +40,8 @@ def main():
 
     args = parser.parse_args()
 
-    combine_masks(args.mask_dir, args.output, args.masks)
+    combined_img = combine_masks(args.mask_dir, args.masks)
+    nib.save(combined_img, args.output)
 
     if args.nora_tag != "None":
         subprocess.call(f"/opt/nora/src/node/nora -p {args.nora_tag} --add {args.output} --addtag mask", shell=True)

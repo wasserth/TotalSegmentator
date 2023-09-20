@@ -307,13 +307,14 @@ def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
     nib.save(nib.Nifti1Image(img_out, ref_img.affine), multilabel_file)
 
 
-def combine_masks(mask_dir, output, class_type):
+def combine_masks(mask_dir, class_type):
     """
     Combine classes to masks
 
     mask_dir: directory of totalsegmetator masks
-    output: output path
     class_type: ribs | vertebrae | vertebrae_ribs | lung | heart
+
+    returns: nibabel image
     """
     if class_type == "ribs":
         masks = list(class_map_5_parts["class_map_part_ribs"].values())
@@ -346,7 +347,7 @@ def combine_masks(mask_dir, output, class_type):
             img = nib.load(mask_dir / f"{mask}.nii.gz").get_fdata()
             combined[img > 0.5] = 1
 
-    nib.save(nib.Nifti1Image(combined, ref_img.affine), output)
+    return nib.Nifti1Image(combined, ref_img.affine)
 
 
 def compress_nifti(file_in, file_out, dtype=np.int32, force_3d=True):

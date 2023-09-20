@@ -89,6 +89,11 @@ def main():
                         help="Skip saving of segmentations for faster runtime if you are only interested in statistics.",
                         default=False)
 
+    # Used for server to make statistics file have the same classes as images are created
+    parser.add_argument("-ndm", "--no_derived_masks", action="store_true", 
+                        help="Do not create derived masks (e.g. skin from body mask).",
+                        default=False)
+
     # "mps" is for apple silicon; but does not support 3D Conv at the moment. Therefore do not allow here.
     # https://github.com/pytorch/pytorch/issues/77818
     parser.add_argument("-d", "--device", choices=["gpu", "cpu"],
@@ -121,7 +126,8 @@ def main():
                      args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
-                     args.device, args.license_number, not args.stats_include_incomplete)
+                     args.device, args.license_number, not args.stats_include_incomplete,
+                     args.no_derived_masks)
 
 
 if __name__ == "__main__":
