@@ -98,7 +98,9 @@ we added more classes.)
 ![Alt text](resources/imgs/runtime_table.png)
 
 If you want to reduce memory consumption you can use the following options:
+* `--fast`: This will use a lower resolution model
 * `--body_seg`: This will crop the image to the body region before processing it
+* `--roi_subset <list of classes>`: This will only predict a subset of classes
 * `--force_split`: This will split the image into 3 parts and process them one after another
 * `--nr_thr_saving 1`: Saving big images with several threads will take a lot of memory
 
