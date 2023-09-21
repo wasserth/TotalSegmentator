@@ -1,5 +1,5 @@
 class_map = {
-    
+
     # classes of old TotalSegmentator v1
     # "total_v1": {
     #     1: "spleen",
@@ -292,8 +292,8 @@ class_map = {
     },
     "tissue_types": {
         1: "subcutaneous_fat",
-        2: "skeletal_muscle",
-        3: "torso_fat"
+        2: "torso_fat",
+        3: "skeletal_muscle"
     },
     "face": {
         1: "face"

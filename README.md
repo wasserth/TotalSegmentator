@@ -1,6 +1,6 @@
 # TotalSegmentator
 
-Tool for segmentation of over 117 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.6802613) (1204 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
+Tool for segmentation of over 117 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.6802613) (1228 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
 
 **ANNOUNCEMENT: We recently released v2. See [changes and improvements](resources/improvements_in_v2.md).**
 
