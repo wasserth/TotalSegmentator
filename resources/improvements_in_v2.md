@@ -37,8 +37,12 @@ heart_myocardium, heart_atrium_left, heart_ventricle_left, heart_atrium_right, h
 
 Some of these new classes were available in some preliminary version as additional tasks in v1. Now they are properly added.
 
-The following tasks are freely available only for non-commercial usage (all other tasks can be used commercially for free):
+The following tasks are freely available only for non-commercial usage (all other tasks can also be used commercially):
 `appendicular_bones`, `tissue_types`, `face`, `heartchambers_highres`
+
+
+## Speed improvements
+* when using the option `--roi_subset` first a very low resolution model is run (very fast runtime) to locate the rois you have specified. Then the image is cropped to this region and the full resolution model is run. This can save a lot of runtime and memory especially on CPU. (e.g. in a fully body CT image you are only interested in the left kidney. By using `--roi_subset left_kidney` the runtime on GPU is 5x faster and on CPU 32x faster. Memory consumption is 40% lower.)
 
 
 ## Improvements in training dataset
@@ -80,9 +84,6 @@ Still open problems:
 * example code for converting to nnU-Net format
 * example code for evaluation
 * same subjects as in v1 for training and validation (we did not publish the additional subjects we used for TotalSegmentator v2 training)
-* a few more subjects as in v1 for testing
+* a few more subjects than in v1 for testing
 * NOTE: labels for additional tasks are not included
 
-
-## Speed improvements
-* when using the option `--roi_subset` first a very low resolution model is run (very fast runtime) to locate the rois you have specified. Then the image is cropped to this region and the full resolution model is run. This can save a lot of runtime and memory especially on CPU. (e.g. in a fully body CT image you are only interested in the left kidney. By using `--roi_subset left_kidney` the runtime on GPU is 5x faster and on CPU 32x faster. Memory consumption is 40% lower.)
