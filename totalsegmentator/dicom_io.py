@@ -81,6 +81,11 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
 
     subprocess.call(f"\"{dcm2niix}\" -o {output_path.parent} -z y -f {output_path.name[:-7]} {input_path} {verbose_str}", shell=True)
 
+    if not output_path.exists():
+        print(f"Content of dcm2niix output folder ({output_path.parent}):")
+        print(list(output_path.parent.glob("*")))
+        raise ValueError("dcm2niix failed to convert dicom to nifti.")
+
     nii_files = list(output_path.parent.glob("*.nii.gz"))
 
     if len(nii_files) > 1:
