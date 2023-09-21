@@ -25,3 +25,8 @@ if __name__ == "__main__":
     subprocess.call(f"TotalSegmentator -i {file_in} -o {file_out} --fast --ml -d cpu", shell=True)
     pytest.main(['-v', 'tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast'])
     os.remove(file_out)
+
+    # Test Dicom input
+    totalsegmentator('tests/reference_files/example_ct_dicom', 'tests/unittest_prediction_dicom.nii.gz', fast=True, ml=True, device="cpu")
+    pytest.main(['-v', 'tests/test_end_to_end.py::test_end_to_end::test_prediction_dicom'])
+    os.remove('tests/unittest_prediction_dicom.nii.gz')

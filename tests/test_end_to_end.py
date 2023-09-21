@@ -97,6 +97,12 @@ class test_end_to_end(unittest.TestCase):
     #     stats_equal = np.allclose(stats_ref.values, stats_new.values, rtol=3e-1, atol=3e-1)
     #     self.assertTrue(stats_equal, "radiomics is not correct")
 
+    def test_prediction_dicom(self):
+        img_ref = nib.load("tests/reference_files/example_seg_dicom.nii.gz").get_fdata()
+        img_new = nib.load("tests/unittest_prediction_dicom.nii.gz").get_fdata()
+        images_equal = np.array_equal(img_ref, img_new)
+        self.assertTrue(images_equal, "Dicom prediction not correct")
+
 
 if __name__ == '__main__':
     pytest.main(["-v", "tests/test_end_to_end.py::test_end_to_end::test_prediction_fast"])

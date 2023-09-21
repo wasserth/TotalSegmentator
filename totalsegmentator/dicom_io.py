@@ -24,17 +24,21 @@ def download_dcm2niix():
     print("  Downloading dcm2niix...")
 
     if platform.system() == "Windows":
-        url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_win.zip"
+        # url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_win.zip"
+        url = "https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20230411/dcm2niix_win.zip"
     elif platform.system() == "Darwin":  # Mac
         raise ValueError("For MacOS automatic installation of dcm2niix not possible. Install it manually.")
         # Problem: not zip files
-        # if platform.machine().startswith("arm") or platform.machine().startswith("aarch"):  # arm
-        #     url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/macos_dcm2niix.pkg"
-        # else:  # intel
-        #     # unclear if this is the right link (is the same as for arm)
-        #     url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/macos_dcm2niix.pkg"
+        if platform.machine().startswith("arm") or platform.machine().startswith("aarch"):  # arm
+            # url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/macos_dcm2niix.pkg"
+            url = "https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20230411/dcm2niix_macos.zip"
+        else:  # intel
+            # unclear if this is the right link (is the same as for arm)
+            # url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/macos_dcm2niix.pkg"
+            url = "https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20230411/dcm2niix_macos.zip"
     elif platform.system() == "Linux":
-        url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip"
+        # url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_lnx.zip"
+        url = "https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20230411/dcm2niix_lnx.zip"
     else:
         raise ValueError("Unknown operating system. Can not download the right version of dcm2niix.")
 
