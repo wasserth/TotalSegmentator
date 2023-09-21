@@ -6,7 +6,6 @@ RUN apt-get install ffmpeg libsm6 libxext6 -y
 RUN apt-get install xvfb -y
 
 RUN pip install --upgrade pip
-RUN pip install flask gunicorn
 
 # installing pyradiomics results in an error in github actions
 # RUN pip pyradiomics
