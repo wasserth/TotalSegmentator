@@ -1,5 +1,8 @@
 name: Run basic tests on all OS
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - '**.md'
 jobs:
 
   run-tests:
