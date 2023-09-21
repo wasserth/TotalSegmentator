@@ -27,8 +27,7 @@ def download_dcm2niix():
         # url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/dcm2niix_win.zip"
         url = "https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20230411/dcm2niix_win.zip"
     elif platform.system() == "Darwin":  # Mac
-        raise ValueError("For MacOS automatic installation of dcm2niix not possible. Install it manually.")
-        # Problem: not zip files
+        # raise ValueError("For MacOS automatic installation of dcm2niix not possible. Install it manually.")
         if platform.machine().startswith("arm") or platform.machine().startswith("aarch"):  # arm
             # url = "https://github.com/rordenlab/dcm2niix/releases/latest/download/macos_dcm2niix.pkg"
             url = "https://github.com/rordenlab/dcm2niix/releases/download/v1.0.20230411/dcm2niix_macos.zip"
