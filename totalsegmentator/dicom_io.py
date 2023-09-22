@@ -6,10 +6,11 @@ import zipfile
 from pathlib import Path
 import subprocess
 import platform
-from tqdm import tqdm
 
+from tqdm import tqdm
 import numpy as np
 import nibabel as nib
+import dicom2nifti
 
 from totalsegmentator.config import get_weights_dir
 
@@ -60,8 +61,10 @@ def download_dcm2niix():
         os.remove(config_dir / "dcm2niibatch")
 
 
-def dcm_to_nifti(input_path, output_path, verbose=False):
+def dcm_to_nifti_LEGACY(input_path, output_path, verbose=False):
     """
+    Uses dcm2niix (does not properly work on windows)
+
     input_path: a directory of dicom slices
     output_path: a nifti file path
     """
@@ -106,6 +109,16 @@ def dcm_to_nifti(input_path, output_path, verbose=False):
         # todo: have to rename first file to not contain any counter which is automatically added by dcm2niix
 
     os.remove(str(output_path)[:-7] + ".json")
+
+
+def dcm_to_nifti(input_path, output_path, verbose=False):
+    """
+    Uses dicom2nifti package (also works on windows)
+
+    input_path: a directory of dicom slices
+    output_path: a nifti file path
+    """
+    dicom2nifti.dicom_series_to_nifti(input_path, output_path, reorient_nifti=True)
 
 
 def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output_path):

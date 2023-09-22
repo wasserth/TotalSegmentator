@@ -39,7 +39,8 @@ setup(name='TotalSegmentator',
             # 'nnunet-customized==1.2',
             'nnunetv2==2.2',
             f'requests{requests_version}',
-            'rt_utils'
+            'rt_utils',
+            'dicom2nifti'
         ],
         zip_safe=False,
         classifiers=[
