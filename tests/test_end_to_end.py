@@ -2,6 +2,8 @@ import os
 import unittest
 import pytest
 import json
+import subprocess
+
 import nibabel as nib
 import numpy as np
 import pandas as pd
@@ -67,10 +69,14 @@ class test_end_to_end(unittest.TestCase):
             self.assertTrue(images_equal, f"{roi} prediction not correct")
 
     def test_tissue_types_wo_license(self):
+        result = subprocess.run("TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_no_license.nii.gz -ta tissue_types -d cpu --ml")
+        self.assertEqual(result.returncode, 0, "Command failed with non zero return code.")
         no_output_file = not os.path.exists(f"tests/unittest_no_license.nii.gz")
         self.assertTrue(no_output_file, f"A output file was generated even though no license was set.")
 
     def test_tissue_types_wrong_license(self):
+        result = subprocess.run("TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_wrong_license.nii.gz -ta tissue_types -d cpu --ml -l aca_123456789")
+        self.assertEqual(result.returncode, 0, "Command failed with non zero return code.")
         no_output_file = not os.path.exists(f"tests/unittest_wrong_license.nii.gz")
         self.assertTrue(no_output_file, f"A output file was generated even though the license was wrong.")
 

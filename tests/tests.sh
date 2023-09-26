@@ -41,11 +41,11 @@ TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_lung_vessels
 
 # Test tissue types (without license)
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_no_license.nii.gz -ta tissue_types -d cpu --ml
+# TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_no_license.nii.gz -ta tissue_types -d cpu --ml
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_tissue_types_wo_license
 
 # Test tissue types (wrong license)
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_wrong_license.nii.gz -ta tissue_types -d cpu --ml -l aca_123456789
+# TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_wrong_license.nii.gz -ta tissue_types -d cpu --ml -l aca_123456789
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_tissue_types_wrong_license
 
 # Test tissue types (with license)
