@@ -53,7 +53,7 @@ TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_tissue_types
 
 # Test appendicular bones (with license)
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta tissue_types -d cpu
+TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta appendicular_bones -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_appendicular_bones
 
 # Cleanup generated files and directories
