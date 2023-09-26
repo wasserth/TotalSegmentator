@@ -39,26 +39,11 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 > Note: This is not a medical device and not intended for clinical usage.
 
 
-### Advanced settings
-* `--device`: Choose `cpu` or `gpu`
-* `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm). 
-* `--roi_subset`: Takes a space separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory.
-* `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
-* `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
-* `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
-* `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
- 
-
-### Subtasks
+### More tasks
 
 ![Alt text](resources/imgs/overview_subclasses_2.png)
 
-We added some more models to TotalSegmentator beyond the default one. This allows segmentation of even 
-more classes in more detailed subparts of the image.
-```
-TotalSegmentator -i ct.nii.gz -o segmentations -ta lung_vessels
-```
-Overview of available subtasks and the classes which they contain.
+The default task (`total`) does not contain all available classes. Overview of available tasks and the classes which they contain:
 
 Openly available for any usage:  
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator/tree/add_nnunetv2#class-details) for list of classes)
@@ -77,6 +62,20 @@ Available with a license. Free licenses available for non-commercial usage [here
 * **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
 * **face**: face_region
 
+Usage:
+```
+TotalSegmentator -i ct.nii.gz -o segmentations -ta <task_name>
+```
+
+
+### Advanced settings
+* `--device`: Choose `cpu` or `gpu`
+* `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm). 
+* `--roi_subset`: Takes a space separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory.
+* `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
+* `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
+* `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
+* `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 
 
 ### Run via docker
