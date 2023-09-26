@@ -66,9 +66,24 @@ class test_end_to_end(unittest.TestCase):
             images_equal = np.array_equal(img_ref, img_new)
             self.assertTrue(images_equal, f"{roi} prediction not correct")
 
+    def test_tissue_types_wo_license(self):
+        no_output_file = not os.path.exists(f"tests/unittest_no_license.nii.gz")
+        self.assertTrue(no_output_file, f"A output file was generated even though no license was set.")
+
+    def test_tissue_types_wrong_license(self):
+        no_output_file = not os.path.exists(f"tests/unittest_wrong_license.nii.gz")
+        self.assertTrue(no_output_file, f"A output file was generated even though the license was wrong.")
+
     def test_tissue_types(self):
         for roi in ["subcutaneous_fat", "skeletal_muscle", "torso_fat"]:
             img_ref = nib.load(f"tests/reference_files/example_seg_tissue_types/{roi}.nii.gz").get_fdata()
+            img_new = nib.load(f"tests/unittest_prediction/{roi}.nii.gz").get_fdata()
+            images_equal = np.array_equal(img_ref, img_new)
+            self.assertTrue(images_equal, f"{roi} prediction not correct")
+
+    def test_appendicular_bones(self):
+        for roi in ["patella", "phalanges_hand"]:
+            img_ref = nib.load(f"tests/reference_files/example_seg_appendicular_bones/{roi}.nii.gz").get_fdata()
             img_new = nib.load(f"tests/unittest_prediction/{roi}.nii.gz").get_fdata()
             images_equal = np.array_equal(img_ref, img_new)
             self.assertTrue(images_equal, f"{roi} prediction not correct")
