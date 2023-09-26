@@ -29,6 +29,8 @@ def main():
     setup_totalseg()  # create config file if not exists
     set_license_number(args.license_number)
 
+    print("License has been sucessfully saved.")
+
 
 if __name__ == "__main__":
     main()
