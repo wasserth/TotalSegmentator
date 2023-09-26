@@ -6,6 +6,7 @@ if __name__ == "__main__":
     """
     Download all pretrained weights
     """
-    for task_id in [251, 252, 253, 254, 255, 256]:
+    for task_id in [291, 292, 293, 294, 295, 297, 298, 258, 150, 260, 503,
+                    315, 299, 300, 302, 301, 304, 481, 303]:
         download_pretrained_weights(task_id)
         sleep(5)

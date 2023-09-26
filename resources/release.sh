@@ -2,7 +2,9 @@
 set -e  # Exit on error
 
 # Info: Have to run from within the resources directory otherwise pathes incorrect
-
+# 
+# use nnunetv2 env
+# 
 # Usage: ./release.sh -> will ask for new version number
 
 # go to root of package
@@ -21,23 +23,24 @@ update_version() {
 }
 
 # Step 1: Update version in setup.py
-update_version
+# update_version
 
 # Step 2: Commit the version update and tag it
-git add setup.py
-git commit -m "Bump version to ${new_version}"
-git tag "v${new_version}"
+# git add setup.py
+# git commit -m "Bump version to ${new_version}"
+# git tag "v${new_version}"
 
 # Step 3: Push commits and tags to GitHub
-git push origin master
-git push origin "v${new_version}"
+# git push origin master
+# git push origin "v${new_version}"
 
 # Step 4: Publish the package to PyPI
-python setup.py sdist bdist_wheel
-twine upload --skip-existing dist/*
+# python setup.py sdist bdist_wheel
+# twine upload --skip-existing dist/*
 
 # Step 5: Build and Push Docker Image
-docker build -t wasserth/TotalSegmentator:${new_version} .
-docker push wasserth/TotalSegmentator:${new_version}
+read -p "Enter new version: " new_version
+docker build -t wasserth/totalsegmentator:${new_version} .
+docker push wasserth/totalsegmentator:${new_version}
 
 echo "Release process completed."

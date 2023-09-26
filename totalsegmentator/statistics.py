@@ -63,16 +63,31 @@ def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:
         json.dump(stats, f, indent=4)
 
 
-def is_in_first_or_last_slice(mask):
+# def is_in_first_or_last_slice(mask):
+#     """
+#     Check if a mask is in the first or last slice of the image.
+#     Then we do not calc any statistics for it because the mask
+#     is incomplete.
+#     """
+#     # in first or last slice segmentation of bad. Therefore they one slice before and after.
+#     first_slice = mask[:, :, 1]
+#     last_slice = mask[:, :, -2]
+#     return (first_slice.sum() > 0) or (last_slice.sum() > 0)
+
+
+def touches_border(mask):
     """
-    Check if a mask is in the first or last slice of the image.
-    Then we do not calc any statistics for it because the mask
+    Check if mask touches any of the borders. Then we do not calc any statistics for it because the mask
     is incomplete.
+    Do not check last slice by one previous, because segmentation on last slice often bad.
     """
-    # in first or last slice segmentation of bad. Therefore they one slice before and after.
-    first_slice = mask[:, :, 1]
-    last_slice = mask[:, :, -2]
-    return (first_slice.sum() > 0) or (last_slice.sum() > 0)
+    if np.any(mask[1, :, :]) or np.any(mask[-2, :, :]):
+        return True
+    if np.any(mask[:, 1, :]) or np.any(mask[:, -2, :]):
+        return True
+    if np.any(mask[:, :, 1]) or np.any(mask[:, :, -2]):
+        return True
+    return False
 
 
 def get_basic_statistics(seg: np.array, ct_file, file_out: Path, quiet: bool = False,
@@ -89,7 +104,8 @@ def get_basic_statistics(seg: np.array, ct_file, file_out: Path, quiet: bool = F
         stats[mask_name] = {}
         # data = nib.load(mask).get_fdata()  # loading: 0.6s
         data = seg == k  # 0.18s
-        if is_in_first_or_last_slice(data) and exclude_masks_at_border:
+        if touches_border(data) and exclude_masks_at_border:
+            # print(f"WARNING: {mask_name} touches border. Skipping.")
             stats[mask_name]["volume"] = 0.0
             stats[mask_name]["intensity"] = 0.0
         else:
