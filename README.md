@@ -12,16 +12,14 @@ If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.
 
 ### Installation
 
-TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU (on CPU it is slow).
+TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU.
 
 Install dependencies:  
 * Python >= 3.7
 * [Pytorch](http://pytorch.org/) >= 1.12.1
 
 Optionally:
-* if you input DICOM images and run on MacOS you have to install [dcm2niix](https://github.com/rordenlab/dcm2niix)
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
-* for faster resampling you can use `cucim` (`pip install cupy-cuda11x cucim`)
 
 
 Install Totalsegmentator
@@ -37,8 +35,6 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 > Note: A Nifti file or a folder with all DICOM slices of one patient is allowed as input
 
 > Note: If you run on CPU use the option `--fast` or `--roi_subset` to greatly improve runtime.
-
-> Note: You can also try it online: [www.totalsegmentator.com](https://totalsegmentator.com/)
 
 > Note: This is not a medical device and not intended for clinical usage.
 
@@ -107,14 +103,11 @@ If you want to reduce memory consumption you can use the following options:
 
 ### Train / validation / test split
 The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.  
-The exact numbers of the results for the high resolution model (1.5mm) can be found [here](resources/results_all_classes.json). The paper shows these numbers in the supplementary materials figure 11. 
-To aggregate results across subjects and classes the following approach was taken: For each class in each subject calculate the (Dice) score, then take the average of all scores (micro averaging). If a class is not present on an image (e.g. the brain is not present on images of the legs) then exclude this value from the calculation.
-
-> Note: The model was trained on unblurred images. The published training dataset, however, has blurred faces for data privacy reasons. Therefore, models trained on the public dataset cannot be directly compared to our pretrained model. In the future we plan to provide a version of our model which was trained on the public blurred dataset so people can compare to this as a baseline. 
+The exact numbers of the results for the high resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials figure 11. 
 
 
-### Retrain model on your own
-See [here](resources/train_nnunet.md) for more infos.
+### Retrain model and run evaluation
+See [here](resources/train_nnunet.md) for more infos how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set like in our paper and how to run the same evaluation as in our paper.
 
 
 ### Other commands
@@ -123,9 +116,9 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
-Normally weights are automatically downloaded when running TotalSegmentator. If you want to manually download the weights (download links see [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/libs.py#L75)) and copy them into the right directory so TotalSegmentator can find them use this:
+Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an etxra command (e.g. when building a docker container) use this: 
 ```
-totalseg_import_weights -i my_downloaded_weights.zip
+totalseg_download_weights -t <task_name>
 ```
 
 After acquiring a license number for the non-open tasks you can set it with the following command:
