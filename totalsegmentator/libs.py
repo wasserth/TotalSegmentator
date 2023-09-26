@@ -80,7 +80,7 @@ def download_model_with_license_and_unpack(task_name, config_dir):
         else:
             if r.json()['status'] == "invalid_license":
                 print(f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support.")
-                sys.exit(1)
+                sys.exit(0)
             
     except Exception as e:
         raise e

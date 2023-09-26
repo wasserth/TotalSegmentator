@@ -75,7 +75,7 @@ def setup_totalseg(totalseg_id=None):
 def set_license_number(license_number):
     if not is_valid_license(license_number):
         print("ERROR: Invalid license number. Please check your license number or contact support.")
-        sys.exit(1)
+        sys.exit(0)
 
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"

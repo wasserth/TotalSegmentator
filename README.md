@@ -39,11 +39,11 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 > Note: This is not a medical device and not intended for clinical usage.
 
 
-### More tasks
+### Subtasks
 
 ![Alt text](resources/imgs/overview_subclasses_2.png)
 
-The default task (`total`) does not contain all available classes. Overview of available tasks and the classes which they contain:
+The default task (`total`) does not contain all available classes. Overview of available subtasks and the classes which they contain:
 
 Openly available for any usage:  
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator/tree/add_nnunetv2#class-details) for list of classes)
