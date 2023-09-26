@@ -131,7 +131,7 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
-                     plans="nnUNetPlans", device="cuda"):
+                     plans="nnUNetPlans", device="cuda", quiet=False):
     """
     Identical to bash function nnUNetv2_predict
 
@@ -170,6 +170,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     prev_stage_predictions = None
     num_parts = 1
     part_id = 0
+    allow_tqdm = not quiet
 
     # predict_from_raw_data(dir_in,
     #                       dir_out,
@@ -199,7 +200,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         device=device,
         verbose=verbose,
         verbose_preprocessing=verbose,
-        allow_tqdm=True
+        allow_tqdm=allow_tqdm
     )
     predictor.initialize_from_trained_model_folder(
         model_folder,
@@ -368,7 +369,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                         # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
                         #                nr_threads_resampling, nr_threads_saving)
                         nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                                         nr_threads_resampling, nr_threads_saving, device=device)
+                                         nr_threads_resampling, nr_threads_saving, device=device, quiet=quiet)
                     # iterate over models (different sets of classes)
                     for img_part in img_parts:
                         (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
@@ -388,7 +389,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                     #                nr_threads_resampling, nr_threads_saving)
                     nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                                     nr_threads_resampling, nr_threads_saving, device=device)
+                                     nr_threads_resampling, nr_threads_saving, device=device, quiet=quiet)
             # elif test == 2:
             #     print("WARNING: Using reference seg instead of prediction for testing.")
             #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
