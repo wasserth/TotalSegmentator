@@ -43,7 +43,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 
 ![Alt text](resources/imgs/overview_subclasses_2.png)
 
-The default task (`total`) does not contain all available classes. Overview of available subtasks and the classes which they contain:
+Next to the default task (`total`) there are more subtasks with more classes:
 
 Openly available for any usage:  
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator/tree/add_nnunetv2#class-details) for list of classes)
@@ -56,7 +56,7 @@ Openly available for any usage:
 
 *: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
-Available with a license. Free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch. 
+Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch): 
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
