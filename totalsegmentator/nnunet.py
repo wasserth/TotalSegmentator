@@ -28,7 +28,7 @@ from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_tas
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
-from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical
+from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical, reorder_multilabel_like_v1
 from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
@@ -234,7 +234,8 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti", 
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
-                         device="cuda", exclude_masks_at_border=True, no_derived_masks=False):
+                         device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
+                         v1_order=False):
     """
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
@@ -498,9 +499,13 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 else:
                     file_out.mkdir(exist_ok=True, parents=True)
                 if multilabel_image:
-                    # nib.save(nib.Nifti1Image(img_data, img_pred.affine, new_header), file_out)  # recreate nifti image to ensure uint8 dtype
+                    if v1_order and task_name == "total":
+                        img_data = reorder_multilabel_like_v1(img_data, class_map["total"], class_map["total_v1"])
+                        label_map = class_map["total_v1"]
+                    else:
+                        label_map = class_map[task_name]
                     img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
-                    save_multilabel_nifti(img_out, file_out, class_map[task_name])
+                    save_multilabel_nifti(img_out, file_out, label_map)
                     if nora_tag != "None":
                         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
                 else:  # save each class as a separate binary image

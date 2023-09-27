@@ -388,3 +388,15 @@ def check_if_shape_and_affine_identical(img_1, img_2):
         print(img_2.shape)
         print("WARNING: Output shape not equal to input shape. This should not happen.")
 
+
+def reorder_multilabel_like_v1(data, label_map_v2, label_map_v1):
+    """
+    Reorder a multilabel image from v2 to v1
+    """
+    label_map_v2_inv = {v: k for k, v in label_map_v2.items()}
+    data_out = np.zeros(data.shape, dtype=np.uint8)
+    for label_id, label_name in label_map_v1.items():
+        if label_name in label_map_v2_inv:
+            data_out[data == label_map_v2_inv[label_name]] = label_id
+        # heart chambers are not in v2 anymore. The results seg will be empty for these classes
+    return data_out

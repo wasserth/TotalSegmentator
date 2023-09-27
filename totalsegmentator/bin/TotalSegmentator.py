@@ -94,6 +94,10 @@ def main():
                         help="Do not create derived masks (e.g. skin from body mask).",
                         default=False)
 
+    parser.add_argument("-v1o", "--v1_order", action="store_true", 
+                        help="In multilabel file order classes as in v1. New v2 classes will be removed.",
+                        default=False)
+
     # "mps" is for apple silicon; but does not support 3D Conv at the moment. Therefore do not allow here.
     # https://github.com/pytorch/pytorch/issues/77818
     parser.add_argument("-d", "--device", choices=["gpu", "cpu"],
@@ -127,7 +131,7 @@ def main():
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
                      args.device, args.license_number, not args.stats_include_incomplete,
-                     args.no_derived_masks)
+                     args.no_derived_masks, args.v1_order)
 
 
 if __name__ == "__main__":

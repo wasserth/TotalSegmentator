@@ -43,7 +43,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
                      skip_saving=False, device="gpu", license_number=None,
-                     statistics_exclude_masks_at_border=True, no_derived_masks=False):
+                     statistics_exclude_masks_at_border=True, no_derived_masks=False,
+                     v1_order=False):
     """
     Run TotalSegmentator from within python. 
 
@@ -297,7 +298,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                          output_type=output_type, statistics=statistics_fast, 
                          quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
                          exclude_masks_at_border=statistics_exclude_masks_at_border,
-                         no_derived_masks=no_derived_masks)
+                         no_derived_masks=no_derived_masks, v1_order=v1_order)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     config = increase_prediction_counter()

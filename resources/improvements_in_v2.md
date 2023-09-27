@@ -2,7 +2,8 @@
 
 
 ## Breaking changes from v1 to v2
-The order of the classes has changed in the multilabel output file. If you use the option `--ml` checkout the new order [here](https://github.com/wasserth/TotalSegmentator#class-details). Everything else should be identical.
+The order of the classes has changed in the multilabel output file. If you use the option `--ml` checkout the new order [here](https://github.com/wasserth/TotalSegmentator#class-details). You can use the option `--v1_order` to use the old order from v1. However, the results will not contain the new v2 classes then. The resulting segmentations will also be slightly different from v1, because all models have been retrained. The heart chambers and the face will also be empty since those moved to the subtasks `heartchambers_highres` and `face`.
+Everything else should be identical.
 
 
 ## New classes (n=33)
