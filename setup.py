@@ -12,7 +12,7 @@ else:
 
 
 setup(name='TotalSegmentator',
-        version='2.0.0',
+        version='2.0.1',
         description='Robust segmentation of 104 classes in CT images.',
         long_description="See Readme.md on github for more details.",
         url='https://github.com/wasserth/TotalSegmentator',
