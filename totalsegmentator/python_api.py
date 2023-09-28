@@ -99,7 +99,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         trainer = "nnUNetTrainer"
         crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                 "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        if ml: raise ValueError("task lung_vessels does not work with option --ml, because of postprocessing.")
+        # if ml: raise ValueError("task lung_vessels does not work with option --ml, because of postprocessing.")
         if fast: raise ValueError("task lung_vessels does not work with option --fast")
         model = "3d_fullres"
         folds = [0]
@@ -154,7 +154,6 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
             crop = None
             model = "3d_fullres"
             folds = [0]
-        if ml: raise ValueError("task body does not work with option --ml, because of postprocessing.")
     elif task == "pleural_pericard_effusion":
         task_id = 315
         resample = None

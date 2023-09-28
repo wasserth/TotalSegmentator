@@ -557,7 +557,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             #     remove_outside_of_mask(file_out / "aorta.nii.gz", file_out / "heart.nii.gz", addon=5)
             #     remove_outside_of_mask(file_out / "pulmonary_artery.nii.gz", file_out / "heart.nii.gz", addon=5)
 
-            if task_name == "body" and not no_derived_masks:
+            if task_name == "body" and not multilabel_image and not no_derived_masks:
                 if not quiet: print("Creating body.nii.gz")
                 body_img = combine_masks(file_out, "body")
                 nib.save(body_img, file_out / "body.nii.gz")
