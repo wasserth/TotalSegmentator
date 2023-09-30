@@ -15,7 +15,7 @@ If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.
 TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU.
 
 Install dependencies:  
-* Python >= 3.7
+* Python >= 3.9
 * [Pytorch](http://pytorch.org/) >= 1.12.1
 
 Optionally:
