@@ -249,8 +249,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         raise ValueError("roi_subset only works with task 'total'")
 
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
-    if crop is not None or \
-       (roi_subset is not None and len(roi_subset) < 10):
+    if crop is not None or roi_subset is not None:
         
         body_seg = False  # can not be used together with body_seg
         download_pretrained_weights(298)
