@@ -91,6 +91,7 @@ can install it with the following command:
 ```
 pip install TotalSegmentator==1.5.6
 ```
+The documentation for v1 can be found [here](https://github.com/wasserth/TotalSegmentator/tree/v1.5.6).
 Our Radiology AI publication refers to TotalSegmentator v1. 
 
 
