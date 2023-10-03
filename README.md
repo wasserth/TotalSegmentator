@@ -85,6 +85,15 @@ docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/
 ```
 
 
+### Running v1
+If you want to keep on using TotalSegmentator v1 (e.g. because you do not want to change your pipeline) you 
+can install it with the following command:
+```
+pip install TotalSegmentator==1.5.6
+```
+Our Radiology AI publication refers to TotalSegmentator v1. 
+
+
 ### Resource Requirements
 Totalsegmentator has the following runtime and memory requirements (using a Nvidia RTX 3090 GPU):  
 (1.5mm is the normal model and 3mm is the `--fast` model. With v2 the runtimes have increased a bit since
