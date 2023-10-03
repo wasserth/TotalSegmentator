@@ -565,4 +565,4 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")
 
-    return nib.Nifti1Image(img_data, img_pred.affine)
+    return nib.Nifti1Image(img_data, img_pred.affine), img_in_orig

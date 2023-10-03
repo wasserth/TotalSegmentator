@@ -230,6 +230,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     crop_path = output if crop_path is None else crop_path
 
+    img_type = "nifti" if str(input).endswith(".nii") or str(input).endswith(".nii.gz") else "dicom"
+
     # fast statistics are calculated on the downsampled image
     if statistics and fast:
         statistics_fast = True  
@@ -255,7 +257,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         download_pretrained_weights(298)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
-        organ_seg = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
+        organ_seg, _ = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
@@ -278,7 +280,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         download_pretrained_weights(300)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
-        body_seg = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
+        body_seg, _ = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
@@ -288,7 +290,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
     folds = [0]  # None
-    seg_img = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
+    seg_img, ct_img = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
                          trainer=trainer, tta=False, multilabel_image=ml, resample=resample,
                          crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview, 
                          nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
@@ -308,13 +310,15 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if not quiet: print("Calculating statistics...")
         st = time.time()
         stats_dir = output.parent if ml else output
-        get_basic_statistics(seg, input, stats_dir / "statistics.json", quiet, task, statistics_exclude_masks_at_border)
+        get_basic_statistics(seg, ct_img, stats_dir / "statistics.json", quiet, task, statistics_exclude_masks_at_border)
         # get_radiomics_features_for_entire_dir(input, output, output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
     if radiomics:
         if ml:
             raise ValueError("Radiomics not supported for multilabel segmentation. Use without --ml option.")
+        if img_type == "dicom":
+            raise ValueError("Radiomics not supported for DICOM input. Use nifti input.")
         if not quiet: print("Calculating radiomics...")  
         st = time.time()
         stats_dir = output.parent if ml else output

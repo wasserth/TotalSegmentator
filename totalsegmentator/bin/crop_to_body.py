@@ -62,7 +62,7 @@ def main():
 
     st = time.time()
     if not quiet: print("Generating rough body segmentation...")
-    body_seg = nnUNet_predict_image(args.input, None, 300, model="3d_fullres", folds=[0],
+    body_seg, _ = nnUNet_predict_image(args.input, None, 300, model="3d_fullres", folds=[0],
                         trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
                         crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
                         save_binary=False, nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=1, 
