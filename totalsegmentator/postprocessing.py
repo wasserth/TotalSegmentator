@@ -147,7 +147,7 @@ def extract_skin(ct_img, body_img):
 def remove_auxiliary_labels(img, task_name):
     task_name_aux = task_name + "_auxiliary"
     if task_name_aux in class_map:
-        class_map_aux = class_map[task_name]
+        class_map_aux = class_map[task_name_aux]
         data = img.get_fdata()
         # remove auxiliary labels
         for idx in class_map_aux.keys():

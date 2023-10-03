@@ -1,6 +1,6 @@
 ## Master
-*
-
+* allow more than 10 classes in `--roi_subset`
+* bugfix in `appendicular_bones` auxiliary mapping
 
 ## Release 2.0.1
 * add option `--v1_order` to use the old class order from v1
