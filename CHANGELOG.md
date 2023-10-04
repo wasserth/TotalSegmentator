@@ -1,6 +1,13 @@
 ## Master
+* 
+
+
+## Release 2.0.2
 * allow more than 10 classes in `--roi_subset`
 * bugfix in `appendicular_bones` auxiliary mapping
+* in multilable output only show classes selected in `--roi_subset` if selected
+* make statistics work with dicom input
+
 
 ## Release 2.0.1
 * add option `--v1_order` to use the old class order from v1
