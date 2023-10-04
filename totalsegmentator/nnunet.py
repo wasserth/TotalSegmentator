@@ -501,11 +501,13 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 if multilabel_image:
                     if v1_order and task_name == "total":
                         img_data = reorder_multilabel_like_v1(img_data, class_map["total"], class_map["total_v1"])
-                        label_map = class_map["total_v1"]
-                    else:
-                        label_map = class_map[task_name]
+                        selected_classes = class_map["total_v1"]
+                        if roi_subset is not None:
+                            selected_classes = {k:v for k, v in selected_classes.items() if v in roi_subset}
+                    # Keep only voxel values corresponding to the roi_subset
+                    img_data *= np.isin(img_data, list(selected_classes.keys()))
                     img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
-                    save_multilabel_nifti(img_out, file_out, label_map)
+                    save_multilabel_nifti(img_out, file_out, selected_classes)
                     if nora_tag != "None":
                         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
                 else:  # save each class as a separate binary image
