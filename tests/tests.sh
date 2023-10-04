@@ -12,7 +12,7 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
 # 2 cpus:
 #   example_ct_sm.nii.gz: 34s, 3.0GB
 #   example_ct.nii.gz: 36s, 3.0GB
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_roi_subset -rs liver brain -d cpu
+TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_roi_subset.nii.gz --ml -rs liver brain -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_liver_roi_subset
 
 # Test organ predictions - fast - statistics
