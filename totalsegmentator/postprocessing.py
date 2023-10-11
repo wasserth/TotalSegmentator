@@ -157,3 +157,4 @@ def remove_auxiliary_labels(img, task_name):
         return nib.Nifti1Image(data.astype(np.uint8), img.affine)
     else:
         return img
+
