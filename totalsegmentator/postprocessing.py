@@ -11,15 +11,17 @@ from totalsegmentator.map_to_binary import class_map
 
 
 def keep_largest_blob(data, debug=False):
-    blob_map, _ = ndimage.label(data)
-    counts = list(np.bincount(blob_map.flatten()))  # number of pixels in each blob
-    if len(counts) <= 1: return data  # no foreground
-    if debug: print(f"size of second largest blob: {sorted(counts)[-2]}")
-    key_second = counts.index(sorted(counts)[-2])
-    return (blob_map == key_second).astype(np.uint8)
+    blob_map, nr_of_blobs = ndimage.label(data)
+    # Get number of pixels in each blob
+    # counts = list(np.bincount(blob_map.flatten()))  # this will also count background -> bug
+    counts = [np.sum(blob_map == i) for i in range(1, nr_of_blobs + 1)]  # this will not count background
+    if len(counts) == 0: return data  # no foreground
+    largest_blob_label = np.argmax(counts) + 1  # +1 because labels start from 1
+    if debug: print(f"size of largest blob: {np.max(counts)}")
+    return (blob_map == largest_blob_label).astype(np.uint8)
 
 
-def keep_largest_blob_multilabel(data, class_map, rois):
+def keep_largest_blob_multilabel(data, class_map, rois, debug=False):
     """
     Keep the largest blob for the classes defined in rois.
 
@@ -34,7 +36,7 @@ def keep_largest_blob_multilabel(data, class_map, rois):
     for roi in tqdm(rois):
         idx = class_map_inv[roi]
         data_roi = data == idx
-        cleaned_roi = keep_largest_blob(data_roi) > 0.5
+        cleaned_roi = keep_largest_blob(data_roi, debug) > 0.5
         data[data_roi] = 0   # Clear the original ROI in data
         data[cleaned_roi] = idx   # Write back the cleaned ROI into data
     # print(f"  keep_largest_blob_multilabel took {time.time() - st:.2f}s")

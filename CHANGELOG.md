@@ -1,5 +1,5 @@
 ## Master
-* 
+* fix critical bug in `body` task postprocessing: sometimes all foreground removed
 
 
 ## Release 2.0.2

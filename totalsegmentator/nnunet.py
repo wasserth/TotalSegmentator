@@ -415,7 +415,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         # Postprocessing multilabel (run here on lower resolution)
         if task_name == "body":
             img_pred_pp = keep_largest_blob_multilabel(img_pred.get_fdata().astype(np.uint8),
-                                                       class_map[task_name], ["body_trunc"])
+                                                       class_map[task_name], ["body_trunc"], debug=False)
             img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
 
         if task_name == "body":
@@ -423,7 +423,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             size_thr_mm3 = 50000 / vox_vol
             img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
                                                         class_map[task_name], ["body_extremities"],
-                                                        interval=[size_thr_mm3, 1e10])
+                                                        interval=[size_thr_mm3, 1e10], debug=False)
             img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
 
         if preview:
