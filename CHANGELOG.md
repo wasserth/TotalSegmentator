@@ -1,5 +1,8 @@
 ## Master
 
+## Release 1.5.7
+* download all weights from github releases
+
 
 ## Release 1.5.6
 * remove verbose print outs not needed
