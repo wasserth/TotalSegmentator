@@ -89,9 +89,9 @@ docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/
 If you want to keep on using TotalSegmentator v1 (e.g. because you do not want to change your pipeline) you 
 can install it with the following command:
 ```
-pip install TotalSegmentator==1.5.6
+pip install TotalSegmentator==1.5.7
 ```
-The documentation for v1 can be found [here](https://github.com/wasserth/TotalSegmentator/tree/v1.5.6).
+The documentation for v1 can be found [here](https://github.com/wasserth/TotalSegmentator/tree/v1.5.7). Bugfixes for v1 are developed in the branch `v1_bugfixes`.
 Our Radiology AI publication refers to TotalSegmentator v1. 
 
 

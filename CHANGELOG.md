@@ -1,5 +1,8 @@
 ## Master
 
+## LEGACY BUGFIX Release 1.5.7
+* download all weights from github releases instead of zenodo
+
 
 ## Release 2.0.3
 * fix critical bug in `body` task postprocessing: sometimes all foreground removed
