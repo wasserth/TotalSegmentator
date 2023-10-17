@@ -1,7 +1,7 @@
 ## Master
 
 ## Release 1.5.7
-* download all weights from github releases
+* download all weights from github releases instead of zenodo
 
 
 ## Release 1.5.6
