@@ -158,7 +158,10 @@ def download_pretrained_weights(task_id):
         "nnUNet/3d_fullres/Task008_HepaticVessel",
         "nnUNet/3d_fullres/Task417_heart_mixed_317subj",
         "nnUNet/3d_fullres/Task278_TotalSegmentator_part6_bones_1259subj",
-        "nnUNet/3d_fullres/Task435_Heart_vessels_118subj"
+        "nnUNet/3d_fullres/Task435_Heart_vessels_118subj",
+        "Dataset297_TotalSegmentator_total_3mm_1559subj",  # for >= v2.0.4
+        # "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",  # for >= v2.0.5
+        # "Dataset298_TotalSegmentator_total_6mm_1559subj",  # for >= v2.0.5
     ]
 
     # url = "http://backend.totalsegmentator.com"
@@ -193,12 +196,14 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj"
         # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"
-        # WEIGHTS_URL = url + "/v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.4-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_TMP_FIX.zip"
+        # WEIGHTS_URL = url + "/v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"  # v200
+        WEIGHTS_URL = url + "/v2.0.4-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v204.zip"
+        # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v205.zip"
     elif task_id == 298:
         weights_path = config_dir / "Dataset298_TotalSegmentator_total_6mm_1559subj"
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
         WEIGHTS_URL = url + "/v2.0.0-weights/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
+        # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset298_TotalSegmentator_total_6mm_1559subj_v205.zip"
     elif task_id == 299:
         weights_path = config_dir / "Dataset299_body_1559subj"
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset299_body_1559subj.zip"
