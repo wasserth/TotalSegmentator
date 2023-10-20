@@ -125,7 +125,7 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
-Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an etxra command (e.g. when building a docker container) use this: 
+Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this: 
 ```
 totalseg_download_weights -t <task_name>
 ```
