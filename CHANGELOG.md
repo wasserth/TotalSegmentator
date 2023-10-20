@@ -1,6 +1,10 @@
 ## Master
 
 
+## Release 2.0.5
+* downgrade nnunet to 2.1 to fix bug in `fast` model
+
+
 ## Release 2.0.4
 * temporary fix of critical bug in `fast` model. Proper fix in next release.
 
