@@ -193,7 +193,7 @@ def download_pretrained_weights(task_id):
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
         WEIGHTS_URL = url + "/v2.0.0-weights/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
     elif task_id == 297:
-        weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj"
+        weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj_v204"
         # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"
         # WEIGHTS_URL = url + "/v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"  # v200
