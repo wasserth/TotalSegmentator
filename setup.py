@@ -31,7 +31,7 @@ setup(name='TotalSegmentator',
             'p_tqdm',
             'xvfbwrapper',
             'fury',
-            'nnunetv2==2.2',
+            'nnunetv2==2.1',
             f'requests{requests_version}',
             'rt_utils',
             'dicom2nifti'

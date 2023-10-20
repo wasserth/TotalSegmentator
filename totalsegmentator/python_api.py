@@ -82,9 +82,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if fast:
             task_id = 297
             resample = 3.0
-            # todo: change back to 4000 epochs in next release
-            # trainer = "nnUNetTrainer_4000epochs_NoMirroring"
-            trainer = "nnUNetTrainerNoMirroring"
+            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
+            # trainer = "nnUNetTrainerNoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
         else:

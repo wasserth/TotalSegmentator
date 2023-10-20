@@ -159,8 +159,8 @@ def download_pretrained_weights(task_id):
         "nnUNet/3d_fullres/Task417_heart_mixed_317subj",
         "nnUNet/3d_fullres/Task278_TotalSegmentator_part6_bones_1259subj",
         "nnUNet/3d_fullres/Task435_Heart_vessels_118subj",
-        "Dataset297_TotalSegmentator_total_3mm_1559subj",  # for >= v2.0.4
-        # "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",  # for >= v2.0.5
+        # "Dataset297_TotalSegmentator_total_3mm_1559subj",  # for >= v2.0.4
+        "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",  # for >= v2.0.5
         # "Dataset298_TotalSegmentator_total_6mm_1559subj",  # for >= v2.0.5
     ]
 
@@ -193,11 +193,12 @@ def download_pretrained_weights(task_id):
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
         WEIGHTS_URL = url + "/v2.0.0-weights/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
     elif task_id == 297:
-        weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj_v204"
+        weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj"
+        # weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj_v204"
         # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"
-        # WEIGHTS_URL = url + "/v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"  # v200
-        WEIGHTS_URL = url + "/v2.0.4-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v204.zip"
+        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"  # v200
+        # WEIGHTS_URL = url + "/v2.0.4-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v204.zip"
         # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v205.zip"
     elif task_id == 298:
         weights_path = config_dir / "Dataset298_TotalSegmentator_total_6mm_1559subj"
