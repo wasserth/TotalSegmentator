@@ -106,7 +106,7 @@ def is_valid_license(license_number):
     try:
         url = f"http://backend.totalsegmentator.com:80/"
         r = requests.post(url + "is_valid_license_number",
-                          json={"license_number": license_number}, timeout=2)
+                          json={"license_number": license_number}, timeout=5)
         if r.ok:
             return r.json()['status'] == "valid_license"
         else:
@@ -226,7 +226,7 @@ def send_usage_stats(config, params):
                                     "python_version": sys.version,
                                     "cuda_available": torch.cuda.is_available(),
                                     "license_number": license_number
-                                    }, timeout=2)
+                                    }, timeout=5)
             # if r.ok:
             #     print(f"status: {r.json()['status']}")
             # else:
