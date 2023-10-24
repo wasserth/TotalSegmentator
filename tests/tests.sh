@@ -1,5 +1,3 @@
-set -e
-
 # To run these tests simply do 
 # ./tests.sh <license_key>
 
