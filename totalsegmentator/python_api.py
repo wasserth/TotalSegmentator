@@ -29,13 +29,13 @@ def show_license_info():
 
               For commercial usage contact: jakob.wasserthal@usb.ch
               """))
-        sys.exit(0)
+        sys.exit(1)
     elif status == "invalid_license":
         print(message)
-        sys.exit(0)
+        sys.exit(1)
     elif status == "missing_config_file":
         print(message)
-        sys.exit(0)
+        sys.exit(1)
 
 
 def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
