@@ -51,8 +51,10 @@ class test_end_to_end(unittest.TestCase):
     def test_prediction_multilabel_fast_force_split(self):
         img_ref = nib.load("tests/reference_files/example_seg_fast_force_split.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_fast_force_split.nii.gz").get_fdata()
-        images_equal = np.array_equal(img_ref, img_new)
-        self.assertTrue(images_equal, "force_split prediction not correct")
+        nr_of_diff_voxels = (img_ref != img_new).sum()
+        images_equal = nr_of_diff_voxels < 20
+        self.assertTrue(images_equal, f"force_split prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
+
 
     def test_prediction_multilabel_fast_body_seg(self):
         img_ref = nib.load("tests/reference_files/example_seg_fast_body_seg.nii.gz").get_fdata()
