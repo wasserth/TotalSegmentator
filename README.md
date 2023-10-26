@@ -116,7 +116,7 @@ The exact numbers of the results for the high resolution model (1.5mm) can be fo
 
 
 ### Retrain model and run evaluation
-See [here](resources/train_nnunet.md) for more infos how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set like in our paper and how to run the same evaluation as in our paper.
+See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set like in our paper and how to run the same evaluation as in our paper.
 
 
 ### Other commands
