@@ -12,7 +12,7 @@ If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.
 
 ### Installation
 
-TotalSegmentator works on Ubuntu, Mac and Windows and on CPU and GPU.
+TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU and GPU.
 
 Install dependencies:  
 * Python >= 3.9
@@ -36,7 +36,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 
 > Note: If you run on CPU use the option `--fast` or `--roi_subset` to greatly improve runtime.
 
-> Note: This is not a medical device and not intended for clinical usage.
+> Note: This is not a medical device and is not intended for clinical usage.
 
 
 ### Subtasks
@@ -71,11 +71,11 @@ TotalSegmentator -i ct.nii.gz -o segmentations -ta <task_name>
 ### Advanced settings
 * `--device`: Choose `cpu` or `gpu`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm). 
-* `--roi_subset`: Takes a space separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory.
+* `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory.
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
-* `--radiomics`: This will generate a file `statistics_radiomics.json` with radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
+* `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 
 
 ### Run via docker
@@ -96,27 +96,27 @@ Our Radiology AI publication refers to TotalSegmentator v1.
 
 
 ### Resource Requirements
-Totalsegmentator has the following runtime and memory requirements (using a Nvidia RTX 3090 GPU):  
+Totalsegmentator has the following runtime and memory requirements (using an Nvidia RTX 3090 GPU):  
 (1.5mm is the normal model and 3mm is the `--fast` model. With v2 the runtimes have increased a bit since
 we added more classes.)
 
 ![Alt text](resources/imgs/runtime_table.png)
 
 If you want to reduce memory consumption you can use the following options:
-* `--fast`: This will use a lower resolution model
+* `--fast`: This will use a lower-resolution model
 * `--body_seg`: This will crop the image to the body region before processing it
 * `--roi_subset <list of classes>`: This will only predict a subset of classes
 * `--force_split`: This will split the image into 3 parts and process them one after another
 * `--nr_thr_saving 1`: Saving big images with several threads will take a lot of memory
 
 
-### Train / validation / test split
+### Train/validation/test split
 The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.  
-The exact numbers of the results for the high resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials figure 11. 
+The exact numbers of the results for the high-resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials Figure 11. 
 
 
 ### Retrain model and run evaluation
-See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set like in our paper and how to run the same evaluation as in our paper.
+See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set as in our paper, and how to run the same evaluation as in our paper.
 
 
 ### Other commands
@@ -136,7 +136,7 @@ totalseg_set_license -l aca_12345678910
 ```
 
 ### Python API
-You can run totalsegmentator via python:
+You can run totalsegmentator via Python:
 ```python
 from totalsegmentator.python_api import totalsegmentator
 
@@ -154,7 +154,7 @@ pip install git+https://github.com/wasserth/TotalSegmentator.git
 ### Typical problems
 When you get the following error message
 ```
-ITK ERROR: ITK only supports orthonormal direction cosines. No orthonormal definition found!
+ITK ERROR: ITK only supports orthonormal direction cosines. No orthonormal definition was found!
 ```
 you should do
 ```
@@ -173,14 +173,14 @@ If you use this tool please cite it as follows
 Wasserthal, J., Breit, H.-C., Meyer, M.T., Pradella, M., Hinck, D., Sauter, A.W., Heye, T., Boll, D., Cyriac, J., Yang, S., Bach, M., Segeroth, M., 2023. TotalSegmentator: Robust Segmentation of 104 Anatomic Structures in CT Images. Radiology: Artificial Intelligence. https://doi.org/10.1148/ryai.230024
 ```
 Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.  
-Moreover, we would really appreciate if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).
+Moreover, we would really appreciate it if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).
 
 
 ### Class details
 
 The following table shows a list of all classes.
 
-TA2 is a standardised way to name anatomy. Mostly the TotalSegmentator names follow this standard. 
+TA2 is a standardized way to name anatomy. Mostly the TotalSegmentator names follow this standard. 
 For some classes they differ which you can see in the table below.
 
 [Here](resources/totalsegmentator_snomed_mapping.csv) you can find a mapping of the TotalSegmentator classes to SNOMED-CT codes.
