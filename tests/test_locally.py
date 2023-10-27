@@ -123,35 +123,39 @@ def start_monitors():
     gpu_util_thread.daemon = True  
     gpu_util_thread.start()
 
-def are_logs_similar(last_log, new_log, tolerance_percent=0.02):
+def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
     if last_log is None or new_log is None:
+        print("Cannot compare logs because one of them is None.")
         return False
     
-    for old_value, new_value in zip(last_log, new_log):
+    identical = True
+    for old_value, new_value, col in zip(last_log, new_log, cols):
         # Check string values for equality
         if isinstance(old_value, str) and isinstance(new_value, str):
             if old_value != new_value:
-                print(f"WARNING: New log is different from last log: {old_value} != {new_value}")
-                return False
+                print(f"  Difference in {col}: {old_value} != {new_value}")
+                identical = False
         # Check Timestamp
         elif isinstance(old_value, pd.Timestamp) and isinstance(new_value, pd.Timestamp):
             continue
         # Check numeric values for similarity within a tolerance
-        elif isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
+        elif (isinstance(old_value, (int, float)) or np.isscalar(old_value) ) and \
+                (isinstance(new_value, (int, float)) or np.isscalar(new_value)):
             if old_value == 0 and new_value == 0:
                 continue
             elif old_value == 0 or new_value == 0:
-                print(f"WARNING: New log is different from last log: {old_value} != {new_value} (one is zero))")
-                return False  # If one is zero but the other isn't, they're different
+                print(f"  Difference in {col}: {old_value} != {new_value} (one is zero))")
+                identical = False
             percent_diff = abs(old_value - new_value) / abs(old_value)
             if percent_diff > tolerance_percent:
-                print(f"WARNING: New log is different from last log: {old_value} != {new_value} (percent_diff: {percent_diff:.2f}))")
-                return False
+                print(f"  Difference in {col}: {old_value} != {new_value} (percent_diff: {percent_diff:.2f})")
+                identical = False
         else:
             # If types are neither string nor numeric, do a direct comparison
             if old_value != new_value:
-                return False
-    return True
+                print(f"  Difference in {col}: {old_value} != {new_value} (type: {type(old_value)})))")
+                identical = False
+    return identical
 
 
 if __name__ == "__main__":
@@ -171,6 +175,7 @@ if __name__ == "__main__":
         img_dir = base_dir / resolution / "ct"
         gt_dir = base_dir / resolution / "gt"
         pred_dir = base_dir / resolution / "pred"
+        pred_dir.mkdir(parents=True, exist_ok=True)
 
         print("Run totalsegmentator...")
         reset_monitors()
@@ -205,18 +210,19 @@ if __name__ == "__main__":
     times = dict(times)
 
     print("Saving...")
+    cols = ["time", "Dice_15mm", "NSD_15mm", "Dice_3mm", "NSD_3mm",
+            "runtime_15mm", "runtime_3mm",
+            "memory_ram_15mm", "memory_ram_3mm",
+            "memory_gpu_15mm", "memory_gpu_3mm",
+            "cpu_utilization_15mm", "cpu_utilization_3mm",
+            "gpu_utilization_15mm", "gpu_utilization_3mm",
+            "python_version", "torch_version", "cuda_version", "cudnn_version",
+            "gpu_name"]
     overview_file = Path(f"{base_dir}/overview.xlsx")
     if overview_file.exists():
         overview = pd.read_excel(overview_file)
     else:
-        overview = pd.DataFrame(columns=["time", "Dice_15mm", "NSD_15mm", "Dice_3mm", "NSD_3mm",
-                                        "runtime_15mm", "runtime_3mm", 
-                                        "memory_ram_15mm", "memory_ram_3mm",
-                                        "memory_gpu_15mm", "memory_gpu_3mm", 
-                                        "cpu_utilization_15mm", "cpu_utilization_3mm",
-                                        "gpu_utilization_15mm", "gpu_utilization_3mm",
-                                        "python_version", "torch_version", "cuda_version", "cudnn_version",
-                                        "gpu_name"])
+        overview = pd.DataFrame(columns=cols)
 
     last_log = overview.iloc[-1] if len(overview) > 0 else None
 
@@ -227,18 +233,18 @@ if __name__ == "__main__":
                memory_gpu["15mm"], memory_gpu["3mm"],
                cpu_utilization["15mm"], cpu_utilization["3mm"],
                gpu_utilization["15mm"], gpu_utilization["3mm"],
-               platform.python_version(), torch.__version__, torch.version.cuda, str(torch.backends.cudnn.version()),
+               platform.python_version(), torch.__version__, 
+               float(torch.version.cuda), int(torch.backends.cudnn.version()),
                torch.cuda.get_device_name(0)]
 
-    if are_logs_similar(last_log, new_log):
-        print("SUCCESS: New log is similar to last log.")
-    else:
-        print("WARNING: New log is different from last log.")
+    print("Comparing NEW to PREVIOUS log:")
+    if are_logs_similar(last_log, new_log, cols):
+        print("SUCCESS: no differences")
 
     overview.loc[len(overview)] = new_log
     overview.to_excel(overview_file, index=False)
     set_xlsx_column_width_to_content(overview_file)
 
     # Clean up
-    shutil.rmtree(pred_dir = base_dir / "15mm" / "pred")
-    shutil.rmtree(pred_dir = base_dir / "3mm" / "pred")
+    shutil.rmtree(base_dir / "15mm" / "pred")
+    shutil.rmtree(base_dir / "3mm" / "pred")
