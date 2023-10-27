@@ -17,25 +17,52 @@ import psutil
 import time
 import threading
 import torch
+import platform
 
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.map_to_binary import class_map
+from totalsegmentator.excel import set_xlsx_column_width_to_content
 from resources.evaluate import calc_metrics
 
 """
-Run a complete prediction locally with GPU and evaluate Dice score.
-This is not possible on github actions due to missing GPU.
+Run a complete prediction locally with GPU and evaluate Dice score + 
+CPU/GPU usage + RAM/GPU memory usage + runtime.
+(This is not possible on github actions due to missing GPU)
 
 Info:
 To get the CT file and create the multilable groundtruth files use 
 python ~/dev/jakob_scripts/multiseg/eval/get_data_for_test_locally.py
-"""
 
+Usage:
+python test_locally.py
+"""
 
 max_memory_usage = 0  # Initialize max_memory_usage for RAM as 0
 max_gpu_memory_usage = 0  # Initialize max_gpu_memory_usage for GPU as 0
 cpu_utilizations = []  # Initialize an empty list to store CPU utilizations
 gpu_utilizations = []  # Initialize an empty list to store GPU utilizations
+
+def get_memory_usage():
+    global max_memory_usage
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    current_memory = memory_info.rss / (1024 ** 2)  # Convert to MB
+    max_memory_usage = max(max_memory_usage, round(current_memory))  # Update max_memory_usage
+
+def get_gpu_memory_usage():
+    global max_gpu_memory_usage
+    current_memory = torch.cuda.memory_allocated() / (1024 ** 2)  # Convert to MB
+    max_gpu_memory_usage = max(max_gpu_memory_usage, round(current_memory))  # Update max_gpu_memory_usage
+
+def memory_monitor(interval=1):
+    while True:
+        get_memory_usage()
+        time.sleep(interval)
+
+def gpu_memory_monitor(interval=1):
+    while True:
+        get_gpu_memory_usage()
+        time.sleep(interval)
 
 def get_cpu_utilization():
     cpu_util = psutil.cpu_percent(interval=1)  # Get CPU utilization as a percentage
@@ -68,18 +95,6 @@ def gpu_utilization_monitor(interval=1):
         get_gpu_utilization()
         time.sleep(interval)
 
-def get_memory_usage():
-    global max_memory_usage
-    process = psutil.Process(os.getpid())
-    memory_info = process.memory_info()
-    current_memory = memory_info.rss / (1024 ** 2)  # Convert to MB
-    max_memory_usage = max(max_memory_usage, round(current_memory))  # Update max_memory_usage
-
-def get_gpu_memory_usage():
-    global max_gpu_memory_usage
-    current_memory = torch.cuda.memory_allocated() / (1024 ** 2)  # Convert to MB
-    max_gpu_memory_usage = max(max_gpu_memory_usage, round(current_memory))  # Update max_gpu_memory_usage
-
 def reset_monitors():
     global max_memory_usage
     global max_gpu_memory_usage
@@ -89,16 +104,6 @@ def reset_monitors():
     max_gpu_memory_usage = 0
     cpu_utilizations = []
     gpu_utilizations = []
-
-def memory_monitor(interval=1):
-    while True:
-        get_memory_usage()
-        time.sleep(interval)
-
-def gpu_memory_monitor(interval=1):
-    while True:
-        get_gpu_memory_usage()
-        time.sleep(interval)
 
 def start_monitors():
     # Create separate threads to monitor memory usage
@@ -118,13 +123,43 @@ def start_monitors():
     gpu_util_thread.daemon = True  
     gpu_util_thread.start()
 
+def are_logs_similar(last_log, new_log, tolerance_percent=0.02):
+    if last_log is None or new_log is None:
+        return False
+    
+    for old_value, new_value in zip(last_log, new_log):
+        # Check string values for equality
+        if isinstance(old_value, str) and isinstance(new_value, str):
+            if old_value != new_value:
+                print(f"WARNING: New log is different from last log: {old_value} != {new_value}")
+                return False
+        # Check Timestamp
+        elif isinstance(old_value, pd.Timestamp) and isinstance(new_value, pd.Timestamp):
+            continue
+        # Check numeric values for similarity within a tolerance
+        elif isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
+            if old_value == 0 and new_value == 0:
+                continue
+            elif old_value == 0 or new_value == 0:
+                print(f"WARNING: New log is different from last log: {old_value} != {new_value} (one is zero))")
+                return False  # If one is zero but the other isn't, they're different
+            percent_diff = abs(old_value - new_value) / abs(old_value)
+            if percent_diff > tolerance_percent:
+                print(f"WARNING: New log is different from last log: {old_value} != {new_value} (percent_diff: {percent_diff:.2f}))")
+                return False
+        else:
+            # If types are neither string nor numeric, do a direct comparison
+            if old_value != new_value:
+                return False
+    return True
+
 
 if __name__ == "__main__":
     start_monitors()
 
     base_dir = Path("/mnt/nvme/data/multiseg/test_locally")
 
-    res_mean = defaultdict(dict)
+    scores = defaultdict(dict)
     times = defaultdict(list)
     memory_ram = {}
     memory_gpu = {}
@@ -140,8 +175,9 @@ if __name__ == "__main__":
         print("Run totalsegmentator...")
         reset_monitors()
         for img_fn in tqdm(img_dir.glob("*.nii.gz")):
+            fast = resolution == "3mm"
             st = time.time()
-            totalsegmentator(img_fn, pred_dir / img_fn.name, fast=True, ml=True, device="gpu")
+            totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, device="gpu")
             times[resolution].append(time.time()-st)
 
         print("Logging...")
@@ -163,34 +199,46 @@ if __name__ == "__main__":
                 row_wo_nan = res[f"{metric}-{roi_name}"].dropna()
                 res_all_rois.append(row_wo_nan.mean())
                 # print(f"{roi_name} {metric}: {row_wo_nan.mean():.3f}")  # per roi
-            # print(f"{metric}: {np.nanmean(res_all_rois):.3f}")  # mean over all rois
-            res_mean[resolution][metric] = np.nanmean(res_all_rois).round(3)
+            scores[resolution][metric] = np.nanmean(res_all_rois).round(3)  # mean over all rois
 
-    res_mean = dict(res_mean)
+    scores = dict(scores)
     times = dict(times)
 
-    print("Scores:")
-    print(res_mean)
-    print("Times (s):")
-    print(times)
-    print("Memory RAM (MB):")
-    print(memory_ram)
-    print("Memory GPU (MB):")
-    print(memory_gpu)
-    print("CPU utilizations (%):")
-    print(cpu_utilization)
-    print("GPU utilizations (%):")
-    print(gpu_utilization)
+    print("Saving...")
+    overview_file = Path(f"{base_dir}/overview.xlsx")
+    if overview_file.exists():
+        overview = pd.read_excel(overview_file)
+    else:
+        overview = pd.DataFrame(columns=["time", "Dice_15mm", "NSD_15mm", "Dice_3mm", "NSD_3mm",
+                                        "runtime_15mm", "runtime_3mm", 
+                                        "memory_ram_15mm", "memory_ram_3mm",
+                                        "memory_gpu_15mm", "memory_gpu_3mm", 
+                                        "cpu_utilization_15mm", "cpu_utilization_3mm",
+                                        "gpu_utilization_15mm", "gpu_utilization_3mm",
+                                        "python_version", "torch_version", "cuda_version", "cudnn_version",
+                                        "gpu_name"])
 
-    reference_res = {"15mm": {"dice": 0.854, "surface_dice_3": 0.97}, 
-                      "3mm": {"dice": 0.907, "surface_dice_3": 0.988}}
-    reference_times = {}
-    reference_memory_ram = {}
-    reference_memory_gpu = {}
-    reference_cpu_utilizations = {}
-    reference_gpu_utilizations = {}
+    last_log = overview.iloc[-1] if len(overview) > 0 else None
 
-    # Check if Dice + NSD scores are identical
-    # assert dict(res_mean) == reference_res
-    
-    # shutil.rmtree(pred_dir)
+    new_log = [pd.Timestamp.now(), scores["15mm"]["dice"], scores["15mm"]["surface_dice_3"],
+               scores["3mm"]["dice"], scores["3mm"]["surface_dice_3"],
+               times["15mm"], times["3mm"],
+               memory_ram["15mm"], memory_ram["3mm"],
+               memory_gpu["15mm"], memory_gpu["3mm"],
+               cpu_utilization["15mm"], cpu_utilization["3mm"],
+               gpu_utilization["15mm"], gpu_utilization["3mm"],
+               platform.python_version(), torch.__version__, torch.version.cuda, str(torch.backends.cudnn.version()),
+               torch.cuda.get_device_name(0)]
+
+    if are_logs_similar(last_log, new_log):
+        print("SUCCESS: New log is similar to last log.")
+    else:
+        print("WARNING: New log is different from last log.")
+
+    overview.loc[len(overview)] = new_log
+    overview.to_excel(overview_file, index=False)
+    set_xlsx_column_width_to_content(overview_file)
+
+    # Clean up
+    shutil.rmtree(pred_dir = base_dir / "15mm" / "pred")
+    shutil.rmtree(pred_dir = base_dir / "3mm" / "pred")

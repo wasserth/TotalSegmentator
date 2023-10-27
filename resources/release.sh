@@ -3,6 +3,8 @@ set -e  # Exit on error
 
 # Info: Have to run from within the resources directory otherwise pathes incorrect
 # 
+# Run first: test_locally.py
+#
 # use nnunetv2 env
 # 
 # Usage: ./release.sh -> will ask for new version number
