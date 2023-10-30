@@ -21,7 +21,7 @@ def main():
 
     args = parser.parse_args()
 
-    if not args.license_number.startswith("aca_"):
+    if not args.license_number.startswith("aca_") or not args.license_number.startswith("com_"):
         raise ValueError("license number must start with 'aca_' or 'com_' ")
     if len(args.license_number) != 18:
         raise ValueError("license number must have exactly 18 characters.")

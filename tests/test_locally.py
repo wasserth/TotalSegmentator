@@ -54,21 +54,21 @@ def get_gpu_memory_usage():
     current_memory = torch.cuda.memory_allocated() / (1024 ** 2)  # Convert to MB
     max_gpu_memory_usage = max(max_gpu_memory_usage, round(current_memory))  # Update max_gpu_memory_usage
 
-def memory_monitor(interval=1):
+def memory_monitor(interval=0.5):
     while True:
         get_memory_usage()
         time.sleep(interval)
 
-def gpu_memory_monitor(interval=1):
+def gpu_memory_monitor(interval=0.5):
     while True:
         get_gpu_memory_usage()
         time.sleep(interval)
 
 def get_cpu_utilization():
-    cpu_util = psutil.cpu_percent(interval=1)  # Get CPU utilization as a percentage
+    cpu_util = psutil.cpu_percent(interval=0.5)  # Get CPU utilization as a percentage
     cpu_utilizations.append(cpu_util)
 
-def cpu_utilization_monitor(interval=1):
+def cpu_utilization_monitor(interval=0.5):
     while True:
         get_cpu_utilization()
         time.sleep(interval)
@@ -90,7 +90,7 @@ def get_gpu_utilization():
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def gpu_utilization_monitor(interval=1):
+def gpu_utilization_monitor(interval=0.5):
     while True:
         get_gpu_utilization()
         time.sleep(interval)

@@ -3,7 +3,7 @@ set -e  # Exit on error
 
 # Info: Have to run from within the resources directory otherwise pathes incorrect
 # 
-# Run first: test_locally.py
+# Run first: tests/test_locally.py
 #
 # use nnunetv2 env
 # 
@@ -11,6 +11,9 @@ set -e  # Exit on error
 
 # go to root of package
 cd ..
+
+
+echo "Reminder: First run tests/test_locally.py"
 
 echo "Reminder: First update CHANGELOG.md"
 
