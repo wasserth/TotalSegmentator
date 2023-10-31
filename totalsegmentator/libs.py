@@ -24,6 +24,7 @@ https://stackoverflow.com/questions/2828953/silence-the-stdout-of-a-function-in-
 """
 class DummyFile(object):
     def write(self, x): pass
+    def flush(self): pass  
 
 @contextlib.contextmanager
 def nostdout(verbose=False):

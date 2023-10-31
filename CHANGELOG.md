@@ -1,4 +1,5 @@
 ## Master
+* Bugfix: add flush to DummyFile
 
 
 ## Release 2.0.5
