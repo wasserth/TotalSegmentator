@@ -96,7 +96,7 @@ def get_basic_statistics(seg: np.array, ct_file, file_out: Path, quiet: bool = F
     ct_file: path to a ct_file or a nifti file object
     """
     ct_img = nib.load(ct_file) if type(ct_file) == pathlib.PosixPath else ct_file
-    ct = ct_img.get_fdata()
+    ct = ct_img.get_fdata().astype(np.int16)
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     stats = {}
