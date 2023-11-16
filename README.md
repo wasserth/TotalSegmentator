@@ -140,9 +140,10 @@ You can run totalsegmentator via Python:
 ```python
 from totalsegmentator.python_api import totalsegmentator
 
-totalsegmentator(input_path, output_path)
+if __name__ == "__main__":
+    totalsegmentator(input_path, output_path)
 ```
-You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py).
+You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.
 
 
 ### Install latest master branch (contains latest bug fixes)
@@ -161,6 +162,11 @@ you should do
 pip install SimpleITK==2.0.2
 ```
 
+Alternatively you can try
+``` 
+fslorient -copysform2qform input_file
+fslreorient2std input_file output_file
+```
 
 ### Other
 TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.

@@ -18,7 +18,7 @@ setup(name='TotalSegmentator',
         url='https://github.com/wasserth/TotalSegmentator',
         author='Jakob Wasserthal',
         author_email='jakob.wasserthal@usb.ch',
-        python_requires='>=3.5',
+        python_requires='>=3.9',
         license='Apache 2.0',
         packages=find_packages(),
         install_requires=[

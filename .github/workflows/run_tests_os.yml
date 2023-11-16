@@ -9,8 +9,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        # python-version: ["3.8", "3.10"]
-        # Some requirements errors with 3.8 on macos
         python-version: ["3.10"]
     runs-on: ${{ matrix.os }}
     

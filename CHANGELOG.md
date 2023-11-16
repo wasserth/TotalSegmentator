@@ -1,5 +1,6 @@
 ## Master
 * Bugfix: add flush to DummyFile
+* Require python >= 3.9 in setup.py
 
 
 ## Release 2.0.5
