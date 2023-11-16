@@ -46,7 +46,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 Next to the default task (`total`) there are more subtasks with more classes:
 
 Openly available for any usage:  
-* **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for list of classes)
+* **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **body**: body, body_trunc, body_extremities, skin
 * **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))*
