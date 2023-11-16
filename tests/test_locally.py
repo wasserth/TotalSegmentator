@@ -128,6 +128,13 @@ def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
         print("Cannot compare logs because one of them is None.")
         return False
     
+    # For these columns the values differ a lot between runs so we allow a larger margin
+    tolerance_percent_large_diff = 0.2
+    cols_large_diff = ["runtime_3mm", 
+                    #    "memory_gpu_15mm", "memory_gpu_3mm",
+                       "cpu_utilization_15mm", "cpu_utilization_3mm",
+                       "gpu_utilization_15mm", "gpu_utilization_3mm"]
+
     identical = True
     for old_value, new_value, col in zip(last_log, new_log, cols):
         # Check string values for equality
@@ -147,7 +154,8 @@ def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
                 print(f"  Difference in {col}: {old_value} != {new_value} (one is zero))")
                 identical = False
             percent_diff = abs(old_value - new_value) / abs(old_value)
-            if percent_diff > tolerance_percent:
+            tolerance = tolerance_percent_large_diff if col in cols_large_diff else tolerance_percent
+            if percent_diff > tolerance:
                 print(f"  Difference in {col}: {old_value} != {new_value} (percent_diff: {percent_diff:.2f})")
                 identical = False
         else:
@@ -240,7 +248,10 @@ if __name__ == "__main__":
     print("Comparing NEW to PREVIOUS log:")
     if are_logs_similar(last_log, new_log, cols):
         print("SUCCESS: no differences")
+    else:
+        print("ERROR: major differences found")
 
+    print(f"Saving to {overview_file}...")
     overview.loc[len(overview)] = new_log
     overview.to_excel(overview_file, index=False)
     set_xlsx_column_width_to_content(overview_file)
