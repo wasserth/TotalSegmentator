@@ -35,11 +35,11 @@ def main():
         "pleural_pericard_effusion": [315],
         "body": [299],
         "body_fast": [300],
-        "vertebrae_body": [302],
 
         "heartchambers_highres": [301],
         "appendicular_bones": [304],
         "tissue_types": [481],
+        "vertebrae_body": [302],
         "face": [303],
 
         # "liver_vessels": [8]

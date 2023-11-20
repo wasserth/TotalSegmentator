@@ -45,12 +45,11 @@ def main():
 
     # cerebral_bleed: Intracerebral hemorrhage 
     # liver_vessels: hepatic vessels
-    parser.add_argument("-ta", "--task", choices=["total", "body", "vertebrae_body",
+    parser.add_argument("-ta", "--task", choices=["total", "body",
                         "lung_vessels", "cerebral_bleed", "hip_implant", "coronary_arteries", 
                         "pleural_pericard_effusion", "test",
                         "appendicular_bones", "tissue_types", "heartchambers_highres", 
-                        "face", 
-                        ],
+                        "face", "vertebrae_body"],
                         # future: liver_vessels, head, 
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
@@ -58,9 +57,6 @@ def main():
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
                         help="Define a subset of classes to save (space separated list of class names). If running 1.5mm model, will only run the appropriate models for these rois.")
 
-    # When this is used together with --roi_subset and --ml, then statistics will be calculated for all classes
-    # in the class_map_part_X with is calculated. Some of the rois will be cropped and therefore the volume will
-    # only be of the cropped region, making it an incorrect volume.
     parser.add_argument("-s", "--statistics", action="store_true", 
                         help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
                         default=False)

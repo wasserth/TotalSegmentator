@@ -308,6 +308,7 @@ commercial_models = {
     "heartchambers_highres": 301,
     "appendicular_bones": 304, 
     "tissue_types": 481, 
+    "vertebrae_body": 302,
     "face": 303
 }
 # future

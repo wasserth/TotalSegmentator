@@ -1,6 +1,7 @@
 ## Master
 * Bugfix: add flush to DummyFile
 * Require python >= 3.9 in setup.py
+* properly add `vertebrae_body` model
 
 
 ## Release 2.0.5

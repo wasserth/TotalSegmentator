@@ -60,6 +60,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
+* **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch)
 * **face**: face_region
 
 Usage:

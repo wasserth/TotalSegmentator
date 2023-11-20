@@ -173,6 +173,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         model = "3d_fullres"
         folds = None
         if fast: raise ValueError("task liver_vessels does not work with option --fast")
+
+    # Commercial models
     elif task == "vertebrae_body":
         task_id = 302
         resample = 1.5
@@ -181,8 +183,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task vertebrae_body does not work with option --fast")
-
-    # Commercial models
+        show_license_info()
     elif task == "heartchambers_highres":
         task_id = 301
         resample = None
