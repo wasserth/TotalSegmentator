@@ -44,7 +44,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
                      skip_saving=False, device="gpu", license_number=None,
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
-                     v1_order=False):
+                     v1_order=False, fastest=False, roi_subset_robust=None):
     """
     Run TotalSegmentator from within python. 
 
@@ -86,6 +86,12 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
             # trainer = "nnUNetTrainerNoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
+        elif fastest:
+            task_id = 298
+            resample = 6.0
+            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
+            crop = None
+            if not quiet: print("Using 'fastest' option: resampling to lower resolution (6mm)")
         else:
             task_id = [291, 292, 293, 294, 295]
             resample = 1.5
@@ -246,6 +252,10 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     else:
         download_pretrained_weights(task_id)
 
+    if roi_subset_robust is not None:
+        roi_subset = roi_subset_robust
+        robust_rs = True
+
     if roi_subset is not None and type(roi_subset) is not list:
         raise ValueError("roi_subset must be a list of strings")
     if roi_subset is not None and task != "total":
@@ -258,8 +268,14 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         download_pretrained_weights(298)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
-        organ_seg, _ = nnUNet_predict_image(input, None, 298, model="3d_fullres", folds=[0],
-                            trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=6.0,
+        if robust_rs:
+            crop_model_task = 297
+            crop_spacing = 3.0
+        else:
+            crop_model_task = 298
+            crop_spacing = 6.0
+        organ_seg, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
+                            trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=crop_spacing,
                             crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
                             crop_addon=crop_addon, output_type=output_type, statistics=False,

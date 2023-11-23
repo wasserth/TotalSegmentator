@@ -2,6 +2,8 @@
 * Bugfix: add flush to DummyFile
 * Require python >= 3.9 in setup.py
 * properly add `vertebrae_body` model
+* add `--roi_subset_robust` argument
+* add `--fastest` argument
 
 
 ## Release 2.0.5

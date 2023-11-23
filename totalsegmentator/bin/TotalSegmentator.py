@@ -32,7 +32,10 @@ def main():
     parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations", 
                         default=6)
 
-    parser.add_argument("-f", "--fast", action="store_true", help="Run faster lower resolution model",
+    parser.add_argument("-f", "--fast", action="store_true", help="Run faster lower resolution model (3mm)",
+                        default=False)
+
+    parser.add_argument("-ff", "--fastest", action="store_true", help="Run even faster lower resolution model (6mm)",
                         default=False)
 
     parser.add_argument("-t", "--nora_tag", type=str, 
@@ -56,6 +59,11 @@ def main():
 
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
                         help="Define a subset of classes to save (space separated list of class names). If running 1.5mm model, will only run the appropriate models for these rois.")
+
+    # Will use 3mm model instead of 6mm model to crop to the rois specified in this argument.
+    # 3mm is slower but more accurate.
+    parser.add_argument("-rsr", "--roi_subset_robust", type=str, nargs="+",
+                        help="Like roi_subset but uses a slower but more robust model to find the rois.")
 
     parser.add_argument("-s", "--statistics", action="store_true", 
                         help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
@@ -125,7 +133,7 @@ def main():
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
                      args.device, args.license_number, not args.stats_include_incomplete,
-                     args.no_derived_masks, args.v1_order)
+                     args.no_derived_masks, args.v1_order, args.fastest, args.roi_subset_robust)
 
 
 if __name__ == "__main__":
