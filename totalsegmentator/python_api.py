@@ -255,6 +255,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     if roi_subset_robust is not None:
         roi_subset = roi_subset_robust
         robust_rs = True
+    else:
+        robust_rs = False
 
     if roi_subset is not None and type(roi_subset) is not list:
         raise ValueError("roi_subset must be a list of strings")
