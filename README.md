@@ -155,7 +155,7 @@ pip install git+https://github.com/wasserth/TotalSegmentator.git
 
 ### Typical problems
 
-#### ITK loading Error
+**ITK loading Error**  
 When you get the following error message
 ```
 ITK ERROR: ITK only supports orthonormal direction cosines. No orthonormal definition was found!
@@ -171,7 +171,7 @@ fslorient -copysform2qform input_file
 fslreorient2std input_file output_file
 ```
 
-#### Bad segmentations
+**Bad segmentations**  
 When you get bad segmentation results check the following:
 * does your input image contain the original HU values or are the intensity values rescaled to a different range?
 * is the patient normally positioned in the image? (In axial view is the spine at the bottom of the image? In the coronal view is the head at the top of the image?)
