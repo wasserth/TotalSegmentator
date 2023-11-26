@@ -368,7 +368,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     seg_combined[img_part] = np.zeros(img_shape, dtype=np.uint8)
                 # Run several tasks and combine results into one segmentation
                 for idx, tid in enumerate(task_id):
-                    print(f"Predicting part {idx+1} of {len(task_id)} ...")
+                    if not quiet: print(f"Predicting part {idx+1} of {len(task_id)} ...")
                     with nostdout(verbose):
                         # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
                         #                nr_threads_resampling, nr_threads_saving)
