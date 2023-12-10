@@ -2,11 +2,11 @@
 set -e  # Exit on error
 
 # Info: Have to run from within the resources directory otherwise paths incorrect
-# 
+#
 # Run first: tests/test_locally.py
 #
 # use nnunetv2 env
-# 
+#
 # Usage: ./release.sh -> will ask for new version number
 
 # go to root of package
@@ -43,7 +43,7 @@ git push origin "v${new_version}"
 python setup.py sdist bdist_wheel
 twine upload --skip-existing dist/*
 
-# Step 5: Build and Push Docker Image 
+# Step 5: Build and Push Docker Image
 #   (random error on my local machine; have to run on server)
 # docker build -t wasserth/totalsegmentator:${new_version} .
 # docker push wasserth/totalsegmentator:${new_version}

@@ -19,7 +19,7 @@ def main():
 
     parser.add_argument("-t", "--task", choices=["total", "total_fast", "lung_vessels", "cerebral_bleed",
                                                  "hip_implant", "coronary_arteries", "pleural_pericard_effusion",
-                                                 "body", "body_fast", "vertebrae_body", 
+                                                 "body", "body_fast", "vertebrae_body",
                                                  "heartchambers_highres", "appendicular_bones", "tissue_types", "face"],
                         help="Task for which to download the weights", default="total")
 

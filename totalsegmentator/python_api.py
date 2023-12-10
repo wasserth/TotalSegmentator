@@ -22,9 +22,9 @@ def show_license_info():
     if status == "missing_license":
         # textwarp needed to remove the indentation of the multiline string
         print(textwrap.dedent("""\
-              In contrast to the other tasks this task is not openly available. 
-              It requires a license. For non-commercial usage a free license can be 
-              acquired here: 
+              In contrast to the other tasks this task is not openly available.
+              It requires a license. For non-commercial usage a free license can be
+              acquired here:
               https://backend.totalsegmentator.com/license-academic/
 
               For commercial usage contact: jakob.wasserthal@usb.ch
@@ -46,9 +46,9 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
                      v1_order=False, fastest=False, roi_subset_robust=None):
     """
-    Run TotalSegmentator from within python. 
+    Run TotalSegmentator from within python.
 
-    For explanation of the arguments see description of command line 
+    For explanation of the arguments see description of command line
     arguments in bin/TotalSegmentator.
     """
     input = Path(input)
@@ -56,7 +56,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     nora_tag = "None" if nora_tag is None else nora_tag
 
-    if not quiet: 
+    if not quiet:
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
 
     # available devices: gpu | cpu | mps
@@ -241,7 +241,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     # fast statistics are calculated on the downsampled image
     if statistics and fast:
-        statistics_fast = True  
+        statistics_fast = True
         statistics = False
     else:
         statistics_fast = False
@@ -265,7 +265,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
     if crop is not None or roi_subset is not None:
-        
+
         body_seg = False  # can not be used together with body_seg
         download_pretrained_weights(298)
         st = time.time()
@@ -278,14 +278,14 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
             crop_spacing = 6.0
         organ_seg, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=crop_spacing,
-                            crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
-                            save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
+                            crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False,
+                            save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
                             quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
         class_map_inv = {v: k for k, v in class_map["total"].items()}
         crop_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
         organ_seg_data = organ_seg.get_fdata()
-        # roi_subset_crop = [map_to_total[roi] if roi in map_to_total else roi for roi in roi_subset]        
+        # roi_subset_crop = [map_to_total[roi] if roi in map_to_total else roi for roi in roi_subset]
         roi_subset_crop = crop if crop is not None else roi_subset
         for roi in roi_subset_crop:
             crop_mask[organ_seg_data == class_map_inv[roi]] = 1
@@ -301,8 +301,8 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if not quiet: print("Generating rough body segmentation...")
         body_seg, _ = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
-                            crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
-                            save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1, 
+                            crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False,
+                            save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
                             quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
         crop = body_seg
@@ -311,10 +311,10 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
     folds = [0]  # None
     seg_img, ct_img = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
                          trainer=trainer, tta=False, multilabel_image=ml, resample=resample,
-                         crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview, 
-                         nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving, 
+                         crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview,
+                         nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving,
                          force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
-                         output_type=output_type, statistics=statistics_fast, 
+                         output_type=output_type, statistics=statistics_fast,
                          quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
                          exclude_masks_at_border=statistics_exclude_masks_at_border,
                          no_derived_masks=no_derived_masks, v1_order=v1_order)
@@ -322,7 +322,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
 
     config = increase_prediction_counter()
     send_usage_stats(config, {"task": task, "fast": fast, "preview": preview,
-                              "multilabel": ml, "roi_subset": roi_subset, 
+                              "multilabel": ml, "roi_subset": roi_subset,
                               "statistics": statistics, "radiomics": radiomics})
 
     if statistics:
@@ -338,7 +338,7 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
             raise ValueError("Radiomics not supported for multilabel segmentation. Use without --ml option.")
         if img_type == "dicom":
             raise ValueError("Radiomics not supported for DICOM input. Use nifti input.")
-        if not quiet: print("Calculating radiomics...")  
+        if not quiet: print("Calculating radiomics...")
         st = time.time()
         stats_dir = output.parent if ml else output
         get_radiomics_features_for_entire_dir(input, output, stats_dir / "statistics_radiomics.json")

@@ -25,12 +25,12 @@ from totalsegmentator.excel import set_xlsx_column_width_to_content
 from resources.evaluate import calc_metrics
 
 """
-Run a complete prediction locally with GPU and evaluate Dice score + 
+Run a complete prediction locally with GPU and evaluate Dice score +
 CPU/GPU usage + RAM/GPU memory usage + runtime.
 (This is not possible on github actions due to missing GPU)
 
 Info:
-To get the CT file and create the multilable groundtruth files use 
+To get the CT file and create the multilable groundtruth files use
 python ~/dev/jakob_scripts/multiseg/eval/get_data_for_test_locally.py
 
 Usage:
@@ -108,11 +108,11 @@ def reset_monitors():
 def start_monitors():
     # Create separate threads to monitor memory usage
     memory_thread = threading.Thread(target=memory_monitor)
-    memory_thread.daemon = True  
+    memory_thread.daemon = True
     memory_thread.start()
 
     gpu_memory_thread = threading.Thread(target=gpu_memory_monitor)
-    gpu_memory_thread.daemon = True  
+    gpu_memory_thread.daemon = True
     gpu_memory_thread.start()
 
     cpu_util_thread = threading.Thread(target=cpu_utilization_monitor)
@@ -120,17 +120,17 @@ def start_monitors():
     cpu_util_thread.start()
 
     gpu_util_thread = threading.Thread(target=gpu_utilization_monitor)
-    gpu_util_thread.daemon = True  
+    gpu_util_thread.daemon = True
     gpu_util_thread.start()
 
 def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
     if last_log is None or new_log is None:
         print("Cannot compare logs because one of them is None.")
         return False
-    
+
     # For these columns the values differ a lot between runs so we allow a larger margin
     tolerance_percent_large_diff = 0.2
-    cols_large_diff = ["runtime_3mm", 
+    cols_large_diff = ["runtime_3mm",
                     #    "memory_gpu_15mm", "memory_gpu_3mm",
                        "cpu_utilization_15mm", "cpu_utilization_3mm",
                        "gpu_utilization_15mm", "gpu_utilization_3mm"]
@@ -204,7 +204,7 @@ if __name__ == "__main__":
         subjects = [s.name.split(".")[0] for s in img_dir.glob("*.nii.gz")]
         res = [calc_metrics(s, gt_dir, pred_dir, class_map["total"]) for s in subjects]
         res = pd.DataFrame(res)
-        
+
         print("Aggregate metrics...")
         for metric in ["dice", "surface_dice_3"]:
             res_all_rois = []
@@ -241,7 +241,7 @@ if __name__ == "__main__":
                memory_gpu["15mm"], memory_gpu["3mm"],
                cpu_utilization["15mm"], cpu_utilization["3mm"],
                gpu_utilization["15mm"], gpu_utilization["3mm"],
-               platform.python_version(), torch.__version__, 
+               platform.python_version(), torch.__version__,
                float(torch.version.cuda), int(torch.backends.cudnn.version()),
                torch.cuda.get_device_name(0)]
 

@@ -24,7 +24,7 @@ https://stackoverflow.com/questions/2828953/silence-the-stdout-of-a-function-in-
 """
 class DummyFile(object):
     def write(self, x): pass
-    def flush(self): pass  
+    def flush(self): pass
 
 @contextlib.contextmanager
 def nostdout(verbose=False):
@@ -57,11 +57,11 @@ def download_model_with_license_and_unpack(task_name, config_dir):
         st = time.time()
         r = requests.post(url + "download_weights",
                           json={"license_number": license_number,
-                                "task": task_name}, 
+                                "task": task_name},
                           timeout=300,
                           stream=True)
         r.raise_for_status()  # Raise an exception for HTTP errors (4xx, 5xx)
-        
+
         if r.ok:
             with open(tempfile, "wb") as f:
                 # without progress bar
@@ -82,7 +82,7 @@ def download_model_with_license_and_unpack(task_name, config_dir):
             if r.json()['status'] == "invalid_license":
                 print(f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support.")
                 sys.exit(1)
-            
+
     except Exception as e:
         raise e
     finally:
@@ -216,7 +216,7 @@ def download_pretrained_weights(task_id):
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset300_body_6mm_1559subj.zip"
         WEIGHTS_URL = url + "/v2.0.0-weights/Dataset300_body_6mm_1559subj.zip"
 
-    # Models from other projects 
+    # Models from other projects
     elif task_id == 258:
         weights_path = config_dir / "Dataset258_lung_vessels_248subj"
         # WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"
@@ -378,7 +378,7 @@ def compress_nifti(file_in, file_out, dtype=np.int32, force_3d=True):
 
 
 def check_if_shape_and_affine_identical(img_1, img_2):
-    
+
     if not np.array_equal(img_1.affine, img_2.affine):
         print("Affine in:")
         print(img_1.affine)

@@ -11,13 +11,13 @@ from totalsegmentator.config import get_totalseg_dir, get_weights_dir
 def main():
     """
     Import manually downloaded weights (zip file) to the right folder.
-    DEPRECATED! This is no longer needed in v2.0.0 and later. 
+    DEPRECATED! This is no longer needed in v2.0.0 and later.
     """
     parser = argparse.ArgumentParser(description="Import manually downloaded weights.",
                                      epilog="Written by Jakob Wasserthal.")
 
     parser.add_argument("-i", "--weights_file",
-                        help="path to the weights zip file", 
+                        help="path to the weights zip file",
                         type=lambda p: Path(p).absolute(), required=True)
 
     args = parser.parse_args()

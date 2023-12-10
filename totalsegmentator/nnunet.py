@@ -88,7 +88,7 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     """
     Identical to bash function nnUNet_predict
 
-    folds:  folds to use for prediction. Default is None which means that folds will be detected 
+    folds:  folds to use for prediction. Default is None which means that folds will be detected
             automatically in the model output folder.
             for all folds: None
             for only fold 0: [0]
@@ -137,7 +137,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     """
     Identical to bash function nnUNetv2_predict
 
-    folds:  folds to use for prediction. Default is None which means that folds will be detected 
+    folds:  folds to use for prediction. Default is None which means that folds will be detected
             automatically in the model output folder.
             for all folds: None
             for only fold 0: [0]
@@ -213,7 +213,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     # predictor.predict_from_files(dir_in, dir_out,
     #                              save_probabilities=save_probabilities, overwrite=not continue_prediction,
     #                              num_processes_preprocessing=npp, num_processes_segmentation_export=nps,
-    #                              folder_with_segs_from_prev_stage=prev_stage_predictions, 
+    #                              folder_with_segs_from_prev_stage=prev_stage_predictions,
     #                              num_parts=num_parts, part_id=part_id)
 
 
@@ -232,10 +232,10 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
 
 
 def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
-                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=True, 
-                         resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False, 
+                         trainer="nnUNetTrainerV2", tta=False, multilabel_image=True,
+                         resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False,
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
-                         crop_addon=[3,3,3], roi_subset=None, output_type="nifti", 
+                         crop_addon=[3,3,3], roi_subset=None, output_type="nifti",
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False):
@@ -273,7 +273,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             # Workaround to be able to access file_in on windows (see issue #106)
             # if platform.system() == "Windows":
             #     file_in = file_in.NamedTemporaryFile(delete = False)
-            #     file_in.close() 
+            #     file_in.close()
 
             # if not multilabel_image:
             #     shutil.copy(file_in, file_out / "input_file.nii.gz")
@@ -285,7 +285,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if len(img_in_orig.shape) > 3:
             print(f"WARNING: Input image has {len(img_in_orig.shape)} dimensions. Only using first three dimensions.")
             img_in_orig = nib.Nifti1Image(img_in_orig.get_fdata()[:,:,:,0], img_in_orig.affine)
-        
+
         # takes ~0.9s for medium image
         img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
 
@@ -342,7 +342,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     tmp_dir / "s03_0000.nii.gz")
 
         st = time.time()
-        if multimodel:  # if running multiple models 
+        if multimodel:  # if running multiple models
 
             # only compute model parts containing the roi subset
             if roi_subset is not None:
@@ -431,7 +431,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if preview:
             from totalsegmentator.preview import generate_preview
-            # Generate preview before upsampling so it is faster and still in canonical space 
+            # Generate preview before upsampling so it is faster and still in canonical space
             # for better orientation.
             if not quiet: print("Generating preview...")
             st = time.time()
@@ -444,7 +444,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         # calculated on the original image. Volume often completely identical. For intensity
         # some more change but still minor.
         #
-        # Speed: 
+        # Speed:
         # stats on 1.5mm: 37s
         # stats on 3.0mm: 4s    -> great improvement
         if statistics:
@@ -458,11 +458,11 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
 
         if resample is not None:
             if not quiet: print("Resampling...")
-            if verbose: print(f"  back to original shape: {img_in_shape}")    
+            if verbose: print(f"  back to original shape: {img_in_shape}")
             # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
             # by undo_canonical)
             img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
-                                        order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, 
+                                        order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
                                         force_affine=img_in.affine)
 
         if verbose: print("Undoing canonical...")
@@ -490,7 +490,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 file_out.mkdir(exist_ok=True, parents=True)
                 save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out / "segmentations.dcm")
             else:
-                # Copy header to make output header exactly the same as input. But change dtype otherwise it will be 
+                # Copy header to make output header exactly the same as input. But change dtype otherwise it will be
                 # float or int and therefore the masks will need a lot more space.
                 # (infos on header: https://nipy.org/nibabel/nifti_images.html)
                 new_header = img_in_orig.header.copy()

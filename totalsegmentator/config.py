@@ -116,7 +116,7 @@ def is_valid_license(license_number):
     except Exception as e:
         print(f"An Exception occurred: {e}")
         return False
-    
+
 
 def has_valid_license():
     totalseg_dir = get_totalseg_dir()
@@ -130,10 +130,10 @@ def has_valid_license():
             return "missing_license", "ERROR: A license number has not been set so far."
     else:
         return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
-    
+
     if is_valid_license(license_number):
         return "yes", "SUCCESS: License is valid."
-    else: 
+    else:
         return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
 
 
@@ -150,10 +150,10 @@ def has_valid_license_offline():
             return "missing_license", "ERROR: A license number has not been set so far."
     else:
         return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
-    
+
     if len(license_number) == 18:
         return "yes", "SUCCESS: License is valid."
-    else: 
+    else:
         return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
 
 
@@ -203,7 +203,7 @@ def set_config_key(key_name, value):
 
 def send_usage_stats(config, params):
     if config is not None and config["send_usage_stats"]:
-        
+
         params["roi_subset"] = "" if params["roi_subset"] is None else "-".join(params["roi_subset"])
         license_number = get_license_number()
 

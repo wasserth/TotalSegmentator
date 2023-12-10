@@ -15,7 +15,7 @@ total:
 skull, thyroid_gland, prostate, brachiocephalic_vein_left, brachiocephalic_vein_right, brachiocephalic_trunk, common_carotid_artery_left, common_carotid_artery_right, atrial_appendage_left, subclavian_artery_left, subclavian_artery_right, vertebrae_S1, sternum, costal_cartilages, pulmonary_vein, superior_vena_cava, kidney_cyst_left, kidney_cyst_right, spinal_cord
 ```
 
-appendicular_bones: 
+appendicular_bones:
 ```
 patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 ```
@@ -59,7 +59,7 @@ List of classes where we corrected some systemic errors in the labels (e.g. myoc
 * kidney
 
 We increased the number of training images from 1139 to 1559. We added the following images:
-* more whole body images where TotalSegmentator failed before 
+* more whole body images where TotalSegmentator failed before
 * images of feet and hands  (these were not included so far)
 * more images of the head
 * more images with bleedings in the abdomen where TotalSegmentator failed before

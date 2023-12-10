@@ -51,7 +51,7 @@ def combine_labels(ref_img, file_out, masks):
     ref_img = nib.load(ref_img)
     combined = np.zeros(ref_img.shape).astype(np.uint8)
     for idx, arg in enumerate(masks):
-        file_in = Path(arg)  
+        file_in = Path(arg)
         if file_in.exists():
             img = nib.load(file_in)
             combined[img.get_fdata() > 0] = idx+1
@@ -60,12 +60,12 @@ def combine_labels(ref_img, file_out, masks):
     nib.save(nib.Nifti1Image(combined.astype(np.uint8), ref_img.affine), file_out)
 
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
     """
-    Convert the downloaded TotalSegmentator dataset (after unzipping it) to nnUNet format and 
+    Convert the downloaded TotalSegmentator dataset (after unzipping it) to nnUNet format and
     generate dataset.json and splits_final.json
 
-    example usage: 
+    example usage:
     python convert_dataset_to_nnunet.py /my_downloads/TotalSegmentator_dataset /nnunet/raw/Dataset100_TotalSegmentator_part1 class_map_part_organs
 
     You must set nnUNet_raw and nnUNet_preprocessed environment variables before running this (see nnUNet documentation).
@@ -73,13 +73,13 @@ if __name__ == "__main__":
 
     dataset_path = Path(sys.argv[1])  # directory containing all the subjects
     nnunet_path = Path(sys.argv[2])  # directory of the new nnunet dataset
-    # TotalSegmentator is made up of 5 models. Choose which one you want to produce. Choose from: 
+    # TotalSegmentator is made up of 5 models. Choose which one you want to produce. Choose from:
     #   class_map_part_organs
-    #   class_map_part_vertebrae 
-    #   class_map_part_cardiac 
-    #   class_map_part_muscles 
+    #   class_map_part_vertebrae
+    #   class_map_part_cardiac
+    #   class_map_part_muscles
     #   class_map_part_ribs
-    class_map_name = sys.argv[3]  
+    class_map_name = sys.argv[3]
 
     class_map = class_map_5_parts[class_map_name]
 
