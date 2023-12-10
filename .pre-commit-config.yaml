@@ -10,6 +10,13 @@ repos:
   - id: check-symlinks
   - id: trailing-whitespace
 
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.1.7
+  hooks:
+    # Run the linter.
+    - id: ruff
+      args: [ --fix ]
+
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.15.0
   hooks:
