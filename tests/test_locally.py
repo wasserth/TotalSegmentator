@@ -1,11 +1,9 @@
 import sys
 from pathlib import Path
 
-from pathlib import Path
 import pytest
 import os
 import re
-import sys
 import glob
 import shutil
 import subprocess

@@ -44,7 +44,6 @@ ignore = [
     "E721", # do not compare types, use isinstance()
     "E741", # do not use variables named l, O, or I
     "F401", # module imported but unused
-    "F811", # redefinition of unused name from line N
     "F821", # undefined name
     "F841" # local variable name is assigned to but never used
 ]
