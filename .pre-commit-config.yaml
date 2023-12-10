@@ -1,4 +1,15 @@
 repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: "v4.4.0"
+  hooks:
+  - id: check-added-large-files
+    args: ['--maxkb=1024']
+  - id: check-ast
+  - id: check-case-conflict
+  - id: check-merge-conflict
+  - id: check-symlinks
+  - id: trailing-whitespace
+
 - repo: https://github.com/codespell-project/codespell
   rev: v2.2.6
   hooks:
