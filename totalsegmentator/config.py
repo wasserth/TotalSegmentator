@@ -104,7 +104,7 @@ def get_license_number():
 
 def is_valid_license(license_number):
     try:
-        url = f"http://backend.totalsegmentator.com:80/"
+        url = "http://backend.totalsegmentator.com:80/"
         r = requests.post(url + "is_valid_license_number",
                           json={"license_number": license_number}, timeout=5)
         if r.ok:
@@ -209,7 +209,7 @@ def send_usage_stats(config, params):
 
         try:
             st = time.time()
-            url = f"http://backend.totalsegmentator.com:80/"
+            url = "http://backend.totalsegmentator.com:80/"
             r = requests.post(url + "log_totalseg_run",
                               json={"totalseg_id": config["totalseg_id"],
                                     "prediction_counter": config["prediction_counter"],

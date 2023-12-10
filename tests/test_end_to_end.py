@@ -22,8 +22,8 @@ class test_end_to_end(unittest.TestCase):
         self.assertTrue(images_equal, f"multilabel prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
 
     def test_prediction_liver_roi_subset(self):
-        img_ref = nib.load(f"tests/reference_files/example_seg_roi_subset.nii.gz").get_fdata()
-        img_new = nib.load(f"tests/unittest_prediction_roi_subset.nii.gz").get_fdata()
+        img_ref = nib.load("tests/reference_files/example_seg_roi_subset.nii.gz").get_fdata()
+        img_new = nib.load("tests/unittest_prediction_roi_subset.nii.gz").get_fdata()
         # prediction is not completely deterministic therefore allow for small differences
         nr_of_diff_voxels = (img_ref != img_new).sum()
         images_equal = nr_of_diff_voxels < 20
@@ -39,8 +39,8 @@ class test_end_to_end(unittest.TestCase):
             self.assertTrue(images_equal, f"{roi} fast prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
 
     def test_preview(self):
-        preview_exists = os.path.exists(f"tests/unittest_prediction_fast/preview_total.png")
-        self.assertTrue(preview_exists, f"Preview was not generated")
+        preview_exists = os.path.exists("tests/unittest_prediction_fast/preview_total.png")
+        self.assertTrue(preview_exists, "Preview was not generated")
 
     def test_prediction_multilabel_fast(self):
         img_ref = nib.load("tests/reference_files/example_seg_fast.nii.gz").get_fdata()
@@ -70,12 +70,12 @@ class test_end_to_end(unittest.TestCase):
             self.assertTrue(images_equal, f"{roi} prediction not correct")
 
     def test_tissue_types_wo_license(self):
-        no_output_file = not os.path.exists(f"tests/unittest_no_license.nii.gz")
-        self.assertTrue(no_output_file, f"A output file was generated even though no license was set.")
+        no_output_file = not os.path.exists("tests/unittest_no_license.nii.gz")
+        self.assertTrue(no_output_file, "A output file was generated even though no license was set.")
 
     def test_tissue_types_wrong_license(self):
-        no_output_file = not os.path.exists(f"tests/unittest_wrong_license.nii.gz")
-        self.assertTrue(no_output_file, f"A output file was generated even though the license was wrong.")
+        no_output_file = not os.path.exists("tests/unittest_wrong_license.nii.gz")
+        self.assertTrue(no_output_file, "A output file was generated even though the license was wrong.")
 
     def test_tissue_types(self):
         for roi in ["subcutaneous_fat", "skeletal_muscle", "torso_fat"]:

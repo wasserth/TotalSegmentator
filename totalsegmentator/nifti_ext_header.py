@@ -29,7 +29,7 @@ def add_label_map_to_nifti(img_in, label_map):
     colors = [[255,0,0],[0,255,0],[0,0,255],[255,255,0],[255,0,255],[0,255,255],[255,128,0],[255,0,128],[128,255,128],[0,128,255],[128,128,128],[185,170,155]]
     xmlpre = '<?xml version="1.0" encoding="UTF-8"?> <CaretExtension>  <Date><![CDATA[2013-07-14T05:45:09]]></Date>   <VolumeInformation Index="0">   <LabelTable>'
 
-    body = f''
+    body = ''
     for label_id, label_name in label_map.items():
         rgb = colors[label_id%len(colors)]
         body += f'<Label Key="{label_id}" Red="{rgb[0]/255}" Green="{rgb[1]/255}" Blue="{rgb[2]/255}" Alpha="1"><![CDATA[{label_name}]]></Label>\n'

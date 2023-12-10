@@ -305,7 +305,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         img_in = as_closest_canonical(img_in)
 
         if resample is not None:
-            if not quiet: print(f"Resampling...")
+            if not quiet: print("Resampling...")
             st = time.time()
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
@@ -329,7 +329,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
         if force_split:
             do_triple_split = True
         if do_triple_split:
-            if not quiet: print(f"Splitting into subparts...")
+            if not quiet: print("Splitting into subparts...")
             img_parts = ["s01", "s02", "s03"]
             third = img_in_rsp.shape[2] // 3
             margin = 20  # set margin with fixed values to avoid rounding problem if using percentage of third
@@ -385,9 +385,9 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     nib.save(nib.Nifti1Image(seg_combined[img_part], img_in_rsp.affine), tmp_dir / f"{img_part}.nii.gz")
             elif test == 1:
                 print("WARNING: Using reference seg instead of prediction for testing.")
-                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / f"s01.nii.gz")
+                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
         else:
-            if not quiet: print(f"Predicting...")
+            if not quiet: print("Predicting...")
             if test == 0:
                 with nostdout(verbose):
                     # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
@@ -399,7 +399,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
             elif test == 3:
                 print("WARNING: Using reference seg instead of prediction for testing.")
-                shutil.copy(Path("tests") / "reference_files" / "example_seg_lung_vessels.nii.gz", tmp_dir / f"s01.nii.gz")
+                shutil.copy(Path("tests") / "reference_files" / "example_seg_lung_vessels.nii.gz", tmp_dir / "s01.nii.gz")
         if not quiet: print(f"  Predicted in {time.time() - st:.2f}s")
 
         # Combine image subparts back to one image
@@ -519,7 +519,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                     file_out.mkdir(exist_ok=True, parents=True)
 
                     if np.prod(img_data.shape) > 512*512*1000:
-                        print(f"Shape of output image is very big. Setting nr_threads_saving=1 to save memory.")
+                        print("Shape of output image is very big. Setting nr_threads_saving=1 to save memory.")
                         nr_threads_saving = 1
 
                     # Code for single threaded execution  (runtime:24s)
