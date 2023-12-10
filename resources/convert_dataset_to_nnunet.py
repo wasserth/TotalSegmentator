@@ -71,7 +71,7 @@ if __name__ == "__main__":
     You must set nnUNet_raw and nnUNet_preprocessed environment variables before running this (see nnUNet documentation).
     """
 
-    dataset_path = Path(sys.argv[1])  # directory containining all the subjects
+    dataset_path = Path(sys.argv[1])  # directory containing all the subjects
     nnunet_path = Path(sys.argv[2])  # directory of the new nnunet dataset
     # TotalSegmentator is made up of 5 models. Choose which one you want to produce. Choose from: 
     #   class_map_part_organs

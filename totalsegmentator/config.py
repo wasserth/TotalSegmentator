@@ -110,11 +110,11 @@ def is_valid_license(license_number):
         if r.ok:
             return r.json()['status'] == "valid_license"
         else:
-            print(f"An internal server error occured. status code: {r.status_code}")
+            print(f"An internal server error occurred. status code: {r.status_code}")
             print(f"message: {r.json()['message']}")
             return False
     except Exception as e:
-        print(f"An Exception occured: {e}")
+        print(f"An Exception occurred: {e}")
         return False
     
 
@@ -234,5 +234,5 @@ def send_usage_stats(config, params):
             #     print(f"message: {r.json()['message']}")
             # print(f"Request took {time.time()-st:.3f}s")
         except Exception as e:
-            # print(f"An Exception occured: {e}")
+            # print(f"An Exception occurred: {e}")
             pass

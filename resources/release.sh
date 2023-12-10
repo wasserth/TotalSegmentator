@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e  # Exit on error
 
-# Info: Have to run from within the resources directory otherwise pathes incorrect
+# Info: Have to run from within the resources directory otherwise paths incorrect
 # 
 # Run first: tests/test_locally.py
 #

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     example usage: 
     python evaluate.py ground_truth_dir predictions_dir
     """
-    gt_dir = Path(sys.argv[1])  # directory containining all the subjects
+    gt_dir = Path(sys.argv[1])  # directory containing all the subjects
     pred_dir = Path(sys.argv[2])  # directory of the new nnunet dataset
 
     # class_map = class_map_5_parts["class_map_part_organs"]

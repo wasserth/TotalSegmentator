@@ -111,7 +111,7 @@ class test_end_to_end(unittest.TestCase):
     #     stats_new = pd.DataFrame(stats_new)
     #     stats_new = stats_new.fillna(0)
     #     # very big margin, but some of the radiomics features can change a lot if only a few voxels
-    #     # of the segmentation change. So this test is only to check that radiomics ran sucessfully.
+    #     # of the segmentation change. So this test is only to check that radiomics ran successfully.
     #     stats_equal = np.allclose(stats_ref.values, stats_new.values, rtol=3e-1, atol=3e-1)
     #     self.assertTrue(stats_equal, "radiomics is not correct")
 

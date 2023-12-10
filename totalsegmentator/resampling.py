@@ -29,7 +29,7 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
     Resize numpy image array to new size.
 
     Faster than resample_img_nnunet.
-    Resample_img_nnunet maybe slighlty better quality on CT (but not sure).
+    Resample_img_nnunet maybe slightly better quality on CT (but not sure).
     
     Works for 2D and 3D and 4D images.
     """
@@ -38,7 +38,7 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
 
     dim = len(img.shape)
 
-    # Add dimesions to make each input 4D
+    # Add dimensions to make each input 4D
     if dim == 2: 
         img = img[..., None, None]
     if dim == 3: 
@@ -144,8 +144,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     a shape which is +-1 compared to original shape, because of rounding of the shape to int.
     To avoid this the exact output shape can be provided. Then new_spacing will be ignored and the exact
     spacing will be calculated which is needed to get to target_shape.
-    In this case however the calculated spacing can be slighlty different from the desired new_spacing. This will
-    result in a slightly different affine. To avoid this the desired affine can be writen by force with "force_affine".
+    In this case however the calculated spacing can be slightly different from the desired new_spacing. This will
+    result in a slightly different affine. To avoid this the desired affine can be written by force with "force_affine".
 
     Note: Only works properly if affine is all 0 except for diagonal and offset (=no rotation and sheering)
     """

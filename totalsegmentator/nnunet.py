@@ -73,7 +73,7 @@ def _get_full_task_name(task_id: int, src: str="raw"):
 
 def contains_empty_img(imgs):
     """
-    imgs: List of image pathes
+    imgs: List of image paths
     """
     is_empty = True
     for img in imgs:

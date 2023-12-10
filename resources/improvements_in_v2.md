@@ -34,7 +34,7 @@ The following classes were moved from the `total` task to the `heartchambers_hig
 ```
 heart_myocardium, heart_atrium_left, heart_ventricle_left, heart_atrium_right, heart_ventricle_right, pulmonary_artery
 ```
-`total` now only contains the overal class `heart` instead.
+`total` now only contains the overall class `heart` instead.
 
 Some of these new classes were available in some preliminary version as additional tasks in v1. Now they are properly added.
 
