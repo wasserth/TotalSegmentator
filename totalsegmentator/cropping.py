@@ -39,7 +39,7 @@ def get_bbox_from_mask(mask, outside_value=-900, addon=0):
 
 def crop_to_bbox(image, bbox):
     """
-    image: 3d nd.array
+    image: 3d ndarray
     bbox: list of lists [[minx_idx, maxx_idx], [miny_idx, maxy_idx], [minz_idx, maxz_idx]]
           Indices of bbox must be in voxel coordinates  (not in world space)
     """

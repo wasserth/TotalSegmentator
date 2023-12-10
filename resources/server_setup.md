@@ -92,7 +92,7 @@ Start or stop only once
 ``` 
 systemctl start/stop/restart totalsegmentator_server
 ``` 
-Permanently start programm (automatic restart on error or reboot):
+Permanently start program (automatic restart on error or reboot):
 ``` 
 systemctl enable/disable totalsegmentator_server
 ``` 
