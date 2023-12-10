@@ -400,7 +400,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             elif test == 3:
                 print("WARNING: Using reference seg instead of prediction for testing.")
                 shutil.copy(Path("tests") / "reference_files" / "example_seg_lung_vessels.nii.gz", tmp_dir / f"s01.nii.gz")
-        if not quiet: print("  Predicted in {:.2f}s".format(time.time() - st))
+        if not quiet: print(f"  Predicted in {time.time() - st:.2f}s")
 
         # Combine image subparts back to one image
         if do_triple_split:
@@ -438,7 +438,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             smoothing = 20
             preview_dir = file_out.parent if multilabel_image else file_out
             generate_preview(img_in_rsp, preview_dir / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
-            if not quiet: print("  Generated in {:.2f}s".format(time.time() - st))
+            if not quiet: print(f"  Generated in {time.time() - st:.2f}s")
 
         # Statistics calculated on the 3mm downsampled image are very similar to statistics
         # calculated on the original image. Volume often completely identical. For intensity

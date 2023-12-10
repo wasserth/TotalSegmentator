@@ -92,9 +92,9 @@ class test_end_to_end(unittest.TestCase):
             self.assertTrue(images_equal, f"{roi} prediction not correct")
 
     def test_statistics(self):
-        stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics.json", "r"))
+        stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics.json"))
         stats_ref = pd.DataFrame(stats_ref)
-        stats_new = json.load(open("tests/unittest_prediction_fast/statistics.json", "r"))
+        stats_new = json.load(open("tests/unittest_prediction_fast/statistics.json"))
         stats_new = pd.DataFrame(stats_new)
         stats_equal = np.allclose(stats_ref.loc["volume"].values, stats_new.loc["volume"].values,
                                   rtol=3e-2, atol=3e-2)

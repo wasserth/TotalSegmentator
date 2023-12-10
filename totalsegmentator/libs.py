@@ -22,7 +22,7 @@ from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_
 Helpers to suppress stdout prints from nnunet
 https://stackoverflow.com/questions/2828953/silence-the-stdout-of-a-function-in-python-without-trashing-sys-stdout-and-resto
 """
-class DummyFile(object):
+class DummyFile:
     def write(self, x): pass
     def flush(self): pass
 
@@ -42,7 +42,7 @@ def download_model_with_license_and_unpack(task_name, config_dir):
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         license_number = config["license_number"]
     else:

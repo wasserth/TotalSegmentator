@@ -56,7 +56,7 @@ def setup_totalseg(totalseg_id=None):
     totalseg_config_file = totalseg_dir / "config.json"
 
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
     else:
         if totalseg_id is None:
@@ -81,7 +81,7 @@ def set_license_number(license_number):
     totalseg_config_file = totalseg_dir / "config.json"
 
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         config["license_number"] = license_number
         with open(totalseg_config_file, "w") as f:
@@ -94,7 +94,7 @@ def get_license_number():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         license_number = config["license_number"] if "license_number" in config else ""
     else:
@@ -122,7 +122,7 @@ def has_valid_license():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         if "license_number" in config:
             license_number = config["license_number"]
@@ -142,7 +142,7 @@ def has_valid_license_offline():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         if "license_number" in config:
             license_number = config["license_number"]
@@ -161,7 +161,7 @@ def increase_prediction_counter():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         config["prediction_counter"] += 1
         with open(totalseg_config_file, "w") as f:
@@ -180,7 +180,7 @@ def get_config_key(key_name):
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         if key_name in config:
             return config[key_name]
@@ -191,7 +191,7 @@ def set_config_key(key_name, value):
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         config[key_name] = value
         with open(totalseg_config_file, "w") as f:
