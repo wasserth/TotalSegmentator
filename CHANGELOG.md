@@ -4,6 +4,7 @@
 * properly add `vertebrae_body` model
 * add `--roi_subset_robust` argument
 * add `--fastest` argument
+* allow `mps` as device
 
 
 ## Release 2.0.5
