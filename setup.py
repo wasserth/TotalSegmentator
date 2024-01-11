@@ -1,18 +1,8 @@
-import sys
 from setuptools import setup, find_packages
-
-if sys.version_info < (3, 10):
-    # Specify the fixed version for Python < 3.10. Because using the latest
-    # requests would also install the latest urllib3 which does not work
-    # properly on python < 3.10.
-    requests_version = '==2.27.1'  #requires: urllib3>=1.21.1,<1.27 
-    # 2.27.1 somehow not available in dockerfile
-else:
-    requests_version = ''  # No fixed version for Python 3.10 and higher
 
 
 setup(name='TotalSegmentator',
-        version='2.0.5+kaiko',
+        version='2.0.6',
         description='Robust segmentation of 104 classes in CT images.',
         long_description="See Readme.md on github for more details.",
         url='https://github.com/wasserth/TotalSegmentator',
@@ -32,9 +22,10 @@ setup(name='TotalSegmentator',
             'xvfbwrapper',
             'fury',
             'nnunetv2==2.1',
-            f'requests{requests_version}',
+            'requests==2.27.1;python_version<"3.10"',
+            'requests;python_version>="3.10"',
             'rt_utils',
-            'dicom2nifti'
+            'dicom2nifti',
         ],
         zip_safe=False,
         classifiers=[
