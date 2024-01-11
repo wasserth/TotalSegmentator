@@ -345,4 +345,3 @@ def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
     return seg_img
-

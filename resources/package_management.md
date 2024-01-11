@@ -1,5 +1,12 @@
 # Helpful commands to manage the package
 
+
+## Run pre-commit checks
+```
+pre-commit run --all-file
+```
+
+
 ## Update version and publish new version to pypi
 
 Increase version number in code and commit
