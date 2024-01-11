@@ -19,7 +19,7 @@ def as_closest_canonical_nifti(path_in, path_out):
     img_in = nib.load(path_in)
     img_out = nib.as_closest_canonical(img_in)
     nib.save(img_out, path_out)
-    
+
 
 def undo_canonical(img_can, img_orig):
     """

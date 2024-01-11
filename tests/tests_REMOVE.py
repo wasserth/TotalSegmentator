@@ -10,7 +10,7 @@ from totalsegmentator.python_api import totalsegmentator
 def cleanup():
     files_to_remove = glob.glob('tests/unittest_prediction*')
     # files_to_remove.append('tests/statistics.json')
-    
+
     for f in files_to_remove:
         if os.path.isdir(f):
             shutil.rmtree(f)
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     #   example_ct.nii.gz: 36s, 3.0GB
     totalsegmentator('tests/reference_files/example_ct_sm.nii.gz', 'tests/unittest_prediction_roi_subset', roi_subset=['liver', 'brain'], device="cpu")
     pytest.main(['-v', 'tests/test_end_to_end.py::test_end_to_end::test_prediction_liver_roi_subset'])
-  
+
     # Test organ predictions - fast - statistics
     # 2 cpus: (statistics <1s)
     #   example_ct_sm.nii.gz: 13s, 4.1GB
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # Test organ predictions - fast - multilabel
     totalsegmentator('tests/reference_files/example_ct_sm.nii.gz', 'tests/unittest_prediction_fast.nii.gz', ml=True, fast=True, device="cpu")
     pytest.main(['-v', 'tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast'])
-    
+
     # Test organ predictions - fast - multilabel - force split
     totalsegmentator('tests/reference_files/example_ct.nii.gz', 'tests/unittest_prediction_fast_force_split.nii.gz', ml=True, fast=True, force_split=True, device="cpu")
     pytest.main(['-v', 'tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast_force_split'])

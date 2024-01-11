@@ -133,7 +133,7 @@ def extract_skin(ct_img, body_img):
     # Segment by density
     # Roughly the skin density range. Made large to make segmentation not have holes
     # (0 to 250 would have many small holes in skin)
-    density_mask = (ct > -200) & (ct < 250)  
+    density_mask = (ct > -200) & (ct < 250)
     skin[~density_mask] = 0
 
     # Fill holes

@@ -6,7 +6,7 @@ Tool for segmentation of over 117 classes in CT images. It was trained on a wide
 
 ![Alt text](resources/imgs/overview_classes_2.png)
 
-Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung-radiologie-nuklearmedizin).  
+Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung-radiologie-nuklearmedizin).
 If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
 
 
@@ -14,7 +14,7 @@ If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.
 
 TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU and GPU.
 
-Install dependencies:  
+Install dependencies:
 * Python >= 3.9
 * [Pytorch](http://pytorch.org/) >= 1.12.1
 
@@ -45,7 +45,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 
 Next to the default task (`total`) there are more subtasks with more classes:
 
-Openly available for any usage:  
+Openly available for any usage:
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **body**: body, body_trunc, body_extremities, skin
@@ -56,7 +56,7 @@ Openly available for any usage:
 
 *: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
-Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch): 
+Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch):
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
@@ -87,17 +87,17 @@ docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/
 
 
 ### Running v1
-If you want to keep on using TotalSegmentator v1 (e.g. because you do not want to change your pipeline) you 
+If you want to keep on using TotalSegmentator v1 (e.g. because you do not want to change your pipeline) you
 can install it with the following command:
 ```
 pip install TotalSegmentator==1.5.7
 ```
 The documentation for v1 can be found [here](https://github.com/wasserth/TotalSegmentator/tree/v1.5.7). Bugfixes for v1 are developed in the branch `v1_bugfixes`.
-Our Radiology AI publication refers to TotalSegmentator v1. 
+Our Radiology AI publication refers to TotalSegmentator v1.
 
 
 ### Resource Requirements
-Totalsegmentator has the following runtime and memory requirements (using an Nvidia RTX 3090 GPU):  
+Totalsegmentator has the following runtime and memory requirements (using an Nvidia RTX 3090 GPU):
 (1.5mm is the normal model and 3mm is the `--fast` model. With v2 the runtimes have increased a bit since
 we added more classes.)
 
@@ -112,8 +112,8 @@ If you want to reduce memory consumption you can use the following options:
 
 
 ### Train/validation/test split
-The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.  
-The exact numbers of the results for the high-resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials Figure 11. 
+The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.
+The exact numbers of the results for the high-resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials Figure 11.
 
 
 ### Retrain model and run evaluation
@@ -126,7 +126,7 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
-Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this: 
+Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
 ```
 totalseg_download_weights -t <task_name>
 ```
@@ -155,7 +155,7 @@ pip install git+https://github.com/wasserth/TotalSegmentator.git
 
 ### Typical problems
 
-**ITK loading Error**  
+**ITK loading Error**
 When you get the following error message
 ```
 ITK ERROR: ITK only supports orthonormal direction cosines. No orthonormal definition was found!
@@ -166,12 +166,12 @@ pip install SimpleITK==2.0.2
 ```
 
 Alternatively you can try
-``` 
+```
 fslorient -copysform2qform input_file
 fslreorient2std input_file output_file
 ```
 
-**Bad segmentations**  
+**Bad segmentations**
 When you get bad segmentation results check the following:
 * does your input image contain the original HU values or are the intensity values rescaled to a different range?
 * is the patient normally positioned in the image? (In axial view is the spine at the bottom of the image? In the coronal view is the head at the top of the image?)
@@ -181,13 +181,13 @@ When you get bad segmentation results check the following:
 TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
 
 
-### Reference 
+### Reference
 For more details see our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([freely available preprint](https://arxiv.org/abs/2208.05868)).
 If you use this tool please cite it as follows
 ```
 Wasserthal, J., Breit, H.-C., Meyer, M.T., Pradella, M., Hinck, D., Sauter, A.W., Heye, T., Boll, D., Cyriac, J., Yang, S., Bach, M., Segeroth, M., 2023. TotalSegmentator: Robust Segmentation of 104 Anatomic Structures in CT Images. Radiology: Artificial Intelligence. https://doi.org/10.1148/ryai.230024
 ```
-Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.  
+Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
 Moreover, we would really appreciate it if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).
 
 
@@ -195,7 +195,7 @@ Moreover, we would really appreciate it if you let us know what you are using th
 
 The following table shows a list of all classes.
 
-TA2 is a standardized way to name anatomy. Mostly the TotalSegmentator names follow this standard. 
+TA2 is a standardized way to name anatomy. Mostly the TotalSegmentator names follow this standard.
 For some classes they differ which you can see in the table below.
 
 [Here](resources/totalsegmentator_snomed_mapping.csv) you can find a mapping of the TotalSegmentator classes to SNOMED-CT codes.

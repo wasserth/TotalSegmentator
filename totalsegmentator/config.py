@@ -56,7 +56,7 @@ def setup_totalseg(totalseg_id=None):
     totalseg_config_file = totalseg_dir / "config.json"
 
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
     else:
         if totalseg_id is None:
@@ -81,7 +81,7 @@ def set_license_number(license_number):
     totalseg_config_file = totalseg_dir / "config.json"
 
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         config["license_number"] = license_number
         with open(totalseg_config_file, "w") as f:
@@ -94,7 +94,7 @@ def get_license_number():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         license_number = config["license_number"] if "license_number" in config else ""
     else:
@@ -104,25 +104,25 @@ def get_license_number():
 
 def is_valid_license(license_number):
     try:
-        url = f"http://backend.totalsegmentator.com:80/"
+        url = "http://backend.totalsegmentator.com:80/"
         r = requests.post(url + "is_valid_license_number",
                           json={"license_number": license_number}, timeout=5)
         if r.ok:
             return r.json()['status'] == "valid_license"
         else:
-            print(f"An internal server error occured. status code: {r.status_code}")
+            print(f"An internal server error occurred. status code: {r.status_code}")
             print(f"message: {r.json()['message']}")
             return False
     except Exception as e:
-        print(f"An Exception occured: {e}")
+        print(f"An Exception occurred: {e}")
         return False
-    
+
 
 def has_valid_license():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         if "license_number" in config:
             license_number = config["license_number"]
@@ -130,10 +130,10 @@ def has_valid_license():
             return "missing_license", "ERROR: A license number has not been set so far."
     else:
         return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
-    
+
     if is_valid_license(license_number):
         return "yes", "SUCCESS: License is valid."
-    else: 
+    else:
         return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
 
 
@@ -142,7 +142,7 @@ def has_valid_license_offline():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         if "license_number" in config:
             license_number = config["license_number"]
@@ -150,10 +150,10 @@ def has_valid_license_offline():
             return "missing_license", "ERROR: A license number has not been set so far."
     else:
         return "missing_config_file", f"ERROR: Could not find config file: {totalseg_config_file}"
-    
+
     if len(license_number) == 18:
         return "yes", "SUCCESS: License is valid."
-    else: 
+    else:
         return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
 
 
@@ -161,7 +161,7 @@ def increase_prediction_counter():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         config["prediction_counter"] += 1
         with open(totalseg_config_file, "w") as f:
@@ -180,7 +180,7 @@ def get_config_key(key_name):
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         if key_name in config:
             return config[key_name]
@@ -191,7 +191,7 @@ def set_config_key(key_name, value):
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file, "r") as f:
+        with open(totalseg_config_file) as f:
             config = json.load(f)
         config[key_name] = value
         with open(totalseg_config_file, "w") as f:
@@ -203,13 +203,13 @@ def set_config_key(key_name, value):
 
 def send_usage_stats(config, params):
     if config is not None and config["send_usage_stats"]:
-        
+
         params["roi_subset"] = "" if params["roi_subset"] is None else "-".join(params["roi_subset"])
         license_number = get_license_number()
 
         try:
             st = time.time()
-            url = f"http://backend.totalsegmentator.com:80/"
+            url = "http://backend.totalsegmentator.com:80/"
             r = requests.post(url + "log_totalseg_run",
                               json={"totalseg_id": config["totalseg_id"],
                                     "prediction_counter": config["prediction_counter"],
@@ -234,5 +234,5 @@ def send_usage_stats(config, params):
             #     print(f"message: {r.json()['message']}")
             # print(f"Request took {time.time()-st:.3f}s")
         except Exception as e:
-            # print(f"An Exception occured: {e}")
+            # print(f"An Exception occurred: {e}")
             pass

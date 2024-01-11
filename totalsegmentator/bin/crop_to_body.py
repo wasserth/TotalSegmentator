@@ -20,11 +20,11 @@ def main():
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
 
     parser.add_argument("-i", metavar="filepath", dest="input",
-                        help="CT nifti image", 
+                        help="CT nifti image",
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-o", metavar="filepath", dest="output",
-                        help="Cropped nifti image", 
+                        help="Cropped nifti image",
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-t", "--only_trunc", action="store_true", help="Crop to trunc instead of entire body.",
@@ -32,9 +32,9 @@ def main():
 
     parser.add_argument("-nr", "--nr_thr_resamp", type=int, help="Nr of threads for resampling", default=1)
 
-    parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations", 
+    parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations",
                         default=6)
-    
+
     parser.add_argument("-d", "--device", choices=["gpu", "cpu"], help="Device to run on (default: gpu).",
                         default="gpu")
 
@@ -64,8 +64,8 @@ def main():
     if not quiet: print("Generating rough body segmentation...")
     body_seg, _ = nnUNet_predict_image(args.input, None, 300, model="3d_fullres", folds=[0],
                         trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
-                        crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False, 
-                        save_binary=False, nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=1, 
+                        crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False,
+                        save_binary=False, nr_threads_resampling=args.nr_thr_resamp, nr_threads_saving=1,
                         crop_addon=crop_addon, quiet=quiet, verbose=verbose, test=0, device=device)
     if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 

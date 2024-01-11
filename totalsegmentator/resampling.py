@@ -29,8 +29,8 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
     Resize numpy image array to new size.
 
     Faster than resample_img_nnunet.
-    Resample_img_nnunet maybe slighlty better quality on CT (but not sure).
-    
+    Resample_img_nnunet maybe slightly better quality on CT (but not sure).
+
     Works for 2D and 3D and 4D images.
     """
     def _process_gradient(grad_idx):
@@ -38,10 +38,10 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
 
     dim = len(img.shape)
 
-    # Add dimesions to make each input 4D
-    if dim == 2: 
+    # Add dimensions to make each input 4D
+    if dim == 2:
         img = img[..., None, None]
-    if dim == 3: 
+    if dim == 3:
         img = img[..., None]
 
     nr_cpus = psutil.cpu_count() if nr_cpus == -1 else nr_cpus
@@ -58,7 +58,7 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
 
 def resample_img_cucim(img, zoom=0.5, order=0, nr_cpus=-1):
     """
-    Completely speedup of resampling compare to non-gpu version not as big, because much time is lost in 
+    Completely speedup of resampling compare to non-gpu version not as big, because much time is lost in
     loading the file and then in copying to the GPU.
 
     For small image no significant speedup.
@@ -91,7 +91,7 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
         [x,y,z], [x,y,z]
     """
     from .resample_nnunet import resample_patient
-    
+
     if type(original_spacing) is float:
         original_spacing = [original_spacing,] * 3
     original_spacing = np.array(original_spacing)
@@ -126,12 +126,12 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
                    nnunet_resample=False, dtype=None, remove_negative=False, force_affine=None):
     """
     Resample nifti image to the new spacing (uses resample_img() internally).
-    
+
     img_in: nifti image
     new_spacing: float or sequence of float
     target_shape: sequence of int (optional)
     order: resample order (optional)
-    nnunet_resample: nnunet resampling will use order=0 sampling for z if very anisotropic. Sometimes results 
+    nnunet_resample: nnunet resampling will use order=0 sampling for z if very anisotropic. Sometimes results
                      in a little bit less blurry results
     dtype: output datatype
     remove_negative: set all negative values to 0. Useful if resampling introduced negative values.
@@ -144,8 +144,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     a shape which is +-1 compared to original shape, because of rounding of the shape to int.
     To avoid this the exact output shape can be provided. Then new_spacing will be ignored and the exact
     spacing will be calculated which is needed to get to target_shape.
-    In this case however the calculated spacing can be slighlty different from the desired new_spacing. This will
-    result in a slightly different affine. To avoid this the desired affine can be writen by force with "force_affine".
+    In this case however the calculated spacing can be slightly different from the desired new_spacing. This will
+    result in a slightly different affine. To avoid this the desired affine can be written by force with "force_affine".
 
     Note: Only works properly if affine is all 0 except for diagonal and offset (=no rotation and sheering)
     """
@@ -166,8 +166,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     if target_shape is not None:
         # Find the right zoom to exactly reach the target_shape.
         # We also have to adapt the spacing to this new zoom.
-        zoom = np.array(target_shape) / old_shape  
-        new_spacing = img_spacing / zoom  
+        zoom = np.array(target_shape) / old_shape
+        new_spacing = img_spacing / zoom
     else:
         zoom = img_spacing / new_spacing
 
@@ -198,7 +198,7 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
             new_data = resample_img_cucim(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # gpu resampling
         else:
             new_data = resample_img(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # cpu resampling
-        
+
     if remove_negative:
         new_data[new_data < 1e-4] = 0
 
@@ -219,8 +219,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
 
 # if __name__ == "__main__":
 #     args = sys.argv[1:]
-#     file_in = Path(args[0])   
-#     file_out = Path(args[1])  
+#     file_in = Path(args[0])
+#     file_out = Path(args[1])
 
 #     # spacing in mm
 #     x = float(args[2])

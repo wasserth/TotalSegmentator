@@ -262,12 +262,12 @@ class_map = {
         1: "vertebrae_body"
     },
     "heartchambers_highres": {
-        1: "heart_myocardium", 
-        2: "heart_atrium_left", 
-        3: "heart_ventricle_left", 
-        4: "heart_atrium_right", 
-        5: "heart_ventricle_right", 
-        6: "aorta", 
+        1: "heart_myocardium",
+        2: "heart_atrium_left",
+        3: "heart_ventricle_left",
+        4: "heart_atrium_right",
+        5: "heart_ventricle_right",
+        6: "aorta",
         7: "pulmonary_artery"
     },
     "appendicular_bones": {
@@ -306,8 +306,8 @@ class_map = {
 
 commercial_models = {
     "heartchambers_highres": 301,
-    "appendicular_bones": 304, 
-    "tissue_types": 481, 
+    "appendicular_bones": 304,
+    "tissue_types": 481,
     "vertebrae_body": 302,
     "face": 303
 }
@@ -435,8 +435,8 @@ class_map_5_parts = {
     #  (the extra rib would start from C7)
     #  -> this has label rib_1
     #
-    # Quite often only 11 ribs (12. ribs probably so small that not found). Those 
-    # cases often wrongly segmented. 
+    # Quite often only 11 ribs (12. ribs probably so small that not found). Those
+    # cases often wrongly segmented.
     "class_map_part_ribs": {
         1: "rib_left_1",
         2: "rib_left_2",

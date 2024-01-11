@@ -24,14 +24,14 @@ def main():
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
 
     parser.add_argument("-i", metavar="directory", dest="mask_dir",
-                        help="TotalSegmentator output directory containing all the masks", 
+                        help="TotalSegmentator output directory containing all the masks",
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-o", metavar="filepath", dest="output",
-                        help="Output path for combined mask", 
+                        help="Output path for combined mask",
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("-m", "--masks", type=str, choices=["lung", "lung_left", "lung_right", 
+    parser.add_argument("-m", "--masks", type=str, choices=["lung", "lung_left", "lung_right",
                         "vertebrae", "ribs", "vertebrae_ribs", "heart", "pelvis", "body"],
                         help="The type of masks you want to combine", required=True)
 

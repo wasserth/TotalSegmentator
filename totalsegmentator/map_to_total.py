@@ -23,10 +23,10 @@ map_to_total = {
     # "torso_fat": "body",
 
     "heart_myocardium": "heart",
-    "heart_atrium_left": "heart", 
-    "heart_ventricle_left": "heart", 
-    "heart_atrium_right": "heart", 
-    "heart_ventricle_right": "heart", 
+    "heart_atrium_left": "heart",
+    "heart_ventricle_left": "heart",
+    "heart_atrium_right": "heart",
+    "heart_ventricle_right": "heart",
     "pulmonary_artery": "heart",
 
     "face": "skull"

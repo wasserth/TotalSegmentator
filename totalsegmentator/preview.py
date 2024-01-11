@@ -22,7 +22,7 @@ random_colors = np.random.rand(100, 4)
 roi_groups = {
     "total": [
         ["humerus_left", "humerus_right", "scapula_left", "scapula_right", "clavicula_left",
-         "clavicula_right", "femur_left", "femur_right", "hip_left", "hip_right", "sacrum",         
+         "clavicula_right", "femur_left", "femur_right", "hip_left", "hip_right", "sacrum",
         #  "patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet", "ulna", "radius", "carpal", "metacarpal", "phalanges_hand",
          "colon", "trachea", "skull"],
         ["spleen", "kidney_right", "kidney_left", "gallbladder",
@@ -34,8 +34,8 @@ roi_groups = {
         ["iliac_artery_left", "iliac_artery_right", "iliac_vena_left", "iliac_vena_right",
          "aorta", "inferior_vena_cava",
          "portal_vein_and_splenic_vein", "esophagus",
-         "brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left", 
-         "common_carotid_artery_right", "common_carotid_artery_left",  
+         "brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left",
+         "common_carotid_artery_right", "common_carotid_artery_left",
          "atrial_appendage_left"],
         ["small_bowel", "stomach", "lung_upper_lobe_left",
          "lung_upper_lobe_right"],
@@ -54,7 +54,7 @@ roi_groups = {
          "rib_right_12", "urinary_bladder", "duodenum",
          "gluteus_minimus_left", "gluteus_minimus_right", "sternum", "costal_cartilages"],
         ["liver", "autochthon_left", "autochthon_right", "iliopsoas_left", "iliopsoas_right",
-        #  "heart_ventricle_left", "heart_ventricle_right", "pulmonary_artery", 
+        #  "heart_ventricle_left", "heart_ventricle_right", "pulmonary_artery",
         "pulmonary_vein",
          "superior_vena_cava", "brachiocephalic_vein_left", "brachiocephalic_vein_right"]
     ],
@@ -93,7 +93,7 @@ roi_groups = {
         ["aorta", "pulmonary_artery"]
     ],
     "appendicular_bones": [
-        ["patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet", 
+        ["patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet",
          "ulna", "radius", "carpal", "metacarpal", "phalanges_hand"]
     ],
     "tissue_types": [
@@ -107,7 +107,7 @@ roi_groups = {
     # "aortic_branches_test": [
     #     ["brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left", "aorta",
     #     "common_carotid_artery_right", "common_carotid_artery_left"],
-    #     ["superior_vena_cava", 
+    #     ["superior_vena_cava",
     #     "brachiocephalic_vein_left", "brachiocephalic_vein_right", "atrial_appendage_left"],
     #     ["pulmonary_vein", "pulmonary_artery"],
     #     ["heart_atrium_left", "heart_atrium_right", "thyroid_gland"]
@@ -176,7 +176,7 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
     # scene.set_camera(position=(612., 331., 1782.),  # decrease z: zoom a bit closer
     #                  focal_point=(612., 331., 228.),
     #                  view_up=(0.0, 1.0, 0.0))
-    
+
     scene.projection(proj_type="parallel")
     scene.reset_camera_tight(margin_factor=1.02)  # need to do reset_camera=False in record for this to work in
 

@@ -1,4 +1,3 @@
-
 def set_xlsx_column_width_to_content(file_name):
     from openpyxl import load_workbook
     from openpyxl.utils import get_column_letter
