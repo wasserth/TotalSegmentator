@@ -5,6 +5,7 @@
 * add `--roi_subset_robust` argument
 * add `--fastest` argument
 * allow `mps` as device (but not working yet)
+* add inline python version requirement for `requests` package
 
 
 ## Release 2.0.5
