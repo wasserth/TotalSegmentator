@@ -100,9 +100,10 @@ def main():
                         help="In multilabel file order classes as in v1. New v2 classes will be removed.",
                         default=False)
 
-    # "mps" is for apple silicon; but does not support 3D Conv at the moment. Therefore do not allow here.
+    # "mps" is for apple silicon; the latest pytorch nightly version supports 3D Conv but not ConvTranspose3D which is
+    # also needed by nnU-Net. So "mps" not working for now.
     # https://github.com/pytorch/pytorch/issues/77818
-    parser.add_argument("-d", "--device", choices=["gpu", "cpu"],
+    parser.add_argument("-d", "--device", choices=["gpu", "cpu", "mps"],
                         help="Device to run on (default: gpu).",
                         default="gpu")
 
