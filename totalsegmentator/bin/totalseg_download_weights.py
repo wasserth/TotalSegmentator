@@ -26,7 +26,7 @@ def main():
     args = parser.parse_args()
 
     task_to_id = {
-        "total": [291, 292, 293, 294, 295],
+        "total": [291, 292, 293, 294, 295, 298],
         "total_fast": [297, 298],
         "lung_vessels": [258],
         "cerebral_bleed": [150],
