@@ -6,6 +6,7 @@
 * add `--fastest` argument
 * allow `mps` as device (but not working yet)
 * add inline python version requirement for `requests` package
+* if input spacing same as resampling spacing then skip resampling
 
 
 ## Release 2.0.5

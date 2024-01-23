@@ -171,6 +171,10 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     else:
         zoom = img_spacing / new_spacing
 
+    if np.array_equal(img_spacing, new_spacing):
+        # print("Input spacing is equal to new spacing. Return image without resampling.")
+        return img_in
+
     # copy very important; otherwise new_affine changes will also be in old affine
     new_affine = np.copy(img_in.affine)
 
