@@ -571,7 +571,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 if not quiet: print("Creating skin.nii.gz")
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")
-    
+
     seg_img = nib.Nifti1Image(img_data, img_pred.affine)
     seg_img = add_label_map_to_nifti(seg_img, class_map[task_name])
     return seg_img, img_in_orig
