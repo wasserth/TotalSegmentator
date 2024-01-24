@@ -36,7 +36,7 @@ from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin, remove_auxiliary_labels
 from totalsegmentator.postprocessing import keep_largest_blob_multilabel, remove_small_blobs_multilabel
-from totalsegmentator.nifti_ext_header import save_multilabel_nifti
+from totalsegmentator.nifti_ext_header import save_multilabel_nifti, add_label_map_to_nifti
 from totalsegmentator.statistics import get_basic_statistics
 
 
@@ -571,5 +571,7 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
                 if not quiet: print("Creating skin.nii.gz")
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")
-
-    return nib.Nifti1Image(img_data, img_pred.affine), img_in_orig
+    
+    seg_img = nib.Nifti1Image(img_data, img_pred.affine)
+    seg_img = add_label_map_to_nifti(seg_img, class_map[task_name])
+    return seg_img, img_in_orig

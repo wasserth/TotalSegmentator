@@ -7,6 +7,7 @@
 * allow `mps` as device (but not working yet)
 * add inline python version requirement for `requests` package
 * if input spacing same as resampling spacing then skip resampling
+* from python api also return nifti with label map in header
 
 
 ## Release 2.0.5
