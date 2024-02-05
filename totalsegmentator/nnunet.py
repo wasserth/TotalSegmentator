@@ -251,6 +251,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         img_type = "nifti" if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz") else "dicom"
         if not file_in.exists():
             sys.exit("ERROR: The input file or directory does not exist.")
+    else:
+        img_type = "nifti"
     if file_out is not None:
         file_out = Path(file_out)
     multimodel = type(task_id) is list
