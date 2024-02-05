@@ -7,6 +7,7 @@ from typing import Union
 
 import numpy as np
 import nibabel as nib
+from nibabel.nifti1 import Nifti1Image
 import torch
 
 from totalsegmentator.statistics import get_basic_statistics, get_radiomics_features_for_entire_dir
