@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import time
 import textwrap
+from typing import Union
 
 import numpy as np
 import nibabel as nib
