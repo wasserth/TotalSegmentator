@@ -38,7 +38,7 @@ def show_license_info():
         sys.exit(1)
 
 
-def totalsegmentator(input, output, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
+def totalsegmentator(input: Union[Path, Nifti1Image], output: Path, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,

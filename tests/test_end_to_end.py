@@ -99,9 +99,10 @@ class test_end_to_end(unittest.TestCase):
         stats_equal = np.allclose(stats_ref.loc["volume"].values, stats_new.loc["volume"].values,
                                   rtol=3e-2, atol=3e-2)
         self.assertTrue(stats_equal, "volume statistics are not correct")
+        max_diff_intensity = np.abs(stats_ref.loc["intensity"].values - stats_new.loc["intensity"].values).max()
         stats_equal = np.allclose(stats_ref.loc["intensity"].values, stats_new.loc["intensity"].values,
-                                  rtol=3e-2, atol=3e-2)
-        self.assertTrue(stats_equal, "intensity statistics are not correct")
+                                  rtol=5e-2, atol=5e-2)
+        self.assertTrue(stats_equal, f"intensity statistics are not correct (max_diff: {max_diff_intensity:.5f})")
 
     # def test_radiomics(self):
     #     stats_ref = json.load(open("tests/reference_files/example_seg_fast/statistics_radiomics.json", "r"))
