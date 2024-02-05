@@ -347,8 +347,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if not quiet: print("Calculating radiomics...")
         st = time.time()
         stats_dir = output.parent if ml else output
-        get_radiomics_features_for_entire_dir(input, output, stats_dir / "statistics_radiomics.json")
-        if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
+        with tempfile.TemporaryDirectory(prefix="radiomics_tmp_") as tmp_folder:
+            if isinstance(input, Nifti1Image):
+                input_path = tmp_folder / "ct.nii.gz"
+                nib.save(input, input_path)
+            else:
+                input_path = input
+            get_radiomics_features_for_entire_dir(input_path, output, stats_dir / "statistics_radiomics.json")
+            if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
     return seg_img
 
