@@ -8,12 +8,15 @@ import shutil
 import subprocess
 from pathlib import Path
 from os.path import join
-import numpy as np
-import nibabel as nib
+from typing import Union
 from functools import partial
-from p_tqdm import p_map
 from multiprocessing import Pool
 import tempfile
+
+import numpy as np
+import nibabel as nib
+from nibabel.nifti1 import Nifti1Image
+from p_tqdm import p_map
 import torch
 
 from totalsegmentator.libs import nostdout
@@ -231,7 +234,7 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
 
 
-def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=None,
+def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True,
                          resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False,
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
@@ -243,14 +246,14 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
     crop: string or a nibabel image
     resample: None or float  (target spacing for all dimensions)
     """
-    file_in = Path(file_in)
+    if not isinstance(file_in, Nifti1Image):
+        file_in = Path(file_in)
+        img_type = "nifti" if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz") else "dicom"
     if file_out is not None:
         file_out = Path(file_out)
     if not file_in.exists():
         sys.exit("ERROR: The input file or directory does not exist.")
     multimodel = type(task_id) is list
-
-    img_type = "nifti" if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz") else "dicom"
 
     if img_type == "nifti" and output_type == "dicom":
         raise ValueError("To use output type dicom you also have to use a Dicom image as input.")
@@ -279,7 +282,10 @@ def nnUNet_predict_image(file_in, file_out, task_id, model="3d_fullres", folds=N
             #     shutil.copy(file_in, file_out / "input_file.nii.gz")
             if not quiet: print(f"  found image with shape {nib.load(file_in).shape}")
 
-        img_in_orig = nib.load(file_in)
+        if isinstance(file_in, Nifti1Image):
+            img_in_orig = file_in
+        else:
+            img_in_orig = nib.load(file_in)
         if len(img_in_orig.shape) == 2:
             raise ValueError("TotalSegmentator does not work for 2D images. Use a 3D image.")
         if len(img_in_orig.shape) > 3:

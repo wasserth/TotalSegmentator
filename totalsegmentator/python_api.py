@@ -53,7 +53,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     For explanation of the arguments see description of command line
     arguments in bin/TotalSegmentator.
     """
-    input = Path(input)
+    if not isinstance(input, Nifti1Image):
+        input = Path(input) 
     output = Path(output)
 
     nora_tag = "None" if nora_tag is None else nora_tag
@@ -239,7 +240,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     crop_path = output if crop_path is None else crop_path
 
-    img_type = "nifti" if str(input).endswith(".nii") or str(input).endswith(".nii.gz") else "dicom"
+    if isinstance(input, Nifti1Image):
+        img_type = "nifti"
+    else:
+        img_type = "nifti" if str(input).endswith(".nii") or str(input).endswith(".nii.gz") else "dicom"
 
     # fast statistics are calculated on the downsampled image
     if statistics and fast:
