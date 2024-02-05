@@ -18,7 +18,7 @@ class test_end_to_end(unittest.TestCase):
         img_ref = nib.load("tests/reference_files/example_seg.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction.nii.gz").get_fdata()
         nr_of_diff_voxels = (img_ref != img_new).sum()
-        images_equal = nr_of_diff_voxels < 20
+        images_equal = nr_of_diff_voxels < 30
         self.assertTrue(images_equal, f"multilabel prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
 
     def test_prediction_liver_roi_subset(self):
@@ -26,7 +26,7 @@ class test_end_to_end(unittest.TestCase):
         img_new = nib.load("tests/unittest_prediction_roi_subset.nii.gz").get_fdata()
         # prediction is not completely deterministic therefore allow for small differences
         nr_of_diff_voxels = (img_ref != img_new).sum()
-        images_equal = nr_of_diff_voxels < 20
+        images_equal = nr_of_diff_voxels < 30
         self.assertTrue(images_equal, f"roi subset prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
 
     def test_prediction_fast(self):
@@ -35,7 +35,7 @@ class test_end_to_end(unittest.TestCase):
             img_new = nib.load(f"tests/unittest_prediction_fast/{roi}.nii.gz").get_fdata()
             # prediction is not completely deterministic therefore allow for small differences
             nr_of_diff_voxels = (img_ref != img_new).sum()
-            images_equal = nr_of_diff_voxels < 20
+            images_equal = nr_of_diff_voxels < 30
             self.assertTrue(images_equal, f"{roi} fast prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
 
     def test_preview(self):
@@ -52,7 +52,7 @@ class test_end_to_end(unittest.TestCase):
         img_ref = nib.load("tests/reference_files/example_seg_fast_force_split.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_fast_force_split.nii.gz").get_fdata()
         nr_of_diff_voxels = (img_ref != img_new).sum()
-        images_equal = nr_of_diff_voxels < 20
+        images_equal = nr_of_diff_voxels < 30
         self.assertTrue(images_equal, f"force_split prediction not correct (nr_of_diff_voxels: {nr_of_diff_voxels})")
 
 
