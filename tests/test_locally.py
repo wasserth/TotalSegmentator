@@ -1,5 +1,7 @@
 import sys
 from pathlib import Path
+p_dir = str(Path(__file__).absolute().parents[1])
+if p_dir not in sys.path: sys.path.insert(0, p_dir)
 
 import pytest
 import os
@@ -7,15 +9,17 @@ import re
 import glob
 import shutil
 import subprocess
+from collections import defaultdict
+import time
+import threading
+import platform
+
+import psutil
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
-from collections import defaultdict
-import psutil
-import time
-import threading
 import torch
-import platform
+import nnunetv2
 
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.map_to_binary import class_map
@@ -222,7 +226,8 @@ if __name__ == "__main__":
             "memory_gpu_15mm", "memory_gpu_3mm",
             "cpu_utilization_15mm", "cpu_utilization_3mm",
             "gpu_utilization_15mm", "gpu_utilization_3mm",
-            "python_version", "torch_version", "cuda_version", "cudnn_version",
+            "python_version", "torch_version", "nnunet_version", 
+            "cuda_version", "cudnn_version",
             "gpu_name"]
     overview_file = Path(f"{base_dir}/overview.xlsx")
     if overview_file.exists():
@@ -240,6 +245,7 @@ if __name__ == "__main__":
                cpu_utilization["15mm"], cpu_utilization["3mm"],
                gpu_utilization["15mm"], gpu_utilization["3mm"],
                platform.python_version(), torch.__version__,
+               nnunetv2.__version__,
                float(torch.version.cuda), int(torch.backends.cudnn.version()),
                torch.cuda.get_device_name(0)]
 
