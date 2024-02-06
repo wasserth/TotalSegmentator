@@ -54,7 +54,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     arguments in bin/TotalSegmentator.
     """
     if not isinstance(input, Nifti1Image):
-        input = Path(input) 
+        input = Path(input)
     output = Path(output)
 
     nora_tag = "None" if nora_tag is None else nora_tag
