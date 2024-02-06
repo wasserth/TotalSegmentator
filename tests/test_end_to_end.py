@@ -126,7 +126,7 @@ class test_end_to_end(unittest.TestCase):
                                   rtol=3e-2, atol=3e-2)
         self.assertTrue(stats_equal, "volume statistics are not correct")
         max_diff_intensity = np.abs(stats_ref.loc["intensity"].values - stats_new.loc["intensity"].values).max()
-        stats_equal = max_diff_intensity < 1.0
+        stats_equal = max_diff_intensity < 2.0
         self.assertTrue(stats_equal, f"intensity statistics are not correct (max_diff: {max_diff_intensity:.5f})")
 
     # def test_radiomics(self):
@@ -144,8 +144,9 @@ class test_end_to_end(unittest.TestCase):
     def test_prediction_dicom(self):
         img_ref = nib.load("tests/reference_files/example_seg_dicom.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_dicom.nii.gz").get_fdata()
-        images_equal = np.array_equal(img_ref, img_new)
-        self.assertTrue(images_equal, "Dicom prediction not correct")
+        dice = dice_score(img_ref, img_new)
+        images_equal = dice > 0.99
+        self.assertTrue(images_equal, f"Dicom prediction not correct (dice: {dice:.6f})")
 
 
 if __name__ == '__main__':

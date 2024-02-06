@@ -13,6 +13,7 @@ from collections import defaultdict
 import time
 import threading
 import platform
+import importlib.metadata
 
 import psutil
 from tqdm import tqdm
@@ -226,7 +227,7 @@ if __name__ == "__main__":
             "memory_gpu_15mm", "memory_gpu_3mm",
             "cpu_utilization_15mm", "cpu_utilization_3mm",
             "gpu_utilization_15mm", "gpu_utilization_3mm",
-            "python_version", "torch_version", "nnunet_version", 
+            "python_version", "torch_version", "nnunet_version",
             "cuda_version", "cudnn_version",
             "gpu_name"]
     overview_file = Path(f"{base_dir}/overview.xlsx")
@@ -245,7 +246,7 @@ if __name__ == "__main__":
                cpu_utilization["15mm"], cpu_utilization["3mm"],
                gpu_utilization["15mm"], gpu_utilization["3mm"],
                platform.python_version(), torch.__version__,
-               nnunetv2.__version__,
+               importlib.metadata.version("nnunetv2"),
                float(torch.version.cuda), int(torch.backends.cudnn.version()),
                torch.cuda.get_device_name(0)]
 
