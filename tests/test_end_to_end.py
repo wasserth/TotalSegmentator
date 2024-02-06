@@ -10,6 +10,8 @@ import pandas as pd
 
 
 def dice_score(y_true, y_pred):
+    if y_true.sum() == 0 and y_pred.sum() == 0:
+        return 1.0
     intersect = np.sum(y_true * y_pred)
     denominator = np.sum(y_true) + np.sum(y_pred)
     f1 = (2 * intersect) / (denominator + 1e-6)
