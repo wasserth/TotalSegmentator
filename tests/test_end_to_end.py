@@ -27,7 +27,7 @@ def dice_score_multilabel(y_true, y_pred):
         dice_scores.append(dice_score(gt, pred))
     print(f"Dice scores per class: {dice_scores}")  # only gets printed if the test fails
     return np.mean(dice_scores)
-    
+
 
 class test_end_to_end(unittest.TestCase):
 
