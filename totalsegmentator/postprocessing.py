@@ -21,7 +21,7 @@ def keep_largest_blob(data, debug=False):
     return (blob_map == largest_blob_label).astype(np.uint8)
 
 
-def keep_largest_blob_multilabel(data, class_map, rois, debug=False):
+def keep_largest_blob_multilabel(data, class_map, rois, debug=False, quiet=False):
     """
     Keep the largest blob for the classes defined in rois.
 
@@ -33,7 +33,7 @@ def keep_largest_blob_multilabel(data, class_map, rois, debug=False):
     """
     st = time.time()
     class_map_inv = {v: k for k, v in class_map.items()}
-    for roi in tqdm(rois):
+    for roi in tqdm(rois, disable=quiet):
         idx = class_map_inv[roi]
         data_roi = data == idx
         cleaned_roi = keep_largest_blob(data_roi, debug) > 0.5
@@ -74,7 +74,7 @@ def remove_small_blobs(img: np.ndarray, interval=[10, 30], debug=False) -> np.nd
     return mask
 
 
-def remove_small_blobs_multilabel(data, class_map, rois, interval=[10, 30], debug=False):
+def remove_small_blobs_multilabel(data, class_map, rois, interval=[10, 30], debug=False, quiet=False):
     """
     Remove small blobs for the classes defined in rois.
 
@@ -87,7 +87,7 @@ def remove_small_blobs_multilabel(data, class_map, rois, interval=[10, 30], debu
     st = time.time()
     class_map_inv = {v: k for k, v in class_map.items()}
 
-    for roi in tqdm(rois):
+    for roi in tqdm(rois, disable=quiet):
         idx = class_map_inv[roi]
         data_roi = (data == idx)
         cleaned_roi = remove_small_blobs(data_roi, interval, debug) > 0.5  # Remove small blobs from this ROI
