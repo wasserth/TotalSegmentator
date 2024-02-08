@@ -10,6 +10,7 @@ import platform
 
 import requests
 import torch
+import portalocker
 
 
 def get_totalseg_dir():
@@ -161,10 +162,10 @@ def increase_prediction_counter():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
     if totalseg_config_file.exists():
-        with open(totalseg_config_file) as f:
+        with portalocker.Lock(totalseg_config_file, mode="r", timeout=2) as f:
             config = json.load(f)
         config["prediction_counter"] += 1
-        with open(totalseg_config_file, "w") as f:
+        with portalocker.Lock(totalseg_config_file, mode="w", timeout=2) as f:
             json.dump(config, f, indent=4)
         return config
 
