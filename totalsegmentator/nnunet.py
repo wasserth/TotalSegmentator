@@ -180,6 +180,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     else:
         device = torch.device('mps')
     step_size = 0.5
+    # step_size = 0.8  # overal speedup roughly 11%; for fast model no speedup; dice 0.001 worse
     disable_tta = not tta
     verbose = False
     save_probabilities = False
