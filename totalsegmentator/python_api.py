@@ -328,8 +328,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     config = increase_prediction_counter()
     send_usage_stats(config, {"task": task, "fast": fast, "preview": preview,
-                                "multilabel": ml, "roi_subset": roi_subset,
-                                "statistics": statistics, "radiomics": radiomics})
+                              "multilabel": ml, "roi_subset": roi_subset,
+                              "statistics": statistics, "radiomics": radiomics})
 
     if statistics:
         if not quiet: print("Calculating statistics...")
