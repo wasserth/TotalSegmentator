@@ -19,6 +19,12 @@ def main():
     parser.add_argument("-l", "--license_number", type=str, help="TotalSegmentator license number.",
                         required=True)
 
+    parser.add_argument("-sv", "--skip_validation",  action="store_true", 
+                        help="Do not evaluate if license number is valid. " +
+                             "Use this option only if you are sure that the license number is valid. " +
+                             "Otherwise, the tool will not work properly.",
+                        default=False)
+
     args = parser.parse_args()
 
     if not args.license_number.startswith("aca_"):
@@ -27,7 +33,7 @@ def main():
         raise ValueError("license number must have exactly 18 characters.")
 
     setup_totalseg()  # create config file if not exists
-    set_license_number(args.license_number)
+    set_license_number(args.license_number, skip_validation=args.skip_validation)
 
     print("License has been successfully saved.")
 
