@@ -12,6 +12,7 @@ from typing import Union
 from functools import partial
 from multiprocessing import Pool
 import tempfile
+import inspect
 
 import numpy as np
 import nibabel as nib
@@ -83,6 +84,20 @@ def contains_empty_img(imgs):
         this_is_empty = len(np.unique(nib.load(img).get_fdata())) == 1
         is_empty = is_empty and this_is_empty
     return is_empty
+
+
+def supports_keyword_argument(func, keyword: str):
+    """
+    Check if a function supports a specific keyword argument.
+
+    Returns:
+    - True if the function supports the specified keyword argument.
+    - False otherwise.
+    """
+    signature = inspect.signature(func)
+    parameters = signature.parameters
+    return keyword in parameters
+
 
 
 def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
@@ -197,17 +212,30 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     #                       part_id=part_id,
     #                       device=device)
 
-    # nnUNet 2.2
-    predictor = nnUNetPredictor(
-        tile_step_size=step_size,
-        use_gaussian=True,
-        use_mirroring=not disable_tta,
-        perform_everything_on_gpu=True,
-        device=device,
-        verbose=verbose,
-        verbose_preprocessing=verbose,
-        allow_tqdm=allow_tqdm
-    )
+    # nnUNet 2.2.1
+    if supports_keyword_argument(nnUNetPredictor, "perform_everything_on_gpu"):
+        predictor = nnUNetPredictor(
+            tile_step_size=step_size,
+            use_gaussian=True,
+            use_mirroring=not disable_tta,
+            perform_everything_on_gpu=True,  # for nnunetv2<=2.2.1
+            device=device,
+            verbose=verbose,
+            verbose_preprocessing=verbose,
+            allow_tqdm=allow_tqdm
+        )
+    # nnUNet >= 2.2.2
+    else:
+        predictor = nnUNetPredictor(
+            tile_step_size=step_size,
+            use_gaussian=True,
+            use_mirroring=not disable_tta,
+            perform_everything_on_device=True,  # for nnunetv2>=2.2.2
+            device=device,
+            verbose=verbose,
+            verbose_preprocessing=verbose,
+            allow_tqdm=allow_tqdm
+        )
     predictor.initialize_from_trained_model_folder(
         model_folder,
         use_folds=folds,

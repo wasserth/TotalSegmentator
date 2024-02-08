@@ -4,10 +4,13 @@
 * properly add `vertebrae_body` model
 * add `--roi_subset_robust` argument
 * add `--fastest` argument
-* allow `mps` as device (but not working yet)
+* allow `mps` as device (but not supported by pytorch yet)
 * add inline python version requirement for `requests` package
 * if input spacing same as resampling spacing then skip resampling
 * from python api also return nifti with label map in header
+* input to python api can be a Nifti1Image object or a file path
+* upgrade to `nnunetv2>=2.2.1`
+* minor edits and bugfixes
 
 
 ## Release 2.0.5
