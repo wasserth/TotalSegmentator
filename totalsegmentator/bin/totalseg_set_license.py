@@ -19,7 +19,7 @@ def main():
     parser.add_argument("-l", "--license_number", type=str, help="TotalSegmentator license number.",
                         required=True)
 
-    parser.add_argument("-sv", "--skip_validation",  action="store_true", 
+    parser.add_argument("-sv", "--skip_validation",  action="store_true",
                         help="Do not evaluate if license number is valid. " +
                              "Use this option only if you are sure that the license number is valid. " +
                              "Otherwise, the tool will not work properly.",
