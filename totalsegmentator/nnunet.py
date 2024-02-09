@@ -614,5 +614,4 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")
 
-    
     return img_out, img_in_orig
