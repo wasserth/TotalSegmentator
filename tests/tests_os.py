@@ -34,6 +34,14 @@ def run_tests_and_exit_on_failure():
     os.remove("tests/unittest_prediction_fast.nii.gz")
     if r != 0: sys.exit("Test failed: test_prediction_fast with Nifti input and output")
 
+    # Test python api 3 - nifti input, nifti output, ml=True (has no effect here), roi_subset=['liver', 'brain']
+    input_img = nib.load("tests/reference_files/example_ct_sm.nii.gz")
+    output_img = totalsegmentator(input_img, None, device="cpu", ml=True, roi_subset=['liver', 'brain'])
+    nib.save(output_img, "tests/unittest_prediction_roi_subset.nii.gz")
+    r = pytest.main(["-v", "tests/test_end_to_end.py::test_end_to_end::test_prediction_liver_roi_subset"])
+    os.remove("tests/unittest_prediction_roi_subset.nii.gz")
+    if r != 0: sys.exit("Test failed: test_prediction_fast with Nifti input and output")
+
     # Test terminal
     # Test organ predictions - fast - multilabel
     # makes correct path for windows and linux. Only required for terminal call. Within python
