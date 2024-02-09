@@ -40,7 +40,7 @@ def show_license_info():
         sys.exit(1)
 
 
-def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path], ml=False, nr_thr_resamp=1, nr_thr_saving=6,
+def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path, None], ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
@@ -52,10 +52,17 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     For explanation of the arguments see description of command line
     arguments in bin/TotalSegmentator.
+
+    Return: multilabel Nifti1Image
     """
     if not isinstance(input, Nifti1Image):
         input = Path(input)
-    output = Path(output)
+
+    if output is not None:
+        output = Path(output)
+    else:
+        if statistics or radiomics:
+            raise ValueError("Output path is required for statistics and radiomics.")
 
     nora_tag = "None" if nora_tag is None else nora_tag
 

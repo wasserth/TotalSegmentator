@@ -515,6 +515,27 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if save_binary:
             img_data = (img_data > 0).astype(np.uint8)
 
+        # Reorder labels if needed
+        if v1_order and task_name == "total":
+            img_data = reorder_multilabel_like_v1(img_data, class_map["total"], class_map["total_v1"])
+            label_map = class_map["total_v1"]
+        else:
+            label_map = class_map[task_name]
+
+        # Keep only voxel values corresponding to the roi_subset
+        if roi_subset is not None:
+            label_map = {k: v for k, v in label_map.items() if v in roi_subset}
+            img_data *= np.isin(img_data, list(label_map.keys()))
+
+        # Prepare output nifti
+        # Copy header to make output header exactly the same as input. But change dtype otherwise it will be
+        # float or int and therefore the masks will need a lot more space.
+        # (infos on header: https://nipy.org/nibabel/nifti_images.html)
+        new_header = img_in_orig.header.copy()
+        new_header.set_data_dtype(np.uint8)
+        img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
+        img_out = add_label_map_to_nifti(img_out, class_map[task_name])
+        
         if file_out is not None and skip_saving is False:
             if not quiet: print("Saving segmentations...")
 
@@ -527,29 +548,13 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 file_out.mkdir(exist_ok=True, parents=True)
                 save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out / "segmentations.dcm")
             else:
-                # Copy header to make output header exactly the same as input. But change dtype otherwise it will be
-                # float or int and therefore the masks will need a lot more space.
-                # (infos on header: https://nipy.org/nibabel/nifti_images.html)
-                new_header = img_in_orig.header.copy()
-                new_header.set_data_dtype(np.uint8)
-
                 st = time.time()
                 if multilabel_image:
                     file_out.parent.mkdir(exist_ok=True, parents=True)
                 else:
                     file_out.mkdir(exist_ok=True, parents=True)
                 if multilabel_image:
-                    if v1_order and task_name == "total":
-                        img_data = reorder_multilabel_like_v1(img_data, class_map["total"], class_map["total_v1"])
-                        label_map = class_map["total_v1"]
-                    else:
-                        label_map = class_map[task_name]
-                    # Keep only voxel values corresponding to the roi_subset
-                    if roi_subset is not None:
-                        label_map = {k: v for k, v in label_map.items() if v in roi_subset}
-                        img_data *= np.isin(img_data, list(label_map.keys()))
-                    img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
-                    save_multilabel_nifti(img_out, file_out, label_map)
+                    nib.save(img_out, file_out)
                     if nora_tag != "None":
                         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
                 else:  # save each class as a separate binary image
@@ -609,6 +614,5 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")
 
-    seg_img = nib.Nifti1Image(img_data, img_pred.affine)
-    seg_img = add_label_map_to_nifti(seg_img, class_map[task_name])
-    return seg_img, img_in_orig
+    
+    return img_out, img_in_orig

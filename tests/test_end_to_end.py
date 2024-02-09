@@ -52,6 +52,10 @@ class test_end_to_end(unittest.TestCase):
         images_equal = dice > 0.99
         self.assertTrue(images_equal, f"roi subset prediction not correct (dice: {dice:.6f})")
 
+    def test_preview(self):
+        preview_exists = os.path.exists("tests/unittest_prediction_fast/preview_total.png")
+        self.assertTrue(preview_exists, "Preview was not generated")
+
     def test_prediction_fast(self):
         for roi in ["liver", "vertebrae_L1"]:
             img_ref = nib.load(f"tests/reference_files/example_seg_fast/{roi}.nii.gz").get_fdata()
@@ -59,10 +63,6 @@ class test_end_to_end(unittest.TestCase):
             dice = dice_score_multilabel(img_ref, img_new)
             images_equal = dice > 0.99
             self.assertTrue(images_equal, f"{roi} fast prediction not correct (dice: {dice:.6f})")
-
-    def test_preview(self):
-        preview_exists = os.path.exists("tests/unittest_prediction_fast/preview_total.png")
-        self.assertTrue(preview_exists, "Preview was not generated")
 
     def test_prediction_multilabel_fast(self):
         img_ref = nib.load("tests/reference_files/example_seg_fast.nii.gz").get_fdata()

@@ -19,12 +19,20 @@ def run_tests_and_exit_on_failure():
     shutil.rmtree("tests/unittest_prediction_fast")
     if r != 0: sys.exit("Test failed: test_prediction_fast")
 
-    # Test python api - nifti input
+    # Test python api 1 - nifti input, filepath output
     input_img = nib.load("tests/reference_files/example_ct_sm.nii.gz")
     totalsegmentator(input_img, "tests/unittest_prediction_fast", fast=True, device="cpu")
     r = pytest.main(["-v", "tests/test_end_to_end.py::test_end_to_end::test_prediction_fast"])
     shutil.rmtree("tests/unittest_prediction_fast")
     if r != 0: sys.exit("Test failed: test_prediction_fast with Nifti input")
+
+    # Test python api 2 - nifti input, nifti output
+    input_img = nib.load("tests/reference_files/example_ct_sm.nii.gz")
+    output_img = totalsegmentator(input_img, None, fast=True, device="cpu")
+    nib.save(output_img, "tests/unittest_prediction_fast.nii.gz")
+    r = pytest.main(["-v", "tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast"])
+    os.remove("tests/unittest_prediction_fast.nii.gz")
+    if r != 0: sys.exit("Test failed: test_prediction_fast with Nifti input and output")
 
     # Test terminal
     # Test organ predictions - fast - multilabel
