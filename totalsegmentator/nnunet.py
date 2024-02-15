@@ -417,7 +417,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                         # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
                         #                nr_threads_resampling, nr_threads_saving)
                         nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                                         nr_threads_resampling, nr_threads_saving, 
+                                         nr_threads_resampling, nr_threads_saving,
                                          device=device, quiet=quiet, step_size=step_size)
                     # iterate over models (different sets of classes)
                     for img_part in img_parts:
@@ -438,7 +438,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                     # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                     #                nr_threads_resampling, nr_threads_saving)
                     nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                                     nr_threads_resampling, nr_threads_saving, 
+                                     nr_threads_resampling, nr_threads_saving,
                                      device=device, quiet=quiet, step_size=step_size)
             # elif test == 2:
             #     print("WARNING: Using reference seg instead of prediction for testing.")
