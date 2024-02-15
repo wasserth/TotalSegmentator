@@ -11,6 +11,7 @@
 * input to python api can be a Nifti1Image object or a file path
 * upgrade to `nnunetv2>=2.2.1`
 * minor edits and bugfixes
+* use nnU-Net `step_size=0.8` instead of `0.5` for faster runtime while only decreasing dice by 0.001
 
 
 ## Release 2.0.5

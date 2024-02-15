@@ -179,8 +179,11 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         device = torch.device('cuda')
     else:
         device = torch.device('mps')
-    step_size = 0.5
-    # step_size = 0.8  # overall speedup roughly 11%; for fast model no speedup; dice 0.001 worse
+    # step_size = 0.5
+    # overall speedup for 15mm model roughly 11% (GPU) and 100% (CPU) 
+    # overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
+    # (dice 0.001 worse on test set -> ok)
+    step_size = 0.8
     disable_tta = not tta
     verbose = False
     save_probabilities = False

@@ -181,6 +181,8 @@ if __name__ == "__main__":
     cpu_utilization = {}
     gpu_utilization = {}
 
+    device = "gpu"  # "cpu" or "gpu"
+
     for resolution in ["15mm", "3mm"]:
     # for resolution in ["3mm"]:
         img_dir = base_dir / resolution / "ct"
@@ -193,7 +195,7 @@ if __name__ == "__main__":
         for img_fn in tqdm(img_dir.glob("*.nii.gz")):
             fast = resolution == "3mm"
             st = time.time()
-            totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, device="gpu")
+            totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, device=device)
             times[resolution].append(time.time()-st)
 
         print("Logging...")
@@ -229,7 +231,7 @@ if __name__ == "__main__":
             "gpu_utilization_15mm", "gpu_utilization_3mm",
             "python_version", "torch_version", "nnunet_version",
             "cuda_version", "cudnn_version",
-            "gpu_name"]
+            "gpu_name", "comment"]
     overview_file = Path(f"{base_dir}/overview.xlsx")
     if overview_file.exists():
         overview = pd.read_excel(overview_file)
@@ -248,7 +250,7 @@ if __name__ == "__main__":
                platform.python_version(), torch.__version__,
                importlib.metadata.version("nnunetv2"),
                float(torch.version.cuda), int(torch.backends.cudnn.version()),
-               torch.cuda.get_device_name(0)]
+               torch.cuda.get_device_name(0), ""]
 
     print("Comparing NEW to PREVIOUS log:")
     if are_logs_similar(last_log, new_log, cols):
