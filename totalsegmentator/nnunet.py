@@ -151,7 +151,7 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
 def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
-                     plans="nnUNetPlans", device="cuda", quiet=False):
+                     plans="nnUNetPlans", device="cuda", quiet=False, step_size=0.5):
     """
     Identical to bash function nnUNetv2_predict
 
@@ -179,11 +179,6 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         device = torch.device('cuda')
     else:
         device = torch.device('mps')
-    # step_size = 0.5
-    # overall speedup for 15mm model roughly 11% (GPU) and 100% (CPU) 
-    # overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
-    # (dice 0.001 worse on test set -> ok)
-    step_size = 0.8
     disable_tta = not tta
     verbose = False
     save_probabilities = False
@@ -381,6 +376,15 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third*2+1-margin:], img_in_rsp.affine),
                     tmp_dir / "s03_0000.nii.gz")
 
+        if task_name == "total" and resample < 3.0:
+            # overall speedup for 15mm model roughly 11% (GPU) and 100% (CPU)
+            # overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
+            # (dice 0.001 worse on test set -> ok)
+            # (for lung_trachea_bronchia somehow a lot lower dice)
+            step_size = 0.8
+        else:
+            step_size = 0.5
+
         st = time.time()
         if multimodel:  # if running multiple models
 
@@ -413,7 +417,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                         # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
                         #                nr_threads_resampling, nr_threads_saving)
                         nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                                         nr_threads_resampling, nr_threads_saving, device=device, quiet=quiet)
+                                         nr_threads_resampling, nr_threads_saving, 
+                                         device=device, quiet=quiet, step_size=step_size)
                     # iterate over models (different sets of classes)
                     for img_part in img_parts:
                         (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
@@ -433,7 +438,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                     # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                     #                nr_threads_resampling, nr_threads_saving)
                     nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                                     nr_threads_resampling, nr_threads_saving, device=device, quiet=quiet)
+                                     nr_threads_resampling, nr_threads_saving, 
+                                     device=device, quiet=quiet, step_size=step_size)
             # elif test == 2:
             #     print("WARNING: Using reference seg instead of prediction for testing.")
             #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
