@@ -25,7 +25,7 @@ jobs:
           pip install .
 
       - name: Run test script
-        run: ./tests/tests.sh ${{ secrets.TOTALSEGMENTATOR_LICENSE }}
+        run: ./tests/tests.sh
         shell: bash
 
   # upload-dockerhub:
