@@ -157,9 +157,9 @@ The segmentation image contains the names of the classes in the extended header.
 ```python
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 
-segmentation, label_map = load_multilabel_nifti(image_path)
+segmentation_nifti_img, label_map_dict = load_multilabel_nifti(image_path)
 ```
-This requires (`pip install xmltodict`).
+The above code requires `pip install xmltodict`.
 
 
 ### Install latest master branch (contains latest bug fixes)
