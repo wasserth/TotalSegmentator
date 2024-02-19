@@ -143,7 +143,7 @@ import nibabel as nib
 from totalsegmentator.python_api import totalsegmentator
 
 if __name__ == "__main__":
-    # option 1: provide input and output as file pathes
+    # option 1: provide input and output as file paths
     totalsegmentator(input_path, output_path)
 
     # option 2: provide input and output as nifti image objects
