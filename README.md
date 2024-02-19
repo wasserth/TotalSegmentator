@@ -16,7 +16,7 @@ TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU and GPU.
 
 Install dependencies:
 * Python >= 3.9
-* [Pytorch](http://pytorch.org/) >= 1.12.1
+* [Pytorch](http://pytorch.org/) >= 2.0.0
 
 Optionally:
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`)
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     output_img = totalsegmentator(input_img)
     nib.save(output_img, output_path)
 ```
-You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.  
+You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.
 
 The segmentation image contains the names of the classes in the extended header. If you want to load this additional header information you can use the following code:
 ```python
