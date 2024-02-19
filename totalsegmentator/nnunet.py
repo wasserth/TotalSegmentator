@@ -246,6 +246,19 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                                  folder_with_segs_from_prev_stage=prev_stage_predictions,
                                  num_parts=num_parts, part_id=part_id)
 
+    # Use numpy as input. TODO: In entire pipeline do not save to disk
+    #   Not ready: uses a lot of RAM and Dice very bad
+    # input_image = nib.load(Path(dir_in) / "s01_0000.nii.gz")
+    # input_data = input_image.get_fdata().transpose(2, 0, 1)[None,...].astype(np.float32)
+    # spacing = input_image.header.get_zooms()
+    # # Do i have to transpose spacing? does not matter because anyways isotropic at this point.
+    # spacing = (spacing[2], spacing[0], spacing[1])
+    # seg = predictor.predict_single_npy_array(input_data, {"spacing": spacing}, 
+    #                                          prev_stage_predictions, None, 
+    #                                          save_probabilities)
+    # seg = seg.transpose(1, 2, 0)
+    # nib.save(nib.Nifti1Image(seg.astype(np.uint8), input_image.affine), Path(dir_out) / "s01.nii.gz")
+
 
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
     k, v = class_map_item
@@ -354,8 +367,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
 
-        # nr_voxels_thr = 512*512*900
-        nr_voxels_thr = 256*256*900
+        # todo important: change
+        nr_voxels_thr = 512*512*900
+        # nr_voxels_thr = 256*256*900
         img_parts = ["s01"]
         ss = img_in_rsp.shape
         # If image to big then split into 3 parts along z axis. Also make sure that z-axis is at least 200px otherwise

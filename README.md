@@ -139,12 +139,27 @@ totalseg_set_license -l aca_12345678910
 ### Python API
 You can run totalsegmentator via Python:
 ```python
+import nibabel as nib
 from totalsegmentator.python_api import totalsegmentator
 
 if __name__ == "__main__":
+    # option 1: provide input and output as file pathes
     totalsegmentator(input_path, output_path)
+
+    # option 2: provide input and output as nifti image objects
+    input_img = nib.load(input_path)
+    output_img = totalsegmentator(input_img)
+    nib.save(output_img, output_path)
 ```
-You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.
+You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.  
+
+The segmentation image contains the names of the classes in the extended header. If you want to load this additional header information you can use the following code:
+```python
+from totalsegmentator.nifti_ext_header import load_multilabel_nifti
+
+segmentation, label_map = load_multilabel_nifti(image_path)
+```
+This requires (`pip install xmltodict`).
 
 
 ### Install latest master branch (contains latest bug fixes)
