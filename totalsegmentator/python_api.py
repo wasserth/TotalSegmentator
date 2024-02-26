@@ -370,4 +370,3 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
     return seg_img
-
