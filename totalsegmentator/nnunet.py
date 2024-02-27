@@ -13,6 +13,7 @@ from functools import partial
 from multiprocessing import Pool
 import tempfile
 import inspect
+import warnings
 
 import numpy as np
 import nibabel as nib
@@ -42,6 +43,9 @@ from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin
 from totalsegmentator.postprocessing import keep_largest_blob_multilabel, remove_small_blobs_multilabel
 from totalsegmentator.nifti_ext_header import save_multilabel_nifti, add_label_map_to_nifti
 from totalsegmentator.statistics import get_basic_statistics
+
+# Hide nnunetv2 warning: Detected old nnU-Net plans format. Attempting to reconstruct network architecture...
+warnings.filterwarnings("ignore", category=UserWarning, module="nnunetv2")
 
 
 def _get_full_task_name(task_id: int, src: str="raw"):

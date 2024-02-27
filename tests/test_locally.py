@@ -252,7 +252,7 @@ if __name__ == "__main__":
                float(torch.version.cuda), int(torch.backends.cudnn.version()),
                torch.cuda.get_device_name(0), ""]
 
-    print("Comparing NEW to PREVIOUS log:")
+    print("Comparing PREVIOUS to NEW log:")
     if are_logs_similar(last_log, new_log, cols):
         print("SUCCESS: no differences")
     else:
