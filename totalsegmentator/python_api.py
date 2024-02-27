@@ -4,6 +4,7 @@ from pathlib import Path
 import time
 import textwrap
 from typing import Union
+import tempfile
 
 import numpy as np
 import nibabel as nib

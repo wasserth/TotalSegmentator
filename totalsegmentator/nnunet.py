@@ -257,8 +257,8 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     # spacing = input_image.header.get_zooms()
     # # Do i have to transpose spacing? does not matter because anyways isotropic at this point.
     # spacing = (spacing[2], spacing[0], spacing[1])
-    # seg = predictor.predict_single_npy_array(input_data, {"spacing": spacing}, 
-    #                                          prev_stage_predictions, None, 
+    # seg = predictor.predict_single_npy_array(input_data, {"spacing": spacing},
+    #                                          prev_stage_predictions, None,
     #                                          save_probabilities)
     # seg = seg.transpose(1, 2, 0)
     # nib.save(nib.Nifti1Image(seg.astype(np.uint8), input_image.affine), Path(dir_out) / "s01.nii.gz")

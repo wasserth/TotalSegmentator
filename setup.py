@@ -12,7 +12,7 @@ setup(name='TotalSegmentator',
         license='Apache 2.0',
         packages=find_packages(),
         install_requires=[
-            'torch>=1.10.2',
+            'torch>=2.0.0',
             'numpy',
             'psutil',
             'SimpleITK',
