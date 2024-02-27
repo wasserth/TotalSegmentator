@@ -250,18 +250,21 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                                  folder_with_segs_from_prev_stage=prev_stage_predictions,
                                  num_parts=num_parts, part_id=part_id)
 
-    # Use numpy as input. TODO: In entire pipeline do not save to disk
-    #   Not ready: uses a lot of RAM and Dice very bad
+    # # Use numpy as input. TODO: In entire pipeline do not save to disk
     # input_image = nib.load(Path(dir_in) / "s01_0000.nii.gz")
-    # input_data = input_image.get_fdata().transpose(2, 0, 1)[None,...].astype(np.float32)
+    # input_data = np.asanyarray(input_image.dataobj).transpose(2, 1, 0)[None,...].astype(np.float32)
     # spacing = input_image.header.get_zooms()
+    # affine = input_image.affine
     # # Do i have to transpose spacing? does not matter because anyways isotropic at this point.
-    # spacing = (spacing[2], spacing[0], spacing[1])
-    # seg = predictor.predict_single_npy_array(input_data, {"spacing": spacing},
+    # spacing = (spacing[2], spacing[1], spacing[0])
+    # props = {"spacing": spacing}
+    # # from nnunetv2.imageio.simpleitk_reader_writer import SimpleITKIO
+    # # input_data, props = SimpleITKIO().read_images([os.path.join(dir_in, "s01_0000.nii.gz")])
+    # seg = predictor.predict_single_npy_array(input_data, props,
     #                                          prev_stage_predictions, None,
     #                                          save_probabilities)
-    # seg = seg.transpose(1, 2, 0)
-    # nib.save(nib.Nifti1Image(seg.astype(np.uint8), input_image.affine), Path(dir_out) / "s01.nii.gz")
+    # seg = seg.transpose(2, 1, 0)
+    # nib.save(nib.Nifti1Image(seg.astype(np.uint8), affine), Path(dir_out) / "s01.nii.gz")
 
 
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
