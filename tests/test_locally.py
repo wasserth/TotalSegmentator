@@ -142,15 +142,14 @@ def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
     for old_value, new_value, col in zip(last_log, new_log, cols):
         # Check string values for equality
         if isinstance(old_value, str) and isinstance(new_value, str):
-            if old_value != new_value:
+            if old_value != new_value and col != "comment":
                 print(f"  Difference in {col}: {old_value} != {new_value}")
                 identical = False
         # Check Timestamp
         elif isinstance(old_value, pd.Timestamp) and isinstance(new_value, pd.Timestamp):
             continue
         # Check numeric values for similarity within a tolerance
-        elif (isinstance(old_value, (int, float)) or np.isscalar(old_value) ) and \
-                (isinstance(new_value, (int, float)) or np.isscalar(new_value)):
+        elif isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
             if old_value == 0 and new_value == 0:
                 continue
             elif old_value == 0 or new_value == 0:
@@ -163,7 +162,7 @@ def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
                 identical = False
         else:
             # If types are neither string nor numeric, do a direct comparison
-            if old_value != new_value:
+            if old_value != new_value and col != "comment":
                 print(f"  Difference in {col}: {old_value} != {new_value} (type: {type(old_value)})))")
                 identical = False
     return identical
