@@ -645,3 +645,4 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 nib.save(skin, file_out / "skin.nii.gz")
 
     return img_out, img_in_orig
+
