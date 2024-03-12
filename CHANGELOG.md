@@ -1,5 +1,6 @@
 ## Master
-
+* also return statistics from python api
+* add `totalseg_get_phase`
 
 ## Release 2.1.0
 * Bugfix: add flush to DummyFile

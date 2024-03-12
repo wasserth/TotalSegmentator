@@ -44,7 +44,8 @@ setup(name='TotalSegmentator',
                 'totalseg_import_weights=totalsegmentator.bin.totalseg_import_weights:main',
                 'totalseg_download_weights=totalsegmentator.bin.totalseg_download_weights:main',
                 'totalseg_setup_manually=totalsegmentator.bin.totalseg_setup_manually:main',
-                'totalseg_set_license=totalsegmentator.bin.totalseg_set_license:main'
+                'totalseg_set_license=totalsegmentator.bin.totalseg_set_license:main',
+                'totalseg_get_phase=totalsegmentator.bin.totalseg_get_phase:main'
             ],
         },
     )

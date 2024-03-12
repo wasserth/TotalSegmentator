@@ -41,7 +41,7 @@ def show_license_info():
         sys.exit(1)
 
 
-def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path, None], ml=False, nr_thr_resamp=1, nr_thr_saving=6,
+def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path, None]=None, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics=False, radiomics=False, crop_path=None, body_seg=False,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
@@ -62,8 +62,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     if output is not None:
         output = Path(output)
     else:
-        if statistics or radiomics:
-            raise ValueError("Output path is required for statistics and radiomics.")
+        if radiomics:
+            raise ValueError("Output path is required for radiomics.")
 
     nora_tag = "None" if nora_tag is None else nora_tag
 
@@ -278,6 +278,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         raise ValueError("roi_subset only works with task 'total'")
 
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
+    # (for "fast" on GPU it makes no big difference, but on CPU it can help even for "fast")
     if crop is not None or roi_subset is not None:
 
         body_seg = False  # can not be used together with body_seg
@@ -290,7 +291,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         else:
             crop_model_task = 298
             crop_spacing = 6.0
-        organ_seg, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
+        organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=crop_spacing,
                             crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False,
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
@@ -313,7 +314,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         download_pretrained_weights(300)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
-        body_seg, _ = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
+        body_seg, _, _ = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False,
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
@@ -323,15 +324,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
     folds = [0]  # None
-    seg_img, ct_img = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
-                         trainer=trainer, tta=False, multilabel_image=ml, resample=resample,
-                         crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview,
-                         nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving,
-                         force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
-                         output_type=output_type, statistics=statistics_fast,
-                         quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
-                         exclude_masks_at_border=statistics_exclude_masks_at_border,
-                         no_derived_masks=no_derived_masks, v1_order=v1_order)
+    seg_img, ct_img, stats = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
+                            trainer=trainer, tta=False, multilabel_image=ml, resample=resample,
+                            crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview,
+                            nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving,
+                            force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
+                            output_type=output_type, statistics=statistics_fast,
+                            quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
+                            exclude_masks_at_border=statistics_exclude_masks_at_border,
+                            no_derived_masks=no_derived_masks, v1_order=v1_order)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:
@@ -348,8 +349,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     if statistics:
         if not quiet: print("Calculating statistics...")
         st = time.time()
-        stats_dir = output.parent if ml else output
-        get_basic_statistics(seg, ct_img, stats_dir / "statistics.json", quiet, task, statistics_exclude_masks_at_border)
+        if output is not None:
+            stats_dir = output.parent if ml else output
+            stats_file = stats_dir / "statistics.json"
+        else:
+            stats_file = None
+        stats = get_basic_statistics(seg, ct_img, stats_file, 
+                                     quiet, task, statistics_exclude_masks_at_border,
+                                     roi_subset)
         # get_radiomics_features_for_entire_dir(input, output, output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
@@ -370,4 +377,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             get_radiomics_features_for_entire_dir(input_path, output, stats_dir / "statistics_radiomics.json")
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
-    return seg_img
+    if statistics or statistics_fast:
+        return seg_img, stats
+    else:
+        return seg_img

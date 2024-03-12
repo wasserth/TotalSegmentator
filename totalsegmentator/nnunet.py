@@ -514,13 +514,18 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         # Speed:
         # stats on 1.5mm: 37s
         # stats on 3.0mm: 4s    -> great improvement
+        stats = None
         if statistics:
             if not quiet: print("Calculating statistics fast...")
             st = time.time()
-            stats_dir = file_out.parent if multilabel_image else file_out
-            stats_dir.mkdir(exist_ok=True)
-            get_basic_statistics(img_pred.get_fdata(), img_in_rsp, stats_dir / "statistics.json", quiet, task_name,
-                                 exclude_masks_at_border)
+            if file_out is not None:
+                stats_dir = file_out.parent if multilabel_image else file_out
+                stats_dir.mkdir(exist_ok=True)
+                stats_file = stats_dir / "statistics.json"
+            else:
+                stats_file = None
+            stats = get_basic_statistics(img_pred.get_fdata(), img_in_rsp, stats_file, 
+                                         quiet, task_name, exclude_masks_at_border, roi_subset)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
         if resample is not None:
@@ -529,8 +534,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
             # by undo_canonical)
             img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
-                                        order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
-                                        force_affine=img_in.affine)
+                                      order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
+                                      force_affine=img_in.affine)
 
         if verbose: print("Undoing canonical...")
         img_pred = undo_canonical(img_pred, img_in_orig)
@@ -644,5 +649,5 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 skin = extract_skin(img_in_orig, nib.load(file_out / "body.nii.gz"))
                 nib.save(skin, file_out / "skin.nii.gz")
 
-    return img_out, img_in_orig
+    return img_out, img_in_orig, stats
 
