@@ -569,7 +569,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         new_header = img_in_orig.header.copy()
         new_header.set_data_dtype(np.uint8)
         img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
-        img_out = add_label_map_to_nifti(img_out, class_map[task_name])
+        img_out = add_label_map_to_nifti(img_out, label_map)
 
         if file_out is not None and skip_saving is False:
             if not quiet: print("Saving segmentations...")
