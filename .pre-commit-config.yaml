@@ -8,7 +8,6 @@ repos:
   - id: check-case-conflict
   - id: check-merge-conflict
   - id: check-symlinks
-  - id: trailing-whitespace
 
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.1.7

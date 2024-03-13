@@ -45,8 +45,7 @@ ignore = [
     "E741", # do not use variables named l, O, or I
     "F401", # module imported but unused
     "F821", # undefined name
-    "F841", # local variable name is assigned to but never used
-    "W293" # blank line contains whitespace
+    "F841" # local variable name is assigned to but never used
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
