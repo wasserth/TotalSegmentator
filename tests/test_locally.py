@@ -50,12 +50,12 @@ def get_memory_usage():
     process = psutil.Process(os.getpid())
     memory_info = process.memory_info()
     current_memory = memory_info.rss / (1024 ** 2)  # Convert to MB
-    max_memory_usage = max(max_memory_usage, round(current_memory))  # Update max_memory_usage
+    max_memory_usage = max(max_memory_usage, int(round(current_memory)))  # Update max_memory_usage
 
 def get_gpu_memory_usage():
     global max_gpu_memory_usage
     current_memory = torch.cuda.memory_allocated() / (1024 ** 2)  # Convert to MB
-    max_gpu_memory_usage = max(max_gpu_memory_usage, round(current_memory))  # Update max_gpu_memory_usage
+    max_gpu_memory_usage = max(max_gpu_memory_usage, int(round(current_memory)))  # Update max_gpu_memory_usage
 
 def memory_monitor(interval=0.5):
     while True:
@@ -202,8 +202,8 @@ if __name__ == "__main__":
         times[resolution] = np.mean(times[resolution]).round(1)
         memory_ram[resolution] = max_memory_usage
         memory_gpu[resolution] = max_gpu_memory_usage
-        cpu_utilization[resolution] = np.mean(cpu_utilizations).round(1)
-        gpu_utilization[resolution] = np.mean(gpu_utilizations).round(1)
+        cpu_utilization[resolution] = float(np.mean(cpu_utilizations).round(1))
+        gpu_utilization[resolution] = float(np.mean(gpu_utilizations).round(1))
 
         print("Calc metrics...")
         subjects = [s.name.split(".")[0] for s in img_dir.glob("*.nii.gz")]
@@ -215,7 +215,7 @@ if __name__ == "__main__":
             res_all_rois = {}
             for roi_name in class_map["total"].values():
                 row_wo_nan = res[f"{metric}-{roi_name}"].dropna()
-                res_all_rois[roi_name] = row_wo_nan.mean()
+                res_all_rois[roi_name] = float(row_wo_nan.mean())
             # print per roi (sorted)
             # if metric == "dice":
             #     res_all_rois = {k: v for k, v in sorted(res_all_rois.items(), key=lambda x: x[1] if not np.isnan(x[1]) else 0, reverse=True)}
