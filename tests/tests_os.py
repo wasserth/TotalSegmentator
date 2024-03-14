@@ -9,6 +9,10 @@ import nibabel as nib
 
 from totalsegmentator.python_api import totalsegmentator
 
+"""
+To run these tests do
+python tests/tests_os.py
+"""
 
 def run_tests_and_exit_on_failure():
 

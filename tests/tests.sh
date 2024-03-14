@@ -1,7 +1,7 @@
 set -e
 
-# To run these tests simply do
-# ./tests.sh
+# To run these tests do
+# ./tests/tests.sh
 
 
 # Test multilabel prediction

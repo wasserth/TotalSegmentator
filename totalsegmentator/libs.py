@@ -379,7 +379,8 @@ def compress_nifti(file_in, file_out, dtype=np.int32, force_3d=True):
 
 def check_if_shape_and_affine_identical(img_1, img_2):
 
-    if not np.array_equal(img_1.affine, img_2.affine):
+    max_diff = np.abs(img_1.affine - img_2.affine).max()
+    if max_diff > 1e-5:
         print("Affine in:")
         print(img_1.affine)
         print("Affine out:")

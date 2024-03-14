@@ -1,7 +1,7 @@
 set -e
 
-# To run these tests simply do
-# ./tests_subtasks.sh <license_key>
+# To run these tests do
+# ./tests/tests_subtasks.sh <license_key>
 
 
 # Test vessel predictions

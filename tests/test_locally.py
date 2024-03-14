@@ -184,6 +184,7 @@ if __name__ == "__main__":
 
     for resolution in ["15mm", "3mm"]:
     # for resolution in ["3mm"]:
+        print(f"----- resolution {resolution} ------")
         img_dir = base_dir / resolution / "ct"
         gt_dir = base_dir / resolution / "gt"
         pred_dir = base_dir / resolution / "pred"
@@ -211,12 +212,16 @@ if __name__ == "__main__":
 
         print("Aggregate metrics...")
         for metric in ["dice", "surface_dice_3"]:
-            res_all_rois = []
+            res_all_rois = {}
             for roi_name in class_map["total"].values():
                 row_wo_nan = res[f"{metric}-{roi_name}"].dropna()
-                res_all_rois.append(row_wo_nan.mean())
-                # print(f"{roi_name} {metric}: {row_wo_nan.mean():.3f}")  # per roi
-            scores[resolution][metric] = np.nanmean(res_all_rois).round(3)  # mean over all rois
+                res_all_rois[roi_name] = row_wo_nan.mean()
+            # print per roi (sorted)
+            # if metric == "dice":
+            #     res_all_rois = {k: v for k, v in sorted(res_all_rois.items(), key=lambda x: x[1] if not np.isnan(x[1]) else 0, reverse=True)}
+            #     for k, v in res_all_rois.items():
+            #         print(f"{k}: {v:.3f}")
+            scores[resolution][metric] = np.nanmean(list(res_all_rois.values())).round(3)  # mean over all rois
 
     scores = dict(scores)
     times = dict(times)
