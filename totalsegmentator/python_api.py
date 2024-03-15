@@ -248,10 +248,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     crop_path = output if crop_path is None else crop_path
 
-    if isinstance(input, Nifti1Image):
+    if isinstance(input, Nifti1Image) or input.suffix == '.nii' or input.suffixes == ['.nii', '.gz']:
         img_type = "nifti"
     else:
-        img_type = "nifti" if str(input).endswith(".nii") or str(input).endswith(".nii.gz") else "dicom"
+        img_type = "dicom"
 
     # fast statistics are calculated on the downsampled image
     if statistics and fast:
