@@ -193,6 +193,7 @@ if __name__ == "__main__":
         print("Run totalsegmentator...")
         reset_monitors()
         for img_fn in tqdm(img_dir.glob("*.nii.gz")):
+        # for img_fn in tqdm(list(img_dir.glob("*.nii.gz"))[:1]):
             fast = resolution == "3mm"
             st = time.time()
             totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, device=device)

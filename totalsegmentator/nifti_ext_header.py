@@ -67,6 +67,11 @@ def load_multilabel_nifti(img_path):
     ext_header = img.header.extensions[0].get_content()
     ext_header = xmltodict.parse(ext_header)
     ext_header = ext_header["CaretExtension"]["VolumeInformation"]["LabelTable"]["Label"]
+    
+    # If only one label, ext_header is a dict instead of a list (because of xmltodict.parse()) -> convert to list
+    if isinstance(ext_header, dict):
+        ext_header = [ext_header]
+        
     label_map = {int(e["@Key"]): e["#text"] for e in ext_header}
     return img, label_map
 
