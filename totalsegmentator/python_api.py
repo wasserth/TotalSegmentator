@@ -248,7 +248,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     crop_path = output if crop_path is None else crop_path
 
-    if isinstance(input, Nifti1Image) or input.suffix == '.nii' or input.suffixes == ['.nii', '.gz']:
+    if isinstance(input, Nifti1Image) or input.suffix == ".nii" or input.suffixes == [".nii", ".gz"]:
         img_type = "nifti"
     else:
         img_type = "dicom"

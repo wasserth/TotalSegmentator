@@ -13,6 +13,11 @@ from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.statistics import get_basic_statistics
 
 
+"""
+Additional requirements for this script:
+xgboost
+"""
+
 def pi_time_to_phase(pi_time: float) -> str:
     """
     Convert the pi time to a phase and get a probability for the value.
@@ -78,7 +83,8 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image):
     print(f"mean: {pi_time} [{preds.min():.1f}-{preds.max():.1f}]")
     phase, probability = pi_time_to_phase(pi_time)
 
-    return {"pi_time": pi_time, "phase": phase, "probability": probability}
+    return {"pi_time": pi_time, "phase": phase, "probability": probability, 
+            "pi_time_min": preds.min(), "pi_time_max": preds.max()}
 
 
 def main():
