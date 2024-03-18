@@ -149,7 +149,8 @@ def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
         elif isinstance(old_value, pd.Timestamp) and isinstance(new_value, pd.Timestamp):
             continue
         # Check numeric values for similarity within a tolerance
-        elif isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
+        elif isinstance(old_value, (int, float, np.integer, np.floating)) and \
+             isinstance(new_value, (int, float, np.integer, np.floating)):
             if old_value == 0 and new_value == 0:
                 continue
             elif old_value == 0 or new_value == 0:
@@ -182,6 +183,8 @@ if __name__ == "__main__":
 
     device = "gpu"  # "cpu" or "gpu"
 
+    debug = False
+
     for resolution in ["15mm", "3mm"]:
     # for resolution in ["3mm"]:
         print(f"----- resolution {resolution} ------")
@@ -192,8 +195,8 @@ if __name__ == "__main__":
 
         print("Run totalsegmentator...")
         reset_monitors()
-        for img_fn in tqdm(img_dir.glob("*.nii.gz")):
-        # for img_fn in tqdm(list(img_dir.glob("*.nii.gz"))[:1]):
+        subjects = list(img_dir.glob("*.nii.gz"))[:1] if debug else list(img_dir.glob("*.nii.gz"))
+        for img_fn in tqdm(subjects):
             fast = resolution == "3mm"
             st = time.time()
             totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, device=device)
@@ -207,7 +210,7 @@ if __name__ == "__main__":
         gpu_utilization[resolution] = float(np.mean(gpu_utilizations).round(1))
 
         print("Calc metrics...")
-        subjects = [s.name.split(".")[0] for s in img_dir.glob("*.nii.gz")]
+        subjects = [s.name.split(".")[0] for s in subjects]
         res = [calc_metrics(s, gt_dir, pred_dir, class_map["total"]) for s in subjects]
         res = pd.DataFrame(res)
 
@@ -259,9 +262,9 @@ if __name__ == "__main__":
 
     print("Comparing PREVIOUS to NEW log:")
     if are_logs_similar(last_log, new_log, cols):
-        print("SUCCESS: no differences")
+        print("\nSUCCESS: no differences\n")
     else:
-        print("ERROR: major differences found")
+        print("\nERROR: major differences found\n")
 
     print(f"Saving to {overview_file}...")
     overview.loc[len(overview)] = new_log

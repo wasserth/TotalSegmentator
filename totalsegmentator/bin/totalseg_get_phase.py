@@ -89,9 +89,9 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image):
 
 def main():
     """
-    The the contrast phase of a CT scan. Specifically this script will predict the
+    Predicts the contrast phase of a CT scan. Specifically this script will predict the
     pi (post injection) time (in seconds) of a CT scan based on the intensity of different regions
-    in the image
+    in the image. 
     """
     parser = argparse.ArgumentParser(description="Get CT contrast phase.",
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
