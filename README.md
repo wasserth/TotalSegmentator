@@ -107,7 +107,7 @@ If you want to reduce memory consumption you can use the following options:
 * `--fast`: This will use a lower-resolution model
 * `--body_seg`: This will crop the image to the body region before processing it
 * `--roi_subset <list of classes>`: This will only predict a subset of classes
-* `--force_split`: This will split the image into 3 parts and process them one after another
+* `--force_split`: This will split the image into 3 parts and process them one after another. (Do not use this for small images. Splitting these into even smaller images will result in a field of view which is too small.)
 * `--nr_thr_saving 1`: Saving big images with several threads will take a lot of memory
 
 

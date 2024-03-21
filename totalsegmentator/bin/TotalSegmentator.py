@@ -84,7 +84,7 @@ def main():
                         help="Do initial rough body segmentation and crop image to body region",
                         default=False)
 
-    parser.add_argument("-fs", "--force_split", action="store_true", help="Process image in 3 chunks for less memory consumption",
+    parser.add_argument("-fs", "--force_split", action="store_true", help="Process image in 3 chunks for less memory consumption. (do not use on small images)",
                         default=False)
 
     parser.add_argument("-ss", "--skip_saving", action="store_true",

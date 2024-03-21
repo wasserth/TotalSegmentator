@@ -321,6 +321,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             dcm_to_nifti(file_in, tmp_dir / "dcm" / "converted_dcm.nii.gz", verbose=verbose)
             file_in_dcm = file_in
             file_in = tmp_dir / "dcm" / "converted_dcm.nii.gz"
+            
+            # for debugging
+            # shutil.copy(file_in, file_in_dcm.parent / "converted_dcm_TMP.nii.gz")
 
             # Workaround to be able to access file_in on windows (see issue #106)
             # if platform.system() == "Windows":
