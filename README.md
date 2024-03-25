@@ -59,7 +59,7 @@ Openly available for any usage:
 Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch):
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
-* **tissue_types**: subcutaneous_fat, skeletal_muscle, torso_fat
+* **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch)
 * **face**: face_region
 
@@ -67,6 +67,8 @@ Usage:
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations -ta <task_name>
 ```
+
+The mapping from label ID to class name can be found [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/map_to_binary.py).
 
 
 ### Advanced settings
