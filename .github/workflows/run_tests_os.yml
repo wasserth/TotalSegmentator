@@ -24,7 +24,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         python -m pip install --upgrade pip
-        pip install pytest Cython
+        pip install pytest Cython fury
         pip install torch==2.0.0 -f https://download.pytorch.org/whl/cpu
         pip install .
 
