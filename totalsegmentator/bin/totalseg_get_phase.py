@@ -10,7 +10,6 @@ import nibabel as nib
 import numpy as np
 
 from totalsegmentator.python_api import totalsegmentator
-from totalsegmentator.statistics import get_basic_statistics
 
 
 """
@@ -58,7 +57,8 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image):
               "pulmonary_vein"]
 
     seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
-                                      roi_subset=None, quiet=True)
+                                      roi_subset=None, statistics_exclude_masks_at_border=False,
+                                      quiet=True)
 
     features = []
     for organ in organs:
