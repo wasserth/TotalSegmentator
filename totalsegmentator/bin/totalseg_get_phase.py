@@ -84,7 +84,7 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image):
     phase, probability = pi_time_to_phase(pi_time)
 
     return {"pi_time": pi_time, "phase": phase, "probability": probability, 
-            "pi_time_min": float(preds.min()), "pi_time_max": float(preds.max())}
+            "pi_time_min": round(float(preds.min()), 2), "pi_time_max": round(float(preds.max()), 2)}
 
 
 def main():
