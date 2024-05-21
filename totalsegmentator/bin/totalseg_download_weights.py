@@ -17,10 +17,12 @@ def main():
     parser = argparse.ArgumentParser(description="Import manually downloaded weights.",
                                      epilog="Written by Jakob Wasserthal.")
 
-    parser.add_argument("-t", "--task", choices=["total", "total_fast", "lung_vessels", "cerebral_bleed",
+    parser.add_argument("-t", "--task", choices=["total", "total_fast", "total_mr", "total_fast_mr",
+                                                 "lung_vessels", "cerebral_bleed",
                                                  "hip_implant", "coronary_arteries", "pleural_pericard_effusion",
                                                  "body", "body_fast", "vertebrae_body",
-                                                 "heartchambers_highres", "appendicular_bones", "tissue_types", "face"],
+                                                 "heartchambers_highres", "appendicular_bones", 
+                                                 "tissue_types", "tissue_types_mr", "face"],
                         help="Task for which to download the weights", default="total")
 
     args = parser.parse_args()
@@ -28,6 +30,8 @@ def main():
     task_to_id = {
         "total": [291, 292, 293, 294, 295, 298],
         "total_fast": [297, 298],
+        "total_mr": [730, 731],
+        "total_fast_mr": [732, 733],
         "lung_vessels": [258],
         "cerebral_bleed": [150],
         "hip_implant": [260],
@@ -39,6 +43,7 @@ def main():
         "heartchambers_highres": [301],
         "appendicular_bones": [304],
         "tissue_types": [481],
+        "tissue_types_mr": [734],
         "vertebrae_body": [302],
         "face": [303],
 

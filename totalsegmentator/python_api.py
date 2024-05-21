@@ -110,6 +110,27 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             crop = None
         model = "3d_fullres"
         folds = [0]
+    elif task == "total_mr":
+        if fast:
+            task_id = 732
+            resample = 3.0
+            trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+            # trainer = "nnUNetTrainerNoMirroring"
+            crop = None
+            if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
+        elif fastest:
+            task_id = 733
+            resample = 6.0
+            trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+            crop = None
+            if not quiet: print("Using 'fastest' option: resampling to lower resolution (6mm)")
+        else:
+            task_id = [730, 731]
+            resample = 1.5
+            trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+            crop = None
+        model = "3d_fullres"
+        folds = [0]
     elif task == "lung_vessels":
         task_id = 258
         resample = None
@@ -229,6 +250,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task tissue_types does not work with option --fast")
         show_license_info()
+    elif task == "tissue_types_mr":
+        task_id = 734
+        resample = 1.5
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task tissue_types_mr does not work with option --fast")
+        show_license_info()
     elif task == "face":
         task_id = 303
         resample = 1.5
@@ -277,6 +307,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     if roi_subset is not None and task != "total":
         raise ValueError("roi_subset only works with task 'total'")
 
+    if task == "total_mr" or task == "tissue_types_mr":
+        body_seg = False
+        print("INFO: For MR models the argument '--body_seg' is not supported and will be ignored.")
+
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
     # (for "fast" on GPU it makes no big difference, but on CPU it can help even for "fast")
     if crop is not None or roi_subset is not None:
@@ -286,14 +320,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
         if robust_rs:
-            crop_model_task = 297
+            crop_model_task = 732 if task == "total_mr" else 297
             crop_spacing = 3.0
         else:
-            crop_model_task = 298
+            crop_model_task = 733 if task == "total_mr" else 298
             crop_spacing = 6.0
         organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=crop_spacing,
-                            crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False,
+                            crop=None, crop_path=None, task="total", nora_tag="None", preview=False,
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
                             quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)

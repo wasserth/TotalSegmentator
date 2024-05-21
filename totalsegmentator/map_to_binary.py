@@ -373,6 +373,7 @@ commercial_models = {
     "heartchambers_highres": 301,
     "appendicular_bones": 304,
     "tissue_types": 481,
+    "tissue_types_mr": 734,
     "vertebrae_body": 302,
     "face": 303
 }
@@ -606,6 +607,9 @@ map_taskid_to_partname = {
     293: "class_map_part_cardiac",
     294: "class_map_part_muscles",
     295: "class_map_part_ribs",
+
+    730: "class_map_part_organs",
+    731: "class_map_part_muscles",
 
     517: "test",
 }

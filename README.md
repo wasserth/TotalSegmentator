@@ -47,6 +47,7 @@ Next to the default task (`total`) there are more subtasks with more classes:
 
 Openly available for any usage:
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
+* **total_mr**: default task containing 56 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **body**: body, body_trunc, body_extremities, skin
 * **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))*
@@ -60,6 +61,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
+* **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch)
 * **face**: face_region
 
@@ -210,7 +212,7 @@ Moreover, we would really appreciate it if you let us know what you are using th
 
 ### Class details
 
-The following table shows a list of all classes.
+The following table shows a list of all classes for task `total`.
 
 TA2 is a standardized way to name anatomy. Mostly the TotalSegmentator names follow this standard.
 For some classes they differ which you can see in the table below.
@@ -336,3 +338,66 @@ For some classes they differ which you can see in the table below.
 115 | rib_right_12 ||
 116 | sternum ||
 117 | costal_cartilages ||
+
+
+**Class map for task `total_mr`:**
+
+
+|Index|TotalSegmentator name|TA2 name|
+|:-----|:-----|:-----|
+1 | spleen ||
+2 | kidney_right ||
+3 | kidney_left ||
+4 | gallbladder ||
+5 | liver ||
+6 | stomach ||
+7 | pancreas ||
+8 | adrenal_gland_right | suprarenal gland |
+9 | adrenal_gland_left | suprarenal gland |
+10 | lung_left ||
+11 | lung_right ||
+12 | esophagus ||
+13 | small_bowel | small intestine |
+14 | duodenum ||
+15 | colon ||
+16 | urinary_bladder ||
+17 | prostate ||
+18 | sacrum ||
+19 | vertebrae ||
+20 | intervertebral_discs ||
+21 | spinal_cord ||
+22 | heart ||
+23 | aorta ||
+24 | inferior_vena_cava ||
+25 | portal_vein_and_splenic_vein | hepatic portal vein |
+26 | iliac_artery_left | common iliac artery |
+27 | iliac_artery_right | common iliac artery |
+28 | iliac_vena_left | common iliac vein |
+29 | iliac_vena_right | common iliac vein |
+30 | humerus_left ||
+31 | humerus_right ||
+32 | fibula ||
+33 | tibia ||
+34 | femur_left ||
+35 | femur_right ||
+36 | hip_left ||
+37 | hip_right ||
+38 | gluteus_maximus_left | gluteus maximus muscle |
+39 | gluteus_maximus_right | gluteus maximus muscle |
+40 | gluteus_medius_left | gluteus medius muscle |
+41 | gluteus_medius_right | gluteus medius muscle |
+42 | gluteus_minimus_left | gluteus minimus muscle |
+43 | gluteus_minimus_right | gluteus minimus muscle |
+44 | autochthon_left ||
+45 | autochthon_right ||
+46 | iliopsoas_left | iliopsoas muscle |
+47 | iliopsoas_right | iliopsoas muscle |
+48 | quadriceps_femoris_left ||
+49 | quadriceps_femoris_right ||
+50 | thigh_medial_compartment_left ||
+51 | thigh_medial_compartment_right ||
+52 | thigh_posterior_compartment_left ||
+53 | thigh_posterior_compartment_right ||
+54 | sartorius_left ||
+55 | sartorius_right ||
+56 | brain ||

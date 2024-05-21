@@ -8,6 +8,10 @@ set -e
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta lung_vessels -d cpu  # ~1min
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_lung_vessels
 
+# Test total_mr
+TotalSegmentator -i tests/reference_files/example_mr_sm.nii.gz -o tests/unittest_prediction_mr.nii.gz -ta total_mr --ml -d cpu
+pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_mr
+
 # Test tissue types (without license)
 #   (use "|| true" to not abort if this command returns exit code 1, which it should do)
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_no_license.nii.gz -ta tissue_types -d cpu --ml || true
@@ -27,3 +31,4 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_appendicular_bones
 
 # Cleanup generated files and directories
 rm -rf tests/unittest_prediction
+rm tests/unittest_prediction_mr.nii.gz

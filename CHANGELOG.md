@@ -1,8 +1,12 @@
 ## Master
+
+
+## Release 2.2.0
 * also return statistics from python api
 * add `totalseg_get_phase`
 * major bugfix: rib labels were in wrong order
 * hide nnunetv2 2.3.1 warning: `Detected old nnU-Net plans format. Attempting to reconstruct network architecture...`
+* add mr models
 
 
 ## Release 2.1.0
