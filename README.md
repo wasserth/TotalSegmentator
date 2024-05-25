@@ -72,7 +72,7 @@ The mapping from label ID to class name can be found [here](https://github.com/w
 
 
 ### Advanced settings
-* `--device`: Choose `cpu` or `gpu`
+* `--device`: Choose `cpu` or `gpu` or `desired gpu id (e.g., 1 -> cuda:1)`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
@@ -145,12 +145,15 @@ import nibabel as nib
 from totalsegmentator.python_api import totalsegmentator
 
 if __name__ == "__main__":
+    # specify the device 
+    # 'gpu', 'cpu', 'mps', '1', ...
+    device = '1' ## cuda:1
     # option 1: provide input and output as file paths
-    totalsegmentator(input_path, output_path)
-
+    totalsegmentator(input_path, output_path, device=device)
+    
     # option 2: provide input and output as nifti image objects
     input_img = nib.load(input_path)
-    output_img = totalsegmentator(input_img)
+    output_img = totalsegmentator(input_img, device=device)
     nib.save(output_img, output_path)
 ```
 You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.
