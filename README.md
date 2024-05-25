@@ -148,6 +148,7 @@ if __name__ == "__main__":
     # specify the device 
     # 'gpu', 'cpu', 'mps', '1', ...
     device = '1' ## cuda:1
+    
     # option 1: provide input and output as file paths
     totalsegmentator(input_path, output_path, device=device)
     
