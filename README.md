@@ -133,22 +133,6 @@ The exact numbers of the results for the high-resolution model (1.5mm) can be fo
 See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set as in our paper, and how to run the same evaluation as in our paper.
 
 
-### Other commands
-If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
-```
-totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
-```
-
-Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
-```
-totalseg_download_weights -t <task_name>
-```
-
-After acquiring a license number for the non-open tasks you can set it with the following command:
-```
-totalseg_set_license -l aca_12345678910
-```
-
 ### Python API
 You can run totalsegmentator via Python:
 ```python
@@ -178,6 +162,23 @@ The above code requires `pip install xmltodict`.
 ### Install latest master branch (contains latest bug fixes)
 ```
 pip install git+https://github.com/wasserth/TotalSegmentator.git
+```
+
+
+### Other commands
+If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
+```
+totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
+```
+
+Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
+```
+totalseg_download_weights -t <task_name>
+```
+
+After acquiring a license number for the non-open tasks you can set it with the following command:
+```
+totalseg_set_license -l aca_12345678910
 ```
 
 
