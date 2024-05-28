@@ -1,6 +1,10 @@
 ## Master
 
 
+## Release 2.2.1
+* Bugfixes
+
+
 ## Release 2.2.0
 * also return statistics from python api
 * add `totalseg_get_phase`

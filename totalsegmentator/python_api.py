@@ -331,7 +331,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     if crop is not None or roi_subset is not None:
 
         body_seg = False  # can not be used together with body_seg
-        download_pretrained_weights(298)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
         if robust_rs:
@@ -342,6 +341,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             crop_spacing = 6.0
         crop_task = "total_mr" if task == "total_mr" else "total"
         crop_trainer = "nnUNetTrainer_DASegOrd0_NoMirroring" if task == "total_mr" else "nnUNetTrainer_4000epochs_NoMirroring"
+        download_pretrained_weights(crop_model_task)
+        
         organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
                             trainer=crop_trainer, tta=False, multilabel_image=True, resample=crop_spacing,
                             crop=None, crop_path=None, task_name=crop_task, nora_tag="None", preview=False,
