@@ -130,6 +130,9 @@ roi_groups = {
     "face": [
         ["face"]
     ],
+    "face_mr": [
+        ["face"]
+    ],
     # "aortic_branches_test": [
     #     ["brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left", "aorta",
     #     "common_carotid_artery_right", "common_carotid_artery_left"],

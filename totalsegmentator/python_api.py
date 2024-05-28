@@ -305,6 +305,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     else:
         download_pretrained_weights(task_id)
 
+    # For MR always run 3mm model for roi_subset, because 6mm too bad results
+    #  (runtime for 3mm still very good for MR)
+    if task.endswith("_mr") and roi_subset is not None:
+        roi_subset_robust = roi_subset
+
     if roi_subset_robust is not None:
         roi_subset = roi_subset_robust
         robust_rs = True
@@ -313,10 +318,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     if roi_subset is not None and type(roi_subset) is not list:
         raise ValueError("roi_subset must be a list of strings")
-    if roi_subset is not None and task != "total":
-        raise ValueError("roi_subset only works with task 'total'")
+    if roi_subset is not None and not task.startswith("total"):
+        raise ValueError("roi_subset only works with task 'total' or 'total_mr'")
 
-    if task == "total_mr" or task == "tissue_types_mr":
+    if task.endswith("_mr"):
         if body_seg:
             body_seg = False
             print("INFO: For MR models the argument '--body_seg' is not supported and will be ignored.")
@@ -335,13 +340,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         else:
             crop_model_task = 733 if task == "total_mr" else 298
             crop_spacing = 6.0
+        crop_task = "total_mr" if task == "total_mr" else "total"
+        crop_trainer = "nnUNetTrainer_DASegOrd0_NoMirroring" if task == "total_mr" else "nnUNetTrainer_4000epochs_NoMirroring"
         organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
-                            trainer="nnUNetTrainer_4000epochs_NoMirroring", tta=False, multilabel_image=True, resample=crop_spacing,
-                            crop=None, crop_path=None, task="total", nora_tag="None", preview=False,
+                            trainer=crop_trainer, tta=False, multilabel_image=True, resample=crop_spacing,
+                            crop=None, crop_path=None, task_name=crop_task, nora_tag="None", preview=False,
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
                             quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
-        class_map_inv = {v: k for k, v in class_map["total"].items()}
+        class_map_inv = {v: k for k, v in class_map[crop_task].items()}
         crop_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
         organ_seg_data = organ_seg.get_fdata()
         # roi_subset_crop = [map_to_total[roi] if roi in map_to_total else roi for roi in roi_subset]

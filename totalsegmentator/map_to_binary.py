@@ -363,6 +363,14 @@ class_map = {
     "face": {
         1: "face"
     },
+    "face_mr": {
+        1: "face"
+    },
+    # those classes need to be removed
+    "face_mr_auxiliary": {
+        2: "brain",
+        3: "liver"
+    },
     "test": {
         1: "carpal"
     }
