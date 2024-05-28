@@ -1,13 +1,17 @@
 # TotalSegmentator
 
-Tool for segmentation of over 117 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.6802613) (1228 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
+Tool for segmentation of most major anatomical structures in any CT or MR image. It was trained on a wide range of different CT and MR images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded here: [CT dataset](https://doi.org/10.5281/zenodo.6802613) (1228 subjects) and [MR dataset](https://zenodo.org/doi/10.5281/zenodo.11367004) (298 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
 
-**ANNOUNCEMENT: We recently released v2. See [changes and improvements](resources/improvements_in_v2.md).**
+**ANNOUNCEMENT: We recently added support for MR images. Try out by using the task `-ta total_mr` or see more details in our [paper](TODO).**
 
-![Alt text](resources/imgs/overview_classes_2.png)
+Supported classes for CT: 
+![Alt text](resources/imgs/overview_classes_v2.png)
+
+Supported classes for MR: 
+![Alt text](resources/imgs/overview_classes_mr.png)
 
 Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung-radiologie-nuklearmedizin).
-If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([freely available preprint](https://arxiv.org/abs/2208.05868)). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
+If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([freely available preprint](https://arxiv.org/abs/2208.05868)). If you use it for MR images please cite the [TotalSegmentator MRI paper](TODO). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
 
 
 ### Installation
@@ -29,10 +33,15 @@ pip install TotalSegmentator
 
 
 ### Usage
+For CT images:
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations
 ```
-> Note: A Nifti file or a folder with all DICOM slices of one patient is allowed as input
+For MR images:
+```
+TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
+```
+> Note: A Nifti file or a folder with all DICOM slices of one patient is allowed as input.
 
 > Note: If you run on CPU use the option `--fast` or `--roi_subset` to greatly improve runtime.
 
@@ -43,7 +52,7 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 
 ![Alt text](resources/imgs/overview_subclasses_2.png)
 
-Next to the default task (`total`) there are more subtasks with more classes:
+Next to the default task (`total`) there are more subtasks with more classes. If the taskname ends with `_mr` is works for MR images, otherwise for CT images.
 
 Openly available for any usage:
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
@@ -197,7 +206,8 @@ When you get bad segmentation results check the following:
 
 
 ### Other
-TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
+* TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
+* At [changes and improvements](resources/improvements_in_v2.md) you can see any overview of differences between v1 and v2.
 
 
 ### Reference
