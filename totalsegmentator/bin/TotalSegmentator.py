@@ -52,7 +52,7 @@ def main():
                         "lung_vessels", "cerebral_bleed", "hip_implant", "coronary_arteries",
                         "pleural_pericard_effusion", "test",
                         "appendicular_bones", "tissue_types", "heartchambers_highres",
-                        "face", "vertebrae_body", "total_mr", "tissue_types_mr"],
+                        "face", "vertebrae_body", "total_mr", "tissue_types_mr", "face_mr"],
                         # future: liver_vessels, head,
                         help="Select which model to use. This determines what is predicted.",
                         default="total")

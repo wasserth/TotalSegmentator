@@ -283,6 +283,8 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset302_vertebrae_body_1559subj"
     elif task_id == 734:
         weights_path = config_dir / "Dataset734_TotalSegmentatorMRI_tissue_495subj"
+    elif task_id == 737:
+        weights_path = config_dir / "Dataset737_TotalSegmentatorMRI_face_495subj"
 
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")

@@ -268,6 +268,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task face does not work with option --fast")
         show_license_info()
+    elif task == "face_mr":
+        task_id = 737
+        resample = 1.5
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task face_mr does not work with option --fast")
+        show_license_info()
     elif task == "test":
         task_id = [517]
         resample = None
@@ -308,8 +317,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         raise ValueError("roi_subset only works with task 'total'")
 
     if task == "total_mr" or task == "tissue_types_mr":
-        body_seg = False
-        print("INFO: For MR models the argument '--body_seg' is not supported and will be ignored.")
+        if body_seg:
+            body_seg = False
+            print("INFO: For MR models the argument '--body_seg' is not supported and will be ignored.")
 
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
     # (for "fast" on GPU it makes no big difference, but on CPU it can help even for "fast")

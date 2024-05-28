@@ -46,7 +46,7 @@ def main():
         "tissue_types_mr": [734],
         "vertebrae_body": [302],
         "face": [303],
-
+        "face_mr": [737],
         # "liver_vessels": [8]
     }
 

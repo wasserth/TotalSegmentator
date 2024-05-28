@@ -375,7 +375,8 @@ commercial_models = {
     "tissue_types": 481,
     "tissue_types_mr": 734,
     "vertebrae_body": 302,
-    "face": 303
+    "face": 303,
+    "face_mr": 737,
 }
 # future
 # - brain subparts
