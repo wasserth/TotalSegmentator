@@ -610,17 +610,19 @@ class_map_parts_mr = {
     }
 }
 
-map_taskid_to_partname = {
+map_taskid_to_partname_ct = {
     291: "class_map_part_organs",
     292: "class_map_part_vertebrae",
     293: "class_map_part_cardiac",
     294: "class_map_part_muscles",
     295: "class_map_part_ribs",
 
-    730: "class_map_part_organs",
-    731: "class_map_part_muscles",
-
     517: "test",
+}
+
+map_taskid_to_partname_mr = {
+    730: "class_map_part_organs",
+    731: "class_map_part_muscles"
 }
 
 # pprint({idx:v for idx, (k, v) in enumerate(a.items())}, sort_dicts=False)
