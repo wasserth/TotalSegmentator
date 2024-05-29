@@ -14,6 +14,12 @@ class TestValidateDeviceType(unittest.TestCase):
             validate_device_type("invalid")
         with self.assertRaises(argparse.ArgumentTypeError):
             validate_device_type("gpu:invalid")
+        with self.assertRaises(argparse.ArgumentTypeError):
+            validate_device_type("gpu:-1")
+        with self.assertRaises(argparse.ArgumentTypeError):
+            validate_device_type("gpu:3.1415926")
+        with self.assertRaises(argparse.ArgumentTypeError):
+            validate_device_type("gpu:")
 
 
 if __name__ == "__main__":
