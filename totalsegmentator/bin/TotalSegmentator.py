@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-import sys
-import os
 import argparse
 from pkg_resources import require
 from pathlib import Path
@@ -119,19 +117,8 @@ def main():
     # "mps" is for apple silicon; the latest pytorch nightly version supports 3D Conv but not ConvTranspose3D which is
     # also needed by nnU-Net. So "mps" not working for now.
     # https://github.com/pytorch/pytorch/issues/77818
-    # def validate_device_type(value):
-    #     valid_strings = {"gpu", "cpu", "mps"}
-    #     if value in valid_strings:
-    #         return value
-    #     if value.isdigit():
-    #         return int(value)
-    #     raise argparse.ArgumentTypeError(f"Invalid device type: '{value}'. Must be 'gpu', 'cpu', 'mps', or or an desired device ID (integer).")
-
     parser.add_argument("-d",'--device', type=validate_device_type, required=True,
                         help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
-    # parser.add_argument("-d", "--device", choices=["gpu", "cpu", "mps"],
-    #                     help="Device to run on (default: gpu).",
-    #                     default="gpu")
 
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)

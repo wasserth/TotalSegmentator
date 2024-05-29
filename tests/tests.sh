@@ -10,9 +10,6 @@ pytest -v tests/test_device_type.py
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
 
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu
-pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
-
 # Test organ prediction - roi subset
 # 2 cpus:
 #   example_ct_sm.nii.gz: 34s, 3.0GB
