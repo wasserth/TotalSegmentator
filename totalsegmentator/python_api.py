@@ -80,7 +80,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         else:
             print("Invalid GPU config, running on the CPU")
             device = "cpu"
-    print(f"Using Deivce: {device}")
+    print(f"Using Device: {device}")
 
 
     if not quiet:
