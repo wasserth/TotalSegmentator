@@ -228,6 +228,66 @@ class_map = {
         116: "sternum",
         117: "costal_cartilages"
     },
+    
+    "total_mr": {
+        1: "spleen",
+        2: "kidney_right",
+        3: "kidney_left",
+        4: "gallbladder",
+        5: "liver",
+        6: "stomach",
+        7: "pancreas",
+        8: "adrenal_gland_right",
+        9: "adrenal_gland_left",
+        10: "lung_left",
+        11: "lung_right",
+        12: "esophagus",
+        13: "small_bowel",
+        14: "duodenum",
+        15: "colon",
+        16: "urinary_bladder",
+        17: "prostate",
+        18: "sacrum",
+        19: "vertebrae",
+        20: "intervertebral_discs",
+        21: "spinal_cord",
+        22: "heart",
+        23: "aorta",
+        24: "inferior_vena_cava",
+        25: "portal_vein_and_splenic_vein",
+        26: "iliac_artery_left",
+        27: "iliac_artery_right",
+        28: "iliac_vena_left",
+        29: "iliac_vena_right",
+        30: "humerus_left",
+        31: "humerus_right",
+        32: "fibula",
+        33: "tibia",
+        34: "femur_left",
+        35: "femur_right",
+        36: "hip_left",
+        37: "hip_right",
+        38: "gluteus_maximus_left",
+        39: "gluteus_maximus_right",
+        40: "gluteus_medius_left",
+        41: "gluteus_medius_right",
+        42: "gluteus_minimus_left",
+        43: "gluteus_minimus_right",
+        44: "autochthon_left",
+        45: "autochthon_right",
+        46: "iliopsoas_left",
+        47: "iliopsoas_right",
+        48: "quadriceps_femoris_left",
+        49: "quadriceps_femoris_right",
+        50: "thigh_medial_compartment_left",
+        51: "thigh_medial_compartment_right",
+        52: "thigh_posterior_compartment_left",
+        53: "thigh_posterior_compartment_right",
+        54: "sartorius_left",
+        55: "sartorius_right",
+        56: "brain",
+    },
+    
     # total_fast not extra class map, because easier to use just "total" for fast model
     "lung_vessels": {
         1: "lung_vessels",
@@ -295,8 +355,21 @@ class_map = {
         2: "torso_fat",
         3: "skeletal_muscle"
     },
+    "tissue_types_mr": {
+        1: "subcutaneous_fat",
+        2: "torso_fat",
+        3: "skeletal_muscle"
+    },
     "face": {
         1: "face"
+    },
+    "face_mr": {
+        1: "face"
+    },
+    # those classes need to be removed
+    "face_mr_auxiliary": {
+        2: "brain",
+        3: "liver"
     },
     "test": {
         1: "carpal"
@@ -308,8 +381,10 @@ commercial_models = {
     "heartchambers_highres": 301,
     "appendicular_bones": 304,
     "tissue_types": 481,
+    "tissue_types_mr": 734,
     "vertebrae_body": 302,
-    "face": 303
+    "face": 303,
+    "face_mr": 737,
 }
 # future
 # - brain subparts
@@ -470,7 +545,72 @@ class_map_5_parts = {
 }
 
 
-map_taskid_to_partname = {
+class_map_parts_mr = {
+    
+    "class_map_part_organs": {
+        1: "spleen",
+        2: "kidney_right",
+        3: "kidney_left",
+        4: "gallbladder",
+        5: "liver",
+        6: "stomach",
+        7: "pancreas",
+        8: "adrenal_gland_right",
+        9: "adrenal_gland_left",
+        10: "lung_left",
+        11: "lung_right",
+        12: "esophagus",
+        13: "small_bowel",
+        14: "duodenum",
+        15: "colon",
+        16: "urinary_bladder",
+        17: "prostate",
+        18: "sacrum",
+        19: "vertebrae",
+        20: "intervertebral_discs",
+        21: "spinal_cord",
+        22: "heart",
+        23: "aorta",
+        24: "inferior_vena_cava",
+        25: "portal_vein_and_splenic_vein",
+        26: "iliac_artery_left",
+        27: "iliac_artery_right",
+        28: "iliac_vena_left",
+        29: "iliac_vena_right"
+    },
+    
+    "class_map_part_muscles": {
+        1: "humerus_left",
+        2: "humerus_right",
+        3: "fibula",
+        4: "tibia",
+        5: "femur_left",
+        6: "femur_right",
+        7: "hip_left",
+        8: "hip_right",
+        9: "gluteus_maximus_left",
+        10: "gluteus_maximus_right",
+        11: "gluteus_medius_left",
+        12: "gluteus_medius_right",
+        13: "gluteus_minimus_left",
+        14: "gluteus_minimus_right",
+        15: "autochthon_left",
+        16: "autochthon_right",
+        17: "iliopsoas_left",
+        18: "iliopsoas_right",
+        19: "quadriceps_femoris_left",
+        20: "quadriceps_femoris_right",
+        21: "thigh_medial_compartment_left",
+        22: "thigh_medial_compartment_right",
+        23: "thigh_posterior_compartment_left",
+        24: "thigh_posterior_compartment_right",
+        25: "sartorius_left",
+        26: "sartorius_right",
+        27: "brain"
+    }
+}
+
+map_taskid_to_partname_ct = {
     291: "class_map_part_organs",
     292: "class_map_part_vertebrae",
     293: "class_map_part_cardiac",
@@ -478,6 +618,11 @@ map_taskid_to_partname = {
     295: "class_map_part_ribs",
 
     517: "test",
+}
+
+map_taskid_to_partname_mr = {
+    730: "class_map_part_organs",
+    731: "class_map_part_muscles"
 }
 
 # pprint({idx:v for idx, (k, v) in enumerate(a.items())}, sort_dicts=False)
