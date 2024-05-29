@@ -68,13 +68,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     nora_tag = "None" if nora_tag is None else nora_tag
 
 
-    # available devices: gpu | cpu | mps | your desired device id (integer)
+    # available devices: gpu | cpu | mps | gpu:1, gpu:2, etc.
     if device == "gpu": device = "cuda"
     if device == "cuda" and not torch.cuda.is_available():
         print("No GPU detected. Running on CPU. This can be very slow. The '--fast' or the `--roi_subset` option can help to reduce runtime.")
         device = "cpu"
-    elif isinstance(device, int):
-        if device < torch.cuda.device_count():
+    elif device.startswith('cuda:'):
+        device_id = int(device[5:])
+        if device_id < torch.cuda.device_count():
             device = torch.device(device)
         else:
             print("Invalid GPU config, running on the CPU")
