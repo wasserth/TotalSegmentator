@@ -23,3 +23,8 @@ twine upload --skip-existing dist/*
 ```
 
 INFO: Now all done by `release.sh`
+
+
+## Release new weights
+* Click on "Draft a new release" on github
+* Create new tag ending with -weights and upload weights

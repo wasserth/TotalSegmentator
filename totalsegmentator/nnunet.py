@@ -31,7 +31,7 @@ from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 
 from nnunetv2.utilities.file_path_utilities import get_output_folder
 
-from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_taskid_to_partname
+from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_taskid_to_partname_ct, map_taskid_to_partname_mr, class_map_parts_mr
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
@@ -309,6 +309,13 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     if img_type == "nifti" and output_type == "dicom":
         raise ValueError("To use output type dicom you also have to use a Dicom image as input.")
 
+    if task_name == "total":
+        class_map_parts = class_map_5_parts
+        map_taskid_to_partname = map_taskid_to_partname_ct
+    elif task_name == "total_mr":
+        class_map_parts = class_map_parts_mr
+        map_taskid_to_partname = map_taskid_to_partname_mr
+    
     # for debugging
     # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
     # (tmp_dir).mkdir(exist_ok=True)
@@ -418,7 +425,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if roi_subset is not None:
                 part_names = []
                 new_task_id = []
-                for part_name, part_map in class_map_5_parts.items():
+                for part_name, part_map in class_map_parts.items():
                     if any(organ in roi_subset for organ in part_map.values()):
                         # get taskid associated to model part_name
                         map_partname_to_taskid = {v:k for k,v in map_taskid_to_partname.items()}
@@ -449,7 +456,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                     for img_part in img_parts:
                         (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
                         seg = nib.load(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz").get_fdata()
-                        for jdx, class_name in class_map_5_parts[map_taskid_to_partname[tid]].items():
+                        for jdx, class_name in class_map_parts[map_taskid_to_partname[tid]].items():
                             seg_combined[img_part][seg == jdx] = class_map_inv[class_name]
                 # iterate over subparts of image
                 for img_part in img_parts:

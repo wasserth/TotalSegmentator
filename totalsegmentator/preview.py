@@ -58,6 +58,27 @@ roi_groups = {
         "pulmonary_vein",
          "superior_vena_cava", "brachiocephalic_vein_left", "brachiocephalic_vein_right"]
     ],
+    "total_mr": [
+        ["humerus_left", "humerus_right", "femur_left", "femur_right", 
+        "hip_left", "hip_right", "sacrum",
+        "vertebrae", "intervertebral_discs",
+        "fibula", "tibia",
+        "autochthon_left", "autochthon_right", "iliopsoas_left", "iliopsoas_right",
+        "gluteus_medius_left", "gluteus_medius_right", "gluteus_minimus_left", "gluteus_minimus_right",
+        "gluteus_maximus_left", "gluteus_maximus_right",
+        "quadriceps_femoris_left", "quadriceps_femoris_right", 
+        "thigh_medial_compartment_left", "thigh_medial_compartment_right", 
+        "thigh_posterior_compartment_left", "thigh_posterior_compartment_right", 
+        "sartorius_left", "sartorius_right"],
+        ["iliac_artery_left", "iliac_artery_right", "iliac_vena_left", "iliac_vena_right",
+        "aorta", "inferior_vena_cava", "portal_vein_and_splenic_vein",
+        "heart", "esophagus", "stomach", "duodenum", "colon", "small_bowel", "urinary_bladder"],
+        ["lung_left", "lung_right", "liver",
+        "spleen", "gallbladder", "pancreas", 
+        "kidney_right", "kidney_left",
+        "adrenal_gland_right", "adrenal_gland_left", 
+        "brain", "prostate", "spinal_cord"],
+    ],
     "lung_vessels": [
         ["lung_trachea_bronchia"],
         ["lung_vessels"]
@@ -101,7 +122,15 @@ roi_groups = {
         ["torso_fat"],
         ["skeletal_muscle"]
     ],
+    "tissue_types_mr": [
+        ["subcutaneous_fat"],
+        ["torso_fat"],
+        ["skeletal_muscle"]
+    ],
     "face": [
+        ["face"]
+    ],
+    "face_mr": [
         ["face"]
     ],
     # "aortic_branches_test": [

@@ -1,13 +1,17 @@
 # TotalSegmentator
 
-Tool for segmentation of over 117 classes in CT images. It was trained on a wide range of different CT images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded from [Zenodo](https://doi.org/10.5281/zenodo.6802613) (1228 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
+Tool for segmentation of most major anatomical structures in any CT or MR image. It was trained on a wide range of different CT and MR images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded here: [CT dataset](https://doi.org/10.5281/zenodo.6802613) (1228 subjects) and [MR dataset](https://zenodo.org/doi/10.5281/zenodo.11367004) (298 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
 
-**ANNOUNCEMENT: We recently released v2. See [changes and improvements](resources/improvements_in_v2.md).**
+**ANNOUNCEMENT: We recently added support for MR images. Try out by using the task `-ta total_mr` or see more details in our [paper](TODO).**
 
-![Alt text](resources/imgs/overview_classes_2.png)
+Supported classes for CT: 
+![Alt text](resources/imgs/overview_classes_v2.png)
+
+Supported classes for MR: 
+![Alt text](resources/imgs/overview_classes_mr.png)
 
 Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung-radiologie-nuklearmedizin).
-If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
+If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([freely available preprint](https://arxiv.org/abs/2208.05868)). If you use it for MR images please cite the [TotalSegmentator MRI paper](TODO). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
 
 
 ### Installation
@@ -29,10 +33,15 @@ pip install TotalSegmentator
 
 
 ### Usage
+For CT images:
 ```
 TotalSegmentator -i ct.nii.gz -o segmentations
 ```
-> Note: A Nifti file or a folder with all DICOM slices of one patient is allowed as input
+For MR images:
+```
+TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
+```
+> Note: A Nifti file or a folder with all DICOM slices of one patient is allowed as input.
 
 > Note: If you run on CPU use the option `--fast` or `--roi_subset` to greatly improve runtime.
 
@@ -43,10 +52,11 @@ TotalSegmentator -i ct.nii.gz -o segmentations
 
 ![Alt text](resources/imgs/overview_subclasses_2.png)
 
-Next to the default task (`total`) there are more subtasks with more classes:
+Next to the default task (`total`) there are more subtasks with more classes. If the taskname ends with `_mr` is works for MR images, otherwise for CT images.
 
 Openly available for any usage:
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
+* **total_mr**: default task containing 56 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **body**: body, body_trunc, body_extremities, skin
 * **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))*
@@ -60,6 +70,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
+* **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch)
 * **face**: face_region
 
@@ -122,22 +133,6 @@ The exact numbers of the results for the high-resolution model (1.5mm) can be fo
 See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set as in our paper, and how to run the same evaluation as in our paper.
 
 
-### Other commands
-If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
-```
-totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
-```
-
-Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
-```
-totalseg_download_weights -t <task_name>
-```
-
-After acquiring a license number for the non-open tasks you can set it with the following command:
-```
-totalseg_set_license -l aca_12345678910
-```
-
 ### Python API
 You can run totalsegmentator via Python:
 ```python
@@ -174,6 +169,23 @@ pip install git+https://github.com/wasserth/TotalSegmentator.git
 ```
 
 
+### Other commands
+If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
+```
+totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
+```
+
+Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
+```
+totalseg_download_weights -t <task_name>
+```
+
+After acquiring a license number for the non-open tasks you can set it with the following command:
+```
+totalseg_set_license -l aca_12345678910
+```
+
+
 ### Typical problems
 
 **ITK loading Error**
@@ -199,7 +211,8 @@ When you get bad segmentation results check the following:
 
 
 ### Other
-TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
+* TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
+* At [changes and improvements](resources/improvements_in_v2.md) you can see any overview of differences between v1 and v2.
 
 
 ### Reference
@@ -214,7 +227,7 @@ Moreover, we would really appreciate it if you let us know what you are using th
 
 ### Class details
 
-The following table shows a list of all classes.
+The following table shows a list of all classes for task `total`.
 
 TA2 is a standardized way to name anatomy. Mostly the TotalSegmentator names follow this standard.
 For some classes they differ which you can see in the table below.
@@ -340,3 +353,66 @@ For some classes they differ which you can see in the table below.
 115 | rib_right_12 ||
 116 | sternum ||
 117 | costal_cartilages ||
+
+
+**Class map for task `total_mr`:**
+
+
+|Index|TotalSegmentator name|TA2 name|
+|:-----|:-----|:-----|
+1 | spleen ||
+2 | kidney_right ||
+3 | kidney_left ||
+4 | gallbladder ||
+5 | liver ||
+6 | stomach ||
+7 | pancreas ||
+8 | adrenal_gland_right | suprarenal gland |
+9 | adrenal_gland_left | suprarenal gland |
+10 | lung_left ||
+11 | lung_right ||
+12 | esophagus ||
+13 | small_bowel | small intestine |
+14 | duodenum ||
+15 | colon ||
+16 | urinary_bladder ||
+17 | prostate ||
+18 | sacrum ||
+19 | vertebrae ||
+20 | intervertebral_discs ||
+21 | spinal_cord ||
+22 | heart ||
+23 | aorta ||
+24 | inferior_vena_cava ||
+25 | portal_vein_and_splenic_vein | hepatic portal vein |
+26 | iliac_artery_left | common iliac artery |
+27 | iliac_artery_right | common iliac artery |
+28 | iliac_vena_left | common iliac vein |
+29 | iliac_vena_right | common iliac vein |
+30 | humerus_left ||
+31 | humerus_right ||
+32 | fibula ||
+33 | tibia ||
+34 | femur_left ||
+35 | femur_right ||
+36 | hip_left ||
+37 | hip_right ||
+38 | gluteus_maximus_left | gluteus maximus muscle |
+39 | gluteus_maximus_right | gluteus maximus muscle |
+40 | gluteus_medius_left | gluteus medius muscle |
+41 | gluteus_medius_right | gluteus medius muscle |
+42 | gluteus_minimus_left | gluteus minimus muscle |
+43 | gluteus_minimus_right | gluteus minimus muscle |
+44 | autochthon_left ||
+45 | autochthon_right ||
+46 | iliopsoas_left | iliopsoas muscle |
+47 | iliopsoas_right | iliopsoas muscle |
+48 | quadriceps_femoris_left ||
+49 | quadriceps_femoris_right ||
+50 | thigh_medial_compartment_left ||
+51 | thigh_medial_compartment_right ||
+52 | thigh_posterior_compartment_left ||
+53 | thigh_posterior_compartment_right ||
+54 | sartorius_left ||
+55 | sartorius_right ||
+56 | brain ||
