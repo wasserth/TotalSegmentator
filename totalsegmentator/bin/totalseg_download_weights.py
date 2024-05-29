@@ -22,7 +22,7 @@ def main():
                                                  "hip_implant", "coronary_arteries", "pleural_pericard_effusion",
                                                  "body", "body_fast", "vertebrae_body",
                                                  "heartchambers_highres", "appendicular_bones", 
-                                                 "tissue_types", "tissue_types_mr", "face"],
+                                                 "tissue_types", "tissue_types_mr", "face", "face_mr"],
                         help="Task for which to download the weights", default="total")
 
     args = parser.parse_args()
