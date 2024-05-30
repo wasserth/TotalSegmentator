@@ -95,7 +95,7 @@ The mapping from label ID to class name can be found [here](https://github.com/w
 ### Run via docker
 We also provide a docker container which can be used the following way
 ```
-docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.0.0 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
+docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.2.1 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
 ```
 
 
