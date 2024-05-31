@@ -2,7 +2,7 @@
 
 Tool for segmentation of most major anatomical structures in any CT or MR image. It was trained on a wide range of different CT and MR images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded here: [CT dataset](https://doi.org/10.5281/zenodo.6802613) (1228 subjects) and [MR dataset](https://zenodo.org/doi/10.5281/zenodo.11367004) (298 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/).
 
-**ANNOUNCEMENT: We recently added support for MR images. Try out by using the task `-ta total_mr` or see more details in our [paper](TODO).**
+**ANNOUNCEMENT: We recently added support for MR images. Try out by using the task `-ta total_mr` or see more details in our [paper](https://arxiv.org/abs/2405.19492).**
 
 Supported classes for CT: 
 ![Alt text](resources/imgs/overview_classes_v2.png)
@@ -11,7 +11,7 @@ Supported classes for MR:
 ![Alt text](resources/imgs/overview_classes_mr.png)
 
 Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung-radiologie-nuklearmedizin).
-If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([freely available preprint](https://arxiv.org/abs/2208.05868)). If you use it for MR images please cite the [TotalSegmentator MRI paper](TODO). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
+If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([free preprint](https://arxiv.org/abs/2208.05868)). If you use it for MR images please cite the [TotalSegmentator MRI paper](https://arxiv.org/abs/2405.19492). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
 
 
 ### Installation
