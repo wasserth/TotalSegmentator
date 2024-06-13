@@ -140,16 +140,12 @@ import nibabel as nib
 from totalsegmentator.python_api import totalsegmentator
 
 if __name__ == "__main__":
-    # specify the device 
-    # 'gpu', 'cpu', 'mps', 'gpu:X'
-    device = 'gpu:1' ## cuda:1
-    
     # option 1: provide input and output as file paths
-    totalsegmentator(input_path, output_path, device=device)
+    totalsegmentator(input_path, output_path)
     
     # option 2: provide input and output as nifti image objects
     input_img = nib.load(input_path)
-    output_img = totalsegmentator(input_img, device=device)
+    output_img = totalsegmentator(input_img)
     nib.save(output_img, output_path)
 ```
 You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.

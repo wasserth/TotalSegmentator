@@ -182,6 +182,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         # torch.set_num_interop_threads(1)  # throws error if setting the second time
         device = torch.device('cuda')
     elif isinstance(device, torch.device):
+        torch.set_num_threads(1)
         device = device
     else:
         device = torch.device('mps')

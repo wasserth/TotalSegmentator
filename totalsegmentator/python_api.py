@@ -18,8 +18,10 @@ from totalsegmentator.config import get_config_key, set_config_key
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.map_to_total import map_to_total
 import re
+
+
 def validate_device_type_api(value):
-    valid_strings = {"gpu", "cpu", "mps"}
+    valid_strings = ["gpu", "cpu", "mps"]
     if value in valid_strings:
         return value
 
@@ -28,10 +30,17 @@ def validate_device_type_api(value):
     match = re.match(pattern, value)
     if match:
         device_id = int(match.group(1))
-        return f"cuda:{device_id}"
+        return value
 
     raise ValueError(
         f"Invalid device type: '{value}'. Must be 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
+
+
+def convert_device_to_cuda(device):
+    if device in ["cpu", "mps", "gpu"]:
+        return device
+    else:  # gpu:X
+        return f"cuda:{device.split(':')[1]}"
 
 
 def show_license_info():
@@ -81,20 +90,24 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     nora_tag = "None" if nora_tag is None else nora_tag
 
-    device = validate_device_type_api(device)
+    validate_device_type_api(device)
+    device = convert_device_to_cuda(device)
 
     # available devices: gpu | cpu | mps | gpu:1, gpu:2, etc.
-    if device == "gpu": device = "cuda"
-    if device == "cuda" and not torch.cuda.is_available():
-        print("No GPU detected. Running on CPU. This can be very slow. The '--fast' or the `--roi_subset` option can help to reduce runtime.")
-        device = "cpu"
-    elif device.startswith('cuda:'):
-        device_id = int(device[5:])
-        if device_id < torch.cuda.device_count():
-            device = torch.device(device)
-        else:
-            print("Invalid GPU config, running on the CPU")
+    if device == "gpu": 
+        device = "cuda"
+    if device.startswith("cuda"): 
+        if device == "cuda": device = "cuda:0"
+        if not torch.cuda.is_available():
+            print("No GPU detected. Running on CPU. This can be very slow. The '--fast' or the `--roi_subset` option can help to reduce runtime.")
             device = "cpu"
+        else:
+            device_id = int(device[5:])
+            if device_id < torch.cuda.device_count():
+                device = torch.device(device)
+            else:
+                print("Invalid GPU config, running on the CPU")
+                device = "cpu"
     print(f"Using Device: {device}")
 
 

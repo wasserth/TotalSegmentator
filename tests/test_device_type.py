@@ -6,8 +6,8 @@ class TestValidateDeviceType(unittest.TestCase):
         self.assertEqual(validate_device_type("gpu"), "gpu")
         self.assertEqual(validate_device_type("cpu"), "cpu")
         self.assertEqual(validate_device_type("mps"), "mps")
-        self.assertEqual(validate_device_type("gpu:0"), "cuda:0")
-        self.assertEqual(validate_device_type("gpu:1"), "cuda:1")
+        self.assertEqual(validate_device_type("gpu:0"), "gpu:0")
+        self.assertEqual(validate_device_type("gpu:1"), "gpu:1")
 
     def test_invalid_inputs(self):
         with self.assertRaises(argparse.ArgumentTypeError):

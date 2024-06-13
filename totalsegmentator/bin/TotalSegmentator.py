@@ -3,23 +3,15 @@ import argparse
 from pkg_resources import require
 from pathlib import Path
 import re
-from totalsegmentator.python_api import totalsegmentator
+from totalsegmentator.python_api import totalsegmentator, validate_device_type_api
 
 
 def validate_device_type(value):
-    valid_strings = {"gpu", "cpu", "mps"}
-    if value in valid_strings:
-        return value
-
-    # Check if the value matches the pattern "gpu:X" where X is an integer
-    pattern = r"^gpu:(\d+)$"
-    match = re.match(pattern, value)
-    if match:
-        device_id = int(match.group(1))
-        return f"cuda:{device_id}"
-
-    raise argparse.ArgumentTypeError(
-        f"Invalid device type: '{value}'. Must be 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
+    try:
+        return validate_device_type_api(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"Invalid device type: '{value}'. Must be 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
 
 
 def main():
@@ -117,7 +109,7 @@ def main():
     # "mps" is for apple silicon; the latest pytorch nightly version supports 3D Conv but not ConvTranspose3D which is
     # also needed by nnU-Net. So "mps" not working for now.
     # https://github.com/pytorch/pytorch/issues/77818
-    parser.add_argument("-d",'--device', type=validate_device_type, required=True,
+    parser.add_argument("-d",'--device', type=validate_device_type, default="gpu",
                         help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
 
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
