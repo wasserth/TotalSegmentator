@@ -170,7 +170,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     model_folder = get_output_folder(task_id, trainer, plans, model)
 
     assert device in ['cpu', 'cuda',
-                           'mps'], f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {device}.'
+                           'mps'] or isinstance(device, torch.device), f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {device}.'
     if device == 'cpu':
         # let's allow torch to use hella threads
         import multiprocessing
@@ -181,6 +181,8 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         torch.set_num_threads(1)
         # torch.set_num_interop_threads(1)  # throws error if setting the second time
         device = torch.device('cuda')
+    elif isinstance(device, torch.device):
+        device = device
     else:
         device = torch.device('mps')
     disable_tta = not tta

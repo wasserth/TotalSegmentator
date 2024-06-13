@@ -10,7 +10,6 @@ import numpy as np
 import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 import torch
-
 from totalsegmentator.statistics import get_basic_statistics, get_radiomics_features_for_entire_dir
 from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
@@ -18,6 +17,21 @@ from totalsegmentator.config import send_usage_stats, set_license_number, has_va
 from totalsegmentator.config import get_config_key, set_config_key
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.map_to_total import map_to_total
+import re
+def validate_device_type_api(value):
+    valid_strings = {"gpu", "cpu", "mps"}
+    if value in valid_strings:
+        return value
+
+    # Check if the value matches the pattern "gpu:X" where X is an integer
+    pattern = r"^gpu:(\d+)$"
+    match = re.match(pattern, value)
+    if match:
+        device_id = int(match.group(1))
+        return f"cuda:{device_id}"
+
+    raise ValueError(
+        f"Invalid device type: '{value}'. Must be 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
 
 
 def show_license_info():
@@ -67,14 +81,25 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     nora_tag = "None" if nora_tag is None else nora_tag
 
-    if not quiet:
-        print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
+    device = validate_device_type_api(device)
 
-    # available devices: gpu | cpu | mps
+    # available devices: gpu | cpu | mps | gpu:1, gpu:2, etc.
     if device == "gpu": device = "cuda"
     if device == "cuda" and not torch.cuda.is_available():
         print("No GPU detected. Running on CPU. This can be very slow. The '--fast' or the `--roi_subset` option can help to reduce runtime.")
         device = "cpu"
+    elif device.startswith('cuda:'):
+        device_id = int(device[5:])
+        if device_id < torch.cuda.device_count():
+            device = torch.device(device)
+        else:
+            print("Invalid GPU config, running on the CPU")
+            device = "cpu"
+    print(f"Using Device: {device}")
+
+
+    if not quiet:
+        print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
 
     setup_nnunet()
     setup_totalseg()
