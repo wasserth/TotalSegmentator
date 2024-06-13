@@ -295,7 +295,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     """
     if not isinstance(file_in, Nifti1Image):
         file_in = Path(file_in)
-        img_type = "nifti" if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz") else "dicom"
+        if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz"):
+            img_type = "nifti"
+        else:
+            img_type = "dicom"
         if not file_in.exists():
             sys.exit("ERROR: The input file or directory does not exist.")
     else:
@@ -325,7 +328,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if img_type == "dicom":
             if not quiet: print("Converting dicom to nifti...")
             (tmp_dir / "dcm").mkdir()  # make subdir otherwise this file would be included by nnUNet_predict
-            dcm_to_nifti(file_in, tmp_dir / "dcm" / "converted_dcm.nii.gz", verbose=verbose)
+            dcm_to_nifti(file_in, tmp_dir / "dcm" / "converted_dcm.nii.gz", tmp_dir, verbose=verbose)
             file_in_dcm = file_in
             file_in = tmp_dir / "dcm" / "converted_dcm.nii.gz"
             

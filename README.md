@@ -41,7 +41,7 @@ For MR images:
 ```
 TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
 ```
-> Note: A Nifti file or a folder with all DICOM slices of one patient is allowed as input.
+> Note: A Nifti file or a folder (or zip file) with all DICOM slices of one patient is allowed as input.
 
 > Note: If you run on CPU use the option `--fast` or `--roi_subset` to greatly improve runtime.
 
