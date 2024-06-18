@@ -16,7 +16,7 @@ from totalsegmentator.vtk_utils import contour_from_roi_smooth, plot_mask
 from totalsegmentator.map_to_binary import class_map
 
 
-np.random.seed(1234)
+np.random.seed(1234)   # only set for numpy, not for random, because this would lead to same tmp directories for xvfb
 random_colors = np.random.rand(100, 4)
 
 roi_groups = {
@@ -217,6 +217,6 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
 
 def generate_preview(ct_in, file_out, roi_data, smoothing, task_name):
     from xvfbwrapper import Xvfb
-    # do not set random seed, otherwise can not call xvfb in parallel, because all generate same tmp dir
+    # do not set random seed, otherwise can not call xvfb in parallel, because all generate same tmp dir (numpy random seed is ok)
     with Xvfb() as xvfb:
         plot_subject(ct_in, file_out, None, roi_data, smoothing, task_name)
