@@ -13,7 +13,7 @@ setup(name='TotalSegmentator',
         packages=find_packages(),
         install_requires=[
             'torch>=2.0.0',
-            'numpy',
+            'numpy<2',
             'SimpleITK',
             'nibabel>=2.3.0',
             'tqdm>=4.45.0',
