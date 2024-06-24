@@ -215,7 +215,19 @@ def download_pretrained_weights(task_id):
         # WEIGHTS_URL = "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1"
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset300_body_6mm_1559subj.zip"
         WEIGHTS_URL = url + "/v2.0.0-weights/Dataset300_body_6mm_1559subj.zip"
-        
+    elif task_id == 775:
+        weights_path = config_dir / "Dataset775_head_glands_cavities_492subj"
+        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset775_head_glands_cavities_492subj.zip"
+    elif task_id == 776:
+        weights_path = config_dir / "Dataset776_headneck_bones_vessels_492subj"
+        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset776_headneck_bones_vessels_492subj.zip"
+    elif task_id == 777:
+        weights_path = config_dir / "Dataset777_head_muscles_492subj"
+        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset777_head_muscles_492subj.zip"
+    elif task_id == 778:
+        weights_path = config_dir / "Dataset778_headneck_muscles_492subj"
+        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset778_headneck_muscles_492subj.zip"
+                
     # MR models
     elif task_id == 730:
         weights_path = config_dir / "Dataset730_TotalSegmentatorMRI_part1_organs_495subj"

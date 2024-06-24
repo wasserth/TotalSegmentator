@@ -22,7 +22,9 @@ def main():
                                                  "hip_implant", "coronary_arteries", "pleural_pericard_effusion",
                                                  "body", "body_fast", "vertebrae_body",
                                                  "heartchambers_highres", "appendicular_bones", 
-                                                 "tissue_types", "tissue_types_mr", "face", "face_mr"],
+                                                 "tissue_types", "tissue_types_mr", "face", "face_mr",
+                                                 "head_glands_cavities", "head_muscles", "headneck_bones_vessels",
+                                                 "headneck_muscles"],
                         help="Task for which to download the weights", default="total")
 
     args = parser.parse_args()
@@ -39,6 +41,11 @@ def main():
         "pleural_pericard_effusion": [315],
         "body": [299],
         "body_fast": [300],
+        
+        "head_glands_cavities": [775],
+        "headneck_bones_vessels": [776],
+        "head_muscles": [777],
+        "headneck_muscles": [778],
 
         "heartchambers_highres": [301],
         "appendicular_bones": [304],

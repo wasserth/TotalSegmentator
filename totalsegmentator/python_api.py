@@ -249,6 +249,44 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = None
         if fast: raise ValueError("task liver_vessels does not work with option --fast")
+    elif task == "head_glands_cavities":
+        task_id = 775
+        resample = None
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["skull"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = None
+        if fast: raise ValueError("task head_glands_cavities does not work with option --fast")
+    elif task == "headneck_bones_vessels":
+        task_id = 776
+        resample = None
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = None
+        if fast: raise ValueError("task headneck_bones_vessels does not work with option --fast")
+    elif task == "head_muscles":
+        task_id = 777
+        resample = None
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["skull"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = None
+        if fast: raise ValueError("task head_muscles does not work with option --fast")
+    elif task == "headneck_muscles":
+        task_id = 778
+        resample = None
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        # crop = ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
+        # crop_addon = [10, 10, 10]
+        crop = ["clavicula_left", "clavicula_right", "vertebrae_C1", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
+        crop_addon = [40, 40, 40]
+        model = "3d_fullres"
+        folds = None
+        if fast: raise ValueError("task headneck_muscles does not work with option --fast")
 
     # Commercial models
     elif task == "vertebrae_body":
@@ -370,7 +408,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
         body_seg = False  # can not be used together with body_seg
         st = time.time()
-        if not quiet: print("Generating rough body segmentation...")
+        if not quiet: print("Generating rough segmentation for cropping...")
         if robust_rs:
             crop_model_task = 732 if task == "total_mr" else 297
             crop_spacing = 3.0

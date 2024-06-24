@@ -1,8 +1,9 @@
 ## Master
 
 
-## Release 2.2.1
+## Release 2.3.0
 * Bugfixes
+* add headneck structures
 
 
 ## Release 2.2.0

@@ -133,14 +133,35 @@ roi_groups = {
     "face_mr": [
         ["face"]
     ],
-    # "aortic_branches_test": [
-    #     ["brachiocephalic_trunk", "subclavian_artery_right", "subclavian_artery_left", "aorta",
-    #     "common_carotid_artery_right", "common_carotid_artery_left"],
-    #     ["superior_vena_cava",
-    #     "brachiocephalic_vein_left", "brachiocephalic_vein_right", "atrial_appendage_left"],
-    #     ["pulmonary_vein", "pulmonary_artery"],
-    #     ["heart_atrium_left", "heart_atrium_right", "thyroid_gland"]
-    # ],
+    "head_glands_cavities": [
+        ["eye_left", "eye_right", "eye_lens_left", "eye_lens_right",
+         "optic_nerve_left", "optic_nerve_right", "parotid_gland_left", "parotid_gland_right",
+         "submandibular_gland_right", "submandibular_gland_left", "nasopharynx", "oropharynx",
+         "hypopharynx", "nasal_cavity_right", "nasal_cavity_left", "auditory_canal_right",
+         "auditory_canal_left", "soft_palate", "hard_palate"]
+    ],
+    "headneck_bones_vessels": [
+        ["larynx_air", "thyroid_cartilage", "hyoid", "cricoid_cartilage",
+        "zygomatic_arch_right", "zygomatic_arch_left", "styloid_process_right",
+        "styloid_process_left", "internal_carotid_artery_right", "internal_carotid_artery_left",
+        "internal_jugular_vein_right", "internal_jugular_vein_left"]
+    ],
+    "head_muscles": [
+        ["masseter_right", "masseter_left", "temporalis_right", "temporalis_left",
+        "lateral_pterygoid_right", "lateral_pterygoid_left", "medial_pterygoid_right",
+        "medial_pterygoid_left", "tongue", "digastric_right", "digastric_left"]
+    ],
+    "headneck_muscles": [
+        ["sternocleidomastoid_right", "sternocleidomastoid_left",
+        "superior_pharyngeal_constrictor", "middle_pharyngeal_constrictor",
+        "inferior_pharyngeal_constrictor", "trapezius_right", "trapezius_left",
+        "platysma_right", "platysma_left"],
+        ["levator_scapulae_right", "levator_scapulae_left",
+        "anterior_scalene_right", "anterior_scalene_left", "middle_scalene_right",
+        "middle_scalene_left", "posterior_scalene_right", "posterior_scalene_left",
+        "sterno_thyroid_right", "sterno_thyroid_left", "thyrohyoid_right", "thyrohyoid_left",
+        "prevertebral_right", "prevertebral_left"]
+    ],
     "test": [
         ["ulna"]
     ]
@@ -148,22 +169,16 @@ roi_groups = {
 
 
 def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):
-    # ref_img = nib.load(subject_path)
-    # roi_actors = []
-
     for idx, roi in enumerate(rois):
         color = random_colors[idx]
-
         classname_2_idx = {v: k for k, v in class_map[task_name].items()}
         data = roi_data == classname_2_idx[roi]
-        # data = data.astype(np.uint8)  # needed?
 
         if data.max() > 0:  # empty mask
             affine[:3, 3] = 0  # make offset the same for all subjects
             cont_actor = plot_mask(scene, data, affine, x, y, smoothing=smoothing,
                                 color=color, opacity=1)
             scene.add(cont_actor)
-            # roi_actors.append(cont_actor)
 
 
 def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
