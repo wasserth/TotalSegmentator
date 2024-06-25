@@ -294,7 +294,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          v1_order=False):
     """
     crop: string or a nibabel image
-    resample: None or float  (target spacing for all dimensions)
+    resample: None or float (target spacing for all dimensions) or list of floats
     """
     if not isinstance(file_in, Nifti1Image):
         file_in = Path(file_in)
@@ -319,6 +319,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     elif task_name == "total_mr":
         class_map_parts = class_map_parts_mr
         map_taskid_to_partname = map_taskid_to_partname_mr
+    
+    if type(resample) is float:
+        resample = [resample, resample, resample]
     
     # for debugging
     # tmp_dir = file_in.parent / ("nnunet_tmp_" + ''.join(random.Random().choices(string.ascii_uppercase + string.digits, k=8)))
@@ -380,7 +383,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             st = time.time()
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
-            img_in_rsp = change_spacing(img_in, [resample, resample, resample],
+            img_in_rsp = change_spacing(img_in, resample,
                                         order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
             if verbose:
                 print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
@@ -413,7 +416,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third*2+1-margin:], img_in_rsp.affine),
                     tmp_dir / "s03_0000.nii.gz")
 
-        if task_name == "total" and resample < 3.0:
+        if task_name == "total" and resample is not None and resample[0] < 3.0:
             # overall speedup for 15mm model roughly 11% (GPU) and 100% (CPU)
             # overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
             # (dice 0.001 worse on test set -> ok)
@@ -549,7 +552,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if verbose: print(f"  back to original shape: {img_in_shape}")
             # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
             # by undo_canonical)
-            img_pred = change_spacing(img_pred, [resample, resample, resample], img_in_shape,
+            img_pred = change_spacing(img_pred, resample, img_in_shape,
                                       order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
                                       force_affine=img_in.affine)
 
