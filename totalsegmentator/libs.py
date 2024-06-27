@@ -225,8 +225,11 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset777_head_muscles_492subj"
         WEIGHTS_URL = url + "/v2.3.0-weights/Dataset777_head_muscles_492subj.zip"
     elif task_id == 778:
-        weights_path = config_dir / "Dataset778_headneck_muscles_492subj"
-        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset778_headneck_muscles_492subj.zip"
+        weights_path = config_dir / "Dataset778_headneck_muscles_part1_492subj"
+        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset778_headneck_muscles_part1_492subj.zip"
+    elif task_id == 779:
+        weights_path = config_dir / "Dataset779_headneck_muscles_part2_492subj"
+        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset779_headneck_muscles_part2_492subj.zip"
                 
     # MR models
     elif task_id == 730:

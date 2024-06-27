@@ -31,7 +31,8 @@ from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 
 from nnunetv2.utilities.file_path_utilities import get_output_folder
 
-from totalsegmentator.map_to_binary import class_map, class_map_5_parts, map_taskid_to_partname_ct, map_taskid_to_partname_mr, class_map_parts_mr
+from totalsegmentator.map_to_binary import class_map, class_map_5_parts, class_map_parts_mr, class_map_parts_headneck_muscles
+from totalsegmentator.map_to_binary import map_taskid_to_partname_mr, map_taskid_to_partname_ct, map_taskid_to_partname_headneck_muscles
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
@@ -319,6 +320,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     elif task_name == "total_mr":
         class_map_parts = class_map_parts_mr
         map_taskid_to_partname = map_taskid_to_partname_mr
+    elif task_name == "headneck_muscles":
+        class_map_parts = class_map_parts_headneck_muscles
+        map_taskid_to_partname = map_taskid_to_partname_headneck_muscles
     
     if type(resample) is float:
         resample = [resample, resample, resample]

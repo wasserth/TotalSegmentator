@@ -683,6 +683,40 @@ class_map_parts_mr = {
     }
 }
 
+
+class_map_parts_headneck_muscles = {
+ 
+    "class_map_part_muscles_1": {
+        1: "sternocleidomastoid_right", 
+        2: "sternocleidomastoid_left",
+        3: "superior_pharyngeal_constrictor",
+        4: "middle_pharyngeal_constrictor",
+        5: "inferior_pharyngeal_constrictor",
+        6: "trapezius_right",
+        7: "trapezius_left",
+        8: "platysma_right",
+        9: "platysma_left",
+        10: "levator_scapulae_right",
+        11: "levator_scapulae_left"
+    },
+
+    "class_map_part_muscles_2": {
+        1: "anterior_scalene_right",
+        2: "anterior_scalene_left",
+        3: "middle_scalene_right",
+        4: "middle_scalene_left",
+        5: "posterior_scalene_right",
+        6: "posterior_scalene_left",
+        7: "sterno_thyroid_right",
+        8: "sterno_thyroid_left",
+        9: "thyrohyoid_right",
+        10: "thyrohyoid_left",
+        11: "prevertebral_right",
+        12: "prevertebral_left"
+    }
+}
+
+
 map_taskid_to_partname_ct = {
     291: "class_map_part_organs",
     292: "class_map_part_vertebrae",
@@ -696,6 +730,11 @@ map_taskid_to_partname_ct = {
 map_taskid_to_partname_mr = {
     730: "class_map_part_organs",
     731: "class_map_part_muscles"
+}
+
+map_taskid_to_partname_headneck_muscles = {
+    778: "class_map_part_muscles_1",
+    779: "class_map_part_muscles_2"
 }
 
 # pprint({idx:v for idx, (k, v) in enumerate(a.items())}, sort_dicts=False)

@@ -45,7 +45,7 @@ def main():
         "head_glands_cavities": [775],
         "headneck_bones_vessels": [776],
         "head_muscles": [777],
-        "headneck_muscles": [778],
+        "headneck_muscles": [778, 779],
 
         "heartchambers_highres": [301],
         "appendicular_bones": [304],
