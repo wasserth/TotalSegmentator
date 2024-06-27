@@ -11,6 +11,7 @@ setup(name='TotalSegmentator',
         python_requires='>=3.9',
         license='Apache 2.0',
         packages=find_packages(),
+        package_data={"totalsegmentator": ["resources/totalsegmentator_snomed_mapping.csv"]},
         install_requires=[
             'torch>=2.0.0',
             'numpy<2',
