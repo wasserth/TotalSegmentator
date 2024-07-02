@@ -260,11 +260,13 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task head_glands_cavities does not work with option --fast")
     elif task == "headneck_bones_vessels":
         task_id = 776
-        resample = None
+        resample = [0.75, 0.75, 1.0]
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres"
+        # crop = ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
+        # crop_addon = [10, 10, 10]
+        crop = ["clavicula_left", "clavicula_right", "vertebrae_C1", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
+        crop_addon = [40, 40, 40]
+        model = "3d_fullres_high"
         folds = None
         if fast: raise ValueError("task headneck_bones_vessels does not work with option --fast")
     elif task == "head_muscles":
