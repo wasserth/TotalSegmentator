@@ -198,7 +198,12 @@ if __name__ == "__main__":
         subjects = sorted(list(img_dir.glob("*.nii.gz"))[:1] if debug else list(img_dir.glob("*.nii.gz")))
         for img_fn in tqdm(subjects):
             fast = resolution == "3mm"
-            task = "total_mr" if img_fn.name.split(".")[0].endswith("_mr") else "total"
+            if img_fn.name.split(".")[0].endswith("_mr"):
+                task = "total_mr" 
+            elif img_fn.name.split(".")[0].endswith("_headneck"):
+                task = "headneck_bones_vessels" 
+            else:
+                task = "total"
             st = time.time()
             totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, task=task, device=device)
             times[resolution].append(time.time()-st)
