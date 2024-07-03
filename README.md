@@ -52,7 +52,7 @@ TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
 
 ![Alt text](resources/imgs/overview_subclasses_2.png)
 
-Next to the default task (`total`) there are more subtasks with more classes. If the taskname ends with `_mr` is works for MR images, otherwise for CT images.
+Next to the default task (`total`) there are more subtasks with more classes. If the taskname ends with `_mr` it works for MR images, otherwise for CT images.
 
 Openly available for any usage:
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
