@@ -251,11 +251,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task liver_vessels does not work with option --fast")
     elif task == "head_glands_cavities":
         task_id = 775
-        resample = None
+        resample = [0.75, 0.75, 1.0]
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop = ["skull"]
         crop_addon = [10, 10, 10]
-        model = "3d_fullres"
+        model = "3d_fullres_high"
         folds = None
         if fast: raise ValueError("task head_glands_cavities does not work with option --fast")
     elif task == "headneck_bones_vessels":
@@ -271,11 +271,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task headneck_bones_vessels does not work with option --fast")
     elif task == "head_muscles":
         task_id = 777
-        resample = None
+        resample = [0.75, 0.75, 1.0]
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop = ["skull"]
         crop_addon = [10, 10, 10]
-        model = "3d_fullres"
+        model = "3d_fullres_high"
         folds = None
         if fast: raise ValueError("task head_muscles does not work with option --fast")
     elif task == "headneck_muscles":
