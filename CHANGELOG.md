@@ -6,7 +6,7 @@
 * add headneck structures
 
 
-## Release 2.2.0
+## Release 2.2.1
 * also return statistics from python api
 * add `totalseg_get_phase`
 * major bugfix: rib labels were in wrong order
