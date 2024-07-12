@@ -49,7 +49,7 @@ def pi_time_to_phase(pi_time: float) -> str:
         return "delayed", 0.7
 
 
-def get_ct_contrast_phase(ct_img: nib.Nifti1Image):
+def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
 
     organs = ["liver", "spleen", "kidney_left", "kidney_right", "pancreas", "urinary_bladder", "gallbladder",
               "heart", "aorta", "inferior_vena_cava", "portal_vein_and_splenic_vein",
@@ -64,9 +64,13 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image):
     for organ in organs:
         features.append(stats[organ]["intensity"])
 
-    # weights from longitudinalliver dataset
-    classifier_path = Path(__file__).parents[2] / "resources" / "contrast_phase_classifiers.pkl"
-    # classifier_path = "/mnt/nvme/data/phase_classification/classifiers.pkl"
+    if model_file is None:
+        # weights from longitudinalliver dataset
+        classifier_path = Path(__file__).parents[2] / "resources" / "contrast_phase_classifiers.pkl"
+    else:
+        # weights from megaseg dataset
+        # classifier_path = "/mnt/nor/wasserthalj_data/classifiers_megaseg.pkl"
+        classifier_path = model_file
     clfs = pickle.load(open(classifier_path, "rb"))
 
     # ensemble across folds
@@ -103,10 +107,14 @@ def main():
     parser.add_argument("-o", metavar="filepath", dest="output_file",
                         help="path to output json file",
                         type=lambda p: Path(p).absolute(), required=True)
+    
+    parser.add_argument("-m", metavar="filepath", dest="model_file",
+                        help="path to classifier model",
+                        type=lambda p: Path(p).absolute(), required=False, default=None)
 
     args = parser.parse_args()
 
-    res = get_ct_contrast_phase(nib.load(args.input_file))
+    res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file)
 
     print("Result:")
     pprint(res)
