@@ -133,6 +133,12 @@ roi_groups = {
     "face_mr": [
         ["face"]
     ],
+    "brain_structures": [
+        ["brainstem", "subarachnoid_space", "venous_sinuses", "septum_pellucidum", "cerebellum", 
+         "caudate_nucleus", "lentiform_nucleus", "insular_cortex", "internal_capsule", "ventricle", 
+         "central_sulcus", "frontal_lobe", "parietal_lobe", "occipital_lobe", "temporal_lobe", 
+         "thalamus"]
+    ],
     "head_glands_cavities": [
         ["eye_left", "eye_right", "eye_lens_left", "eye_lens_right",
          "optic_nerve_left", "optic_nerve_right", "parotid_gland_left", "parotid_gland_right",

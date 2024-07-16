@@ -282,8 +282,7 @@ def download_pretrained_weights(task_id):
         WEIGHTS_URL = url + "/v2.0.0-weights/Dataset503_cardiac_motion.zip"
     elif task_id == 8:
         weights_path = config_dir / "Task008_HepaticVessel"
-        # WEIGHTS_URL = "https://zenodo.org/record/7573746/files/Task008_HepaticVessel.zip?download=1"
-        WEIGHTS_URL = "todo"
+        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset008_HepaticVessel.zip"
 
     # Commercial models
     elif task_id == 304:
@@ -300,6 +299,8 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset734_TotalSegmentatorMRI_tissue_495subj"
     elif task_id == 737:
         weights_path = config_dir / "Dataset737_TotalSegmentatorMRI_face_495subj"
+    elif task_id == 409:
+        weights_path = config_dir / "Dataset409_neuro_550subj"
 
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")

@@ -371,6 +371,24 @@ class_map = {
         2: "brain",
         3: "liver"
     },
+    "brain_structures": {
+        1: "brainstem",
+        2: "subarachnoid_space",
+        3: "venous_sinuses",
+        4: "septum_pellucidum",
+        5: "cerebellum",
+        6: "caudate_nucleus",
+        7: "lentiform_nucleus",
+        8: "insular_cortex",
+        9: "internal_capsule",
+        10: "ventricle",
+        11: "central_sulcus",
+        12: "frontal_lobe",
+        13: "parietal_lobe",
+        14: "occipital_lobe",
+        15: "temporal_lobe",
+        16: "thalamus"
+    },
     "head_glands_cavities": {
         1: "eye_left",
         2: "eye_right",
@@ -458,11 +476,8 @@ commercial_models = {
     "vertebrae_body": 302,
     "face": 303,
     "face_mr": 737,
+    "brain_structures": 409
 }
-# future
-# - brain subparts
-# - head subparts
-# - everything highres?
 
 
 class_map_5_parts = {

@@ -247,7 +247,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = ["liver"]
         crop_addon = [20, 20, 20]
         model = "3d_fullres"
-        folds = None
+        folds = [0]
         if fast: raise ValueError("task liver_vessels does not work with option --fast")
     elif task == "head_glands_cavities":
         task_id = 775
@@ -256,7 +256,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = ["skull"]
         crop_addon = [10, 10, 10]
         model = "3d_fullres_high"
-        folds = None
+        folds = [0]
         if fast: raise ValueError("task head_glands_cavities does not work with option --fast")
     elif task == "headneck_bones_vessels":
         task_id = 776
@@ -267,7 +267,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = ["clavicula_left", "clavicula_right", "vertebrae_C1", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
         crop_addon = [40, 40, 40]
         model = "3d_fullres_high"
-        folds = None
+        folds = [0]
         if fast: raise ValueError("task headneck_bones_vessels does not work with option --fast")
     elif task == "head_muscles":
         task_id = 777
@@ -276,7 +276,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = ["skull"]
         crop_addon = [10, 10, 10]
         model = "3d_fullres_high"
-        folds = None
+        folds = [0]
         if fast: raise ValueError("task head_muscles does not work with option --fast")
     elif task == "headneck_muscles":
         task_id = [778, 779]
@@ -287,7 +287,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = ["clavicula_left", "clavicula_right", "vertebrae_C1", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
         crop_addon = [40, 40, 40]
         model = "3d_fullres_high"
-        folds = None
+        folds = [0]
         if fast: raise ValueError("task headneck_muscles does not work with option --fast")
 
     # Commercial models
@@ -307,7 +307,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = ["heart"]
         crop_addon = [5, 5, 5]
         model = "3d_fullres"
-        folds = None
+        folds = [0]
         if fast: raise ValueError("task heartchambers_highres does not work with option --fast")
         show_license_info()
     elif task == "appendicular_bones":
@@ -354,6 +354,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task face_mr does not work with option --fast")
+        show_license_info()
+    elif task == "brain_structures":
+        task_id = 409
+        resample = [1.0, 0.5, 0.5]
+        trainer = "nnUNetTrainer_DASegOrd0"
+        crop = ["brain"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres_high"
+        folds = [0]
+        if fast: raise ValueError("task brain_structures does not work with option --fast")
         show_license_info()
     elif task == "test":
         task_id = [517]

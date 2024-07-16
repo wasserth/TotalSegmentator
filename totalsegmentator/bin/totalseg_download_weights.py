@@ -24,7 +24,7 @@ def main():
                                                  "heartchambers_highres", "appendicular_bones", 
                                                  "tissue_types", "tissue_types_mr", "face", "face_mr",
                                                  "head_glands_cavities", "head_muscles", "headneck_bones_vessels",
-                                                 "headneck_muscles"],
+                                                 "headneck_muscles", "liver_vessels", "brain_structures"],
                         help="Task for which to download the weights", default="total")
 
     args = parser.parse_args()
@@ -41,11 +41,11 @@ def main():
         "pleural_pericard_effusion": [315],
         "body": [299],
         "body_fast": [300],
-        
         "head_glands_cavities": [775],
         "headneck_bones_vessels": [776],
         "head_muscles": [777],
         "headneck_muscles": [778, 779],
+        "liver_vessels": [8],
 
         "heartchambers_highres": [301],
         "appendicular_bones": [304],
@@ -54,7 +54,7 @@ def main():
         "vertebrae_body": [302],
         "face": [303],
         "face_mr": [737],
-        # "liver_vessels": [8]
+        "brain_structures": [409]
     }
 
     setup_totalseg()
