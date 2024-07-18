@@ -87,8 +87,13 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
     # print(f"mean: {pi_time} [{preds.min():.1f}-{preds.max():.1f}]")
     phase, probability = pi_time_to_phase(pi_time)
 
-    return {"pi_time": pi_time, "phase": phase, "probability": probability, 
-            "pi_time_min": round(float(preds.min()), 2), "pi_time_max": round(float(preds.max()), 2)}
+    return {"pi_time": pi_time, 
+            "phase": phase, 
+            "probability": probability, 
+            "pi_time_min": round(float(preds.min()), 2), 
+            "pi_time_max": round(float(preds.max()), 2),
+            "stddev": pi_time_std  # measure of uncertainty
+            }
 
 
 def main():
