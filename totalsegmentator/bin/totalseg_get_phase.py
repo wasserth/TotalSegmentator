@@ -47,7 +47,8 @@ def pi_time_to_phase(pi_time: float) -> str:
     elif pi_time < 100:
         return "portal_venous", 0.7
     else:
-        return "delayed", 0.7
+        return "portal_venous", 0.3
+        # return "delayed", 0.7  # not enough good training data for this
 
 
 def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
@@ -64,16 +65,16 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
     seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
                                       roi_subset=None, statistics_exclude_masks_at_border=False,
                                       quiet=True, stats_aggregation="median")
-    print(f"ts took: {time.time()-st:.2f}s")
+    # print(f"ts took: {time.time()-st:.2f}s")
     
     if stats["brain"]["volume"] > 100:
-        print(f"Brain in image, therefore also running headneck model.")
+        # print(f"Brain in image, therefore also running headneck model.")
         st = time.time()
         seg_img_hn, stats_hn = totalsegmentator(ct_img, None, ml=True, fast=False, statistics=True, 
                                                 task="headneck_bones_vessels",
                                                 roi_subset=None, statistics_exclude_masks_at_border=False,
                                                 quiet=True, stats_aggregation="median")
-        print(f"hn took: {time.time()-st:.2f}s")
+        # print(f"hn took: {time.time()-st:.2f}s")
     else:
         stats_hn = {organ: {"intensity": 0.0} for organ in organs_hn}
 
