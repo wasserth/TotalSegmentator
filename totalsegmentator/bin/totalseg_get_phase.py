@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 from pathlib import Path
+import time
 import argparse
 import json
 import pickle
@@ -51,18 +52,36 @@ def pi_time_to_phase(pi_time: float) -> str:
 
 def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
 
-    organs = ["liver", "spleen", "kidney_left", "kidney_right", "pancreas", "urinary_bladder", "gallbladder",
+    organs = ["liver", "pancreas", "urinary_bladder", "gallbladder",
               "heart", "aorta", "inferior_vena_cava", "portal_vein_and_splenic_vein",
               "iliac_vena_left", "iliac_vena_right", "iliac_artery_left", "iliac_artery_right",
-              "pulmonary_vein"]
+              "pulmonary_vein", "brain", "colon", "small_bowel"]
+    
+    organs_hn = ["internal_carotid_artery_right", "internal_carotid_artery_left",
+                 "internal_jugular_vein_right", "internal_jugular_vein_left"]
 
+    st = time.time()
     seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
                                       roi_subset=None, statistics_exclude_masks_at_border=False,
-                                      quiet=True)
+                                      quiet=True, stats_aggregation="median")
+    print(f"ts took: {time.time()-st:.2f}s")
+    
+    if stats["brain"]["volume"] > 100:
+        print(f"Brain in image, therefore also running headneck model.")
+        st = time.time()
+        seg_img_hn, stats_hn = totalsegmentator(ct_img, None, ml=True, fast=False, statistics=True, 
+                                                task="headneck_bones_vessels",
+                                                roi_subset=None, statistics_exclude_masks_at_border=False,
+                                                quiet=True, stats_aggregation="median")
+        print(f"hn took: {time.time()-st:.2f}s")
+    else:
+        stats_hn = {organ: {"intensity": 0.0} for organ in organs_hn}
 
     features = []
     for organ in organs:
         features.append(stats[organ]["intensity"])
+    for organ in organs_hn:
+        features.append(stats_hn[organ]["intensity"])
 
     if model_file is None:
         # weights from longitudinalliver dataset

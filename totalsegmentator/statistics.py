@@ -98,7 +98,8 @@ def get_basic_statistics(seg: np.array,
                          quiet: bool=False,
                          task: str="total", 
                          exclude_masks_at_border: bool=True,
-                         roi_subset: list=None):
+                         roi_subset: list=None,
+                         metric: str="mean"):
     """
     ct_file: path to a ct_file or a nifti file object
     """
@@ -123,8 +124,13 @@ def get_basic_statistics(seg: np.array,
         else:
             stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3; 0.2s
             roi_mask = (data > 0).astype(np.uint8)  # 0.16s
-            # stats[mask_name]["intensity"] = ct[roi_mask > 0].mean().round(2) if roi_mask.sum() > 0 else 0.0  # 3.0s
-            stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s
+            st = time.time()
+            if metric == "mean":
+                # stats[mask_name]["intensity"] = ct[roi_mask > 0].mean().round(2) if roi_mask.sum() > 0 else 0.0  # 3.0s
+                stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.03s
+            elif metric == "median":
+                stats[mask_name]["intensity"] = np.median(ct[roi_mask > 0]).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.014s
+            # print(f"took: {time.time()-st:.4f}s")
 
     if file_out is not None:
         # For nora json is good

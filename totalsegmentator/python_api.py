@@ -70,7 +70,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
                      skip_saving=False, device="gpu", license_number=None,
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
-                     v1_order=False, fastest=False, roi_subset_robust=None):
+                     v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean"):
     """
     Run TotalSegmentator from within python.
 
@@ -472,7 +472,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             output_type=output_type, statistics=statistics_fast,
                             quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
                             exclude_masks_at_border=statistics_exclude_masks_at_border,
-                            no_derived_masks=no_derived_masks, v1_order=v1_order)
+                            no_derived_masks=no_derived_masks, v1_order=v1_order,
+                            stats_aggregation=stats_aggregation)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:
@@ -496,7 +497,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             stats_file = None
         stats = get_basic_statistics(seg, ct_img, stats_file, 
                                      quiet, task, statistics_exclude_masks_at_border,
-                                     roi_subset)
+                                     roi_subset, metric=stats_aggregation)
         # get_radiomics_features_for_entire_dir(input, output, output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 

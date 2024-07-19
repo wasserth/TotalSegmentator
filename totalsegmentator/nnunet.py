@@ -292,7 +292,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti",
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
-                         v1_order=False):
+                         v1_order=False, stats_aggregation="mean"):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -548,7 +548,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             else:
                 stats_file = None
             stats = get_basic_statistics(img_pred.get_fdata(), img_in_rsp, stats_file, 
-                                         quiet, task_name, exclude_masks_at_border, roi_subset)
+                                         quiet, task_name, exclude_masks_at_border, roi_subset,
+                                         metric=stats_aggregation)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
         if resample is not None:
