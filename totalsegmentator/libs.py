@@ -14,6 +14,7 @@ from tqdm import tqdm
 import requests
 import numpy as np
 import nibabel as nib
+from huggingface_hub import hf_hub_download
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, commercial_models
 from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_license, has_valid_license, has_valid_license_offline
@@ -89,7 +90,6 @@ def download_model_with_license_and_unpack(task_name, config_dir):
         if tempfile.exists():
             os.remove(tempfile)
 
-
 def download_url_and_unpack(url, config_dir):
 
     # Not needed anymore since downloading from github assets (actually results in an error)
@@ -131,14 +131,45 @@ def download_url_and_unpack(url, config_dir):
         if tempfile.exists():
             os.remove(tempfile)
 
+def download_from_huggingface(config_dir):
+    from huggingface_hub import hf_hub_download
 
-def download_pretrained_weights(task_id):
+    try:
+        model_id = "totalseg/TotalSegmentator"
+        filename = "TotalSegmentator.zip"
 
-    config_dir = get_weights_dir()
+        print(f"Downloading model from Hugging Face: {model_id}")
+
+        local_file = hf_hub_download(repo_id=model_id, filename=filename)
+
+        print("Download finished. Extracting...")
+        with zipfile.ZipFile(local_file, 'r') as zip_f:
+            zip_f.extractall(config_dir)
+
+    except Exception as e:
+        print(f"Error downloading from Hugging Face: {str(e)}")
+        raise e
+
+
+def download_pretrained_weights(task_id, config_dir, source=None):
+    """
+    Download pretrained weights for a specific task.
+
+    Args:
+        task_id (int): The ID of the task.
+        config_dir (Path): The directory to store the weights.
+        source (str, optional): The source to download weights from.
+                                Either 'github' or 'huggingface'. Defaults to None.
+
+    Returns:
+        None
+    """
+    if source is None:
+        source = "github"
+
+    print(f"DEBUG: download_pretrained_weights called with task_id={task_id}, source={source}")
+
     config_dir.mkdir(exist_ok=True, parents=True)
-    # (config_dir / "3d_fullres").mkdir(exist_ok=True, parents=True)
-    # (config_dir / "3d_lowres").mkdir(exist_ok=True, parents=True)
-    # (config_dir / "2d").mkdir(exist_ok=True, parents=True)
 
     old_weights = [
         "nnUNet/3d_fullres/Task251_TotalSegmentator_part1_organs_1139subj",
@@ -160,151 +191,155 @@ def download_pretrained_weights(task_id):
         "nnUNet/3d_fullres/Task417_heart_mixed_317subj",
         "nnUNet/3d_fullres/Task278_TotalSegmentator_part6_bones_1259subj",
         "nnUNet/3d_fullres/Task435_Heart_vessels_118subj",
-        # "Dataset297_TotalSegmentator_total_3mm_1559subj",  # for >= v2.0.4
-        "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",  # for >= v2.0.5
-        # "Dataset298_TotalSegmentator_total_6mm_1559subj",  # for >= v2.0.5
+        "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",
     ]
 
-    # url = "http://backend.totalsegmentator.com"
     url = "https://github.com/wasserth/TotalSegmentator/releases/download"
 
-    if task_id == 291:
-        weights_path = config_dir / "Dataset291_TotalSegmentator_part1_organs_1559subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/6802342/files/Task251_TotalSegmentator_part1_organs_1139subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset291_TotalSegmentator_part1_organs_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset291_TotalSegmentator_part1_organs_1559subj.zip"
-    elif task_id == 292:
-        weights_path = config_dir / "Dataset292_TotalSegmentator_part2_vertebrae_1532subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/6802358/files/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip"
-    elif task_id == 293:
-        weights_path = config_dir / "Dataset293_TotalSegmentator_part3_cardiac_1559subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/6802360/files/Task253_TotalSegmentator_part3_cardiac_1139subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip"
-    elif task_id == 294:
-        weights_path = config_dir / "Dataset294_TotalSegmentator_part4_muscles_1559subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/6802366/files/Task254_TotalSegmentator_part4_muscles_1139subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip"
-    elif task_id == 295:
-        weights_path = config_dir / "Dataset295_TotalSegmentator_part5_ribs_1559subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
-    elif task_id == 297:
-        weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj"
-        # weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj_v204"
-        # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"  # v200
-        # WEIGHTS_URL = url + "/v2.0.4-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v204.zip"
-        # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v205.zip"
-    elif task_id == 298:
-        weights_path = config_dir / "Dataset298_TotalSegmentator_total_6mm_1559subj"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
-        # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset298_TotalSegmentator_total_6mm_1559subj_v205.zip"
-    elif task_id == 299:
-        weights_path = config_dir / "Dataset299_body_1559subj"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset299_body_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset299_body_1559subj.zip"
-    elif task_id == 300:
-        weights_path = config_dir / "Dataset300_body_6mm_1559subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset300_body_6mm_1559subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset300_body_6mm_1559subj.zip"
-    elif task_id == 775:
-        weights_path = config_dir / "Dataset775_head_glands_cavities_492subj"
-        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset775_head_glands_cavities_492subj.zip"
-    elif task_id == 776:
-        weights_path = config_dir / "Dataset776_headneck_bones_vessels_492subj"
-        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset776_headneck_bones_vessels_492subj.zip"
-    elif task_id == 777:
-        weights_path = config_dir / "Dataset777_head_muscles_492subj"
-        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset777_head_muscles_492subj.zip"
-    elif task_id == 778:
-        weights_path = config_dir / "Dataset778_headneck_muscles_part1_492subj"
-        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset778_headneck_muscles_part1_492subj.zip"
-    elif task_id == 779:
-        weights_path = config_dir / "Dataset779_headneck_muscles_part2_492subj"
-        WEIGHTS_URL = url + "/v2.3.0-weights/Dataset779_headneck_muscles_part2_492subj.zip"
-                
-    # MR models
-    elif task_id == 730:
-        weights_path = config_dir / "Dataset730_TotalSegmentatorMRI_part1_organs_495subj"
-        WEIGHTS_URL = url + "/v2.2.0-weights/Dataset730_TotalSegmentatorMRI_part1_organs_495subj.zip"
-    elif task_id == 731:
-        weights_path = config_dir / "Dataset731_TotalSegmentatorMRI_part2_muscles_495subj"
-        WEIGHTS_URL = url + "/v2.2.0-weights/Dataset731_TotalSegmentatorMRI_part2_muscles_495subj.zip"
-    elif task_id == 732:
-        weights_path = config_dir / "Dataset732_TotalSegmentatorMRI_total_3mm_495subj"
-        WEIGHTS_URL = url + "/v2.2.0-weights/Dataset732_TotalSegmentatorMRI_total_3mm_495subj.zip"
-    elif task_id == 733:
-        weights_path = config_dir / "Dataset733_TotalSegmentatorMRI_total_6mm_495subj"
-        WEIGHTS_URL = url + "/v2.2.0-weights/Dataset733_TotalSegmentatorMRI_total_6mm_495subj.zip"
+    if source == "github":
+        if task_id == 291:
+            weights_path = config_dir / "Dataset291_TotalSegmentator_part1_organs_1559subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/6802342/files/Task251_TotalSegmentator_part1_organs_1139subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset291_TotalSegmentator_part1_organs_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset291_TotalSegmentator_part1_organs_1559subj.zip"
+        elif task_id == 292:
+            weights_path = config_dir / "Dataset292_TotalSegmentator_part2_vertebrae_1532subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/6802358/files/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip"
+        elif task_id == 293:
+            weights_path = config_dir / "Dataset293_TotalSegmentator_part3_cardiac_1559subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/6802360/files/Task253_TotalSegmentator_part3_cardiac_1139subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip"
+        elif task_id == 294:
+            weights_path = config_dir / "Dataset294_TotalSegmentator_part4_muscles_1559subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/6802366/files/Task254_TotalSegmentator_part4_muscles_1139subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip"
+        elif task_id == 295:
+            weights_path = config_dir / "Dataset295_TotalSegmentator_part5_ribs_1559subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip"
+        elif task_id == 297:
+            weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj"
+            # weights_path = config_dir / "Dataset297_TotalSegmentator_total_3mm_1559subj_v204"
+            # WEIGHTS_URL = "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip"  # v200
+            # WEIGHTS_URL = url + "/v2.0.4-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v204.zip"
+            # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v205.zip"
+        elif task_id == 298:
+            weights_path = config_dir / "Dataset298_TotalSegmentator_total_6mm_1559subj"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
+            # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset298_TotalSegmentator_total_6mm_1559subj_v205.zip"
+        elif task_id == 299:
+            weights_path = config_dir / "Dataset299_body_1559subj"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset299_body_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset299_body_1559subj.zip"
+        elif task_id == 300:
+            weights_path = config_dir / "Dataset300_body_6mm_1559subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset300_body_6mm_1559subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset300_body_6mm_1559subj.zip"
+        elif task_id == 775:
+            weights_path = config_dir / "Dataset775_head_glands_cavities_492subj"
+            WEIGHTS_URL = url + "/v2.3.0-weights/Dataset775_head_glands_cavities_492subj.zip"
+        elif task_id == 776:
+            weights_path = config_dir / "Dataset776_headneck_bones_vessels_492subj"
+            WEIGHTS_URL = url + "/v2.3.0-weights/Dataset776_headneck_bones_vessels_492subj.zip"
+        elif task_id == 777:
+            weights_path = config_dir / "Dataset777_head_muscles_492subj"
+            WEIGHTS_URL = url + "/v2.3.0-weights/Dataset777_head_muscles_492subj.zip"
+        elif task_id == 778:
+            weights_path = config_dir / "Dataset778_headneck_muscles_part1_492subj"
+            WEIGHTS_URL = url + "/v2.3.0-weights/Dataset778_headneck_muscles_part1_492subj.zip"
+        elif task_id == 779:
+            weights_path = config_dir / "Dataset779_headneck_muscles_part2_492subj"
+            WEIGHTS_URL = url + "/v2.3.0-weights/Dataset779_headneck_muscles_part2_492subj.zip"
+                    
+        # MR models
+        elif task_id == 730:
+            weights_path = config_dir / "Dataset730_TotalSegmentatorMRI_part1_organs_495subj"
+            WEIGHTS_URL = url + "/v2.2.0-weights/Dataset730_TotalSegmentatorMRI_part1_organs_495subj.zip"
+        elif task_id == 731:
+            weights_path = config_dir / "Dataset731_TotalSegmentatorMRI_part2_muscles_495subj"
+            WEIGHTS_URL = url + "/v2.2.0-weights/Dataset731_TotalSegmentatorMRI_part2_muscles_495subj.zip"
+        elif task_id == 732:
+            weights_path = config_dir / "Dataset732_TotalSegmentatorMRI_total_3mm_495subj"
+            WEIGHTS_URL = url + "/v2.2.0-weights/Dataset732_TotalSegmentatorMRI_total_3mm_495subj.zip"
+        elif task_id == 733:
+            weights_path = config_dir / "Dataset733_TotalSegmentatorMRI_total_6mm_495subj"
+            WEIGHTS_URL = url + "/v2.2.0-weights/Dataset733_TotalSegmentatorMRI_total_6mm_495subj.zip"
 
-    # Models from other projects
-    elif task_id == 258:
-        weights_path = config_dir / "Dataset258_lung_vessels_248subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset258_lung_vessels_248subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset258_lung_vessels_248subj.zip"
-    elif task_id == 200:
-        weights_path = config_dir / "Task200_covid_challenge"
-        WEIGHTS_URL = "TODO"
-    elif task_id == 201:
-        weights_path = config_dir / "Task201_covid"
-        WEIGHTS_URL = "TODO"
-    # elif task_id == 152:
-    #     weights_path = config_dir / "Task152_icbbig_TN"
-    #     WEIGHTS_URL = "TODO"
-    elif task_id == 150:
-        weights_path = config_dir / "Dataset150_icb_v0"
-        # WEIGHTS_URL = "https://zenodo.org/record/7079161/files/Task150_icb_v0.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset150_icb_v0.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset150_icb_v0.zip"
-    elif task_id == 260:
-        weights_path = config_dir / "Dataset260_hip_implant_71subj"
-        # WEIGHTS_URL = "https://zenodo.org/record/7234263/files/Task260_hip_implant_71subj.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset260_hip_implant_71subj.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset260_hip_implant_71subj.zip"
-    elif task_id == 315:
-        weights_path = config_dir / "Dataset315_thoraxCT"
-        # WEIGHTS_URL = "https://zenodo.org/record/7510288/files/Task315_thoraxCT.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset315_thoraxCT.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset315_thoraxCT.zip"
-    elif task_id == 503:
-        weights_path = config_dir / "Dataset503_cardiac_motion"
-        # WEIGHTS_URL = "https://zenodo.org/record/7271576/files/Task503_cardiac_motion.zip?download=1"
-        # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset503_cardiac_motion.zip"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset503_cardiac_motion.zip"
-    elif task_id == 8:
-        weights_path = config_dir / "Task008_HepaticVessel"
-        WEIGHTS_URL = url + "/v2.0.0-weights/Dataset008_HepaticVessel.zip"
+        # Models from other projects
+        elif task_id == 258:
+            weights_path = config_dir / "Dataset258_lung_vessels_248subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset258_lung_vessels_248subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset258_lung_vessels_248subj.zip"
+        elif task_id == 200:
+            weights_path = config_dir / "Task200_covid_challenge"
+            WEIGHTS_URL = "TODO"
+        elif task_id == 201:
+            weights_path = config_dir / "Task201_covid"
+            WEIGHTS_URL = "TODO"
+        # elif task_id == 152:
+        #     weights_path = config_dir / "Task152_icbbig_TN"
+        #     WEIGHTS_URL = "TODO"
+        elif task_id == 150:
+            weights_path = config_dir / "Dataset150_icb_v0"
+            # WEIGHTS_URL = "https://zenodo.org/record/7079161/files/Task150_icb_v0.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset150_icb_v0.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset150_icb_v0.zip"
+        elif task_id == 260:
+            weights_path = config_dir / "Dataset260_hip_implant_71subj"
+            # WEIGHTS_URL = "https://zenodo.org/record/7234263/files/Task260_hip_implant_71subj.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset260_hip_implant_71subj.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset260_hip_implant_71subj.zip"
+        elif task_id == 315:
+            weights_path = config_dir / "Dataset315_thoraxCT"
+            # WEIGHTS_URL = "https://zenodo.org/record/7510288/files/Task315_thoraxCT.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset315_thoraxCT.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset315_thoraxCT.zip"
+        elif task_id == 503:
+            weights_path = config_dir / "Dataset503_cardiac_motion"
+            # WEIGHTS_URL = "https://zenodo.org/record/7271576/files/Task503_cardiac_motion.zip?download=1"
+            # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset503_cardiac_motion.zip"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset503_cardiac_motion.zip"
+        elif task_id == 8:
+            weights_path = config_dir / "Task008_HepaticVessel"
+            WEIGHTS_URL = url + "/v2.0.0-weights/Dataset008_HepaticVessel.zip"
 
-    # Commercial models
-    elif task_id == 304:
-        weights_path = config_dir / "Dataset304_appendicular_bones_ext_1559subj"
-    elif task_id == 301:
-        weights_path = config_dir / "Dataset301_heart_highres_1559subj"
-    elif task_id == 303:
-        weights_path = config_dir / "Dataset303_face_1559subj"
-    elif task_id == 481:
-        weights_path = config_dir / "Dataset481_tissue_1559subj"
-    elif task_id == 302:
-        weights_path = config_dir / "Dataset302_vertebrae_body_1559subj"
-    elif task_id == 734:
-        weights_path = config_dir / "Dataset734_TotalSegmentatorMRI_tissue_495subj"
-    elif task_id == 737:
-        weights_path = config_dir / "Dataset737_TotalSegmentatorMRI_face_495subj"
-    elif task_id == 409:
-        weights_path = config_dir / "Dataset409_neuro_550subj"
+        # Commercial models
+        elif task_id == 304:
+            weights_path = config_dir / "Dataset304_appendicular_bones_ext_1559subj"
+        elif task_id == 301:
+            weights_path = config_dir / "Dataset301_heart_highres_1559subj"
+        elif task_id == 303:
+            weights_path = config_dir / "Dataset303_face_1559subj"
+        elif task_id == 481:
+            weights_path = config_dir / "Dataset481_tissue_1559subj"
+        elif task_id == 302:
+            weights_path = config_dir / "Dataset302_vertebrae_body_1559subj"
+        elif task_id == 734:
+            weights_path = config_dir / "Dataset734_TotalSegmentatorMRI_tissue_495subj"
+        elif task_id == 737:
+            weights_path = config_dir / "Dataset737_TotalSegmentatorMRI_face_495subj"
+        elif task_id == 409:
+            weights_path = config_dir / "Dataset409_neuro_550subj"
 
+        else:
+            raise ValueError(f"For task_id {task_id} no download path was found.")
+    
+    elif source == "huggingface":
+        print("DEBUG: Entering Hugging Face download logic")
+        weights_path = config_dir / "TotalSegmentator_weights"
     else:
-        raise ValueError(f"For task_id {task_id} no download path was found.")
-
+        print(f"DEBUG: Invalid source provided: {source}")
+        raise ValueError("Invalid source. Choose 'github' or 'huggingface'.")
 
     for old_weight in old_weights:
         if (config_dir / old_weight).exists():
@@ -329,8 +364,11 @@ def download_pretrained_weights(task_id):
             #     print(config_dir)
             # delete tmp file
             # (config_dir / "tmp_download_file.zip").unlink()
-
-            download_url_and_unpack(WEIGHTS_URL, config_dir)
+            if source == "huggingface":
+                download_from_huggingface(config_dir)
+            else:
+                download_url_and_unpack(WEIGHTS_URL, config_dir)
+            
 
 
 def combine_masks_to_multilabel_file(masks_dir, multilabel_file):

@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 import argparse
 
-from totalsegmentator.libs import download_pretrained_weights
+from totalsegmentator.libs import download_pretrained_weights, get_weights_dir
 from totalsegmentator.config import setup_totalseg, set_config_key
 
 
@@ -62,7 +62,8 @@ def main():
 
     for task_id in task_to_id[args.task]:
         print(f"Processing {task_id}...")
-        download_pretrained_weights(task_id)
+        config_dir = get_weights_dir()
+        download_pretrained_weights(task_id, config_dir, source="github")
 
 
 if __name__ == "__main__":

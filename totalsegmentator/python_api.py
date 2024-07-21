@@ -11,7 +11,7 @@ import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 import torch
 from totalsegmentator.statistics import get_basic_statistics, get_radiomics_features_for_entire_dir
-from totalsegmentator.libs import download_pretrained_weights
+from totalsegmentator.libs import download_pretrained_weights, get_weights_dir
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
 from totalsegmentator.config import send_usage_stats, set_license_number, has_valid_license_offline
 from totalsegmentator.config import get_config_key, set_config_key
@@ -70,7 +70,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
                      skip_saving=False, device="gpu", license_number=None,
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
-                     v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean"):
+                     v1_order=False, fastest=False, roi_subset_robust=None):
     """
     Run TotalSegmentator from within python.
 
@@ -387,11 +387,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     else:
         statistics_fast = False
 
+    config_dir = get_weights_dir()
     if type(task_id) is list:
         for tid in task_id:
-            download_pretrained_weights(tid)
+            download_pretrained_weights(tid, config_dir, source="github")
     else:
-        download_pretrained_weights(task_id)
+        download_pretrained_weights(task_id, config_dir, source="github")
 
     # For MR always run 3mm model for roi_subset, because 6mm too bad results
     #  (runtime for 3mm still very good for MR)
@@ -429,7 +430,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             crop_spacing = 6.0
         crop_task = "total_mr" if task == "total_mr" else "total"
         crop_trainer = "nnUNetTrainer_DASegOrd0_NoMirroring" if task == "total_mr" else "nnUNetTrainer_4000epochs_NoMirroring"
-        download_pretrained_weights(crop_model_task)
+        config_dir = get_weights_dir()
+        download_pretrained_weights(crop_model_task, config_dir, source="github")
         
         organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
                             trainer=crop_trainer, tta=False, multilabel_image=True, resample=crop_spacing,
@@ -451,7 +453,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
     if crop is None and body_seg:
-        download_pretrained_weights(300)
+        config_dir = get_weights_dir()
+        download_pretrained_weights(300, config_dir, source="github")
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
         body_seg, _, _ = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
@@ -472,8 +475,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             output_type=output_type, statistics=statistics_fast,
                             quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
                             exclude_masks_at_border=statistics_exclude_masks_at_border,
-                            no_derived_masks=no_derived_masks, v1_order=v1_order,
-                            stats_aggregation=stats_aggregation)
+                            no_derived_masks=no_derived_masks, v1_order=v1_order)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:
@@ -497,7 +499,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             stats_file = None
         stats = get_basic_statistics(seg, ct_img, stats_file, 
                                      quiet, task, statistics_exclude_masks_at_border,
-                                     roi_subset, metric=stats_aggregation)
+                                     roi_subset)
         # get_radiomics_features_for_entire_dir(input, output, output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 

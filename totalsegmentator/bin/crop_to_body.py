@@ -10,7 +10,7 @@ import numpy as np
 import nibabel as nib
 import torch
 
-from totalsegmentator.libs import download_pretrained_weights, combine_masks
+from totalsegmentator.libs import download_pretrained_weights, combine_masks, get_weights_dir
 from totalsegmentator.config import setup_nnunet
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 
@@ -58,7 +58,8 @@ def main():
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
     crop_addon = [3, 3, 3]  # default value
-    download_pretrained_weights(300)
+    config_dir = get_weights_dir()
+    download_pretrained_weights(300, config_dir, source="github")
 
     st = time.time()
     if not quiet: print("Generating rough body segmentation...")
