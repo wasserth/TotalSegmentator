@@ -23,7 +23,7 @@ Results on 5-fold cross validation:
   - arterial_early+late: 0.915
   - portal: 0.940
 
-The results contain a probablity for each class which is high if the predicted pi_time is close to the ideal
+The results contain a probability for each class which is high if the predicted pi_time is close to the ideal
 pi_time for the given phase. Moreover, the classifier is an ensemble of 5 models. The output contains the 
 standard deviation of the predictions which can be used as a measure of confidence. If it is low the 5 models
 give similar predictions which is a good sign.
