@@ -78,8 +78,9 @@ Available with a license (free licenses available for non-commercial usage [here
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
 * **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images)
+* **brain_structures**: brainstem, subarachnoid_space, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch)
-* **face**: face_region
+* **face**: face_region (for anonymization)
 
 Usage:
 ```

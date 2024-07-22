@@ -372,9 +372,9 @@ class_map = {
         3: "liver"
     },
     "brain_structures": {
-        1: "brainstem",
+        1: "brainstem",  # + brain_parenchyma
         2: "subarachnoid_space",
-        3: "venous_sinuses",
+        3: "venous_sinuses", # + dural folds
         4: "septum_pellucidum",
         5: "cerebellum",
         6: "caudate_nucleus",
