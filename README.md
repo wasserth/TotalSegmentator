@@ -133,15 +133,6 @@ If you want to reduce memory consumption you can use the following options:
 * `--nr_thr_saving 1`: Saving big images with several threads will take a lot of memory
 
 
-### Train/validation/test split
-The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.
-The exact numbers of the results for the high-resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials Figure 11.
-
-
-### Retrain model and run evaluation
-See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set as in our paper, and how to run the same evaluation as in our paper.
-
-
 ### Python API
 You can run totalsegmentator via Python:
 ```python
@@ -159,13 +150,12 @@ if __name__ == "__main__":
 ```
 You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.
 
-The segmentation image contains the names of the classes in the extended header. If you want to load this additional header information you can use the following code:
+The segmentation image contains the names of the classes in the extended header. If you want to load this additional header information you can use the following code (requires `pip install xmltodict`):
 ```python
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 
 segmentation_nifti_img, label_map_dict = load_multilabel_nifti(image_path)
 ```
-The above code requires `pip install xmltodict`.
 
 
 ### Install latest master branch (contains latest bug fixes)
@@ -175,6 +165,11 @@ pip install git+https://github.com/wasserth/TotalSegmentator.git
 
 
 ### Other commands
+If you want to know which contrast phase a CT image is you can use the following command (requires `pip install xgboost`). More details can be found [here](resources/contrast_phase_prediction.md):
+```
+totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
+```
+
 If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
 ```
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
@@ -189,6 +184,15 @@ After acquiring a license number for the non-open tasks you can set it with the 
 ```
 totalseg_set_license -l aca_12345678910
 ```
+
+
+### Train/validation/test split
+The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.
+The exact numbers of the results for the high-resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials Figure 11.
+
+
+### Retrain model and run evaluation
+See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set as in our paper, and how to run the same evaluation as in our paper.
 
 
 ### Typical problems

@@ -1,6 +1,7 @@
 ## Master
 * add brain structures
 * add liver vessels
+* greatly improved phase classification model
 
 
 ## Release 2.3.0

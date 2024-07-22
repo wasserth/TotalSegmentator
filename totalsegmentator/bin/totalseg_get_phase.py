@@ -68,7 +68,7 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
     # print(f"ts took: {time.time()-st:.2f}s")
     
     if stats["brain"]["volume"] > 100:
-        # print(f"Brain in image, therefore also running headneck model.")
+        # print("Brain in image, therefore also running headneck model.")
         st = time.time()
         seg_img_hn, stats_hn = totalsegmentator(ct_img, None, ml=True, fast=False, statistics=True, 
                                                 task="headneck_bones_vessels",
@@ -85,11 +85,9 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
         features.append(stats_hn[organ]["intensity"])
 
     if model_file is None:
-        # weights from longitudinalliver dataset
-        classifier_path = Path(__file__).parents[2] / "resources" / "contrast_phase_classifiers.pkl"
-    else:
-        # weights from megaseg dataset
-        # classifier_path = "/mnt/nor/wasserthalj_data/classifiers_megaseg.pkl"
+        classifier_path = Path(__file__).parents[2] / "resources" / "contrast_phase_classifiers_2024_07_19.pkl"
+    else: 
+        # manually set model file
         classifier_path = model_file
     clfs = pickle.load(open(classifier_path, "rb"))
 
@@ -136,13 +134,17 @@ def main():
     parser.add_argument("-m", metavar="filepath", dest="model_file",
                         help="path to classifier model",
                         type=lambda p: Path(p).absolute(), required=False, default=None)
+    
+    parser.add_argument("-q", dest="quiet", action="store_true",
+                        help="Print no output to stdout", default=False)
 
     args = parser.parse_args()
 
     res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file)
 
-    print("Result:")
-    pprint(res)
+    if not args.quiet:
+        print("Result:")
+        pprint(res)
 
     with open(args.output_file, "w") as f:
         f.write(json.dumps(res, indent=4))
