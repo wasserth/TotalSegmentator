@@ -161,6 +161,12 @@ class test_end_to_end(unittest.TestCase):
         dice = dice_score(img_ref, img_new)
         images_equal = dice > 0.99
         self.assertTrue(images_equal, f"Dicom prediction not correct (dice: {dice:.6f})")
+        
+    def test_phase_prediction(self):
+        pred_ref = json.load(open("tests/reference_files/phase_prediction.json"))
+        pred_new = json.load(open("tests/unittest_phase_prediction.json"))
+        self.assertDictEqual(pred_ref, pred_new)
+        
 
 
 if __name__ == '__main__':
