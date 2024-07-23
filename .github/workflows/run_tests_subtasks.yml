@@ -25,5 +25,5 @@ jobs:
           pip install .
 
       - name: Run test script
-        run: ./tests/tests.sh ${{ secrets.TOTALSEGMENTATOR_LICENSE }}
+        run: ./tests/tests_subtasks.sh ${{ secrets.TOTALSEGMENTATOR_LICENSE }}
         shell: bash
