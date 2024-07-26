@@ -366,12 +366,13 @@ def combine_masks(mask_dir, class_type):
 
     returns: nibabel image
     """
+    rib_classes = [f"rib_left_{idx}" for idx in range(1, 13)] + [f"rib_right_{idx}" for idx in range(1, 13)]  # + ["sternum",]
     if class_type == "ribs":
-        masks = list(class_map_5_parts["class_map_part_ribs"].values())
+        masks = rib_classes
     elif class_type == "vertebrae":
         masks = list(class_map_5_parts["class_map_part_vertebrae"].values())
     elif class_type == "vertebrae_ribs":
-        masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + list(class_map_5_parts["class_map_part_ribs"].values())
+        masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + rib_classes
     elif class_type == "lung":
         masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"]
