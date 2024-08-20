@@ -382,7 +382,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 
             if crop_mask_img.get_fdata().sum() == 0:
                 if not quiet: 
-                    print(f"INFO: Crop is empty. Returning empty segmentation.")
+                    print("INFO: Crop is empty. Returning empty segmentation.")
                 img_out = nib.Nifti1Image(np.zeros(img_in.shape, dtype=np.uint8), img_in.affine)
                 nib.save(img_out, file_out)
                 if nora_tag != "None":
