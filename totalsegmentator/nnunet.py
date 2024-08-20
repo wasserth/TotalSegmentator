@@ -379,6 +379,16 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                     crop_mask_img = nib.load(crop_path / f"{crop}.nii.gz")
             else:
                 crop_mask_img = crop
+                
+            if crop_mask_img.get_fdata().sum() == 0:
+                if not quiet: 
+                    print(f"INFO: Crop is empty. Returning empty segmentation.")
+                img_out = nib.Nifti1Image(np.zeros(img_in.shape, dtype=np.uint8), img_in.affine)
+                nib.save(img_out, file_out)
+                if nora_tag != "None":
+                    subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
+                return img_out, img_in_orig, None
+                
             img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32,
                                       verbose=verbose)
             if not quiet:
