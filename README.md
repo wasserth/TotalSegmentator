@@ -180,6 +180,7 @@ Normally weights are automatically downloaded when running TotalSegmentator. If 
 ```
 totalseg_download_weights -t <task_name>
 ```
+This will download them to `~/.totalsegmentator/nnunet/results`. You can change this path by doing `export TOTALSEG_HOME_DIR=/new/path/.totalsegmentator`. If your machine has no internet, then download on another machine with internet and copy `~/.totalsegmentator` to the machine without internet.
 
 After acquiring a license number for the non-open tasks you can set it with the following command:
 ```
