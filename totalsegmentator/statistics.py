@@ -81,13 +81,13 @@ def touches_border(mask):
     """
     Check if mask touches any of the borders. Then we do not calc any statistics for it because the mask
     is incomplete.
-    Do not check last slice by one previous, because segmentation on last slice often bad.
+    Do not check last two slices but the previous one, because segmentation on last slices often bad.
     """
-    if np.any(mask[1, :, :]) or np.any(mask[-2, :, :]):
+    if np.any(mask[2, :, :]) or np.any(mask[-3, :, :]):
         return True
-    if np.any(mask[:, 1, :]) or np.any(mask[:, -2, :]):
+    if np.any(mask[:, 2, :]) or np.any(mask[:, -3, :]):
         return True
-    if np.any(mask[:, :, 1]) or np.any(mask[:, :, -2]):
+    if np.any(mask[:, :, 2]) or np.any(mask[:, :, -3]):
         return True
     return False
 

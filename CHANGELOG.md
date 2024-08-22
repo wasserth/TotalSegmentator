@@ -1,4 +1,5 @@
 ## Master
+* add option to remove small connected components in postprocessing
 
 
 ## Release 2.4.0

@@ -107,6 +107,9 @@ def main():
                         help="In multilabel file order classes as in v1. New v2 classes will be removed.",
                         default=False)
 
+    parser.add_argument("-rmb", "--remove_small_blobs", action="store_true", help="Remove small connected components (<0.2ml) from the final segmentations.",
+                        default=False)  # ~30s runtime because of the large number of classes
+        
     # "mps" is for apple silicon; the latest pytorch nightly version supports 3D Conv but not ConvTranspose3D which is
     # also needed by nnU-Net. So "mps" not working for now.
     # https://github.com/pytorch/pytorch/issues/77818
@@ -140,7 +143,8 @@ def main():
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
                      args.device, args.license_number, not args.stats_include_incomplete,
-                     args.no_derived_masks, args.v1_order, args.fastest, args.roi_subset_robust)
+                     args.no_derived_masks, args.v1_order, args.fastest, args.roi_subset_robust,
+                     "mean", args.remove_small_blobs)
 
 
 if __name__ == "__main__":

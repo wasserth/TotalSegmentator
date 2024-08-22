@@ -292,7 +292,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti",
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
-                         v1_order=False, stats_aggregation="mean"):
+                         v1_order=False, stats_aggregation="mean", remove_small_blobs=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -527,11 +527,23 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
         if task_name == "body":
             vox_vol = np.prod(img_pred.header.get_zooms())
-            size_thr_mm3 = 50000 / vox_vol
+            size_thr_mm3 = 50000
             img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
                                                         class_map[task_name], ["body_extremities"],
-                                                        interval=[size_thr_mm3, 1e10], debug=False, quiet=quiet)
+                                                        interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)
             img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+        
+        # General postprocessing    
+        if remove_small_blobs:
+            if not quiet: print("Removing small blobs...")
+            st = time.time()
+            vox_vol = np.prod(img_pred.header.get_zooms())
+            size_thr_mm3 = 200
+            img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
+                                                        class_map[task_name], list(class_map[task_name].values()),
+                                                        interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)  # ~24s
+            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+            if not quiet: print(f"  Removed in {time.time() - st:.2f}s")
 
         if preview:
             from totalsegmentator.preview import generate_preview
