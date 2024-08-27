@@ -343,6 +343,19 @@ class_map = {
         10: "metacarpal",
         11: "phalanges_hand"
     },
+    "appendicular_bones_mr": {
+        1: "patella",
+        2: "tibia",
+        3: "fibula",
+        4: "tarsal",
+        5: "metatarsal",
+        6: "phalanges_feet",
+        7: "ulna",
+        8: "radius",
+        # 9: "carpal",  # missing for mr
+        # 10: "metacarpal",  # missing for mr
+        # 11: "phalanges_hand"  # missing for mr
+    },
     # those classes need to be removed
     "appendicular_bones_auxiliary": {
         12: "humerus",
@@ -461,6 +474,51 @@ class_map = {
         21: "thyrohyoid_left",
         22: "prevertebral_right",
         23: "prevertebral_left"
+    },
+    # CT model WIP
+    "shoulder_muscles": {
+        1: "deltoid",
+        2: "supraspinatus",
+        3: "infraspinatus",
+        4: "subscapularis",
+        5: "coracobrachial",
+        6: "trapezius",
+        7: "pectoralis_minor",
+        8: "serratus_anterior",
+        9: "teres_major",
+        10: "triceps_brachii"
+    },
+    "shoulder_muscles_mr": {    
+        1: "deltoid",
+        2: "supraspinatus",
+        3: "infraspinatus",
+        4: "subscapularis",
+        5: "coracobrachial",
+        6: "trapezius",
+        7: "pectoralis_minor",
+        8: "serratus_anterior",
+        9: "teres_major",
+        10: "triceps_brachii"
+    },
+    "thigh_muscles": {
+        1: "quadriceps_femoris_left",
+        2: "quadriceps_femoris_right",
+        3: "thigh_medial_compartment_left",
+        4: "thigh_medial_compartment_right",
+        5: "thigh_posterior_compartment_left",
+        6: "thigh_posterior_compartment_right",
+        7: "sartorius_left",
+        8: "sartorius_right"
+    },
+    "thigh_muscles_mr": {
+        1: "quadriceps_femoris_left",
+        2: "quadriceps_femoris_right",
+        3: "thigh_medial_compartment_left",
+        4: "thigh_medial_compartment_right",
+        5: "thigh_posterior_compartment_left",
+        6: "thigh_posterior_compartment_right",
+        7: "sartorius_left",
+        8: "sartorius_right"
     },
     "test": {
         1: "carpal"
@@ -696,6 +754,30 @@ class_map_parts_mr = {
         26: "sartorius_right",
         27: "brain"
     }
+    
+    # "class_map_part_muscles_NEXT_RELEASE": {
+    #     1: "humerus_left",
+    #     2: "humerus_right",
+    #     3: "scapula_left",
+    #     4: "scapula_right",
+    #     5: "clavicula_left",
+    #     6: "clavicula_right",
+    #     7: "femur_left",
+    #     8: "femur_right",
+    #     9: "hip_left",
+    #     10: "hip_right",
+    #     11: "gluteus_maximus_left",
+    #     12: "gluteus_maximus_right",
+    #     13: "gluteus_medius_left",
+    #     14: "gluteus_medius_right",
+    #     15: "gluteus_minimus_left",
+    #     16: "gluteus_minimus_right",
+    #     17: "autochthon_left",
+    #     18: "autochthon_right",
+    #     19: "iliopsoas_left",
+    #     20: "iliopsoas_right",
+    #     21: "brain"
+    # }
 }
 
 
