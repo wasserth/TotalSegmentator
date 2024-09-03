@@ -479,7 +479,7 @@ class_map = {
     "shoulder_muscles": {
         1: "deltoid",
         2: "supraspinatus",
-        3: "infraspinatus",
+        3: "infraspinatus",  # this also contains teres_minor
         4: "subscapularis",
         5: "coracobrachial",
         6: "trapezius",
@@ -491,7 +491,7 @@ class_map = {
     "shoulder_muscles_mr": {    
         1: "deltoid",
         2: "supraspinatus",
-        3: "infraspinatus",
+        3: "infraspinatus",  # this also contains teres_minor
         4: "subscapularis",
         5: "coracobrachial",
         6: "trapezius",
