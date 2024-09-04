@@ -16,7 +16,7 @@ setup(name='TotalSegmentator',
              "resources/contrast_phase_classifiers_2024_07_19.pkl"]
             },
         install_requires=[
-            'torch>=2.0.0',
+            'torch>=2.1.2',
             'numpy<2',
             'SimpleITK',
             'nibabel>=2.3.0',
