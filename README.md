@@ -22,7 +22,7 @@ TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU and GPU.
 
 Install dependencies:
 * Python >= 3.9
-* [Pytorch](http://pytorch.org/) >= 2.0.0
+* [Pytorch](http://pytorch.org/) >= 2.0.0 (and <2.4 for windows)
 
 Optionally:
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`) and fury (`pip install fury`)
