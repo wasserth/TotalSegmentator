@@ -13,7 +13,8 @@ setup(name='TotalSegmentator',
         packages=find_packages(),
         package_data={"totalsegmentator": 
             ["resources/totalsegmentator_snomed_mapping.csv",
-             "resources/contrast_phase_classifiers_2024_07_19.pkl"]
+             "resources/contrast_phase_classifiers_2024_07_19.pkl",
+             "resources/modality_classifiers_2024_10_03.pkl"]
             },
         install_requires=[
             'torch>=2.1.2',
@@ -47,7 +48,8 @@ setup(name='TotalSegmentator',
                 'totalseg_download_weights=totalsegmentator.bin.totalseg_download_weights:main',
                 'totalseg_setup_manually=totalsegmentator.bin.totalseg_setup_manually:main',
                 'totalseg_set_license=totalsegmentator.bin.totalseg_set_license:main',
-                'totalseg_get_phase=totalsegmentator.bin.totalseg_get_phase:main'
+                'totalseg_get_phase=totalsegmentator.bin.totalseg_get_phase:main',
+                'totalseg_get_modality=totalsegmentator.bin.totalseg_get_modality:main'
             ],
         },
     )

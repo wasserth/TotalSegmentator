@@ -1,6 +1,6 @@
 ## Master
 * add option to remove small connected components in postprocessing
-
+* add `totalseg_get_modality`
 
 ## Release 2.4.0
 * add brain structures

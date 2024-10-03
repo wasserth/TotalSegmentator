@@ -171,6 +171,11 @@ If you want to know which contrast phase a CT image is you can use the following
 totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
 ```
 
+If you want to know which modality (CT or MR) a image is you can use the following command (requires `pip install xgboost`). 
+```
+totalseg_get_modality -i image.nii.gz -o modality.json
+```
+
 If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
 ```
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
