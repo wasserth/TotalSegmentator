@@ -48,8 +48,6 @@ def get_modality(img: nib.Nifti1Image):
     for fold, clf in clfs.items():
         preds.append(clf.predict([features])[0])
     preds = np.array(preds)
-    print("Ensemble preds:")
-    print(preds)
     preds = np.mean(preds)
     prediction_str = "ct" if preds < 0.5 else "mr"
     probability = 1 - preds if preds < 0.5 else preds
