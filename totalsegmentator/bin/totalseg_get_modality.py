@@ -21,19 +21,11 @@ def get_features(nifti_img):
     data = nifti_img.get_fdata()
 
     mean = np.mean(data)
-    # mean = np.median(data)  # slower than mean
     std = np.std(data)
     min = np.min(data)
     max = np.max(data)
-    # perc1 = np.percentile(data, 1)
-    # perc5 = np.percentile(data, 5)
-    # perc10 = np.percentile(data, 25)
-    # perc90 = np.percentile(data, 75)
-    # perc95 = np.percentile(data, 95)
-    # perc99 = np.percentile(data, 99)
     
-    # return [mean, median, std, min, max, perc1, perc5, perc10, perc90, perc95, perc99]  # ~30s for big ct image
-    return [mean, std, min, max]  # 5s for big ct image
+    return [mean, std, min, max]
 
 
 def get_modality(img: nib.Nifti1Image):
@@ -45,10 +37,10 @@ def get_modality(img: nib.Nifti1Image):
         probability: float
     """
     st = time.time()
-    features = get_features(img)
-    print(f"features took: {time.time() - st:.2f}s")
+    features = get_features(img)  # 5s for big ct image
+    # print(f"features took: {time.time() - st:.2f}s")
 
-    classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/modality_classifiers_2024_10_03.pkl')
+    classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/modality_classifiers_2024_10_04.pkl')
     clfs = pickle.load(open(classifier_path, "rb"))
 
     # ensemble across folds
