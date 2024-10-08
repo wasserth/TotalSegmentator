@@ -42,7 +42,9 @@ def pi_time_to_phase(pi_time: float) -> str:
     elif pi_time < 50:
         return "arterial_late", 1.0
     elif pi_time < 60:
-        return "portal_venous", 0.7
+        return "arterial_late", 0.7  # in previous version: "portal_venous"
+    elif pi_time < 70:
+        return "portal_venous", 1.0
     elif pi_time < 90:
         return "portal_venous", 1.0
     elif pi_time < 100:
