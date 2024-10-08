@@ -25,8 +25,8 @@ def pi_time_to_phase(pi_time: float) -> str:
 
     native: 0-10
     arterial_early: 10-30
-    arterial_late:  30-50
-    portal_venous:  50-100
+    arterial_late:  30-60
+    portal_venous:  60-100
     delayed: 100+
 
     returns: phase, probability
