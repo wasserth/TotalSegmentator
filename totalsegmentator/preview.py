@@ -197,7 +197,7 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
     # window_size = (1800, 1200)  # if we need higher res image of single class
 
     scene = window.Scene()
-    showm = window.ShowManager(scene, size=window_size, reset_camera=False)
+    showm = window.ShowManager(scene=scene, size=window_size, reset_camera=False)
     showm.initialize()
 
     # ct_img = nib.load(subject_path)
@@ -205,7 +205,7 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
     data = data.transpose(1, 2, 0)  # Show sagittal view
     data = data[::-1, :, :]
     value_range = (-115, 225)  # soft tissue window
-    slice_actor = actor.slicer(data, ct_img.affine, value_range)
+    slice_actor = actor.slicer(data=data, affine=ct_img.affine, value_range=value_range)
     slice_actor.SetPosition(0, 0, 0)
     scene.add(slice_actor)
 
@@ -231,7 +231,7 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
     scene.reset_camera_tight(margin_factor=1.02)  # need to do reset_camera=False in record for this to work in
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    window.record(scene, size=window_size,
+    window.record(scene=scene, size=window_size,
                   out_path=output_path, reset_camera=False)  # , reset_camera=False
     scene.clear()
 
