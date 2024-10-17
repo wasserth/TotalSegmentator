@@ -290,6 +290,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres_high"
         folds = [0]
         if fast: raise ValueError("task headneck_muscles does not work with option --fast")
+    elif task == "oculomotor_muscles":
+        task_id = 351
+        resample = [0.47251562774181366, 0.47251562774181366, 0.8500002026557922]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["skull"]
+        crop_addon = [20, 20, 20]
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task oculomotor_muscles does not work with option --fast")
 
     # Commercial models
     elif task == "vertebrae_body":

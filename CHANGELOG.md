@@ -2,6 +2,7 @@
 * add option to remove small connected components in postprocessing
 * add `totalseg_get_modality`
 * change pi_time threshold for arterial late phase from 50s to 60s
+* add oculomotor muscles model
 
 ## Release 2.4.0
 * add brain structures

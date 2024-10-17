@@ -168,6 +168,18 @@ roi_groups = {
         "sterno_thyroid_right", "sterno_thyroid_left", "thyrohyoid_right", "thyrohyoid_left",
         "prevertebral_right", "prevertebral_left"]
     ],
+    "oculomotor_muscles": [
+        ["skull"], 
+        ["eyeball_right", "eyeball_left", 
+        "levator_palpebrae_superioris_right", "levator_palpebrae_superioris_left", 
+        "superior_rectus_muscle_right", "superior_rectus_muscle_left",
+        "inferior_oblique_muscle_right", "inferior_oblique_muscle_left"],
+        ["lateral_rectus_muscle_right", "lateral_rectus_muscle_left", 
+        "superior_oblique_muscle_right", "superior_oblique_muscle_left",
+        "medial_rectus_muscle_right", "medial_rectus_muscle_left",
+        "inferior_rectus_muscle_right", "inferior_rectus_muscle_left", 
+        "optic_nerve_right", "optic_nerve_left"]
+    ],
     "test": [
         ["ulna"]
     ]

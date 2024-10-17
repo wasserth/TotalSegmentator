@@ -293,6 +293,27 @@ class_map = {
         1: "lung_vessels",
         2: "lung_trachea_bronchia"
     },
+    "oculomotor_muscles": {
+        1: "skull",  # auxiliary class
+        2: "eyeball_right",
+        3: "lateral_rectus_muscle_right",
+        4: "superior_oblique_muscle_right",
+        5: "levator_palpebrae_superioris_right",
+        6: "superior_rectus_muscle_right",
+        7: "medial_rectus_muscle_left",
+        8: "inferior_oblique_muscle_right",
+        9: "inferior_rectus_muscle_right",
+        10: "optic_nerve_left",
+        11: "eyeball_left",
+        12: "lateral_rectus_muscle_left",
+        13: "superior_oblique_muscle_left",
+        14: "levator_palpebrae_superioris_left",
+        15: "superior_rectus_muscle_left",
+        16: "medial_rectus_muscle_right",
+        17: "inferior_oblique_muscle_left",
+        18: "inferior_rectus_muscle_left",
+        19: "optic_nerve_right"
+    },
     "covid": {
         1: "lung_covid_infiltrate",
     },
