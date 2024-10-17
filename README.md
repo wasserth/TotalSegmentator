@@ -77,11 +77,14 @@ Openly available for any usage:
 Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch):
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
+* **apendicular_bones_mr**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius (for MR images)
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
 * **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images)
 * **brain_structures**: brainstem, subarachnoid_space, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus (NOTE: this is for CT) (cite [paper](https://doi.org/10.1148/ryai.2020190183) as our model is partly based on this)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch)
 * **face**: face_region (for anonymization)
+* **thigh_shoulder_muscles**: thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (WIP)
+* **thigh_shoulder_muscles_mr**: thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (for MR images)
 
 Usage:
 ```
@@ -408,30 +411,24 @@ For some classes they differ which you can see in the table below.
 29 | iliac_vena_right | common iliac vein |
 30 | humerus_left ||
 31 | humerus_right ||
-32 | fibula ||
-33 | tibia ||
-34 | femur_left ||
-35 | femur_right ||
-36 | hip_left ||
-37 | hip_right ||
-38 | gluteus_maximus_left | gluteus maximus muscle |
-39 | gluteus_maximus_right | gluteus maximus muscle |
-40 | gluteus_medius_left | gluteus medius muscle |
-41 | gluteus_medius_right | gluteus medius muscle |
-42 | gluteus_minimus_left | gluteus minimus muscle |
-43 | gluteus_minimus_right | gluteus minimus muscle |
-44 | autochthon_left ||
-45 | autochthon_right ||
-46 | iliopsoas_left | iliopsoas muscle |
-47 | iliopsoas_right | iliopsoas muscle |
-48 | quadriceps_femoris_left ||
-49 | quadriceps_femoris_right ||
-50 | thigh_medial_compartment_left ||
-51 | thigh_medial_compartment_right ||
-52 | thigh_posterior_compartment_left ||
-53 | thigh_posterior_compartment_right ||
-54 | sartorius_left ||
-55 | sartorius_right ||
-56 | brain ||
+32 | scapula_left ||
+33 | scapula_right ||
+34 | clavicula_left ||
+35 | clavicula_right ||
+36 | femur_left ||
+37 | femur_right ||
+38 | hip_left ||
+39 | hip_right ||
+40 | gluteus_maximus_left | gluteus maximus muscle |
+41 | gluteus_maximus_right | gluteus maximus muscle |
+42 | gluteus_medius_left | gluteus medius muscle |
+43 | gluteus_medius_right | gluteus medius muscle |
+44 | gluteus_minimus_left | gluteus minimus muscle |
+45 | gluteus_minimus_right | gluteus minimus muscle |
+46 | autochthon_left ||
+47 | autochthon_right ||
+48 | iliopsoas_left | iliopsoas muscle |
+49 | iliopsoas_right | iliopsoas muscle |
+50 | brain ||
 
 

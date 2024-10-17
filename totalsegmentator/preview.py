@@ -62,14 +62,10 @@ roi_groups = {
         ["humerus_left", "humerus_right", "femur_left", "femur_right", 
         "hip_left", "hip_right", "sacrum",
         "vertebrae", "intervertebral_discs",
-        "fibula", "tibia",
         "autochthon_left", "autochthon_right", "iliopsoas_left", "iliopsoas_right",
         "gluteus_medius_left", "gluteus_medius_right", "gluteus_minimus_left", "gluteus_minimus_right",
-        "gluteus_maximus_left", "gluteus_maximus_right",
-        "quadriceps_femoris_left", "quadriceps_femoris_right", 
-        "thigh_medial_compartment_left", "thigh_medial_compartment_right", 
-        "thigh_posterior_compartment_left", "thigh_posterior_compartment_right", 
-        "sartorius_left", "sartorius_right"],
+        "gluteus_maximus_left", "gluteus_maximus_right", 
+        "scapula_left", "scapula_right", "clavicula_left", "clavicula_right"],
         ["iliac_artery_left", "iliac_artery_right", "iliac_vena_left", "iliac_vena_right",
         "aorta", "inferior_vena_cava", "portal_vein_and_splenic_vein",
         "heart", "esophagus", "stomach", "duodenum", "colon", "small_bowel", "urinary_bladder"],
@@ -116,6 +112,10 @@ roi_groups = {
     "appendicular_bones": [
         ["patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet",
          "ulna", "radius", "carpal", "metacarpal", "phalanges_hand"]
+    ],
+    "appendicular_bones_mr": [
+        ["patella", "tibia", "fibula", "tarsal", "metatarsal", "phalanges_feet",
+         "ulna", "radius"]
     ],
     "tissue_types": [
         ["subcutaneous_fat"],
@@ -179,6 +179,22 @@ roi_groups = {
         "medial_rectus_muscle_right", "medial_rectus_muscle_left",
         "inferior_rectus_muscle_right", "inferior_rectus_muscle_left", 
         "optic_nerve_right", "optic_nerve_left"]
+    ],
+    "thigh_shoulder_muscles": [
+        ["quadriceps_femoris_left", "quadriceps_femoris_right", 
+        "thigh_medial_compartment_left", "thigh_medial_compartment_right",
+        "deltoid", "supraspinatus", "infraspinatus", "subscapularis", "coracobrachial", "trapezius"], 
+        ["thigh_posterior_compartment_left", "thigh_posterior_compartment_right", 
+        "sartorius_left", "sartorius_right",
+        "pectoralis_minor", "serratus_anterior", "teres_major", "triceps_brachii"]
+    ],
+    "thigh_shoulder_muscles_mr": [
+        ["quadriceps_femoris_left", "quadriceps_femoris_right", 
+        "thigh_medial_compartment_left", "thigh_medial_compartment_right",
+        "deltoid", "supraspinatus", "infraspinatus", "subscapularis", "coracobrachial", "trapezius"], 
+        ["thigh_posterior_compartment_left", "thigh_posterior_compartment_right", 
+        "sartorius_left", "sartorius_right",
+        "pectoralis_minor", "serratus_anterior", "teres_major", "triceps_brachii"]
     ],
     "test": [
         ["ulna"]

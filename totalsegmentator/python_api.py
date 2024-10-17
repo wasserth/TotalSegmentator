@@ -151,22 +151,22 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
     elif task == "total_mr":
         if fast:
-            task_id = 732
+            task_id = 852
             resample = 3.0
-            trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+            trainer = "nnUNetTrainer_2000epochs_NoMirroring"
             # trainer = "nnUNetTrainerNoMirroring"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
         elif fastest:
-            task_id = 733
+            task_id = 853
             resample = 6.0
-            trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+            trainer = "nnUNetTrainer_2000epochs_NoMirroring"
             crop = None
             if not quiet: print("Using 'fastest' option: resampling to lower resolution (6mm)")
         else:
-            task_id = [730, 731]
+            task_id = [850, 851]
             resample = 1.5
-            trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+            trainer = "nnUNetTrainer_2000epochs_NoMirroring"
             crop = None
         model = "3d_fullres"
         folds = [0]
@@ -329,6 +329,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task appendicular_bones does not work with option --fast")
         show_license_info()
+    elif task == "appendicular_bones_mr":
+        task_id = 855
+        resample = 1.5
+        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task appendicular_bones_mr does not work with option --fast")
+        show_license_info()
     elif task == "tissue_types":
         task_id = 481
         resample = 1.5
@@ -339,9 +348,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task tissue_types does not work with option --fast")
         show_license_info()
     elif task == "tissue_types_mr":
-        task_id = 734
+        task_id = 854
         resample = 1.5
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
         crop = None
         model = "3d_fullres"
         folds = [0]
@@ -357,9 +366,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task face does not work with option --fast")
         show_license_info()
     elif task == "face_mr":
-        task_id = 737
+        task_id = 856
         resample = 1.5
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
         crop = None
         model = "3d_fullres"
         folds = [0]
@@ -374,6 +383,24 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres_high"
         folds = [0]
         if fast: raise ValueError("task brain_structures does not work with option --fast")
+        show_license_info()
+    elif task == "thigh_shoulder_muscles":
+        task_id = 999
+        resample = 1.5
+        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task thigh_shoulder_muscles does not work with option --fast")
+        show_license_info()
+    elif task == "thigh_shoulder_muscles_mr":
+        task_id = 857
+        resample = 1.5
+        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task thigh_shoulder_muscles does not work with option --fast")
         show_license_info()
     elif task == "test":
         task_id = [517]
