@@ -83,6 +83,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **brain_structures**: brainstem, subarachnoid_space, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus (NOTE: this is for CT) (cite [paper](https://doi.org/10.1148/ryai.2020190183) as our model is partly based on this)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch)
 * **face**: face_region (for anonymization)
+* **face_mr**: face_region (for anonymization)
 * **thigh_shoulder_muscles**: thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (WIP)
 * **thigh_shoulder_muscles_mr**: thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (for MR images)
 
