@@ -197,6 +197,11 @@ After acquiring a license number for the non-open tasks you can set it with the 
 totalseg_set_license -l aca_12345678910
 ```
 
+If you do not have internet access on the machine you want to run TotalSegmentator on:
+1. Install TotalSegmentator [and set up the license] on a machine with internet.
+2. Run TotalSegmentator for one subject on this machine. This will download the weights and save them to `~/.totalsegmentator`.
+3. Copy the folder `~/.totalsegmentator` from this machine to the machine without internet.
+4. TotalSegmentator should now work also on the machine without internet.
 
 ### Train/validation/test split
 The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.

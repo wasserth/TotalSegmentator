@@ -119,6 +119,7 @@ def is_valid_license(license_number):
         return False
 
 
+# currently not used anywere
 def has_valid_license():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
@@ -138,7 +139,7 @@ def has_valid_license():
         return "invalid_license", f"ERROR: Invalid license number ({license_number}). Please check your license number or contact support."
 
 
-# Online check if license number is in config; do not do web request
+# Used in python_api
 def has_valid_license_offline():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
