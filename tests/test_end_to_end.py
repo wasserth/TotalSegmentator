@@ -167,6 +167,9 @@ class test_end_to_end(unittest.TestCase):
         pred_new = json.load(open("tests/unittest_phase_prediction.json"))
         self.assertDictEqual(pred_ref, pred_new)
         
+    def test_nnunet_prediction(self):
+        nnunet_output_exists = os.path.exists("tests/nnunet_input_files/example_ct_sm.nii.gz")
+        self.assertTrue(nnunet_output_exists, "A nnunet output file was not generated.")
 
 
 if __name__ == '__main__':
