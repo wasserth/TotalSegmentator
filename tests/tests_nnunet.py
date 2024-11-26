@@ -27,7 +27,7 @@ def run_tests_and_exit_on_failure():
     os.makedirs("tests/nnunet_input_files", exist_ok=True)
     shutil.copy("tests/reference_files/example_ct_sm.nii.gz", "tests/nnunet_input_files/example_ct_sm_0000.nii.gz")
 
-    subprocess.call(f"nnUNetv2_predict -i tests/nnunet_input_files -o tests/nnunet_input_files -d 297 -tr nnUNetTrainer_4000epochs_NoMirroring -c 3d_fullres -f 0", shell=True)
+    subprocess.call(f"nnUNetv2_predict -i tests/nnunet_input_files -o tests/nnunet_input_files -d 297 -tr nnUNetTrainer_4000epochs_NoMirroring -c 3d_fullres -f 0 -device cpu", shell=True)
 
     r = pytest.main(["-v", "tests/test_end_to_end.py::test_end_to_end::test_nnunet_prediction"])
     shutil.rmtree("tests/nnunet_input_files")
