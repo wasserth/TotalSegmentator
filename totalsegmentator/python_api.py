@@ -91,6 +91,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     nora_tag = "None" if nora_tag is None else nora_tag
 
+    # Store initial torch settings
+    initial_cudnn_benchmark = torch.backends.cudnn.benchmark
+    initial_num_threads = torch.get_num_threads()
+
     validate_device_type_api(device)
     device = convert_device_to_cuda(device)
 
@@ -554,6 +558,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 input_path = input
             get_radiomics_features_for_entire_dir(input_path, output, stats_dir / "statistics_radiomics.json")
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
+
+    # Restore initial torch settings
+    torch.backends.cudnn.benchmark = initial_cudnn_benchmark
+    torch.set_num_threads(initial_num_threads)
 
     if statistics or statistics_fast:
         return seg_img, stats
