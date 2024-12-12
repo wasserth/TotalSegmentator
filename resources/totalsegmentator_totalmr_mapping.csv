@@ -1,0 +1,58 @@
+Index,TotalSegmentator_name,TA2_name
+1,spleen,
+2,kidney_right,
+3,kidney_left,
+4,gallbladder,
+5,liver,
+6,stomach,
+7,pancreas,
+8,adrenal_gland_right,suprarenal gland
+9,adrenal_gland_left,suprarenal gland
+10,lung_left,
+11,lung_right,
+12,esophagus,
+13,small_bowel,small intestine
+14,duodenum,
+15,colon,
+16,urinary_bladder,
+17,prostate,
+18,sacrum,
+19,vertebrae,
+20,intervertebral_discs,
+21,spinal_cord,
+22,heart,
+23,aorta,
+24,inferior_vena_cava,
+25,portal_vein_and_splenic_vein,hepatic portal vein
+26,iliac_artery_left,common iliac artery
+27,iliac_artery_right,common iliac artery
+28,iliac_vena_left,common iliac vein
+29,iliac_vena_right,common iliac vein
+30,humerus_left,
+31,humerus_right,
+32,fibula,
+33,tibia,
+34,femur_left,
+35,femur_right,
+36,hip_left,
+37,hip_right,
+38,gluteus_maximus_left,gluteus maximus muscle
+39,gluteus_maximus_right,gluteus maximus muscle
+40,gluteus_medius_left,gluteus medius muscle
+41,gluteus_medius_right,gluteus medius muscle
+42,gluteus_minimus_left,gluteus minimus muscle
+43,gluteus_minimus_right,gluteus minimus muscle
+44,autochthon_left,
+45,autochthon_right,
+46,iliopsoas_left,iliopsoas muscle
+47,iliopsoas_right,iliopsoas muscle
+48,quadriceps_femoris_left,
+49,quadriceps_femoris_right,
+50,thigh_medial_compartment_left,
+51,thigh_medial_compartment_right,
+52,thigh_posterior_compartment_left,
+53,thigh_posterior_compartment_right,
+54,sartorius_left,
+55,sartorius_right,
+56,brain,
+
