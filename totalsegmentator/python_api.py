@@ -98,6 +98,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     validate_device_type_api(device)
     device = convert_device_to_cuda(device)
 
+    if output_type == "dicom":
+        try:
+            from rt_utils import RTStructBuilder
+        except ImportError:
+            raise ImportError("rt_utils is required for output_type='dicom'. Please install it with 'pip install rt_utils'.")
+
     # available devices: gpu | cpu | mps | gpu:1, gpu:2, etc.
     if device == "gpu": 
         device = "cuda"

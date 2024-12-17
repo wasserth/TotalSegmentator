@@ -18,7 +18,7 @@ import warnings
 import numpy as np
 import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
-from p_tqdm import p_map
+# from p_tqdm import p_map
 import torch
 
 from totalsegmentator.libs import nostdout
@@ -666,21 +666,22 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             if nora_tag != "None":
                                 subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
                     else:
+                        nib.save(img_pred, tmp_dir / "s01.nii.gz")  # needed inside of threads
+
                         # Code for multithreaded execution
                         #   Speed with different number of threads:
                         #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
-                        nib.save(img_pred, tmp_dir / "s01.nii.gz")
-                        _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag, header=new_header, task_name=task_name, quiet=quiet),
-                                selected_classes.items(), num_cpus=nr_threads_saving, disable=quiet)
+                        # _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag, header=new_header, task_name=task_name, quiet=quiet),
+                        #         selected_classes.items(), num_cpus=nr_threads_saving, disable=quiet)
 
                         # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
-                        # pool = Pool(nr_threads_saving)
-                        # results = []
-                        # for k, v in selected_classes.items():
-                        #     results.append(pool.starmap_async(save_segmentation_nifti, ((k, v, tmp_dir, file_out, nora_tag),) ))
-                        # _ = [i.get() for i in results]  # this actually starts the execution of the async functions
-                        # pool.close()
-                        # pool.join()
+                        pool = Pool(nr_threads_saving)
+                        results = []
+                        for k, v in selected_classes.items():
+                            results.append(pool.starmap_async(save_segmentation_nifti, [((k, v), tmp_dir, file_out, nora_tag, new_header, task_name, quiet)]))
+                        _ = [i.get() for i in results]  # this actually starts the execution of the async functions
+                        pool.close()
+                        pool.join()
             if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
             # Postprocessing single files
