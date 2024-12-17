@@ -18,7 +18,7 @@ import warnings
 import numpy as np
 import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
-from p_tqdm import p_map
+# from p_tqdm import p_map
 import torch
 
 from totalsegmentator.libs import nostdout
