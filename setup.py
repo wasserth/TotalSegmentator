@@ -26,7 +26,6 @@ setup(name='TotalSegmentator',
             'nnunetv2>=2.2.1',
             'requests==2.27.1;python_version<"3.10"',
             'requests;python_version>="3.10"',
-            'rt_utils',
             'dicom2nifti',
             'pyarrow'
         ],
