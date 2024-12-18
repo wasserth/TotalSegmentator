@@ -249,7 +249,7 @@ The following table shows a list of all classes for task `total`.
 TA2 is a standardized way to name anatomy. Mostly the TotalSegmentator names follow this standard.
 For some classes they differ which you can see in the table below.
 
-[Here](resources/totalsegmentator_snomed_mapping.csv) you can find a mapping of the TotalSegmentator classes to SNOMED-CT codes.
+[Here](totalsegmentator/resources/totalsegmentator_snomed_mapping.csv) you can find a mapping of the TotalSegmentator classes to SNOMED-CT codes.
 
 |Index|TotalSegmentator name|TA2 name|
 |:-----|:-----|:-----|
