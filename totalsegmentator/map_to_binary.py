@@ -545,6 +545,10 @@ class_map = {
         7: "sartorius_left",
         8: "sartorius_right"
     },
+    "lung_nodules": {
+        1: "lung",
+        2: "lung_nodules"
+    },
     "test": {
         1: "carpal"
     }

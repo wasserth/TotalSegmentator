@@ -381,6 +381,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task brain_structures does not work with option --fast")
         show_license_info()
+
     elif task == "lung_nodules":
         task_id = 913
         resample = [1.5, 1.5, 1.5]
@@ -389,19 +390,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 "lung_middle_lobe_right", "lung_lower_lobe_right"]
         crop_addon = [10, 10, 10]
         model = "3d_fullres"
-        folds = "all"
+        folds = [0]
         if fast: raise ValueError("task lung_nodules does not work with option --fast")
-        show_license_info()
-        # dummy monkey-patch for custom trainer
-        import nnunetv2.training.nnUNetTrainer as nnunet_trainer_module
-        from nnunetv2.training.nnUNetTrainer import nnUNetTrainer
-        from nnunetv2.training.nnUNetTrainer.variants.data_augmentation.nnUNetTrainerNoMirroring import nnUNetTrainerNoMirroring
-        class nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring(nnUNetTrainerNoMirroring):
-            def __init__(self, plans: dict, configuration: str, fold: int, dataset_json: dict, unpack_dataset: bool = True,
-                        device: torch.device = torch.device('cuda')):
-                super().__init__(plans, configuration, fold, dataset_json, unpack_dataset, device)
-                self.initial_lr = 2.5e-3
-        nnunet_trainer_module.nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring = nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring        
     elif task == "test":
         task_id = [517]
         resample = None

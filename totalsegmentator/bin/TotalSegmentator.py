@@ -60,7 +60,7 @@ def main():
                         "appendicular_bones", "tissue_types", "heartchambers_highres",
                         "face", "vertebrae_body", "total_mr", "tissue_types_mr", "face_mr",
                         "head_glands_cavities", "head_muscles", "headneck_bones_vessels", "headneck_muscles",
-                        "brain_structures", "liver_vessels", "oculomotor_muscles"],
+                        "brain_structures", "liver_vessels", "oculomotor_muscles", "lung_nodules"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 

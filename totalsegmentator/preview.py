@@ -180,6 +180,9 @@ roi_groups = {
         "inferior_rectus_muscle_right", "inferior_rectus_muscle_left", 
         "optic_nerve_right", "optic_nerve_left"]
     ],
+    "lung_nodules": [
+        ["lung_nodules"]
+    ],
     "test": [
         ["ulna"]
     ]
