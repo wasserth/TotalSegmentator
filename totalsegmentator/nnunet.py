@@ -24,6 +24,19 @@ import torch
 
 from totalsegmentator.libs import nostdout
 
+# --- monkey-patch snippet (custom trainers) --- #
+from nnunetv2.utilities.find_class_by_name import recursive_find_python_class
+from totalsegmentator.custom_trainers import nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring
+def recursive_find_python_class_custom(folder: str, class_name: str, current_module: str):
+    if class_name == "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring":
+        return nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring
+    
+    return recursive_find_python_class(folder, class_name, current_module)
+# monkey-patch
+import nnunetv2
+nnunetv2.inference.predict_from_raw_data.recursive_find_python_class = recursive_find_python_class_custom
+# --- now we have included custom trainers into the nnUNetv2 basic package --- #
+
 # nnUNet 2.1
 # with nostdout():
 #     from nnunetv2.inference.predict_from_raw_data import predict_from_raw_data
@@ -155,39 +168,6 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
-def install_custom_trainer():
-    """Install custom trainer into nnunetv2 package temporarily"""
-    import shutil
-    from pathlib import Path
-    import site
-    import atexit
-    
-    # Find nnunetv2 package location
-    nnunet_location = next((Path(path) / 'nnunetv2' for path in site.getsitepackages() 
-                            if (Path(path) / 'nnunetv2').exists()), None)
-    
-    if nnunet_location is None:
-        raise RuntimeError("Could not find nnunetv2 package installation")
-
-    # Copy custom trainer if needed
-    custom_trainer_path = Path(__file__).parent / "custom_trainers.py"
-    target_path = nnunet_location / "training" / "nnUNetTrainer" / "custom_trainers.py"
-    
-    if not target_path.exists() or custom_trainer_path.stat().st_mtime > target_path.stat().st_mtime:
-        target_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(custom_trainer_path, target_path)
-
-        # Register cleanup function to remove the file when the program exits
-        def cleanup():
-            try:
-                if target_path.exists():
-                    target_path.unlink()
-            except Exception as e:
-                print(f"Warning: Could not remove temporary custom trainer: {e}")
-
-        atexit.register(cleanup)
-
-
 def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
@@ -197,9 +177,6 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     """
     dir_in = str(dir_in)
     dir_out = str(dir_out)
-
-    if "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring" in trainer:
-        install_custom_trainer()
 
     model_folder = get_output_folder(task_id, trainer, plans, model)
 

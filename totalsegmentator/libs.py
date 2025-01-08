@@ -286,9 +286,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 8:
         weights_path = config_dir / "Dataset008_HepaticVessel"
         WEIGHTS_URL = url + "/v2.4.0-weights/Dataset008_HepaticVessel.zip"
-    elif task_id == 913:
-        weights_path = config_dir / "Dataset913_lung_nodules"
-        WEIGHTS_URL = url + "/v2.4.0-weights/Dataset913_lung_nodules.zip"  # TODO: correct url
+    # elif task_id == 913:
+    #     weights_path = config_dir / "Dataset913_lung_nodules"
+    #     WEIGHTS_URL = url + "/v2.4.0-weights/Dataset913_lung_nodules.zip"  # TODO: correct url
 
     # Commercial models
     elif task_id == 304:
