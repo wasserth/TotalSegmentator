@@ -305,7 +305,18 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task oculomotor_muscles does not work with option --fast")
+    elif task == "lung_nodules":
+        task_id = 913
+        resample = [1.5, 1.5, 1.5]
+        trainer = "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring"
+        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
+                "lung_middle_lobe_right", "lung_lower_lobe_right"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task lung_nodules does not work with option --fast")
 
+        
     # Commercial models
     elif task == "vertebrae_body":
         task_id = 302
@@ -381,16 +392,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task brain_structures does not work with option --fast")
         show_license_info()
-    elif task == "lung_nodules":
-        task_id = 913
-        resample = [1.5, 1.5, 1.5]
-        trainer = "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring"
-        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task lung_nodules does not work with option --fast")
+
     elif task == "test":
         task_id = [517]
         resample = None
