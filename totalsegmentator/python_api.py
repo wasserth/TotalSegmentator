@@ -381,7 +381,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task brain_structures does not work with option --fast")
         show_license_info()
-
     elif task == "lung_nodules":
         task_id = 913
         resample = [1.5, 1.5, 1.5]
