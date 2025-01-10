@@ -293,10 +293,6 @@ class_map = {
         1: "lung_vessels",
         2: "lung_trachea_bronchia"
     },
-    "lung_nodules": {
-        1: "lung",
-        2: "lung_nodule"
-    },
     "oculomotor_muscles": {
         1: "skull",  # auxiliary class
         2: "eyeball_right",
