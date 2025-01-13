@@ -328,6 +328,33 @@ class_map = {
         1: "body_trunc",
         2: "body_extremities",
     },
+    "vertebrae_mr": {
+        1: "sacrum",
+        2: "vertebrae_L5",
+        3: "vertebrae_L4", 
+        4: "vertebrae_L3",
+        5: "vertebrae_L2",
+        6: "vertebrae_L1",
+        7: "vertebrae_T12",
+        8: "vertebrae_T11",
+        9: "vertebrae_T10",
+        10: "vertebrae_T9",
+        11: "vertebrae_T8",
+        12: "vertebrae_T7",
+        13: "vertebrae_T6",
+        14: "vertebrae_T5",
+        15: "vertebrae_T4",
+        16: "vertebrae_T3",
+        17: "vertebrae_T2",
+        18: "vertebrae_T1",
+        19: "vertebrae_C7",
+        20: "vertebrae_C6",
+        21: "vertebrae_C5",
+        22: "vertebrae_C4",
+        23: "vertebrae_C3",
+        24: "vertebrae_C2",
+        25: "vertebrae_C1",
+    },
     "pleural_pericard_effusion": {
         # 1: "lung_pleural",
         2: "pleural_effusion",
@@ -337,8 +364,9 @@ class_map = {
         1: "liver_vessels",
         2: "liver_tumor"
     },
-    "vertebrae_body": {
-        1: "vertebrae_body"
+    "vertebrae_discs": {
+        1: "vertebrae_body",
+        2: "intervertebral_discs"
     },
     "heartchambers_highres": {
         1: "heart_myocardium",
@@ -539,6 +567,18 @@ class_map = {
         1: "lung",
         2: "lung_nodules"
     },
+    "kidney_cysts": {
+        1: "kidney_cyst_left",
+        2: "kidney_cyst_right"
+    },
+    # those classes need to be removed
+    "kidney_cysts_auxiliary": {
+        3: "kidney_left",
+        4: "kidney_right"
+    },
+    "breasts": {
+        1: "breast"
+    },
     "test": {
         1: "carpal"
     }
@@ -551,7 +591,7 @@ commercial_models = {
     "appendicular_bones_mr": 855,
     "tissue_types": 481,
     "tissue_types_mr": 854,
-    "vertebrae_body": 302,
+    "vertebrae_body": 305,
     "face": 303,
     "face_mr": 856,
     "brain_structures": 409,

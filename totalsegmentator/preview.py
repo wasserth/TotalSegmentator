@@ -97,14 +97,19 @@ roi_groups = {
     "body_mr": [
         ["body_trunc", "body_extremities"]
     ],
+    "vertebrae_mr": [
+        ["sacrum", "vertebrae_L5", "vertebrae_L4", "vertebrae_L3", "vertebrae_L2", "vertebrae_L1", "vertebrae_T12", "vertebrae_T11", "vertebrae_T10", 
+         "vertebrae_T9", "vertebrae_T8", "vertebrae_T7", "vertebrae_T6", "vertebrae_T5", "vertebrae_T4", "vertebrae_T3", "vertebrae_T2", "vertebrae_T1", 
+         "vertebrae_C7", "vertebrae_C6", "vertebrae_C5", "vertebrae_C4", "vertebrae_C3", "vertebrae_C2", "vertebrae_C1"]
+    ],
     "pleural_pericard_effusion": [
         ["pleural_effusion", "pericardial_effusion"]
     ],
     "liver_vessels": [
         ["liver_vessels", "liver_tumor"]
     ],
-    "vertebrae_body": [
-        ["vertebrae_body"]
+    "vertebrae_discs": [
+        ["vertebrae_body", "intervertebral_discs"]
     ],
     "heartchambers_highres": [
         ["heart_myocardium"],
@@ -200,6 +205,12 @@ roi_groups = {
         "pectoralis_minor", "serratus_anterior", "teres_major", "triceps_brachii"]
     "lung_nodules": [
         ["lung_nodules"]
+    ],
+    "kidney_cysts": [
+        ["kidney_cyst_left", "kidney_cyst_right"]
+    ],
+    "breasts": [
+        ["breast"]
     ],
     "test": [
         ["ulna"]

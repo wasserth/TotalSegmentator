@@ -245,7 +245,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast:
             task_id = 598  # todo: train
             resample = 6.0
-            trainer = "nnUNetTrainer"
+            trainer = "nnUNetTrainer_DASegOrd0"
             crop = None
             model = "3d_fullres"
             folds = [0]
@@ -253,10 +253,17 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         else:
             task_id = 597
             resample = 1.5
-            trainer = "nnUNetTrainer"
+            trainer = "nnUNetTrainer_DASegOrd0"
             crop = None
             model = "3d_fullres"
             folds = [0]
+    elif task == "vertebrae_mr":
+        task_id = 756
+        resample = None
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
     elif task == "pleural_pericard_effusion":
         task_id = 315
         resample = None
@@ -335,17 +342,34 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task lung_nodules does not work with option --fast")
-
-        
-    # Commercial models
-    elif task == "vertebrae_body":
-        task_id = 302
-        resample = 1.5
-        trainer = "nnUNetTrainer"
+    elif task == "kidney_cysts":
+        task_id = 789
+        resample = [1.5, 1.5, 1.5]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["kidney_left", "kidney_right", "liver", "spleen", "colon"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task kidney_cysts does not work with option --fast")
+    elif task == "breasts":
+        task_id = 527
+        resample = [1.5, 1.5, 1.5]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop = None
         model = "3d_fullres"
         folds = [0]
-        if fast: raise ValueError("task vertebrae_body does not work with option --fast")
+        if fast: raise ValueError("task breasts does not work with option --fast")
+
+        
+    # Commercial models
+    elif task == "vertebrae_discs":
+        task_id = 305
+        resample = 1.5
+        trainer = "nnUNetTrainer_DASegOrd0"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task vertebrae_discs does not work with option --fast")
         show_license_info()
     elif task == "heartchambers_highres":
         task_id = 301

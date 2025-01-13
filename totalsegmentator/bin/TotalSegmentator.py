@@ -54,14 +54,15 @@ def main():
 
     # cerebral_bleed: Intracerebral hemorrhage
     # liver_vessels: hepatic vessels
-    parser.add_argument("-ta", "--task", choices=["total", "body", "body_mr",
+    parser.add_argument("-ta", "--task", choices=["total", "body", "body_mr", "vertebrae_mr",
                         "lung_vessels", "cerebral_bleed", "hip_implant", "coronary_arteries",
                         "pleural_pericard_effusion", "test",
                         "appendicular_bones", "appendicular_bones_mr", "tissue_types", "heartchambers_highres",
-                        "face", "vertebrae_body", "total_mr", "tissue_types_mr", "face_mr",
+                        "face", "vertebrae_discs", "total_mr", "tissue_types_mr", "face_mr",
                         "head_glands_cavities", "head_muscles", "headneck_bones_vessels", "headneck_muscles",
                         "brain_structures", "liver_vessels", "oculomotor_muscles",
-                        "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules"],
+                        "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules", "kidney_cysts", 
+                        "breasts"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
