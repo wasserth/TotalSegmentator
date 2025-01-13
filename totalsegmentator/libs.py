@@ -286,6 +286,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 8:
         weights_path = config_dir / "Dataset008_HepaticVessel"
         WEIGHTS_URL = url + "/v2.4.0-weights/Dataset008_HepaticVessel.zip"
+    elif task_id == 913:
+        weights_path = config_dir / "Dataset913_lung_nodules"
+        WEIGHTS_URL = url + "/v2.4.0-weights/Dataset913_lung_nodules.zip"  # TODO: correct url
 
     # Commercial models
     elif task_id == 304:
@@ -310,6 +313,8 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "TODO"
     elif task_id == 857:
         weights_path = config_dir / "Dataset857_TotalSegMRI_thigh_shoulder_1088subj"
+    elif task_id == 913:
+        weights_path = config_dir / "Dataset913_lung_nodules_1352subj"
 
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")

@@ -4,6 +4,7 @@
 * change pi_time threshold for arterial late phase from 50s to 60s
 * add oculomotor muscles model
 * removed `rt_utils` and `p_tqdm` dependency
+* add lung nodules model (thanks to [BLUEMIND AI](https://bluemind.co/))
 
 
 ## Release 2.4.0

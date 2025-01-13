@@ -14,6 +14,7 @@ from multiprocessing import Pool
 import tempfile
 import inspect
 import warnings
+import atexit
 
 import numpy as np
 import nibabel as nib
@@ -22,6 +23,19 @@ from nibabel.nifti1 import Nifti1Image
 import torch
 
 from totalsegmentator.libs import nostdout
+
+# --- monkey-patch snippet (custom trainers) --- #
+from nnunetv2.utilities.find_class_by_name import recursive_find_python_class
+from totalsegmentator.custom_trainers import nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring
+def recursive_find_python_class_custom(folder: str, class_name: str, current_module: str):
+    if class_name == "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring":
+        return nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring
+    
+    return recursive_find_python_class(folder, class_name, current_module)
+# monkey-patch
+import nnunetv2
+nnunetv2.inference.predict_from_raw_data.recursive_find_python_class = recursive_find_python_class_custom
+# --- now we have included custom trainers into the nnUNetv2 basic package --- #
 
 # nnUNet 2.1
 # with nostdout():
@@ -160,11 +174,6 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      plans="nnUNetPlans", device="cuda", quiet=False, step_size=0.5):
     """
     Identical to bash function nnUNetv2_predict
-
-    folds:  folds to use for prediction. Default is None which means that folds will be detected
-            automatically in the model output folder.
-            for all folds: None
-            for only fold 0: [0]
     """
     dir_in = str(dir_in)
     dir_out = str(dir_out)

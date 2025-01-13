@@ -531,6 +531,10 @@ class_map = {
         17: "teres_major",
         18: "triceps_brachii"
     },
+    "lung_nodules": {
+        1: "lung",
+        2: "lung_nodules"
+    },
     "test": {
         1: "carpal"
     }

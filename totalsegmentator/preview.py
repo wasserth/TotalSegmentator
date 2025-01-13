@@ -195,6 +195,8 @@ roi_groups = {
         ["thigh_posterior_compartment_left", "thigh_posterior_compartment_right", 
         "sartorius_left", "sartorius_right",
         "pectoralis_minor", "serratus_anterior", "teres_major", "triceps_brachii"]
+    "lung_nodules": [
+        ["lung_nodules"]
     ],
     "test": [
         ["ulna"]
