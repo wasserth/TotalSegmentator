@@ -324,6 +324,10 @@ class_map = {
         1: "body_trunc",
         2: "body_extremities",
     },
+    "body_mr": {
+        1: "body_trunc",
+        2: "body_extremities",
+    },
     "pleural_pericard_effusion": {
         # 1: "lung_pleural",
         2: "pleural_effusion",

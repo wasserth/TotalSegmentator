@@ -247,6 +247,12 @@ def download_pretrained_weights(task_id):
     elif task_id == 853:
         weights_path = config_dir / "Dataset853_TotalSegMRI_total_6mm_1088subj"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset853_TotalSegMRI_total_6mm_1088subj.zip"
+    elif task_id == 597:
+        weights_path = config_dir / "Dataset597_body_mr_139subj"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset597_body_mr_139subj.zip"
+    elif task_id == 598:
+        weights_path = config_dir / "Dataset598_body_mr_6mm_139subj"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset598_body_mr_6mm_139subj.zip"
 
     # Models from other projects
     elif task_id == 258:

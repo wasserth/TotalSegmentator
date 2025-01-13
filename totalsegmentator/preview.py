@@ -94,6 +94,9 @@ roi_groups = {
     "body": [
         ["body_trunc", "body_extremities"]
     ],
+    "body_mr": [
+        ["body_trunc", "body_extremities"]
+    ],
     "pleural_pericard_effusion": [
         ["pleural_effusion", "pericardial_effusion"]
     ],

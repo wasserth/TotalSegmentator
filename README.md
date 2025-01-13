@@ -61,6 +61,7 @@ Openly available for any usage:
 * **total_mr**: default task containing 56 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **body**: body, body_trunc, body_extremities, skin
+* **body_mr**: body_trunc, body_extremities (for MR images)
 * **cerebral_bleed**: intracerebral_hemorrhage (cite [paper](https://www.mdpi.com/2077-0383/12/7/2631))*
 * **hip_implant**: hip_implant*
 * **coronary_arteries**: coronary_arteries*

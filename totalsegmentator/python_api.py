@@ -241,6 +241,22 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             crop = None
             model = "3d_fullres"
             folds = [0]
+    elif task == "body_mr":
+        if fast:
+            task_id = 598  # todo: train
+            resample = 6.0
+            trainer = "nnUNetTrainer"
+            crop = None
+            model = "3d_fullres"
+            folds = [0]
+            if not quiet: print("Using 'fast' option: resampling to lower resolution (6mm)")
+        else:
+            task_id = 597
+            resample = 1.5
+            trainer = "nnUNetTrainer"
+            crop = None
+            model = "3d_fullres"
+            folds = [0]
     elif task == "pleural_pericard_effusion":
         task_id = 315
         resample = None
