@@ -13,9 +13,8 @@ if __name__ == "__main__":
 
     usage:
 
-    cd $RESULTS_FOLDER
-    anonymise_nnunet_pkl_v2.py nnUNet/3d_fullres/Dataset291_TotalSegmentator_part1_organs_1559subj/nnUNetTrainerNoMirroring__nnUNetPlans__3d_fullres
-    nnUNet_export_model_to_zip -t 291 -o dataset_291_upload.zip -c 3d_fullres -tr nnUNetTrainerV2 --not_strict
+    cd $nnUNet_results
+    anonymise_nnunet_pkl_v2.py Dataset789_kidney_cyst_501subj/nnUNetTrainer_DASegOrd0_NoMirroring__nnUNetPlans__3d_fullres
     """
     dir_in = Path(sys.argv[1])
 

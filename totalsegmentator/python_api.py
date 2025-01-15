@@ -446,7 +446,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task brain_structures does not work with option --fast")
         show_license_info()
     elif task == "thigh_shoulder_muscles":
-        task_id = 999
+        task_id = 999  # TODO
         resample = 1.5
         trainer = "nnUNetTrainer_2000epochs_NoMirroring"
         crop = None
@@ -521,13 +521,13 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         st = time.time()
         if not quiet: print("Generating rough segmentation for cropping...")
         if robust_rs:
-            crop_model_task = 732 if task == "total_mr" else 297
+            crop_model_task = 852 if task == "total_mr" else 297
             crop_spacing = 3.0
         else:
-            crop_model_task = 733 if task == "total_mr" else 298
+            crop_model_task = 853 if task == "total_mr" else 298
             crop_spacing = 6.0
         crop_task = "total_mr" if task == "total_mr" else "total"
-        crop_trainer = "nnUNetTrainer_DASegOrd0_NoMirroring" if task == "total_mr" else "nnUNetTrainer_4000epochs_NoMirroring"
+        crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task == "total_mr" else "nnUNetTrainer_4000epochs_NoMirroring"
         download_pretrained_weights(crop_model_task)
         
         organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],

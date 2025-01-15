@@ -26,7 +26,8 @@ def main():
                                                  "tissue_types", "tissue_types_mr", "face", "face_mr",
                                                  "head_glands_cavities", "head_muscles", "headneck_bones_vessels",
                                                  "headneck_muscles", "liver_vessels", "brain_structures",
-                                                 "lung_nodules", "kidney_cysts", "breasts"],
+                                                 "lung_nodules", "kidney_cysts", "breasts",
+                                                 "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr"],
                         help="Task for which to download the weights", default="total")
 
     args = parser.parse_args()
@@ -34,8 +35,8 @@ def main():
     task_to_id = {
         "total": [291, 292, 293, 294, 295, 298],
         "total_fast": [297, 298],
-        "total_mr": [730, 731],
-        "total_fast_mr": [732, 733],
+        "total_mr": [850, 851],
+        "total_fast_mr": [852, 853],
         "lung_vessels": [258],
         "cerebral_bleed": [150],
         "hip_implant": [260],
@@ -58,11 +59,13 @@ def main():
         "heartchambers_highres": [301],
         "appendicular_bones": [304],
         "tissue_types": [481],
-        "tissue_types_mr": [734],
+        "tissue_types_mr": [854],
         "vertebrae_discs": [305],
         "face": [303],
-        "face_mr": [737],
-        "brain_structures": [409]
+        "face_mr": [856],
+        "brain_structures": [409],
+        "thigh_shoulder_muscles": [999],  # TODO
+        "thigh_shoulder_muscles_mr": [857]
     }
 
     setup_totalseg()

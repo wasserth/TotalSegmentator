@@ -26,9 +26,11 @@ INFO: Now all done by `release.sh`
 
 
 ## Release new weights
-* `cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_v2`
-* `cp -r $nnUNet_results/Dataset527_breasts_1559subj .`
-* `python ~/dev/TotalSegmentator/resources/anonymise_nnunet_pkl_v2.py Dataset527_breasts_1559subj/nnUNetTrainer_DASegOrd0_NoMirroring__nnUNetPlans__3d_fullres`
-* `zip -r Dataset527_breasts_1559subj.zip Dataset527_breasts_1559subj`
+* Run `./resources/prepare_weights_for_release.sh DATASET_ID [DATASET_ID2 ...]`
+* Or do it manually:
+    * `cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_v2`
+    * `cp -r $nnUNet_results/Dataset527_breasts_1559subj .`
+    * `python ~/dev/TotalSegmentator/resources/anonymise_nnunet_pkl_v2.py Dataset527_breasts_1559subj/nnUNetTrainer_DASegOrd0_NoMirroring__nnUNetPlans__3d_fullres`
+    * `zip -r Dataset527_breasts_1559subj.zip Dataset527_breasts_1559subj`
 * Click on "Draft a new release" on github
 * Create new tag ending with -weights and upload weights

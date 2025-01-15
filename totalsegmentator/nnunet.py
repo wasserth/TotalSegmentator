@@ -64,7 +64,7 @@ warnings.filterwarnings("ignore", category=UserWarning, module="nnunetv2")
 warnings.filterwarnings("ignore", category=FutureWarning, module="nnunetv2")  # ignore torch.load warning
 
 
-def _get_full_task_name(task_id: int, src: str="raw"):
+def get_full_task_name(task_id: int, src: str="raw"):
     if src == "raw":
         base = Path(os.environ['nnUNet_raw_data_base']) / "nnUNet_raw_data"
     elif src == "preprocessed":
@@ -93,6 +93,20 @@ def _get_full_task_name(task_id: int, src: str="raw"):
                 return dir
 
     raise ValueError(f"task_id {task_id} not found")
+
+
+def get_full_task_name_v2(task_id: int, src: str="raw"):
+    if src == "raw":
+        base = Path(os.environ['nnUNet_raw'])
+    elif src == "preprocessed":
+        base = Path(os.environ['nnUNet_preprocessed'])
+    elif src == "results":
+        base = Path(os.environ['nnUNet_results'])
+    dirs = [str(dir).split("/")[-1] for dir in base.glob("*")]
+    for dir in dirs:
+        if f"Dataset{task_id:03d}" in dir:
+            return dir
+    raise ValueError(f"dataset_id {task_id} not found")
 
 
 def contains_empty_img(imgs):
@@ -152,7 +166,7 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     disable_mixed_precision = False
 
     task_id = int(task_id)
-    task_name = _get_full_task_name(task_id, src="results")
+    task_name = get_full_task_name(task_id, src="results")
 
     # trainer_class_name = default_trainer
     # trainer = trainer_class_name

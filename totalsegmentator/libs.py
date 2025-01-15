@@ -326,8 +326,6 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "TODO"
     elif task_id == 857:
         weights_path = config_dir / "Dataset857_TotalSegMRI_thigh_shoulder_1088subj"
-    elif task_id == 913:
-        weights_path = config_dir / "Dataset913_lung_nodules_1352subj"
 
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")
