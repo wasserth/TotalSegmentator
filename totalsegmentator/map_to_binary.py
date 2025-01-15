@@ -591,7 +591,7 @@ commercial_models = {
     "appendicular_bones_mr": 855,
     "tissue_types": 481,
     "tissue_types_mr": 854,
-    "vertebrae_body": 305,
+    "vertebrae_discs": 305,
     "face": 303,
     "face_mr": 856,
     "brain_structures": 409,
