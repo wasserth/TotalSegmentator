@@ -33,9 +33,9 @@ def run_tests_and_exit_on_failure():
 
     # Run nnunet
     # Task 297
-    # subprocess.call(f"nnUNetv2_predict -i tests/nnunet_input_files -o tests/nnunet_input_files -d 297 -tr nnUNetTrainer_4000epochs_NoMirroring -c 3d_fullres -f 0 -device cpu", shell=True)
+    # subprocess.call("nnUNetv2_predict -i tests/nnunet_input_files -o tests/nnunet_input_files -d 297 -tr nnUNetTrainer_4000epochs_NoMirroring -c 3d_fullres -f 0 -device cpu", shell=True)
     # Task 300
-    subprocess.call(f"nnUNetv2_predict -i tests/nnunet_input_files -o tests/nnunet_input_files -d 300 -tr nnUNetTrainer -c 3d_fullres -f 0 -device cpu", shell=True)
+    subprocess.call("nnUNetv2_predict -i tests/nnunet_input_files -o tests/nnunet_input_files -d 300 -tr nnUNetTrainer -c 3d_fullres -f 0 -device cpu", shell=True)
 
     # Check if output file exists
     assert os.path.exists("tests/nnunet_input_files/example_ct_sm.nii.gz"), "A nnunet output file was not generated."
