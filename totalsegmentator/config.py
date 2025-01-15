@@ -119,7 +119,7 @@ def is_valid_license(license_number):
         return False
 
 
-# currently not used anywere
+# currently not used anywhere
 def has_valid_license():
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
