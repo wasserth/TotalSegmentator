@@ -322,8 +322,6 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset856_TotalSegMRI_face_1088subj"
     elif task_id == 409:
         weights_path = config_dir / "Dataset409_neuro_550subj"
-    elif task_id == 999:
-        weights_path = config_dir / "TODO"
     elif task_id == 857:
         weights_path = config_dir / "Dataset857_TotalSegMRI_thigh_shoulder_1088subj"
 
