@@ -310,6 +310,8 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset303_face_1559subj"
     elif task_id == 481:
         weights_path = config_dir / "Dataset481_tissue_1559subj"
+    elif task_id == 485:
+        weights_path = config_dir / "Dataset485_tissue_4types_1559subj"
     elif task_id == 305:
         weights_path = config_dir / "Dataset305_vertebrae_discs_1559subj"
     elif task_id == 854:

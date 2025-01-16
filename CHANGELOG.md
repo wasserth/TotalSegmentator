@@ -1,10 +1,24 @@
 ## Master
+
+
+
+## Release 2.5.0
+* major update to all MR models: double the number of training subjects
+* add `tissue_4_types` task: add intermuscular fat class
+* add `vertebrae_mr` task: numbered single vertebrae segmentation in MR images (for CT this is already part of the `total` task)
+* add `appendicular_bones_mr` task: add appendicular bones segmentation for MR images
+* add `thigh_shoulder_muscles_mr` task: add thigh and shoulder muscles segmentation for CT and MR images
+* add `vertebrae_body` with new class `intervertebral_discs`
+* add `body_mr` task: add body segmentation for MR images
+* add `kidney_cysts` task: greatly improved kidney cyst segmentation compared to the `kidney_cyst` class which is part of `total` task
+* add `breasts` task: add breast segmentation
+* add `oculomotor_muscles` task: add oculomotor muscles model
+* add `lung_nodules` task (thanks to [BLUEMIND AI](https://bluemind.co/))
+* update `coronary_arteries` task: increased number of training subjects, including non-contrast images
 * add option to remove small connected components in postprocessing
-* add `totalseg_get_modality`
-* change pi_time threshold for arterial late phase from 50s to 60s
-* add oculomotor muscles model
+* add `totalseg_get_modality`: estimate modality (CT or MR) from input image
 * removed `rt_utils` and `p_tqdm` dependency
-* add lung nodules model (thanks to [BLUEMIND AI](https://bluemind.co/))
+* change pi_time threshold for arterial late phase from 50s to 60s
 
 
 ## Release 2.4.0
