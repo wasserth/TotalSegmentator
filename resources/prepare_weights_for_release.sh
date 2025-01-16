@@ -8,8 +8,8 @@ set -e  # Exit on error
 # Example: ./prepare_weights_for_release.sh 527 528 529 ...
 
 # todo: select as needed
-# cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_v2
-cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_mri
+cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_v2
+# cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_mri
 
 # Process each dataset ID
 for dataset_id in "$@"; do

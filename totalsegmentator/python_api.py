@@ -353,14 +353,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
         
     # Commercial models
-    elif task == "vertebrae_discs":
+    elif task == "vertebrae_body":
         task_id = 305
         resample = 1.5
         trainer = "nnUNetTrainer_DASegOrd0"
         crop = None
         model = "3d_fullres"
         folds = [0]
-        if fast: raise ValueError("task vertebrae_discs does not work with option --fast")
+        if fast: raise ValueError("task vertebrae_body does not work with option --fast")
         show_license_info()
     elif task == "heartchambers_highres":
         task_id = 301

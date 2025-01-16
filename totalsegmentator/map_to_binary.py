@@ -364,7 +364,7 @@ class_map = {
         1: "liver_vessels",
         2: "liver_tumor"
     },
-    "vertebrae_discs": {
+    "vertebrae_body": {
         1: "vertebrae_body",
         2: "intervertebral_discs"
     },
@@ -591,7 +591,7 @@ commercial_models = {
     "appendicular_bones_mr": 855,
     "tissue_types": 481,
     "tissue_types_mr": 854,
-    "vertebrae_discs": 305,
+    "vertebrae_body": 305,
     "face": 303,
     "face_mr": 856,
     "brain_structures": 409,

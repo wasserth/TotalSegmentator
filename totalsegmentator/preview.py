@@ -108,7 +108,7 @@ roi_groups = {
     "liver_vessels": [
         ["liver_vessels", "liver_tumor"]
     ],
-    "vertebrae_discs": [
+    "vertebrae_body": [
         ["vertebrae_body", "intervertebral_discs"]
     ],
     "heartchambers_highres": [
