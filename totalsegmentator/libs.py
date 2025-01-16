@@ -16,7 +16,7 @@ import numpy as np
 import nibabel as nib
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, commercial_models
-from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_license, has_valid_license, has_valid_license_offline
+from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_license, has_valid_license, has_valid_license_offline, get_version
 
 """
 Helpers to suppress stdout prints from nnunet
@@ -57,7 +57,8 @@ def download_model_with_license_and_unpack(task_name, config_dir):
         st = time.time()
         r = requests.post(url + "download_weights",
                           json={"license_number": license_number,
-                                "task": task_name},
+                                "task": task_name,
+                                "version": get_version()},
                           timeout=300,
                           stream=True)
         r.raise_for_status()  # Raise an exception for HTTP errors (4xx, 5xx)

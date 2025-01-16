@@ -446,7 +446,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task brain_structures does not work with option --fast")
         show_license_info()
     elif task == "thigh_shoulder_muscles":
-        task_id = 999  # TODO
+        task_id = 857  # at the moment only one mixed model for CT and MR; when annotated all CT samples -> train separate CT model
         resample = 1.5
         trainer = "nnUNetTrainer_2000epochs_NoMirroring"
         crop = None
@@ -461,7 +461,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = None
         model = "3d_fullres"
         folds = [0]
-        if fast: raise ValueError("task thigh_shoulder_muscles does not work with option --fast")
+        if fast: raise ValueError("task thigh_shoulder_muscles_mr does not work with option --fast")
         show_license_info()
 
     elif task == "test":
