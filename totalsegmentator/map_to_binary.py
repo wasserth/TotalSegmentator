@@ -595,7 +595,7 @@ commercial_models = {
     "face": 303,
     "face_mr": 856,
     "brain_structures": 409,
-    "thigh_shoulder_muscles": 999,  # todo
+    "thigh_shoulder_muscles": 857,
     "thigh_shoulder_muscles_mr": 857
 }
 
