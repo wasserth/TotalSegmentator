@@ -408,6 +408,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task tissue_types_mr does not work with option --fast")
         show_license_info()
+    elif task == "tissue_4_types":
+        task_id = 485
+        resample = 1.5
+        trainer = "nnUNetTrainer"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task tissue_4_types does not work with option --fast")
+        show_license_info()
     elif task == "face":
         task_id = 303
         resample = 1.5

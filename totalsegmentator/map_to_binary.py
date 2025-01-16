@@ -420,6 +420,12 @@ class_map = {
         2: "torso_fat",
         3: "skeletal_muscle"
     },
+    "tissue_4_types": {
+        1: "subcutaneous_fat",
+        2: "torso_fat",
+        3: "skeletal_muscle",
+        4: "intermuscular_fat"
+    },
     "face": {
         1: "face"
     },

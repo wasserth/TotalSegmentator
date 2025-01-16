@@ -84,6 +84,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **appendicular_bones_mr**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius (for MR images)
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
 * **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images)
+* **tissue_4_types**: subcutaneous_fat, torso_fat, skeletal_muscle, intermuscular_fat (in contrast to `tissue_types` skeletal_muscle is split into two classes: muscle and fat)
 * **brain_structures**: brainstem, subarachnoid_space, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus (NOTE: this is for CT) (cite [paper](https://doi.org/10.1148/ryai.2020190183) as our model is partly based on this)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch), intervertebral_discs (for MR this is part of the `total_mr` task)
 * **face**: face_region (for anonymization)

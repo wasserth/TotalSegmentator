@@ -135,6 +135,12 @@ roi_groups = {
         ["torso_fat"],
         ["skeletal_muscle"]
     ],
+    "tissue_4_types": [
+        ["subcutaneous_fat"],
+        ["torso_fat"],
+        ["skeletal_muscle"],
+        ["intermuscular_fat"]
+    ],
     "face": [
         ["face"]
     ],
