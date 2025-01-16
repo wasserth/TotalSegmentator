@@ -216,15 +216,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task hip_implant does not work with option --fast")
-    elif task == "coronary_arteries":
-        task_id = 503
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["heart"]
-        model = "3d_fullres"
-        folds = [0]
-        print("WARNING: The coronary artery model does not work very robustly. Use with care!")
-        if fast: raise ValueError("task coronary_arteries does not work with option --fast")
     elif task == "body":
         if fast:
             task_id = 300
@@ -462,6 +453,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task thigh_shoulder_muscles_mr does not work with option --fast")
+        show_license_info()
+    elif task == "coronary_arteries":
+        task_id = 507
+        resample = [0.7, 0.7, 0.7]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["heart"]
+        crop_addon = [20, 20, 20]
+        model = "3d_fullres_high"
+        folds = [0]
+        if fast: raise ValueError("task coronary_arteries does not work with option --fast")
         show_license_info()
 
     elif task == "test":

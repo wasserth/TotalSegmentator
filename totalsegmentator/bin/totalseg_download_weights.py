@@ -40,7 +40,7 @@ def main():
         "lung_vessels": [258],
         "cerebral_bleed": [150],
         "hip_implant": [260],
-        "coronary_arteries": [503],
+        "coronary_arteries": [507],
         "pleural_pericard_effusion": [315],
         "body": [299],
         "body_fast": [300],
