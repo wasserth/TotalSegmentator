@@ -603,7 +603,8 @@ commercial_models = {
     "face_mr": 856,
     "brain_structures": 409,
     "thigh_shoulder_muscles": 857,
-    "thigh_shoulder_muscles_mr": 857
+    "thigh_shoulder_muscles_mr": 857,
+    "coronary_arteries": 507
 }
 
 

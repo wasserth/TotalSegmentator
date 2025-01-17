@@ -41,7 +41,6 @@ def main():
         "lung_vessels": [258],
         "cerebral_bleed": [150],
         "hip_implant": [260],
-        "coronary_arteries": [507],
         "pleural_pericard_effusion": [315],
         "body": [299],
         "body_fast": [300],
@@ -69,7 +68,8 @@ def main():
         "face_mr": [856],
         "brain_structures": [409],
         "thigh_shoulder_muscles": [857],
-        "thigh_shoulder_muscles_mr": [857]
+        "thigh_shoulder_muscles_mr": [857],
+        "coronary_arteries": [507]
     }
 
     setup_totalseg()
