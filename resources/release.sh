@@ -44,9 +44,7 @@ python setup.py sdist bdist_wheel
 twine upload --skip-existing dist/*
 
 # Step 5: Build and Push Docker Image
-#   (random error on my local machine; have to run on apollo server)
-# docker build -t wasserth/totalsegmentator:${new_version} .
-# docker push wasserth/totalsegmentator:${new_version}
-echo "Build and upload docker container manually"
+docker build -t wasserth/totalsegmentator:${new_version} .
+docker push wasserth/totalsegmentator:${new_version}
 
 echo "Release process completed."
