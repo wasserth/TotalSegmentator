@@ -419,9 +419,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                     print("INFO: Crop is empty. Returning empty segmentation.")
                 img_out = nib.Nifti1Image(np.zeros(img_in.shape, dtype=np.uint8), img_in.affine)
                 img_out = add_label_map_to_nifti(img_out, label_map)
-                nib.save(img_out, file_out)
-                if nora_tag != "None":
-                    subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
+                if file_out is not None:
+                    nib.save(img_out, file_out)
+                    if nora_tag != "None":
+                        subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
                 return img_out, img_in_orig, None
                 
             img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32,
@@ -585,11 +586,14 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             # Generate preview before upsampling so it is faster and still in canonical space
             # for better orientation.
             if not quiet: print("Generating preview...")
-            st = time.time()
-            smoothing = 20
-            preview_dir = file_out.parent if multilabel_image else file_out
-            generate_preview(img_in_rsp, preview_dir / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
-            if not quiet: print(f"  Generated in {time.time() - st:.2f}s")
+            if file_out is None:
+                print("WARNING: No output directory specified. Skipping preview generation.")
+            else:
+                st = time.time()
+                smoothing = 20
+                preview_dir = file_out.parent if multilabel_image else file_out
+                generate_preview(img_in_rsp, preview_dir / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
+                if not quiet: print(f"  Generated in {time.time() - st:.2f}s")
 
         # Statistics calculated on the 3mm downsampled image are very similar to statistics
         # calculated on the original image. Volume often completely identical. For intensity
