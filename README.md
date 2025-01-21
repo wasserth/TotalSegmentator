@@ -89,8 +89,8 @@ Available with a license (free licenses available for non-commercial usage [here
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch), intervertebral_discs (for MR this is part of the `total_mr` task)
 * **face**: face_region (for anonymization)
 * **face_mr**: face_region (for anonymization)
-* **thigh_shoulder_muscles**: thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii
-* **thigh_shoulder_muscles_mr**: thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (for MR images)
+* **thigh_shoulder_muscles**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachi"
+* **thigh_shoulder_muscles_mr**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachi" (for MR images)
 * **coronary_arteries**: coronary_arteries (also works on non-contrast images)
 
 Usage:
