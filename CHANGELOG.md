@@ -3,7 +3,8 @@
 
 
 ## Release 2.5.0
-* major update to all MR models: double the number of training subjects
+* **major update to all MR models**: double the number of training subjects (this includes a retraining of these models. Therefore
+results can be different from previous versions.)
 * add `tissue_4_types` task: add intermuscular fat class
 * add `vertebrae_mr` task: numbered single vertebrae segmentation in MR images (for CT this is already part of the `total` task)
 * add `appendicular_bones_mr` task: add appendicular bones segmentation for MR images
