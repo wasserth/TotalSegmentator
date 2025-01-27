@@ -238,6 +238,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 527:
         weights_path = config_dir / "Dataset527_breasts_1559subj"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset527_breasts_1559subj.zip"
+    elif task_id == 552:
+        weights_path = config_dir / "Dataset552_ventricle_parts_38subj"
+        WEIGHTS_URL = url + "/v2.6.0-weights/Dataset552_ventricle_parts_38subj.zip"  # TODO: upload. does not exist yet.
                 
     # MR models
     elif task_id == 850:

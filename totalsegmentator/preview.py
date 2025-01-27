@@ -219,6 +219,12 @@ roi_groups = {
     "breasts": [
         ["breast"]
     ],
+    "ventricle_parts": [
+        ["ventricle_frontal_horn_left", "ventricle_occipital_horn_left", "ventricle_body_left",
+        "ventricle_temporal_horn_left", "ventricle_trigone_left", "ventricle_frontal_horn_right",
+        "ventricle_occipital_horn_right", "ventricle_body_right", "ventricle_temporal_horn_right",
+        "ventricle_trigone_right", "third_ventricle", "fourth_ventricle"]
+    ],
     "test": [
         ["ulna"]
     ]

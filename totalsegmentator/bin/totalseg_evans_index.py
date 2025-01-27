@@ -123,7 +123,7 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     slice_2d_b = slice_2d_b.transpose(1,0)  # x and y axis are flipped in imshow
     
     # Create figure with extra space at bottom for disclaimer
-    plt.figure(figsize=(8, 8.5))  # Reduced height slightly
+    plt.figure(figsize=(8, 8.5))
     
     # Main plot
     plt.subplot(111)

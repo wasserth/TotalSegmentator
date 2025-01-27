@@ -585,6 +585,20 @@ class_map = {
     "breasts": {
         1: "breast"
     },
+    "ventricle_parts": {
+        1: "ventricle_frontal_horn_left",
+        2: "ventricle_occipital_horn_left", 
+        3: "ventricle_body_left",
+        4: "ventricle_temporal_horn_left",
+        5: "ventricle_trigone_left",
+        6: "ventricle_frontal_horn_right",
+        7: "ventricle_occipital_horn_right",
+        8: "ventricle_body_right", 
+        9: "ventricle_temporal_horn_right",
+        10: "ventricle_trigone_right",
+        11: "third_ventricle",
+        12: "fourth_ventricle"
+    },
     "test": {
         1: "carpal"
     }

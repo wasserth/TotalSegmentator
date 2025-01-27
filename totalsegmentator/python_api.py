@@ -350,6 +350,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task breasts does not work with option --fast")
+    elif task == "ventricle_parts":
+        task_id = 552
+        resample = [1.0, 0.4345703125, 0.4384765625]
+        trainer = "nnUNetTrainerNoMirroring"
+        crop = ["brain"]
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task ventricle_parts does not work with option --fast")
 
         
     # Commercial models

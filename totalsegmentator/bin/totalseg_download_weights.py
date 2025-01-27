@@ -26,7 +26,7 @@ def main():
                                                  "tissue_types", "tissue_types_mr", "tissue_4_types", "face", "face_mr",
                                                  "head_glands_cavities", "head_muscles", "headneck_bones_vessels",
                                                  "headneck_muscles", "liver_vessels", "brain_structures",
-                                                 "lung_nodules", "kidney_cysts", "breasts",
+                                                 "lung_nodules", "kidney_cysts", "breasts", "ventricle_parts",
                                                  "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr",
                                                  "all"],
                         help="Task for which to download the weights", default="total")
@@ -54,8 +54,9 @@ def main():
         "liver_vessels": [8],
         "lung_nodules": [913],
         "kidney_cysts": [789],
-        "breasts": [527],
         "oculomotor_muscles": [351],
+        "breasts": [527],
+        "ventricle_parts": [552],
 
         "heartchambers_highres": [301],
         "appendicular_bones": [304],
