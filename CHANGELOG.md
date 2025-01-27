@@ -1,5 +1,5 @@
 ## Master
-
+* add evans index calculation
 
 
 ## Release 2.5.0
