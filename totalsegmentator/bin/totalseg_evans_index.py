@@ -16,14 +16,14 @@ from totalsegmentator.registration import calc_transform, apply_transform
 
 
 
-def run_models_consecutive(ct_path, tmp_dir, logger):
+def run_models_consecutive(ct_path, tmp_dir):
     """
     """
     st = time.time()
 
     yield "Running TotalSegmentator - brain and skull"
     if (tmp_dir / 'brain.nii.gz').exists():
-        logger.info("  Skipping TotalSeg brain and skull (already exists)")
+        print("  Skipping TotalSeg brain and skull (already exists)")
     else:
         rois = ["brain", "skull"]
         rois_str = " ".join(rois)
@@ -31,13 +31,12 @@ def run_models_consecutive(ct_path, tmp_dir, logger):
 
     yield "Running TotalSegmentator - ventricle parts"
     if (tmp_dir / 'ventricle_parts.nii.gz').exists():
-        logger.info("  Skipping TotalSeg ventricle parts (already exists)")
+        print("  Skipping TotalSeg ventricle parts (already exists)")
     else:
         subprocess.call(f"TotalSegmentator -i {ct_path} -o {tmp_dir / 'ventricle_parts.nii.gz'} -ns 1 -ta ventricle_parts -ml 1", shell=True)
 
     print(f"Models done (took: {time.time()-st:.2f}s)")
     yield "Models done"
-
 
 
 async def run_totalsegmentator_async(ct_img, file_out, args):
@@ -51,7 +50,7 @@ async def run_totalsegmentator_async(ct_img, file_out, args):
     return nib.load(file_out)
 
 
-async def run_models_parallel(ct_path, tmp_dir, logger, host="local"):
+async def run_models_parallel(ct_path, tmp_dir, host="local"):
     """
     host: local | modal
     """
@@ -148,12 +147,27 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     plt.close()
 
 
-def evans_index(brain_mask, ventricle_masks, skull_mask, ct_img, output_file, preview_file):
+def evans_index(brain_mask, ventricle_masks, skull_mask, ct_img, output_file, preview_file, models_parallel=False):
+    """
+    """
 
     resolution = 1.0  # 8s; good enough
     # resolution = 0.7  # 25s    
 
     st = time.time()
+
+
+    # Run models
+    # if not models_parallel:
+    #     # consecutive execution 
+    #     res = run_models_consecutive(ct_path, tmp_dir_models)
+    #     for idx, r in enumerate(res):
+    #         yield {"id": 3, "progress": 10+idx*2, "status": r}
+    # else:
+    #     # parallel execution asyncio
+    #     import asyncio
+    #     _ = asyncio.run(run_models_parallel(ct_path, tmp_dir_models, host))
+
 
     brain_atlas = pkg_resources.resource_filename('totalsegmentator', 'resources/ct_brain_atlas_1mm.nii.gz')
     atlas_img = nib.load(brain_atlas)
