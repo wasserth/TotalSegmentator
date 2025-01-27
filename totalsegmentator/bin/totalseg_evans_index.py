@@ -66,9 +66,9 @@ async def run_models_parallel(ct_path, tmp_dir, logger, host="local"):
     st = time.time()
 
     if host == "local":
-        img1, img2 = await asyncio.gather(   # this needs to be inside of asnyc func with await
+        img1, img2 = await asyncio.gather(   # this needs to be inside of async func with await
             run_totalsegmentator_async(ct_img, "totalseg_body.nii.gz", f"-ml -ns 1 -rs {rois_str}"), 
-            run_totalsegmentator_async(ct_img, "totalseg_ventricle_parts.nii.gz", f"-ml -ns 1 -ta ventricle_parts"), 
+            run_totalsegmentator_async(ct_img, "totalseg_ventricle_parts.nii.gz", "-ml -ns 1 -ta ventricle_parts"), 
         )
     elif host == "modal":
         import modal 
