@@ -17,9 +17,9 @@ from totalsegmentator.postprocessing import keep_largest_blob, remove_small_blob
 from totalsegmentator.registration import calc_transform, apply_transform
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
-
 from totalsegmentator.serialization_utils import decompress_and_deserialize, filestream_to_nifti, serialize_and_compress, convert_to_serializable
 from totalsegmentator.dicom_io import dcm_to_nifti
+from totalsegmentator.config import send_usage_stats_application
 
 
 def run_models(ct_img):
@@ -97,8 +97,7 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     return buf.getvalue()
 
 
-# def evans_index(brain_mask, ventricle_masks, skull_mask, ct_path, output_file, preview_file, models_parallel=False):
-def evans_index(ct_bytes, output_file, preview_file, f_type):
+def evans_index(ct_bytes, f_type):
     """
     ct_bytes: path to nifti file or 
               bytes object of zip file or
@@ -215,27 +214,20 @@ def evans_index(ct_bytes, output_file, preview_file, f_type):
 
 
 """
-# pip install antspyx
 cd ~/Downloads/evans_index/31103170_rot_large
-python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -b roi/brain.nii.gz -s roi/skull.nii.gz -v predicted/T552_ventricle_parts.nii.gz -c NR_01_SCHAEDEL/Sch_del_Syngo_1_0_Hr38_3_s003.nii -o evans_index_TEST.json -p evans_index_TEST.png
+python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -i ct_sm.nii.gz -o evans_index_TEST.json -p evans_index.png
 """
 if __name__ == "__main__":
     """
     For more documentation see resources/evans_index.md
     """
-    parser = argparse.ArgumentParser(description="Calc evans index.")
-    parser.add_argument("-b", "--brain_mask", type=lambda p: Path(p).resolve(), required=True,
-                        help="Path to brain mask file.")
-    parser.add_argument("-v", "--ventricle_masks", type=lambda p: Path(p).resolve(), required=True,
-                        help="Path to ventricle part masks.")
-    parser.add_argument("-s", "--skull_mask", type=lambda p: Path(p).resolve(), required=True,
-                        help="Path to skull masks.")
-    parser.add_argument("-c", "--ct_img", type=lambda p: Path(p).resolve(), required=True,
+    parser = argparse.ArgumentParser(description="Calculate evans index.")
+    parser.add_argument("-i", "--ct_img", type=lambda p: Path(p).resolve(), required=True,
                         help="Path to ct_img.")
     parser.add_argument("-o", "--output_file", type=lambda p: Path(p).resolve(), required=True,
                         help="json output file.")
     parser.add_argument("-p", "--preview_file", type=lambda p: Path(p).resolve(), required=True,
-                        help="Preview file of evans index to check if correct.")
+                        help="Preview PNG file of evans index to check if calculation is correct.")
     args = parser.parse_args()
 
     try:
@@ -265,3 +257,5 @@ if __name__ == "__main__":
     # Save report png
     with open(args.preview_file, "wb") as f:
         f.write(final_result["report_png"])
+
+    send_usage_stats_application("evans_index")

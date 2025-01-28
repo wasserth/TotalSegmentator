@@ -11,6 +11,7 @@ import pkg_resources
 import nibabel as nib
 import numpy as np
 
+from totalsegmentator.config import send_usage_stats_application
 
 """
 Additional requirements for this script:
@@ -83,6 +84,8 @@ def main():
 
     with open(args.output_file, "w") as f:
         f.write(json.dumps(res, indent=4))
+
+    send_usage_stats_application("get_modality")
 
 
 if __name__ == "__main__":
