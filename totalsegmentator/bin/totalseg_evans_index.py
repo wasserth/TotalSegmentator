@@ -3,7 +3,9 @@ from pathlib import Path
 import time
 import argparse
 import json
-import pkg_resources
+from importlib import resources
+import tempfile
+import io
 
 import nibabel as nib
 import numpy as np
@@ -13,74 +15,17 @@ from matplotlib import pyplot as plt
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.postprocessing import keep_largest_blob, remove_small_blobs
 from totalsegmentator.registration import calc_transform, apply_transform
+from totalsegmentator.python_api import totalsegmentator
+from totalsegmentator.nifti_ext_header import load_multilabel_nifti
+
+from totalsegmentator.serialization_utils import decompress_and_deserialize, filestream_to_nifti, serialize_and_compress, convert_to_serializable
+from totalsegmentator.dicom_io import dcm_to_nifti
 
 
-
-def run_models_consecutive(ct_path, tmp_dir):
-    """
-    """
-    st = time.time()
-
-    yield "Running TotalSegmentator - brain and skull"
-    if (tmp_dir / 'brain.nii.gz').exists():
-        print("  Skipping TotalSeg brain and skull (already exists)")
-    else:
-        rois = ["brain", "skull"]
-        rois_str = " ".join(rois)
-        subprocess.call(f"TotalSegmentator -i {ct_path} -o {tmp_dir} -ns 1 -rs {rois_str}", shell=True)
-
-    yield "Running TotalSegmentator - ventricle parts"
-    if (tmp_dir / 'ventricle_parts.nii.gz').exists():
-        print("  Skipping TotalSeg ventricle parts (already exists)")
-    else:
-        subprocess.call(f"TotalSegmentator -i {ct_path} -o {tmp_dir / 'ventricle_parts.nii.gz'} -ns 1 -ta ventricle_parts -ml 1", shell=True)
-
-    print(f"Models done (took: {time.time()-st:.2f}s)")
-    yield "Models done"
-
-
-async def run_totalsegmentator_async(ct_img, file_out, args):
-    tmp_dir = Path(tempfile.mkdtemp())
-    ct_path = tmp_dir / "ct.nii.gz"
-    file_out = tmp_dir / f"{file_out}.nii.gz"
-    nib.save(ct_img, ct_path)
-    # subprocess.call(f"TotalSegmentator -i {ct_path} -o {file_out} {args}", shell=True)
-    command = f"TotalSegmentator -i {ct_path} -o {file_out} {args}"
-    _ = await asyncio.to_thread(subprocess.call, command, shell=True)
-    return nib.load(file_out)
-
-
-async def run_models_parallel(ct_path, tmp_dir, host="local"):
-    """
-    host: local | modal
-    """
-
-    print("Running Models - ASYNC")
-
-    rois = ["brain", "skull"]
-    rois_str = " ".join(rois)
-
-    ct_img = nib.load(ct_path)
-    ct_img = nib.Nifti1Image(ct_img.get_fdata(), ct_img.affine)  # copy image to be able to pass it as parameter to modal
-    st = time.time()
-
-    if host == "local":
-        img1, img2 = await asyncio.gather(   # this needs to be inside of async func with await
-            run_totalsegmentator_async(ct_img, "totalseg_body.nii.gz", f"-ml -ns 1 -rs {rois_str}"), 
-            run_totalsegmentator_async(ct_img, "totalseg_ventricle_parts.nii.gz", "-ml -ns 1 -ta ventricle_parts"), 
-        )
-    elif host == "modal":
-        import modal 
-        run_ts = modal.Function.lookup("totalsegmentator", "run_totalsegmentator")
-        img1, img2 = await asyncio.gather(
-            run_ts.remote.aio(ct_img, {"roi_subset": rois, "ml": True, "nr_thr_saving": 1}), 
-            run_ts.remote.aio(ct_img, {"task": "ventricle_parts", "ml": True, "nr_thr_saving": 1}), 
-        )
-
-    print(f"Models ASYNC done (took: {time.time()-st:.2f}s)")
-    # todo: add this function to totalsegmentator
-    map_to_binary_custom(img1, tmp_dir, "header")
-    map_to_binary_custom(img2, tmp_dir, "header")
+def run_models(ct_img):
+    brain_skull = totalsegmentator(ct_img, None, roi_subset=["brain", "skull"], ml=True, nr_thr_saving=1, quiet=True)
+    ventricle_parts = totalsegmentator(ct_img, None, task="ventricle_parts", ml=True, nr_thr_saving=1, quiet=True)
+    return brain_skull, ventricle_parts
 
 
 def extract_brain(brain_mask, ct_img):
@@ -116,7 +61,7 @@ def max_diameter_x(mask):
     return max_diameter_all
 
 
-def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index, output_file):
+def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index):
     z = start_v[2]
     slice_2d_b = brain[:, :, z]
     slice_2d_b = slice_2d_b.transpose(1,0)  # x and y axis are flipped in imshow
@@ -133,50 +78,68 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     # ventricle diameter
     plt.scatter([start_v[0], end_v[0]], [start_v[1], end_v[1]], color="red", marker="x", s=200)
     plt.plot([start_v[0], end_v[0]], [start_v[1], end_v[1]], color="green", linewidth=3)
-    plt.title(f"Evans index: {evans_index:.2f}", fontweight='bold')  # (slice {z})
+    plt.title(f"Evans index: {evans_index:.2f}", fontweight='bold')
     plt.axis("off")
     plt.gca().invert_xaxis()
 
     # Add disclaimer text at bottom with adjusted position
     disclaimer = "This is a research prototype and not designed for diagnosis of any medical complaint.\n" + \
-                "Created by AI Lab, Department of Radiology, University Hospital Basel"
+                 "Created by AI Lab, Department of Radiology, University Hospital Basel"
     plt.figtext(0.5, 0.01, disclaimer, ha='center', va='bottom', fontsize=8, wrap=True)
 
     plt.tight_layout()
-    plt.savefig(output_file, dpi=200, bbox_inches='tight', pad_inches=0.1)  # Reduced padding
+    
+    # Save to bytes buffer instead of file (to be able to return it from modal function)
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=200, bbox_inches='tight', pad_inches=0.1)
     plt.close()
+    buf.seek(0)
+    return buf.getvalue()
 
 
-def evans_index(brain_mask, ventricle_masks, skull_mask, ct_img, output_file, preview_file, models_parallel=False):
+# def evans_index(brain_mask, ventricle_masks, skull_mask, ct_path, output_file, preview_file, models_parallel=False):
+def evans_index(ct_bytes, output_file, preview_file, f_type):
     """
+    ct_bytes: path to nifti file or 
+              bytes object of zip file or
+              bytes object of nifti file
+    f_type: "niigz" or "nii" or "dicom" 
     """
-
-    resolution = 1.0  # 8s; good enough
-    # resolution = 0.7  # 25s    
-
     st = time.time()
+    yield {"id": 1, "progress": 2, "status": "Loading data"}
 
+    if isinstance(ct_bytes, Path):  # for local usage
+        ct_img = nib.load(ct_bytes)
+    elif f_type == "dicom":  # for online zip file bytes
+        print("Converting dicom to nifti...")
+        with tempfile.TemporaryDirectory(prefix="totalseg_tmp_") as tmp_folder:
+            ct_tmp_path = Path(tmp_folder) / "ct.nii.gz"
+            dcm_to_nifti(ct_bytes, ct_tmp_path, verbose=True)
+            ct_img = nib.load(ct_tmp_path)  # todo: eager loading needed?
+    elif f_type == "niigz":  # for online nifti bytes
+        ct_img = filestream_to_nifti(ct_bytes, gzipped=True)
+    else:  # for online nifti bytes
+        ct_img = filestream_to_nifti(ct_bytes, gzipped=False)
 
+    resolution = 1.0
+    
     # Run models
-    # if not models_parallel:
-    #     # consecutive execution 
-    #     res = run_models_consecutive(ct_path, tmp_dir_models)
-    #     for idx, r in enumerate(res):
-    #         yield {"id": 3, "progress": 10+idx*2, "status": r}
-    # else:
-    #     # parallel execution asyncio
-    #     import asyncio
-    #     _ = asyncio.run(run_models_parallel(ct_path, tmp_dir_models, host))
+    yield {"id": 2, "progress": 5, "status": "Run models"}
+    brain_skull_img, ventricle_img = run_models(ct_img)
 
-
-    brain_atlas = pkg_resources.resource_filename('totalsegmentator', 'resources/ct_brain_atlas_1mm.nii.gz')
+    # Load atlas
+    with resources.files('totalsegmentator').joinpath('resources/ct_brain_atlas_1mm.nii.gz').open('rb') as f:
+        brain_atlas = f.name
     atlas_img = nib.load(brain_atlas)
     
-    # Loading
-    brain_img = nib.load(brain_mask)
-    skull_img = nib.load(skull_mask)
-    ventricle_img = nib.load(ventricle_masks)
-    ct_img = nib.load(ct_img)
+    # Load images
+    brain_skull_img, label_map = load_multilabel_nifti(brain_skull_img)
+    label_map_inv = {v: k for k, v in label_map.items()}
+    brain_skull_data = brain_skull_img.get_fdata()
+    brain = (brain_skull_data == label_map_inv["brain"]).astype(np.uint8)
+    skull = (brain_skull_data == label_map_inv["skull"]).astype(np.uint8)
+    brain_img = nib.Nifti1Image(brain, brain_skull_img.affine)
+    skull_img = nib.Nifti1Image(skull, brain_skull_img.affine)
     
     # Canonical
     brain_img = nib.as_closest_canonical(brain_img)
@@ -185,6 +148,7 @@ def evans_index(brain_mask, ventricle_masks, skull_mask, ct_img, output_file, pr
     ct_img = nib.as_closest_canonical(ct_img)
 
     # Resampling
+    yield {"id": 3, "progress": 60, "status": "Resampling"}
     brain_img = change_spacing(brain_img, resolution, dtype=np.uint8, order=0)  # order=1 leads to holes in seg
     skull_img = change_spacing(skull_img, resolution, dtype=np.uint8, order=0)
     ventricle_img = change_spacing(ventricle_img, resolution, dtype=np.uint8, order=0)
@@ -195,11 +159,8 @@ def evans_index(brain_mask, ventricle_masks, skull_mask, ct_img, output_file, pr
     ventricle_all_img = nib.Nifti1Image((ventricle_img.get_fdata() > 0).astype(np.uint8), ventricle_img.affine)
 
     # Registration
-    # transform = calc_transform(brain_img, atlas_img, transform_type="Rigid", resample=None, verbose=False)  # not working robustly
-    # transform = calc_transform(ventricle_all_img, atlas_img, transform_type="Rigid", resample=None, verbose=False)  # not working robustly
-    # transform = calc_transform(skull_img, atlas_img, transform_type="Rigid", resample=None, verbose=False)  # not working robustly
+    yield {"id": 4, "progress": 80, "status": "Registration"}
     transform = calc_transform(ct_img, atlas_img, transform_type="Rigid", resample=None, verbose=False)
-
     brain_img = apply_transform(brain_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0)
     skull_img = apply_transform(skull_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0, interp="genericLabel")
     ventricle_img = apply_transform(ventricle_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0, interp="genericLabel")
@@ -214,6 +175,7 @@ def evans_index(brain_mask, ventricle_masks, skull_mask, ct_img, output_file, pr
     ventricle_data = np.where((ventricle_data == 1) | (ventricle_data == 6), 1, 0)
 
     # postprocessing for robustness
+    yield {"id": 5, "progress": 90, "status": "Postprocessing"}
     brain_data = remove_small_blobs(brain_data, [200, 1e10])  # fast
     ventricle_data = remove_small_blobs(ventricle_data, [10, 1e10])  # fast
 
@@ -232,21 +194,30 @@ def evans_index(brain_mask, ventricle_masks, skull_mask, ct_img, output_file, pr
     evans_index = max_dia_vent / max_dia_brain
     
     # Plot
+    yield {"id": 6, "progress": 95, "status": "Plotting"}
     skull_data[ventricle_all > 0] = 1  # combine skull and ventricle masks
-    plot_slice_with_diameters(skull_data, start_brain, end_brain, 
-                              start_vent, end_vent, evans_index, preview_file)
+    report_png_bytes = plot_slice_with_diameters(skull_data, start_brain, end_brain, 
+                                                 start_vent, end_vent, evans_index)
     
-    # save to json
     evans_index = {"evans_index": round(evans_index, 3)}
-    json.dump(evans_index, open(output_file, "w"), indent=4)
+    masks_output = {
+        "brain_mask": brain_img,
+        "skull_mask": skull_img,
+        "ventricle_mask": ventricle_img
+    }
 
     print(f"took: {time.time()-st:.2f}s")
+
+    yield {"id": 7, "progress": 100, "status": "Done",
+            "report_json": evans_index, 
+            "masks": serialize_and_compress(masks_output),
+            "report_png": report_png_bytes}
 
 
 """
 # pip install antspyx
 cd ~/Downloads/evans_index/31103170_rot_large
-python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -b roi/brain.nii.gz -s roi/skull.nii.gz -v predicted/T552_ventricle_parts.nii.gz -c NR_01_SCHAEDEL/Sch_del_Syngo_1_0_Hr38_3_s003.nii -a /mnt/nvme/data/ventricle_vol_nathan/atlas/atlas_ct_07.nii.gz -o evans_index_TEST.json -p evans_index_TEST.png
+python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -b roi/brain.nii.gz -s roi/skull.nii.gz -v predicted/T552_ventricle_parts.nii.gz -c NR_01_SCHAEDEL/Sch_del_Syngo_1_0_Hr38_3_s003.nii -o evans_index_TEST.json -p evans_index_TEST.png
 """
 if __name__ == "__main__":
     """
@@ -273,12 +244,24 @@ if __name__ == "__main__":
         print("Error: antspyx package not installed. Please install it using:")
         print("pip install antspyx")
         sys.exit(1)
-    
-    evans_index(
-        brain_mask=args.brain_mask,
-        ventricle_masks=args.ventricle_masks,
-        skull_mask=args.skull_mask,
-        ct_img=args.ct_img,
-        output_file=args.output_file,
-        preview_file=args.preview_file
-    )
+
+    if str(args.ct_img).endswith(".nii.gz"):
+        f_type = "niigz"
+    elif str(args.ct_img).endswith(".zip"):
+        f_type = "dicom"
+    else:
+        f_type = "nii"
+
+    res = evans_index(ct_bytes=args.ct_img, f_type=f_type)
+
+    for r in res:
+        print(f"progress: {r['progress']}, status: {r['status']}")
+        if r["progress"] == 100:
+            final_result = r
+
+    # Save report json
+    json.dump(convert_to_serializable(final_result["report_json"]), open(args.output_file, "w"), indent=4)
+
+    # Save report png
+    with open(args.preview_file, "wb") as f:
+        f.write(final_result["report_png"])

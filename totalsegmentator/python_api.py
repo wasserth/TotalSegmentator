@@ -355,6 +355,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         resample = [1.0, 0.4345703125, 0.4384765625]
         trainer = "nnUNetTrainerNoMirroring"
         crop = ["brain"]
+        crop_addon = [0, 0, 0]
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task ventricle_parts does not work with option --fast")
