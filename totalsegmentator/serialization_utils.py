@@ -6,9 +6,12 @@ import gzip
 from gzip import GzipFile
 from io import BytesIO
 
+import nibabel as nib
 from nibabel import FileHolder, Nifti1Image
 import numpy as np
 import blosc
+
+from totalsegmentator.nifti_ext_header import load_multilabel_nifti, add_label_map_to_nifti
 
 
 class NumpyJsonEncoder(json.JSONEncoder):
@@ -108,3 +111,13 @@ def convert_to_serializable(d):
         return int(d)
     else:
         return d
+
+
+def nib_load_eager(img_path, dtype=np.float32):
+    """
+    Load nifti image with data and extended header into memory.
+    """
+    img, label_map = load_multilabel_nifti(img_path)
+    img = nib.Nifti1Image(np.asanyarray(img.dataobj), img.affine, img.header)
+    img = add_label_map_to_nifti(img, label_map)
+    return img

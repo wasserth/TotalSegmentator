@@ -6,6 +6,7 @@ import json
 from importlib import resources
 import tempfile
 import io
+import subprocess
 
 import nibabel as nib
 import numpy as np
@@ -17,14 +18,27 @@ from totalsegmentator.postprocessing import keep_largest_blob, remove_small_blob
 from totalsegmentator.registration import calc_transform, apply_transform
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
-from totalsegmentator.serialization_utils import decompress_and_deserialize, filestream_to_nifti, serialize_and_compress, convert_to_serializable
+from totalsegmentator.serialization_utils import decompress_and_deserialize, filestream_to_nifti, serialize_and_compress, convert_to_serializable, nib_load_eager
 from totalsegmentator.dicom_io import dcm_to_nifti
 from totalsegmentator.config import send_usage_stats_application
 
 
-def run_models(ct_img):
-    brain_skull = totalsegmentator(ct_img, None, roi_subset=["brain", "skull"], ml=True, nr_thr_saving=1, quiet=True)
-    ventricle_parts = totalsegmentator(ct_img, None, task="ventricle_parts", ml=True, nr_thr_saving=1, quiet=True)
+def run_models(ct_img, verbose=False):
+    brain_skull = totalsegmentator(ct_img, None, roi_subset=["brain", "skull"], ml=True, nr_thr_saving=1, quiet=not verbose)
+    ventricle_parts = totalsegmentator(ct_img, None, task="ventricle_parts", ml=True, nr_thr_saving=1, quiet=not verbose)
+    return brain_skull, ventricle_parts
+
+
+def run_models_shell(ct_img, verbose=False):
+    quiet = "--quiet" if not verbose else ""
+    with tempfile.TemporaryDirectory(prefix="totalseg_tmp_2_") as tmp_folder:
+        tmp_dir = Path(tmp_folder)
+        ct_img_path = tmp_dir / "ct.nii.gz"  # save to tmp folder
+        nib.save(ct_img, ct_img_path)
+        subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'brain_skull.nii.gz'} --roi_subset brain skull --ml --nr_thr_saving 1 {quiet}", shell=True)
+        subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'ventricle_parts.nii.gz'} --task ventricle_parts --ml --nr_thr_saving 1 {quiet}", shell=True)
+        brain_skull = nib_load_eager(tmp_dir / "brain_skull.nii.gz")  # eager loading required here
+        ventricle_parts = nib_load_eager(tmp_dir / "ventricle_parts.nii.gz")
     return brain_skull, ventricle_parts
 
 
@@ -97,7 +111,7 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     return buf.getvalue()
 
 
-def evans_index(ct_bytes, f_type):
+def evans_index(ct_bytes, f_type, verbose=False):
     """
     ct_bytes: path to nifti file or 
               bytes object of zip file or
@@ -114,7 +128,8 @@ def evans_index(ct_bytes, f_type):
         with tempfile.TemporaryDirectory(prefix="totalseg_tmp_") as tmp_folder:
             ct_tmp_path = Path(tmp_folder) / "ct.nii.gz"
             dcm_to_nifti(ct_bytes, ct_tmp_path, verbose=True)
-            ct_img = nib.load(ct_tmp_path)  # todo: eager loading needed?
+            ct_img = nib.load(ct_tmp_path)
+            ct_img = nib.Nifti1Image(np.asanyarray(ct_img.dataobj), ct_img.affine, ct_img.header)  # eager loading into memory
     elif f_type == "niigz":  # for online nifti bytes
         ct_img = filestream_to_nifti(ct_bytes, gzipped=True)
     else:  # for online nifti bytes
@@ -124,7 +139,8 @@ def evans_index(ct_bytes, f_type):
     
     # Run models
     yield {"id": 2, "progress": 5, "status": "Run models"}
-    brain_skull_img, ventricle_img = run_models(ct_img)
+    # brain_skull_img, ventricle_img = run_models(ct_img, verbose=verbose)
+    brain_skull_img, ventricle_img = run_models_shell(ct_img, verbose=verbose)
 
     # Load atlas
     with resources.files('totalsegmentator').joinpath('resources/ct_brain_atlas_1mm.nii.gz').open('rb') as f:
@@ -220,6 +236,9 @@ python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -i ct
 if __name__ == "__main__":
     """
     For more documentation see resources/evans_index.md
+
+    Requires:
+    pip install antspyx blosc
     """
     parser = argparse.ArgumentParser(description="Calculate evans index.")
     parser.add_argument("-i", "--ct_img", type=lambda p: Path(p).resolve(), required=True,
@@ -228,14 +247,18 @@ if __name__ == "__main__":
                         help="json output file.")
     parser.add_argument("-p", "--preview_file", type=lambda p: Path(p).resolve(), required=True,
                         help="Preview PNG file of evans index to check if calculation is correct.")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Print detailed progress information")
     args = parser.parse_args()
 
-    try:
-        import ants
-    except ImportError:
-        print("Error: antspyx package not installed. Please install it using:")
-        print("pip install antspyx")
-        sys.exit(1)
+    # Check if additional dependencies are installed
+    for pkg, name in [("ants", "antspyx"), ("blosc", "blosc")]:
+        try:
+            __import__(pkg)
+        except ImportError:
+            print(f"Error: {name} package not installed. Please install it using:")
+            print(f"pip install {name}")
+            sys.exit(1)
 
     if str(args.ct_img).endswith(".nii.gz"):
         f_type = "niigz"
@@ -244,7 +267,7 @@ if __name__ == "__main__":
     else:
         f_type = "nii"
 
-    res = evans_index(ct_bytes=args.ct_img, f_type=f_type)
+    res = evans_index(ct_bytes=args.ct_img, f_type=f_type, verbose=args.verbose)
 
     for r in res:
         print(f"progress: {r['progress']}, status: {r['status']}")
