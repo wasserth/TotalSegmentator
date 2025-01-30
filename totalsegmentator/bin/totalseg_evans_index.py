@@ -28,6 +28,7 @@ def run_models(ct_img, verbose=False):
     ventricle_parts = totalsegmentator(ct_img, None, task="ventricle_parts", ml=True, nr_thr_saving=1, quiet=not verbose)
     return brain_skull, ventricle_parts
 
+
 # Required if calling from e.g. streamlit; calling python_api not working there
 def run_models_shell(ct_img, verbose=False):
     quiet = "--quiet" if not verbose else ""
@@ -75,13 +76,13 @@ def max_diameter_x(mask):
     return max_diameter_all
 
 
-def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index):
+def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index, brain_vol, vent_vol, vol_ratio):
     z = start_v[2]
     slice_2d_b = brain[:, :, z]
     slice_2d_b = slice_2d_b.transpose(1,0)  # x and y axis are flipped in imshow
     
     # Create figure with extra space at bottom for disclaimer
-    plt.figure(figsize=(8, 8.5))
+    plt.figure(figsize=(8, 9.0))
     
     # Main plot
     plt.subplot(111)
@@ -92,7 +93,11 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     # ventricle diameter
     plt.scatter([start_v[0], end_v[0]], [start_v[1], end_v[1]], color="red", marker="x", s=200)
     plt.plot([start_v[0], end_v[0]], [start_v[1], end_v[1]], color="green", linewidth=3)
-    plt.title(f"Evans index: {evans_index:.2f}", fontweight='bold')
+    plt.title(f"Evans index: {evans_index:.3f}\n".upper() + 
+              f"brain volume: {brain_vol:.1f}ml\n" +
+              f"ventricle volume: {vent_vol:.1f}ml\n" +
+              f"ventricle/brain ratio: {vol_ratio:.3f}", 
+              fontweight='normal')
     plt.axis("off")
     plt.gca().invert_xaxis()
 
@@ -113,9 +118,10 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
 
 def evans_index(ct_bytes, f_type, verbose=False):
     """
-    ct_bytes: path to nifti file or 
-              bytes object of zip file or
-              bytes object of nifti file
+    ct_bytes: file path to nifti file | 
+              Nifti1Image object |
+              filestream of zip file (result of streamlit.file_uploader) |
+              filestream of nifti file (result of streamlit.file_uploader)
     f_type: "niigz" or "nii" or "dicom" 
     """
     st = time.time()
@@ -123,6 +129,8 @@ def evans_index(ct_bytes, f_type, verbose=False):
 
     if isinstance(ct_bytes, Path):  # for local usage
         ct_img = nib.load(ct_bytes)
+    elif isinstance(ct_bytes, nib.Nifti1Image):  # for local usage
+        ct_img = ct_bytes
     elif f_type == "dicom":  # for online zip file bytes
         print("Converting dicom to nifti...")
         with tempfile.TemporaryDirectory(prefix="totalseg_tmp_") as tmp_folder:
@@ -171,7 +179,6 @@ def evans_index(ct_bytes, f_type, verbose=False):
     
     # Editing
     ct_img = extract_brain(brain_img, ct_img)
-    ventricle_all_img = nib.Nifti1Image((ventricle_img.get_fdata() > 0).astype(np.uint8), ventricle_img.affine)
 
     # Registration
     yield {"id": 4, "progress": 80, "status": "Registration"}
@@ -185,6 +192,12 @@ def evans_index(ct_bytes, f_type, verbose=False):
     skull_data = skull_img.get_fdata()
     ventricle_data = ventricle_img.get_fdata()
     ventricle_all = (ventricle_data > 0).astype(np.uint8)
+
+    # Calculate volumes
+    voxel_vol_mm3 = np.prod(brain_img.header.get_zooms())
+    brain_volume_ml = np.sum(brain_data) * voxel_vol_mm3 * 0.001
+    ventricle_volume_ml = np.sum(ventricle_all) * voxel_vol_mm3 * 0.001
+    ventricle_brain_ratio = ventricle_volume_ml / brain_volume_ml
 
     # select only frontal horn
     ventricle_data = np.where((ventricle_data == 1) | (ventricle_data == 6), 1, 0)
@@ -212,9 +225,16 @@ def evans_index(ct_bytes, f_type, verbose=False):
     yield {"id": 6, "progress": 95, "status": "Plotting"}
     skull_data[ventricle_all > 0] = 1  # combine skull and ventricle masks
     report_png_bytes = plot_slice_with_diameters(skull_data, start_brain, end_brain, 
-                                                 start_vent, end_vent, evans_index)
+                                                start_vent, end_vent, evans_index,
+                                                brain_volume_ml, ventricle_volume_ml,
+                                                ventricle_brain_ratio)
     
-    evans_index = {"evans_index": round(evans_index, 3)}
+    evans_index = {
+        "evans_index": round(evans_index, 3),
+        "brain_volume_ml": round(brain_volume_ml, 1),
+        "ventricle_volume_ml": round(ventricle_volume_ml, 1),
+        "ventricle_brain_ratio": round(ventricle_brain_ratio, 3)
+    }
     masks_output = {
         "brain_mask": brain_img,
         "skull_mask": skull_img,
@@ -267,7 +287,13 @@ if __name__ == "__main__":
     else:
         f_type = "nii"
 
-    res = evans_index(ct_bytes=args.ct_img, f_type=f_type, verbose=args.verbose)
+    # Passing a file path
+    # res = evans_index(ct_bytes=args.ct_img, f_type=f_type, verbose=args.verbose)
+
+    # Passing a Nifti1Image object
+    ct_img = nib.load(args.ct_img)
+    ct_img = nib.Nifti1Image(np.asanyarray(ct_img.dataobj), ct_img.affine, ct_img.header)  # eager loading into memory
+    res = evans_index(ct_bytes=ct_img, f_type=f_type, verbose=args.verbose)
 
     for r in res:
         print(f"progress: {r['progress']}, status: {r['status']}")
