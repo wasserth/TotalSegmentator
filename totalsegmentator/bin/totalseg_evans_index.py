@@ -18,15 +18,17 @@ from totalsegmentator.postprocessing import keep_largest_blob, remove_small_blob
 from totalsegmentator.registration import calc_transform, apply_transform
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
-from totalsegmentator.serialization_utils import decompress_and_deserialize, filestream_to_nifti, serialize_and_compress, convert_to_serializable, nib_load_eager
+from totalsegmentator.serialization_utils import decompress_and_deserialize, filestream_to_nifti, serialize_and_compress, convert_to_serializable, nib_load_eager, NumpyJsonEncoder
 from totalsegmentator.dicom_io import dcm_to_nifti
 from totalsegmentator.config import send_usage_stats_application
 
 
+# run models in python_api but does not work properly in e.g. streamlit or modal
 def run_models(ct_img, verbose=False):
     brain_skull = totalsegmentator(ct_img, None, roi_subset=["brain", "skull"], ml=True, nr_thr_saving=1, quiet=not verbose)
+    yield brain_skull
     ventricle_parts = totalsegmentator(ct_img, None, task="ventricle_parts", ml=True, nr_thr_saving=1, quiet=not verbose)
-    return brain_skull, ventricle_parts
+    yield ventricle_parts
 
 
 # Required if calling from e.g. streamlit; calling python_api not working there
@@ -37,10 +39,11 @@ def run_models_shell(ct_img, verbose=False):
         ct_img_path = tmp_dir / "ct.nii.gz"
         nib.save(ct_img, ct_img_path)
         subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'brain_skull.nii.gz'} --roi_subset brain skull --ml --nr_thr_saving 1 {quiet}", shell=True)
-        subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'ventricle_parts.nii.gz'} --task ventricle_parts --ml --nr_thr_saving 1 {quiet}", shell=True)
         brain_skull = nib_load_eager(tmp_dir / "brain_skull.nii.gz")  # eager loading required here
+        yield brain_skull
+        subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'ventricle_parts.nii.gz'} --task ventricle_parts --ml --nr_thr_saving 1 {quiet}", shell=True)
         ventricle_parts = nib_load_eager(tmp_dir / "ventricle_parts.nii.gz")
-    return brain_skull, ventricle_parts
+        yield ventricle_parts
 
 
 def extract_brain(brain_mask, ct_img):
@@ -146,11 +149,15 @@ def evans_index(ct_bytes, f_type, verbose=False):
     resolution = 1.0
     
     # Run models
-    yield {"id": 2, "progress": 5, "status": "Run models"}
-    # brain_skull_img, ventricle_img = run_models(ct_img, verbose=verbose)
-    brain_skull_img, ventricle_img = run_models_shell(ct_img, verbose=verbose)
+    yield {"id": 2, "progress": 10, "status": "Run brain and skull model"}
+    # brain_skull_img, ventricle_img_orig = run_models(ct_img, verbose=verbose)
+    model_results = run_models_shell(ct_img, verbose=verbose)
+    brain_skull_img = next(model_results)
+    yield {"id": 3, "progress": 40, "status": "Run ventricle model"}
+    ventricle_img_orig = next(model_results)
 
     # Load atlas
+    yield {"id": 4, "progress": 70, "status": "Process segmentations"}
     with resources.files('totalsegmentator').joinpath('resources/ct_brain_atlas_1mm.nii.gz').open('rb') as f:
         brain_atlas = f.name
     atlas_img = nib.load(brain_atlas)
@@ -161,17 +168,17 @@ def evans_index(ct_bytes, f_type, verbose=False):
     brain_skull_data = brain_skull_img.get_fdata()
     brain = (brain_skull_data == label_map_inv["brain"]).astype(np.uint8)
     skull = (brain_skull_data == label_map_inv["skull"]).astype(np.uint8)
-    brain_img = nib.Nifti1Image(brain, brain_skull_img.affine)
-    skull_img = nib.Nifti1Image(skull, brain_skull_img.affine)
+    brain_img_orig = nib.Nifti1Image(brain, brain_skull_img.affine)
+    skull_img_orig = nib.Nifti1Image(skull, brain_skull_img.affine)
     
     # Canonical
-    brain_img = nib.as_closest_canonical(brain_img)
-    skull_img = nib.as_closest_canonical(skull_img)
-    ventricle_img = nib.as_closest_canonical(ventricle_img)
+    brain_img = nib.as_closest_canonical(brain_img_orig)
+    skull_img = nib.as_closest_canonical(skull_img_orig)
+    ventricle_img = nib.as_closest_canonical(ventricle_img_orig)
     ct_img = nib.as_closest_canonical(ct_img)
 
     # Resampling
-    yield {"id": 3, "progress": 60, "status": "Resampling"}
+    yield {"id": 5, "progress": 75, "status": "Resampling"}
     brain_img = change_spacing(brain_img, resolution, dtype=np.uint8, order=0)  # order=1 leads to holes in seg
     skull_img = change_spacing(skull_img, resolution, dtype=np.uint8, order=0)
     ventricle_img = change_spacing(ventricle_img, resolution, dtype=np.uint8, order=0)
@@ -181,7 +188,7 @@ def evans_index(ct_bytes, f_type, verbose=False):
     ct_img = extract_brain(brain_img, ct_img)
 
     # Registration
-    yield {"id": 4, "progress": 80, "status": "Registration"}
+    yield {"id": 6, "progress": 80, "status": "Registration"}
     transform = calc_transform(ct_img, atlas_img, transform_type="Rigid", resample=None, verbose=False)
     brain_img = apply_transform(brain_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0)
     skull_img = apply_transform(skull_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0, interp="genericLabel")
@@ -203,7 +210,7 @@ def evans_index(ct_bytes, f_type, verbose=False):
     ventricle_data = np.where((ventricle_data == 1) | (ventricle_data == 6), 1, 0)
 
     # postprocessing for robustness
-    yield {"id": 5, "progress": 90, "status": "Postprocessing"}
+    yield {"id": 7, "progress": 90, "status": "Postprocessing"}
     brain_data = remove_small_blobs(brain_data, [200, 1e10])  # fast
     ventricle_data = remove_small_blobs(ventricle_data, [10, 1e10])  # fast
 
@@ -222,7 +229,7 @@ def evans_index(ct_bytes, f_type, verbose=False):
     evans_index = max_dia_vent / max_dia_brain
     
     # Plot
-    yield {"id": 6, "progress": 95, "status": "Plotting"}
+    yield {"id": 8, "progress": 95, "status": "Plotting"}
     skull_data[ventricle_all > 0] = 1  # combine skull and ventricle masks
     report_png_bytes = plot_slice_with_diameters(skull_data, start_brain, end_brain, 
                                                 start_vent, end_vent, evans_index,
@@ -236,14 +243,15 @@ def evans_index(ct_bytes, f_type, verbose=False):
         "ventricle_brain_ratio": round(ventricle_brain_ratio, 3)
     }
     masks_output = {
-        "brain_mask": brain_img,
-        "skull_mask": skull_img,
-        "ventricle_mask": ventricle_img
+        "brain_mask": brain_img_orig,
+        "skull_mask": skull_img_orig,
+        "ventricle_mask": ventricle_img_orig
     }
 
-    print(f"took: {time.time()-st:.2f}s")
+    if verbose:
+        print(f"took: {time.time()-st:.2f}s")
 
-    yield {"id": 7, "progress": 100, "status": "Done",
+    yield {"id": 9, "progress": 100, "status": "Done",
             "report_json": evans_index, 
             "masks": serialize_and_compress(masks_output),
             "report_png": report_png_bytes}
@@ -293,18 +301,24 @@ if __name__ == "__main__":
     # Passing a Nifti1Image object
     ct_img = nib.load(args.ct_img)
     ct_img = nib.Nifti1Image(np.asanyarray(ct_img.dataobj), ct_img.affine, ct_img.header)  # eager loading into memory
-    res = evans_index(ct_bytes=ct_img, f_type=f_type, verbose=args.verbose)
+    res = evans_index(ct_img, f_type, verbose=args.verbose)
 
     for r in res:
-        print(f"progress: {r['progress']}, status: {r['status']}")
+        print(f"progress: {r['progress']}%: {r['status']}")
         if r["progress"] == 100:
             final_result = r
 
     # Save report json
-    json.dump(convert_to_serializable(final_result["report_json"]), open(args.output_file, "w"), indent=4)
+    json.dump(final_result["report_json"], open(args.output_file, "w"), indent=4, cls=NumpyJsonEncoder)
 
     # Save report png
     with open(args.preview_file, "wb") as f:
         f.write(final_result["report_png"])
+
+    # Save masks
+    # masks = decompress_and_deserialize(final_result["masks"])
+    # nib.save(masks["brain_mask"], str(args.output_file).replace(".json", "_brain_mask.nii.gz"))
+    # nib.save(masks["skull_mask"], str(args.output_file).replace(".json", "_skull_mask.nii.gz"))
+    # nib.save(masks["ventricle_mask"], str(args.output_file).replace(".json", "_ventricle_mask.nii.gz"))
 
     send_usage_stats_application("evans_index")
