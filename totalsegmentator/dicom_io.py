@@ -115,12 +115,14 @@ def dcm_to_nifti(input_path, output_path, tmp_dir=None, verbose=False):
     """
     Uses dicom2nifti package (also works on windows)
 
-    input_path: a directory of dicom slices or a zip file of dicom slices
+    input_path: a directory of dicom slices or a zip file of dicom slices or a bytes object of zip file
     output_path: a nifti file path
-    tmp_dir: extract zip file to this directory, else to the same directory as the zip file
+    tmp_dir: extract zip file to this directory, else to the same directory as the zip file. Needs to be set if input is a zip file.
     """
     # Check if input_path is a zip file and extract it
     if zipfile.is_zipfile(input_path):
+        if tmp_dir is None:
+            raise ValueError("tmp_dir must be set when input_path is a zip file or bytes object of zip file")
         if verbose: print(f"Extracting zip file: {input_path}")
         extract_dir = os.path.splitext(input_path)[0] if tmp_dir is None else tmp_dir / "extracted_dcm"
         with zipfile.ZipFile(input_path, 'r') as zip_ref:

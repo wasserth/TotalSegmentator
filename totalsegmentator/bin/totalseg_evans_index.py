@@ -130,7 +130,7 @@ def evans_index(ct_bytes, f_type, verbose=False):
     st = time.time()
     yield {"id": 1, "progress": 2, "status": "Loading data"}
 
-    if isinstance(ct_bytes, Path):  # for local usage
+    if isinstance(ct_bytes, Path) and f_type != "dicom":  # for local usage
         ct_img = nib.load(ct_bytes)
     elif isinstance(ct_bytes, nib.Nifti1Image):  # for local usage
         ct_img = ct_bytes
@@ -138,7 +138,7 @@ def evans_index(ct_bytes, f_type, verbose=False):
         print("Converting dicom to nifti...")
         with tempfile.TemporaryDirectory(prefix="totalseg_tmp_") as tmp_folder:
             ct_tmp_path = Path(tmp_folder) / "ct.nii.gz"
-            dcm_to_nifti(ct_bytes, ct_tmp_path, verbose=True)
+            dcm_to_nifti(ct_bytes, ct_tmp_path, tmp_dir=Path(tmp_folder), verbose=True)
             ct_img = nib.load(ct_tmp_path)
             ct_img = nib.Nifti1Image(np.asanyarray(ct_img.dataobj), ct_img.affine, ct_img.header)  # eager loading into memory
     elif f_type == "niigz":  # for online nifti bytes
@@ -296,12 +296,12 @@ if __name__ == "__main__":
         f_type = "nii"
 
     # Passing a file path
-    # res = evans_index(ct_bytes=args.ct_img, f_type=f_type, verbose=args.verbose)
+    res = evans_index(args.ct_img, f_type, verbose=args.verbose)
 
-    # Passing a Nifti1Image object
-    ct_img = nib.load(args.ct_img)
-    ct_img = nib.Nifti1Image(np.asanyarray(ct_img.dataobj), ct_img.affine, ct_img.header)  # eager loading into memory
-    res = evans_index(ct_img, f_type, verbose=args.verbose)
+    # Passing a Nifti1Image object (does not work with zip files)
+    # ct_img = nib.load(args.ct_img)
+    # ct_img = nib.Nifti1Image(np.asanyarray(ct_img.dataobj), ct_img.affine, ct_img.header)  # eager loading into memory
+    # res = evans_index(ct_img, f_type, verbose=args.verbose)
 
     for r in res:
         print(f"progress: {r['progress']}%: {r['status']}")
