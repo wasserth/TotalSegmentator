@@ -28,12 +28,12 @@ def run_models(ct_img, verbose=False):
     ventricle_parts = totalsegmentator(ct_img, None, task="ventricle_parts", ml=True, nr_thr_saving=1, quiet=not verbose)
     return brain_skull, ventricle_parts
 
-
+# Required if calling from e.g. streamlit; calling python_api not working there
 def run_models_shell(ct_img, verbose=False):
     quiet = "--quiet" if not verbose else ""
     with tempfile.TemporaryDirectory(prefix="totalseg_tmp_2_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
-        ct_img_path = tmp_dir / "ct.nii.gz"  # save to tmp folder
+        ct_img_path = tmp_dir / "ct.nii.gz"
         nib.save(ct_img, ct_img_path)
         subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'brain_skull.nii.gz'} --roi_subset brain skull --ml --nr_thr_saving 1 {quiet}", shell=True)
         subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'ventricle_parts.nii.gz'} --task ventricle_parts --ml --nr_thr_saving 1 {quiet}", shell=True)
