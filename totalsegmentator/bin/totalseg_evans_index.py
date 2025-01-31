@@ -12,6 +12,7 @@ import nibabel as nib
 import numpy as np
 from tqdm import tqdm
 from matplotlib import pyplot as plt
+from scipy.ndimage import binary_dilation
 
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.postprocessing import keep_largest_blob, remove_small_blobs
@@ -97,7 +98,7 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     plt.scatter([start_v[0], end_v[0]], [start_v[1], end_v[1]], color="red", marker="x", s=200)
     plt.plot([start_v[0], end_v[0]], [start_v[1], end_v[1]], color="green", linewidth=3)
     plt.title(f"Evans index: {evans_index:.3f}\n".upper() + 
-              f"brain volume: {brain_vol:.1f}ml\n" +
+              f"brain volume: {brain_vol:.1f}ml*\n" +
               f"ventricle volume: {vent_vol:.1f}ml\n" +
               f"ventricle/brain ratio: {vol_ratio:.3f}", 
               fontweight='normal')
@@ -105,9 +106,10 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     plt.gca().invert_xaxis()
 
     # Add disclaimer text at bottom with adjusted position
-    disclaimer = "This is a research prototype and not designed for diagnosis of any medical complaint.\n" + \
+    disclaimer = "* Volume of brain + cranial cavity (area inside of skull).\n\n" + \
+                 "This is a research prototype and not designed for diagnosis of any medical complaint.\n" + \
                  "Created by AI Lab, Department of Radiology, University Hospital Basel"
-    plt.figtext(0.5, 0.01, disclaimer, ha='center', va='bottom', fontsize=8, wrap=True)
+    plt.figtext(0.5, -0.01, disclaimer, ha='center', va='bottom', fontsize=8, wrap=True)
 
     plt.tight_layout()
     
@@ -240,6 +242,14 @@ def evans_index(ct_bytes, f_type, verbose=False):
         ventricle_data = ventricle_img.get_fdata()
         ventricle_all = (ventricle_data > 0).astype(np.uint8)
 
+        
+        # Increase brain to fill entire space inside of skull.
+        # But do not increase too much because otherwise areas without skull around will get too big.
+        # (fast if doing here in 1mm space, in orig space can take 10s if high img resolution)
+        brain_data = binary_dilation(brain_data, iterations=2).astype(np.uint8) 
+        brain_data[skull_data > 0] = 0  # Remove skull from brain mask
+        brain_data = keep_largest_blob(brain_data)
+        
         # Calculate volumes
         voxel_vol_mm3 = np.prod(brain_img.header.get_zooms())
         brain_volume_ml = np.sum(brain_data) * voxel_vol_mm3 * 0.001
@@ -260,10 +270,10 @@ def evans_index(ct_bytes, f_type, verbose=False):
         max_dia_brain, (start_brain, end_brain) = max_diameter_x(brain_data_slice)
         
         # Make 2mm wider to correct for skull-brain gap
-        addon_mm = 1 / resolution
-        max_dia_brain += 2 * addon_mm
-        start_brain[0] = start_brain[0] - addon_mm
-        end_brain[0] = end_brain[0] + addon_mm
+        # addon_mm = 1 / resolution
+        # max_dia_brain += 2 * addon_mm
+        # start_brain[0] = start_brain[0] - addon_mm
+        # end_brain[0] = end_brain[0] + addon_mm
         
         # Calc index
         evans_index = max_dia_vent / max_dia_brain
@@ -357,7 +367,7 @@ if __name__ == "__main__":
     with open(args.preview_file, "wb") as f:
         f.write(final_result["report_png"])
 
-    # Save masks
+    # Save masks for debugging
     # masks = decompress_and_deserialize(final_result["masks"])
     # nib.save(masks["brain_mask"], str(args.output_file).replace(".json", "_brain_mask.nii.gz"))
     # nib.save(masks["skull_mask"], str(args.output_file).replace(".json", "_skull_mask.nii.gz"))
