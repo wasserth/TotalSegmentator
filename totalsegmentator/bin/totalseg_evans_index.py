@@ -39,11 +39,11 @@ def run_models_shell(ct_img, verbose=False):
         ct_img_path = tmp_dir / "ct.nii.gz"
         nib.save(ct_img, ct_img_path)
         subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'brain_skull.nii.gz'} --roi_subset brain skull --ml --nr_thr_saving 1 {quiet}", shell=True)
-        brain_skull = nib_load_eager(tmp_dir / "brain_skull.nii.gz")  # eager loading required here
-        yield brain_skull
+        brain_skull_img = nib_load_eager(tmp_dir / "brain_skull.nii.gz")  # eager loading required here
+        yield brain_skull_img
         subprocess.call(f"TotalSegmentator -i {ct_img_path} -o {tmp_dir / 'ventricle_parts.nii.gz'} --task ventricle_parts --ml --nr_thr_saving 1 {quiet}", shell=True)
-        ventricle_parts = nib_load_eager(tmp_dir / "ventricle_parts.nii.gz")
-        yield ventricle_parts
+        ventricle_parts_img = nib_load_eager(tmp_dir / "ventricle_parts.nii.gz")
+        yield ventricle_parts_img
 
 
 def extract_brain(brain_mask, ct_img):
@@ -119,6 +119,34 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     return buf.getvalue()
 
 
+def plot_empty_result():
+    """Create an image with only text for cases where segmentation is empty"""
+    plt.figure(figsize=(8, 9.0))
+    
+    # Set black background
+    ax = plt.gca()
+    ax.set_facecolor('black')
+    plt.gcf().patch.set_facecolor('black')
+    
+    # Add main text in white
+    plt.text(0.5, 0.5, "No calculation possible because the segmentation is empty.\nDoes your image contain the full brain?",
+             ha='center', va='center', wrap=True, color='white')
+    plt.axis('off')
+    
+    # Add disclaimer text at bottom in white
+    disclaimer = "This is a research prototype and not designed for diagnosis of any medical complaint.\n" + \
+                "Created by AI Lab, Department of Radiology, University Hospital Basel"
+    plt.figtext(0.5, 0.01, disclaimer, ha='center', va='bottom', fontsize=8, wrap=True, color='white')
+    
+    plt.tight_layout()
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', dpi=200, bbox_inches='tight', pad_inches=0.1, facecolor='black')
+    plt.close()
+    buf.seek(0)
+    return buf.getvalue()
+
+
 def evans_index(ct_bytes, f_type, verbose=False):
     """
     ct_bytes: file path to nifti file | 
@@ -170,78 +198,91 @@ def evans_index(ct_bytes, f_type, verbose=False):
     skull = (brain_skull_data == label_map_inv["skull"]).astype(np.uint8)
     brain_img_orig = nib.Nifti1Image(brain, brain_skull_img.affine)
     skull_img_orig = nib.Nifti1Image(skull, brain_skull_img.affine)
+    ventricle = ventricle_img_orig.get_fdata()
+    frontal_horn = np.where((ventricle == 1) | (ventricle == 6), 1, 0)
     
-    # Canonical
-    brain_img = nib.as_closest_canonical(brain_img_orig)
-    skull_img = nib.as_closest_canonical(skull_img_orig)
-    ventricle_img = nib.as_closest_canonical(ventricle_img_orig)
-    ct_img = nib.as_closest_canonical(ct_img)
+    # Check if segmentation is empty
+    if np.sum(brain) == 0 or np.sum(skull) == 0 or np.sum(frontal_horn) == 0:
+        evans_index = {
+            "evans_index": None,
+            "brain_volume_ml": None,
+            "ventricle_volume_ml": None, 
+            "ventricle_brain_ratio": None
+        }
+        report_png_bytes = plot_empty_result()
+    else:
+        # Canonical
+        brain_img = nib.as_closest_canonical(brain_img_orig)
+        skull_img = nib.as_closest_canonical(skull_img_orig)
+        ventricle_img = nib.as_closest_canonical(ventricle_img_orig)
+        ct_img = nib.as_closest_canonical(ct_img)
 
-    # Resampling
-    yield {"id": 5, "progress": 75, "status": "Resampling"}
-    brain_img = change_spacing(brain_img, resolution, dtype=np.uint8, order=0)  # order=1 leads to holes in seg
-    skull_img = change_spacing(skull_img, resolution, dtype=np.uint8, order=0)
-    ventricle_img = change_spacing(ventricle_img, resolution, dtype=np.uint8, order=0)
-    ct_img = change_spacing(ct_img, resolution, dtype=np.uint8, order=1)
+        # Resampling
+        yield {"id": 5, "progress": 75, "status": "Resampling"}
+        brain_img = change_spacing(brain_img, resolution, dtype=np.uint8, order=0)  # order=1 leads to holes in seg
+        skull_img = change_spacing(skull_img, resolution, dtype=np.uint8, order=0)
+        ventricle_img = change_spacing(ventricle_img, resolution, dtype=np.uint8, order=0)
+        ct_img = change_spacing(ct_img, resolution, dtype=np.uint8, order=1)
+        
+        # Editing
+        ct_img = extract_brain(brain_img, ct_img)
+
+        # Registration
+        yield {"id": 6, "progress": 80, "status": "Registration"}
+        transform = calc_transform(ct_img, atlas_img, transform_type="Rigid", resample=None, verbose=False)
+        brain_img = apply_transform(brain_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0)
+        skull_img = apply_transform(skull_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0, interp="genericLabel")
+        ventricle_img = apply_transform(ventricle_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0, interp="genericLabel")
+
+        # Get data
+        brain_data = brain_img.get_fdata()
+        skull_data = skull_img.get_fdata()
+        ventricle_data = ventricle_img.get_fdata()
+        ventricle_all = (ventricle_data > 0).astype(np.uint8)
+
+        # Calculate volumes
+        voxel_vol_mm3 = np.prod(brain_img.header.get_zooms())
+        brain_volume_ml = np.sum(brain_data) * voxel_vol_mm3 * 0.001
+        ventricle_volume_ml = np.sum(ventricle_all) * voxel_vol_mm3 * 0.001
+        ventricle_brain_ratio = ventricle_volume_ml / brain_volume_ml
+
+        # select only frontal horn
+        ventricle_data = np.where((ventricle_data == 1) | (ventricle_data == 6), 1, 0)
+
+        # postprocessing for robustness
+        yield {"id": 7, "progress": 90, "status": "Postprocessing"}
+        brain_data = remove_small_blobs(brain_data, [200, 1e10])  # fast
+        ventricle_data = remove_small_blobs(ventricle_data, [10, 1e10])  # fast
+
+        # Get diameters
+        max_dia_vent, (start_vent, end_vent) = max_diameter_x(ventricle_data)
+        brain_data_slice = brain_data[:,:,start_vent[2]:end_vent[2]+1]  # select same slice as ventricles
+        max_dia_brain, (start_brain, end_brain) = max_diameter_x(brain_data_slice)
+        
+        # Make 2mm wider to correct for skull-brain gap
+        addon_mm = 1 / resolution
+        max_dia_brain += 2 * addon_mm
+        start_brain[0] = start_brain[0] - addon_mm
+        end_brain[0] = end_brain[0] + addon_mm
+        
+        # Calc index
+        evans_index = max_dia_vent / max_dia_brain
+        
+        # Plot
+        yield {"id": 8, "progress": 95, "status": "Plotting"}
+        skull_data[ventricle_all > 0] = 1  # combine skull and ventricle masks
+        report_png_bytes = plot_slice_with_diameters(skull_data, start_brain, end_brain, 
+                                                    start_vent, end_vent, evans_index,
+                                                    brain_volume_ml, ventricle_volume_ml,
+                                                    ventricle_brain_ratio)
     
-    # Editing
-    ct_img = extract_brain(brain_img, ct_img)
+        evans_index = {
+            "evans_index": round(evans_index, 3),
+            "brain_volume_ml": round(brain_volume_ml, 1),
+            "ventricle_volume_ml": round(ventricle_volume_ml, 1),
+            "ventricle_brain_ratio": round(ventricle_brain_ratio, 3)
+        }
 
-    # Registration
-    yield {"id": 6, "progress": 80, "status": "Registration"}
-    transform = calc_transform(ct_img, atlas_img, transform_type="Rigid", resample=None, verbose=False)
-    brain_img = apply_transform(brain_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0)
-    skull_img = apply_transform(skull_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0, interp="genericLabel")
-    ventricle_img = apply_transform(ventricle_img, atlas_img, transform, resample=None, dtype=np.uint8, order=0, interp="genericLabel")
-
-    # Get data
-    brain_data = brain_img.get_fdata()
-    skull_data = skull_img.get_fdata()
-    ventricle_data = ventricle_img.get_fdata()
-    ventricle_all = (ventricle_data > 0).astype(np.uint8)
-
-    # Calculate volumes
-    voxel_vol_mm3 = np.prod(brain_img.header.get_zooms())
-    brain_volume_ml = np.sum(brain_data) * voxel_vol_mm3 * 0.001
-    ventricle_volume_ml = np.sum(ventricle_all) * voxel_vol_mm3 * 0.001
-    ventricle_brain_ratio = ventricle_volume_ml / brain_volume_ml
-
-    # select only frontal horn
-    ventricle_data = np.where((ventricle_data == 1) | (ventricle_data == 6), 1, 0)
-
-    # postprocessing for robustness
-    yield {"id": 7, "progress": 90, "status": "Postprocessing"}
-    brain_data = remove_small_blobs(brain_data, [200, 1e10])  # fast
-    ventricle_data = remove_small_blobs(ventricle_data, [10, 1e10])  # fast
-
-    # Get diameters
-    max_dia_vent, (start_vent, end_vent) = max_diameter_x(ventricle_data)
-    brain_data_slice = brain_data[:,:,start_vent[2]:end_vent[2]+1]  # select same slice as ventricles
-    max_dia_brain, (start_brain, end_brain) = max_diameter_x(brain_data_slice)
-    
-    # Make 2mm wider to correct for skull-brain gap
-    addon_mm = 1 / resolution
-    max_dia_brain += 2 * addon_mm
-    start_brain[0] = start_brain[0] - addon_mm
-    end_brain[0] = end_brain[0] + addon_mm
-    
-    # Calc index
-    evans_index = max_dia_vent / max_dia_brain
-    
-    # Plot
-    yield {"id": 8, "progress": 95, "status": "Plotting"}
-    skull_data[ventricle_all > 0] = 1  # combine skull and ventricle masks
-    report_png_bytes = plot_slice_with_diameters(skull_data, start_brain, end_brain, 
-                                                start_vent, end_vent, evans_index,
-                                                brain_volume_ml, ventricle_volume_ml,
-                                                ventricle_brain_ratio)
-    
-    evans_index = {
-        "evans_index": round(evans_index, 3),
-        "brain_volume_ml": round(brain_volume_ml, 1),
-        "ventricle_volume_ml": round(ventricle_volume_ml, 1),
-        "ventricle_brain_ratio": round(ventricle_brain_ratio, 3)
-    }
     masks_output = {
         "brain_mask": brain_img_orig,
         "skull_mask": skull_img_orig,
@@ -259,7 +300,8 @@ def evans_index(ct_bytes, f_type, verbose=False):
 
 """
 cd ~/Downloads/evans_index/31103170_rot_large
-python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -i ct_sm.nii.gz -o evans_index_TEST.json -p evans_index.png
+python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -i ct_sm.nii.gz -o evans_index.json -p evans_index.png
+python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -i ct_nonbrain.nii.gz -o evans_index_nonbrain.json -p evans_index_nonbrain.png
 """
 if __name__ == "__main__":
     """
