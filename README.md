@@ -189,6 +189,11 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
 ```
 
+If you want to calculate the Evans index you can use the following command (currently only available in master branch):
+```
+totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png
+```
+
 Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
 ```
 totalseg_download_weights -t <task_name>
