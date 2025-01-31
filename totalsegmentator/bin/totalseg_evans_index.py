@@ -106,7 +106,7 @@ def plot_slice_with_diameters(brain, start_b, end_b, start_v, end_v, evans_index
     plt.gca().invert_xaxis()
 
     # Add disclaimer text at bottom with adjusted position
-    disclaimer = "* Volume of brain + cranial cavity (area inside of skull).\n\n" + \
+    disclaimer = "* Volume of brain + cranial cavity (area inside of skull)\n\n" + \
                  "This is a research prototype and not designed for diagnosis of any medical complaint.\n" + \
                  "Created by AI Lab, Department of Radiology, University Hospital Basel"
     plt.figtext(0.5, -0.01, disclaimer, ha='center', va='bottom', fontsize=8, wrap=True)
