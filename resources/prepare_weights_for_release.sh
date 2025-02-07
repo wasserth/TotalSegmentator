@@ -10,6 +10,7 @@ set -e  # Exit on error
 # todo: select as needed
 cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_v2
 # cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_mri
+# cd /mnt/nvme/data/multiseg/weights_upload/nnunet_modal
 
 # Process each dataset ID
 for dataset_id in "$@"; do

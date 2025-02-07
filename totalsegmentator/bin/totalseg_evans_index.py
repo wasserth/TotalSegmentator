@@ -309,7 +309,7 @@ def evans_index(ct_bytes, f_type, verbose=False):
 
 
 """
-cd ~/Downloads/evans_index/31103170_rot_large
+cd /mnt/nvme/data/test_data/evans_index/31103170_rot_large
 python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -i ct_sm.nii.gz -o evans_index.json -p evans_index.png
 python ~/dev/TotalSegmentator/totalsegmentator/bin/totalseg_evans_index.py -i ct_nonbrain.nii.gz -o evans_index_nonbrain.json -p evans_index_nonbrain.png
 """

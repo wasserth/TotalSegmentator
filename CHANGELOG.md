@@ -1,5 +1,9 @@
 ## Master
+
+
+## Release 2.6.0
 * add evans index calculation
+* require torch < 2.6.0 to avoid weight loading error (waiting for nnU-Net to fix this issue)
 
 
 ## Release 2.5.0

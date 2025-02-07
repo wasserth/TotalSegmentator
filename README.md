@@ -189,7 +189,7 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
 ```
 
-If you want to calculate the Evans index you can use the following command (currently only available in master branch):
+If you want to calculate the [Evans index](https://radiopaedia.org/articles/evans-index-2) you can use the following command:
 ```
 totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png
 ```
