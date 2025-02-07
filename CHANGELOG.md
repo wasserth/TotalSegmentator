@@ -17,7 +17,7 @@ results can be different from previous versions.)
 * add `body_mr` task: add body segmentation for MR images
 * add `kidney_cysts` task: greatly improved kidney cyst segmentation compared to the `kidney_cyst` class which is part of `total` task
 * add `breasts` task: add breast segmentation
-* add `oculomotor_muscles` task: add oculomotor muscles model
+* add `oculomotor_muscles` task: add oculomotor muscles model (thanks to Philippe)
 * add `lung_nodules` task (thanks to [BLUEMIND AI](https://bluemind.co/))
 * update `coronary_arteries` task: increased number of training subjects, including non-contrast images
 * add option to remove small connected components in postprocessing
