@@ -2,7 +2,8 @@
 
 Tool for segmentation of most major anatomical structures in any CT or MR image. It was trained on a wide range of different CT and MR images (different scanners, institutions, protocols,...) and therefore should work well on most images. A large part of the training dataset can be downloaded here: [CT dataset](https://doi.org/10.5281/zenodo.6802613) (1228 subjects) and [MR dataset](https://zenodo.org/doi/10.5281/zenodo.11367004) (616 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/) or as [3D Slicer extension](https://github.com/lassoan/SlicerTotalSegmentator).
 
-**ANNOUNCEMENT: We created a platform where anyone can help annotate more data to further improve TotalSegmentator: [TotalSegmentator Annotation Platform](https://annotate.totalsegmentator.com).**
+**ANNOUNCEMENT: We created a platform where anyone can help annotate more data to further improve TotalSegmentator: [TotalSegmentator Annotation Platform](https://annotate.totalsegmentator.com).**  
+**ANNOUNCEMENT: We created web applications for [abdominal organs volume](https://compute.totalsegmentator.com/volume-report/), [Evans index](https://compute.totalsegmentator.com/evans-index/), and [aorta diameter](https://compute.totalsegmentator.com/aorta-report/).**
 
 Main classes for CT and MR:
 ![Alt text](resources/imgs/overview_classes_v2.png)
@@ -110,21 +111,59 @@ The mapping from label ID to class name can be found [here](https://github.com/w
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 
 
+### Other commands
+If you want to know which contrast phase a CT image is you can use the following command (requires `pip install xgboost`). More details can be found [here](resources/contrast_phase_prediction.md):
+```
+totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
+```
+
+If you want to know which modality (CT or MR) a image is you can use the following command (requires `pip install xgboost`). 
+```
+totalseg_get_modality -i image.nii.gz -o modality.json
+```
+
+If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
+```
+totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
+```
+
+If you want to calculate the [Evans index](https://radiopaedia.org/articles/evans-index-2) you can use the following command:
+```
+totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png
+```
+
+Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
+```
+totalseg_download_weights -t <task_name>
+```
+This will download them to `~/.totalsegmentator/nnunet/results`. You can change this path by doing `export TOTALSEG_HOME_DIR=/new/path/.totalsegmentator`. If your machine has no internet, then download on another machine with internet and copy `~/.totalsegmentator` to the machine without internet.
+
+After acquiring a license number for the non-open tasks you can set it with the following command:
+```
+totalseg_set_license -l aca_12345678910
+```
+
+If you do not have internet access on the machine you want to run TotalSegmentator on:
+1. Install TotalSegmentator [and set up the license] on a machine with internet.
+2. Run TotalSegmentator for one subject on this machine. This will download the weights and save them to `~/.totalsegmentator`.
+3. Copy the folder `~/.totalsegmentator` from this machine to the machine without internet.
+4. TotalSegmentator should now work also on the machine without internet.
+
+
+### Web applications
+We provide the following web applications to easily process your images:
+* [TotalSegmentator](https://totalsegmentator.com/): Run totalsegmentator on your own images via a simple web interface.
+* [TotalSegmentator Annotation Platform](https://annotate.totalsegmentator.com/): Help annotate more data to further improve TotalSegmentator.
+* [Volume Report](https://compute.totalsegmentator.com/volume-report/): Get the volume of abdominal organs + tissue und bone density. Also show percentile in population.
+* [Evans Index](https://compute.totalsegmentator.com/evans-index/): Compute the Evans index.
+* [Aorta Report](https://compute.totalsegmentator.com/aorta-report/): Analyse the diameter along the aorta.
+
+
 ### Run via docker
 We also provide a docker container which can be used the following way
 ```
 docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.2.1 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
 ```
-
-
-### Running v1
-If you want to keep on using TotalSegmentator v1 (e.g. because you do not want to change your pipeline) you
-can install it with the following command:
-```
-pip install TotalSegmentator==1.5.7
-```
-The documentation for v1 can be found [here](https://github.com/wasserth/TotalSegmentator/tree/v1.5.7). Bugfixes for v1 are developed in the branch `v1_bugfixes`.
-Our Radiology AI publication refers to TotalSegmentator v1.
 
 
 ### Resource Requirements
@@ -173,44 +212,6 @@ pip install git+https://github.com/wasserth/TotalSegmentator.git
 ```
 
 
-### Other commands
-If you want to know which contrast phase a CT image is you can use the following command (requires `pip install xgboost`). More details can be found [here](resources/contrast_phase_prediction.md):
-```
-totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
-```
-
-If you want to know which modality (CT or MR) a image is you can use the following command (requires `pip install xgboost`). 
-```
-totalseg_get_modality -i image.nii.gz -o modality.json
-```
-
-If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
-```
-totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
-```
-
-If you want to calculate the [Evans index](https://radiopaedia.org/articles/evans-index-2) you can use the following command:
-```
-totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png
-```
-
-Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
-```
-totalseg_download_weights -t <task_name>
-```
-This will download them to `~/.totalsegmentator/nnunet/results`. You can change this path by doing `export TOTALSEG_HOME_DIR=/new/path/.totalsegmentator`. If your machine has no internet, then download on another machine with internet and copy `~/.totalsegmentator` to the machine without internet.
-
-After acquiring a license number for the non-open tasks you can set it with the following command:
-```
-totalseg_set_license -l aca_12345678910
-```
-
-If you do not have internet access on the machine you want to run TotalSegmentator on:
-1. Install TotalSegmentator [and set up the license] on a machine with internet.
-2. Run TotalSegmentator for one subject on this machine. This will download the weights and save them to `~/.totalsegmentator`.
-3. Copy the folder `~/.totalsegmentator` from this machine to the machine without internet.
-4. TotalSegmentator should now work also on the machine without internet.
-
 ### Train/validation/test split
 The exact split of the dataset can be found in the file `meta.csv` inside of the [dataset](https://doi.org/10.5281/zenodo.6802613). This was used for the validation in our paper.
 The exact numbers of the results for the high-resolution model (1.5mm) can be found [here](resources/results_all_classes_v1.json). The paper shows these numbers in the supplementary materials Figure 11.
@@ -242,6 +243,16 @@ fslreorient2std input_file output_file
 When you get bad segmentation results check the following:
 * does your input image contain the original HU values or are the intensity values rescaled to a different range?
 * is the patient normally positioned in the image? (In axial view is the spine at the bottom of the image? In the coronal view is the head at the top of the image?)
+
+
+### Running v1
+If you want to keep on using TotalSegmentator v1 (e.g. because you do not want to change your pipeline) you
+can install it with the following command:
+```
+pip install TotalSegmentator==1.5.7
+```
+The documentation for v1 can be found [here](https://github.com/wasserth/TotalSegmentator/tree/v1.5.7). Bugfixes for v1 are developed in the branch `v1_bugfixes`.
+Our Radiology AI publication refers to TotalSegmentator v1.
 
 
 ### Other
