@@ -599,6 +599,12 @@ class_map = {
         11: "third_ventricle",
         12: "fourth_ventricle"
     },
+    "aortic_sinuses": {
+        1: "left_ventricular_outflow_tract",
+        2: "right_coronary_cusp", 
+        3: "left_coronary_cusp",
+        4: "non_coronary_cusp"
+    },
     "test": {
         1: "carpal"
     }
@@ -618,7 +624,8 @@ commercial_models = {
     "brain_structures": 409,
     "thigh_shoulder_muscles": 857,
     "thigh_shoulder_muscles_mr": 857,
-    "coronary_arteries": 507
+    "coronary_arteries": 507,
+    "aortic_sinuses": 920
 }
 
 

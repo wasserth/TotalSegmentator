@@ -27,7 +27,8 @@ def main():
                                                  "head_glands_cavities", "head_muscles", "headneck_bones_vessels",
                                                  "headneck_muscles", "liver_vessels", "brain_structures",
                                                  "lung_nodules", "kidney_cysts", "breasts", "ventricle_parts",
-                                                 "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr",
+                                                 "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", 
+                                                #  "aortic_sinuses", 
                                                  "all"],
                         help="Task for which to download the weights", default="total")
 
@@ -70,7 +71,8 @@ def main():
         "brain_structures": [409],
         "thigh_shoulder_muscles": [857],
         "thigh_shoulder_muscles_mr": [857],
-        "coronary_arteries": [507]
+        "coronary_arteries": [507],
+        # "aortic_sinuses": [920]
     }
 
     setup_totalseg()

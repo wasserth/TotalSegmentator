@@ -225,6 +225,9 @@ roi_groups = {
         "ventricle_occipital_horn_right", "ventricle_body_right", "ventricle_temporal_horn_right",
         "ventricle_trigone_right", "third_ventricle", "fourth_ventricle"]
     ],
+    "aortic_sinuses": [
+        ["left_ventricular_outflow_tract", "right_coronary_cusp", "left_coronary_cusp", "non_coronary_cusp"]
+    ],
     "test": [
         ["ulna"]
     ]
