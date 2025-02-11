@@ -57,7 +57,7 @@ Next to the default task (`total`) there are more subtasks with more classes. If
 
 Openly available for any usage:
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
-* **total_mr**: default task containing 56 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
+* **total_mr**: default task containing 50 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
 * **body**: body, body_trunc, body_extremities, skin
 * **body_mr**: body_trunc, body_extremities (for MR images)

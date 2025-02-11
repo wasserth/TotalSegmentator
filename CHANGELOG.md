@@ -7,8 +7,8 @@
 
 
 ## Release 2.5.0
-* **major update to all MR models**: double the number of training subjects (this includes a retraining of these models. Therefore
-results can be different from previous versions.)
+* **major update to all MR models**: double the number of training subjects (this includes a retraining of these models. Therefore results can be different from previous versions.)
+* **breaking change**: the `total_mr` task now contains 50 main classes instead of 56. Some classes moved to some other tasks and `total_mr` now contains also some classes which were not part of it previously. Please see the new `total_mr` class map in the readme or in `totalsegmentator/map_to_binary.py`.
 * add `tissue_4_types` task: add intermuscular fat class
 * add `vertebrae_mr` task: numbered single vertebrae segmentation in MR images (for CT this is already part of the `total` task)
 * add `appendicular_bones_mr` task: add appendicular bones segmentation for MR images
