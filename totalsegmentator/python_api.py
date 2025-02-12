@@ -359,6 +359,24 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task ventricle_parts does not work with option --fast")
+    elif task == "liver_segments":
+        task_id = 570
+        resample = [1.5, 0.8046879768371582, 0.8046879768371582]
+        trainer = "nnUNetTrainerNoMirroring"
+        crop = ["liver"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task liver_segments does not work with option --fast")
+    elif task == "liver_segments_mr":
+        task_id = 576
+        resample = [3.0, 1.1875, 1.1250001788139343]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["liver"]
+        crop_addon = [20, 20, 20]
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task liver_segments_mr does not work with option --fast")
 
         
     # Commercial models

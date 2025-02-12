@@ -28,6 +28,7 @@ def main():
                                                  "headneck_muscles", "liver_vessels", "brain_structures",
                                                  "lung_nodules", "kidney_cysts", "breasts", "ventricle_parts",
                                                  "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", 
+                                                 "liver_segments", "liver_segments_mr",
                                                 #  "aortic_sinuses", 
                                                  "all"],
                         help="Task for which to download the weights", default="total")
@@ -58,6 +59,8 @@ def main():
         "oculomotor_muscles": [351],
         "breasts": [527],
         "ventricle_parts": [552],
+        "liver_segments": [570],
+        "liver_segments_mr": [576],
 
         "heartchambers_highres": [301],
         "appendicular_bones": [304],

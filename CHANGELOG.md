@@ -1,4 +1,5 @@
 ## Master
+* add `liver_segments` and `liver_segments_mr` tasks
 
 
 ## Release 2.6.0

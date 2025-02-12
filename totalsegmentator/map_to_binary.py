@@ -605,6 +605,26 @@ class_map = {
         3: "left_coronary_cusp",
         4: "non_coronary_cusp"
     },
+    "liver_segments": {
+        1: "liver_segment_1",
+        2: "liver_segment_2", 
+        3: "liver_segment_3",
+        4: "liver_segment_4",
+        5: "liver_segment_5",
+        6: "liver_segment_6",
+        7: "liver_segment_7",
+        8: "liver_segment_8"
+    },
+    "liver_segments_mr": {
+        1: "liver_segment_1",
+        2: "liver_segment_2",
+        3: "liver_segment_3", 
+        4: "liver_segment_4",
+        5: "liver_segment_5",
+        6: "liver_segment_6",
+        7: "liver_segment_7",
+        8: "liver_segment_8"
+    },
     "test": {
         1: "carpal"
     }
