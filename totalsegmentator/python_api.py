@@ -373,7 +373,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         resample = [3.0, 1.1875, 1.1250001788139343]
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop = ["liver"]
-        crop_addon = [20, 20, 20]
+        crop_addon = [10, 10, 10]
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task liver_segments_mr does not work with option --fast")
@@ -543,6 +543,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     #  (runtime for 3mm still very good for MR)
     if task.endswith("_mr") and roi_subset is not None:
         roi_subset_robust = roi_subset
+        robust_rs = True
 
     if roi_subset_robust is not None:
         roi_subset = roi_subset_robust
@@ -568,13 +569,19 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         st = time.time()
         if not quiet: print("Generating rough segmentation for cropping...")
         if robust_rs:
-            crop_model_task = 852 if task == "total_mr" else 297
+            crop_model_task = 852 if task.endswith("_mr") else 297
             crop_spacing = 3.0
         else:
-            crop_model_task = 853 if task == "total_mr" else 298
-            crop_spacing = 6.0
-        crop_task = "total_mr" if task == "total_mr" else "total"
-        crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task == "total_mr" else "nnUNetTrainer_4000epochs_NoMirroring"
+            # For MR always run 3mm model for cropping, because 6mm too bad results
+            #  (runtime for 3mm still very good for MR)
+            if task.endswith("_mr"):
+                crop_model_task = 852
+                crop_spacing = 3.0
+            else:
+                crop_model_task = 298
+                crop_spacing = 6.0
+        crop_task = "total_mr" if task.endswith("_mr") else "total"
+        crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"
         download_pretrained_weights(crop_model_task)
         
         organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
