@@ -12,7 +12,7 @@ Main classes for CT and MR:
 TotalSegmentator supports a lot more structures. See [subtasks](#subtasks) or [here](https://backend.totalsegmentator.com/find-task/) for more details.
 
 Created by the department of [Research and Analysis at University Hospital Basel](https://www.unispital-basel.ch/en/radiologie-nuklearmedizin/forschung-radiologie-nuklearmedizin).
-If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([free preprint](https://arxiv.org/abs/2208.05868)). If you use it for MR images please cite the [TotalSegmentator MRI paper](https://arxiv.org/abs/2405.19492). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
+If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.1148/ryai.230024) ([free preprint](https://arxiv.org/abs/2208.05868)). If you use it for MR images please cite the [TotalSegmentator MRI Radiology paper](https://pubs.rsna.org/doi/10.1148/radiol.241613) ([free preprint](https://arxiv.org/abs/2405.19492)). Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
 
 
 ### Installation
