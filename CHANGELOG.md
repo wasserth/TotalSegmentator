@@ -1,4 +1,5 @@
 ## Master
+* make `totalseg_get_modality` work with normalized intensities (images which do not have original HU values anymore)
 
 
 ## Release 2.7.0

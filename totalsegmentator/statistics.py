@@ -97,7 +97,8 @@ def get_basic_statistics(seg: np.array,
                          task: str="total", 
                          exclude_masks_at_border: bool=True,
                          roi_subset: list=None,
-                         metric: str="mean"):
+                         metric: str="mean",
+                         normalized_intensities: bool=False):
     """
     ct_file: path to a ct_file or a nifti file object
     """
@@ -106,6 +107,9 @@ def get_basic_statistics(seg: np.array,
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     
+    if normalized_intensities:
+        ct = (ct - ct.min()) / (ct.max() - ct.min())
+
     class_map_stats = class_map[task]
     if roi_subset is not None:
         class_map_stats = {k: v for k, v in class_map_stats.items() if v in roi_subset}
@@ -125,9 +129,9 @@ def get_basic_statistics(seg: np.array,
             st = time.time()
             if metric == "mean":
                 # stats[mask_name]["intensity"] = ct[roi_mask > 0].mean().round(2) if roi_mask.sum() > 0 else 0.0  # 3.0s
-                stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.03s
+                stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(5) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.03s
             elif metric == "median":
-                stats[mask_name]["intensity"] = np.median(ct[roi_mask > 0]).round(2) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.014s
+                stats[mask_name]["intensity"] = np.median(ct[roi_mask > 0]).round(5) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.014s
             # print(f"took: {time.time()-st:.4f}s")
 
     if file_out is not None:

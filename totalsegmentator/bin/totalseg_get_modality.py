@@ -7,10 +7,12 @@ import json
 import pickle
 from pprint import pprint
 import pkg_resources
+import xgboost as xgb
 
 import nibabel as nib
 import numpy as np
 
+from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.config import send_usage_stats_application
 
 """
@@ -29,6 +31,7 @@ def get_features(nifti_img):
     return [mean, std, min, max]
 
 
+# only use image level intensity features. Faster and high accuracy if image intensities not normalized (original HU values)
 def get_modality(img: nib.Nifti1Image):
     """
     Predict modality
@@ -41,8 +44,58 @@ def get_modality(img: nib.Nifti1Image):
     features = get_features(img)  # 5s for big ct image
     # print(f"features took: {time.time() - st:.2f}s")
 
-    classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/modality_classifiers_2024_10_04.pkl')
-    clfs = pickle.load(open(classifier_path, "rb"))
+    classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/modality_classifiers_2025_02_24.json')
+    clfs = {}
+    for fold in range(5):  # assuming 5 folds
+        clf = xgb.XGBClassifier()
+        clf.load_model(f"{classifier_path}.{fold}")
+        clfs[fold] = clf
+
+    # ensemble across folds
+    preds = []
+    for fold, clf in clfs.items():
+        preds.append(clf.predict([features])[0])
+    preds = np.array(preds)
+    preds = np.mean(preds)
+    prediction_str = "ct" if preds < 0.5 else "mr"
+    probability = 1 - preds if preds < 0.5 else preds
+    return {"modality": prediction_str, 
+            "probability": float(probability)}
+
+
+# use normalized intensities only within rois; slower but also works if HU values are normalized
+def get_modality_from_rois(img: nib.Nifti1Image):
+    """
+    Predict modality
+    
+    returns: 
+        prediction: "ct" | "mr"
+        probability: float
+    """
+    st = time.time()
+
+    organs = ["brain", "esophagus", "colon", "spinal_cord", 
+              "scapula_left", "scapula_right", 
+              "femur_left", "femur_right", "hip_left", "hip_right", 
+              "gluteus_maximus_left", "gluteus_maximus_right", 
+              "autochthon_left", "autochthon_right", 
+              "iliopsoas_left", "iliopsoas_right"]
+
+    seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, task="total_mr",
+                                      roi_subset=None, statistics_exclude_masks_at_border=False,
+                                      quiet=True, stats_aggregation="median", statistics_normalized_intensities=True)
+
+    features = []
+    for organ in organs:
+        features.append(stats[organ]["intensity"])
+    # print(f"TS took: {time.time() - st:.2f}s")
+
+    classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/modality_classifiers_normalized_2025_02_24.json')
+    clfs = {}
+    for fold in range(5):  # assuming 5 folds
+        clf = xgb.XGBClassifier()
+        clf.load_model(f"{classifier_path}.{fold}")
+        clfs[fold] = clf
 
     # ensemble across folds
     preds = []
@@ -74,9 +127,16 @@ def main():
     parser.add_argument("-q", dest="quiet", action="store_true",
                         help="Print no output to stdout", default=False)
 
+    # Use this option if want to get modality of a image which has been normalized (does not contain original HU values anymore)
+    parser.add_argument("-n", dest="normalized_intensities", action="store_true",
+                        help="Use normalized intensities within rois for prediction", default=False)
+
     args = parser.parse_args()
 
-    res = get_modality(nib.load(args.input_file))
+    if args.normalized_intensities:
+        res = get_modality_from_rois(nib.load(args.input_file))
+    else:
+        res = get_modality(nib.load(args.input_file))
 
     if not args.quiet:
         print("Result:")

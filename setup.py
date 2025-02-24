@@ -14,7 +14,16 @@ setup(name='TotalSegmentator',
         package_data={"totalsegmentator": 
             ["resources/totalsegmentator_snomed_mapping.csv",
              "resources/contrast_phase_classifiers_2024_07_19.pkl",
-             "resources/modality_classifiers_2024_10_04.pkl",
+             "resources/modality_classifiers_2025_02_24.json.0",
+             "resources/modality_classifiers_2025_02_24.json.1",
+             "resources/modality_classifiers_2025_02_24.json.2",
+             "resources/modality_classifiers_2025_02_24.json.3",
+             "resources/modality_classifiers_2025_02_24.json.4",
+             "resources/modality_classifiers_normalized_2025_02_24.json.0",
+             "resources/modality_classifiers_normalized_2025_02_24.json.1",
+             "resources/modality_classifiers_normalized_2025_02_24.json.2",
+             "resources/modality_classifiers_normalized_2025_02_24.json.3",
+             "resources/modality_classifiers_normalized_2025_02_24.json.4",
              "resources/ct_brain_atlas_1mm.nii.gz"]
             },
         install_requires=[
