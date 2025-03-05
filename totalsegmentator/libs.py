@@ -400,24 +400,21 @@ def combine_masks(mask_dir, class_type):
 
     returns: nibabel image
     """
-    rib_classes = [f"rib_left_{idx}" for idx in range(1, 13)] + [f"rib_right_{idx}" for idx in range(1, 13)]  # + ["sternum",]
-    if class_type == "ribs":
-        masks = rib_classes
-    elif class_type == "vertebrae":
-        masks = list(class_map_5_parts["class_map_part_vertebrae"].values())
-    elif class_type == "vertebrae_ribs":
-        masks = list(class_map_5_parts["class_map_part_vertebrae"].values()) + rib_classes
-    elif class_type == "lung":
-        masks = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                 "lung_middle_lobe_right", "lung_lower_lobe_right"]
-    elif class_type == "lung_left":
-        masks = ["lung_upper_lobe_left", "lung_lower_lobe_left"]
-    elif class_type == "lung_right":
-        masks = ["lung_upper_lobe_right", "lung_middle_lobe_right", "lung_lower_lobe_right"]
-    elif class_type == "pelvis":
-        masks = ["femur_left", "femur_right", "hip_left", "hip_right"]
-    elif class_type == "body":
-        masks = ["body_trunc", "body_extremities"]
+    combined_classes = {
+        "ribs": [f"rib_left_{idx}" for idx in range(1, 13)] + [f"rib_right_{idx}" for idx in range(1, 13)],  # + ["sternum",]
+        "vertebrae": list(class_map_5_parts["class_map_part_vertebrae"].values()),
+        "vertebrae_ribs": list(class_map_5_parts["class_map_part_vertebrae"].values()) + rib_classes,
+        "lung": ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
+                 "lung_middle_lobe_right", "lung_lower_lobe_right"],
+        "lung_left": ["lung_upper_lobe_left", "lung_lower_lobe_left"],
+        "lung_right": ["lung_upper_lobe_right", "lung_middle_lobe_right", "lung_lower_lobe_right"],
+        "pelvis": ["femur_left", "femur_right", "hip_left", "hip_right"],
+        "body": ["body_trunc", "body_extremities"]
+    }
+    try:
+       masks = combined_classes[class_type]
+    except KeyError:
+        raise ValueError(f"Invalid class_type parameter ({class_type}). Valid values are {list(combined_classes.keys())}")
 
     ref_img = None
     for mask in masks:
