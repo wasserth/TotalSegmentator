@@ -6,7 +6,8 @@ import argparse
 import json
 import pickle
 from pprint import pprint
-import pkg_resources
+import importlib.resources
+import importlib.metadata
 import xgboost as xgb
 
 import nibabel as nib
@@ -44,7 +45,7 @@ def get_modality(img: nib.Nifti1Image):
     features = get_features(img)  # 5s for big ct image
     # print(f"features took: {time.time() - st:.2f}s")
 
-    classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/modality_classifiers_2025_02_24.json')
+    classifier_path = str(importlib.resources.files('totalsegmentator') / 'resources/modality_classifiers_2025_02_24.json')
     clfs = {}
     for fold in range(5):  # assuming 5 folds
         clf = xgb.XGBClassifier()
@@ -90,7 +91,7 @@ def get_modality_from_rois(img: nib.Nifti1Image):
         features.append(stats[organ]["intensity"])
     # print(f"TS took: {time.time() - st:.2f}s")
 
-    classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/modality_classifiers_normalized_2025_02_24.json')
+    classifier_path = str(importlib.resources.files('totalsegmentator') / 'resources/modality_classifiers_normalized_2025_02_24.json')
     clfs = {}
     for fold in range(5):  # assuming 5 folds
         clf = xgb.XGBClassifier()

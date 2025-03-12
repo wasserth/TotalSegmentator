@@ -1,5 +1,6 @@
 ## Master
 * make `totalseg_get_modality` work with normalized intensities (images which do not have original HU values anymore)
+* replace pkg_resources for python 3.12 compatibility
 
 
 ## Release 2.7.0

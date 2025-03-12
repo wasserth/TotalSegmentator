@@ -6,7 +6,8 @@ import argparse
 import json
 import pickle
 from pprint import pprint
-import pkg_resources
+import importlib.resources
+import importlib.metadata
 
 import nibabel as nib
 import numpy as np
@@ -89,7 +90,7 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
 
     if model_file is None:
         # classifier_path = Path(__file__).parents[2] / "resources" / "contrast_phase_classifiers_2024_07_19.pkl"
-        classifier_path = pkg_resources.resource_filename('totalsegmentator', 'resources/contrast_phase_classifiers_2024_07_19.pkl')
+        classifier_path = str(importlib.resources.files('totalsegmentator') / 'resources/contrast_phase_classifiers_2024_07_19.pkl')
     else: 
         # manually set model file
         classifier_path = model_file

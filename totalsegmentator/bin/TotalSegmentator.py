@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-from pkg_resources import require
+import importlib.metadata
 from pathlib import Path
 import re
 from totalsegmentator.python_api import totalsegmentator, validate_device_type_api
@@ -136,7 +136,7 @@ def main():
                         help="Only needed for unittesting.",
                         default=0)
 
-    parser.add_argument('--version', action='version', version=require("TotalSegmentator")[0].version)
+    parser.add_argument('--version', action='version', version=importlib.metadata.version("TotalSegmentator"))
 
     args = parser.parse_args()
 

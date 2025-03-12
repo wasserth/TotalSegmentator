@@ -5,7 +5,8 @@ import json
 import string
 import time
 from pathlib import Path
-import pkg_resources
+import importlib.metadata
+import importlib.resources
 import platform
 
 import requests
@@ -184,8 +185,8 @@ def get_config():
 
 def get_version():
     try:
-        return pkg_resources.get_distribution("TotalSegmentator").version
-    except pkg_resources.DistributionNotFound:
+        return importlib.metadata.version("TotalSegmentator")
+    except importlib.metadata.PackageNotFoundError:
         return "unknown"
 
 
