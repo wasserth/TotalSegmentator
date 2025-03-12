@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10"]  # save action minutes; not relevant: for open source unlimited minutes
+        python-version: ["3.12"]  # save action minutes; not relevant: for open source unlimited minutes
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{matrix.python-version}}
