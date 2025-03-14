@@ -27,7 +27,7 @@ setup(name='TotalSegmentator',
              "resources/ct_brain_atlas_1mm.nii.gz"]
             },
         install_requires=[
-            'torch>=2.1.2,<2.6.0',  # <2.6.0 can be removed when using new nnunet version with this change: https://github.com/MIC-DKFZ/nnUNet/pull/2683
+            'torch>=2.1.2',  # torch < 2.6.0 required if using nnunetv2 < 2.6.0
             'numpy<2',
             'SimpleITK',
             'nibabel>=2.3.0',
