@@ -71,8 +71,12 @@ def main():
 
     # Will use 3mm model instead of 6mm model to crop to the rois specified in this argument.
     # 3mm is slower but more accurate.
+    # LEGACY: use --robust_crop now
     parser.add_argument("-rsr", "--roi_subset_robust", type=str, nargs="+",
                         help="Like roi_subset but uses a slower but more robust model to find the rois.")
+
+    parser.add_argument("-rc", "--robust_crop", action="store_true", help="For cropping (which is required for several task) or roi_subset, use the more robust 3mm model instead of the default and faster 6mm model.",
+                        default=False)
 
     parser.add_argument("-s", "--statistics", action="store_true",
                         help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
@@ -146,7 +150,7 @@ def main():
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
                      args.device, args.license_number, not args.stats_include_incomplete,
                      args.no_derived_masks, args.v1_order, args.fastest, args.roi_subset_robust,
-                     "mean", args.remove_small_blobs)
+                     "mean", args.remove_small_blobs, False, args.robust_crop)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 * make `totalseg_get_modality` work with normalized intensities (images which do not have original HU values anymore)
 * replace pkg_resources for python 3.12 compatibility
 * remove torch < 2.6.0 requirement (fixed in nnU-Net)
+* add `--robust_crop`
 
 
 ## Release 2.7.0
