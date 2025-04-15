@@ -1,9 +1,13 @@
 ## Master
+
+
+## Release 2.8.0
 * make `totalseg_get_modality` work with normalized intensities (images which do not have original HU values anymore)
 * replace pkg_resources for python 3.12 compatibility
 * remove torch < 2.6.0 requirement (fixed in nnU-Net)
 * add `--robust_crop`
 * improved `tissue_types_mr` model
+* add mode `nearest` to ndimage.zoom to fix resampling [bug](https://github.com/wasserth/TotalSegmentator/issues/458)
 
 
 ## Release 2.7.0
