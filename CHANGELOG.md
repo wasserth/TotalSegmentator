@@ -7,7 +7,7 @@
 * remove torch < 2.6.0 requirement (fixed in nnU-Net)
 * add `--robust_crop`
 * improved `tissue_types_mr` model
-* add mode `nearest` to ndimage.zoom to fix resampling [bug](https://github.com/wasserth/TotalSegmentator/issues/458)
+* add mode `nearest` to ndimage.zoom to fix resampling [bug](https://github.com/wasserth/TotalSegmentator/issues/458) (thanks to @baderstine for spotting this bug)
 
 
 ## Release 2.7.0
