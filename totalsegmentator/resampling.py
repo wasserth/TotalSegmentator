@@ -34,7 +34,7 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
     Works for 2D and 3D and 4D images.
     """
     def _process_gradient(grad_idx):
-        return ndimage.zoom(img[:, :, :, grad_idx], zoom, order=order)
+        return ndimage.zoom(img[:, :, :, grad_idx], zoom, mode="nearest", order=order)
 
     dim = len(img.shape)
 
