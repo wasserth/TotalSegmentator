@@ -66,7 +66,7 @@ def main():
         "appendicular_bones": [304],
         "appendicular_bones_mr": [855],
         "tissue_types": [481],
-        "tissue_types_mr": [854],
+        "tissue_types_mr": [925],
         "tissue_4_types": [485],
         "vertebrae_body": [305],
         "face": [303],

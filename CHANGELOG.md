@@ -3,6 +3,7 @@
 * replace pkg_resources for python 3.12 compatibility
 * remove torch < 2.6.0 requirement (fixed in nnU-Net)
 * add `--robust_crop`
+* improved `tissue_types_mr` model
 
 
 ## Release 2.7.0
