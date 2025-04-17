@@ -55,7 +55,7 @@ def pi_time_to_phase(pi_time: float) -> str:
         # return "delayed", 0.7  # not enough good training data for this
 
 
-def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
+def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None, quiet: bool = False):
 
     organs = ["liver", "pancreas", "urinary_bladder", "gallbladder",
               "heart", "aorta", "inferior_vena_cava", "portal_vein_and_splenic_vein",
@@ -66,22 +66,29 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None):
                  "internal_jugular_vein_right", "internal_jugular_vein_left"]
 
     st = time.time()
+    if not quiet:
+        print(f"Running TotalSegmentator...")
     seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
                                       roi_subset=None, statistics_exclude_masks_at_border=False,
                                       quiet=True, stats_aggregation="median")
-    # print(f"ts took: {time.time()-st:.2f}s")
+    if not quiet:
+        print(f"  took: {time.time()-st:.2f}s")
     
     if stats["brain"]["volume"] > 100:
-        # print("Brain in image, therefore also running headneck model.")
+        if not quiet:
+            print(f"Running headneck model...")
         st = time.time()
         seg_img_hn, stats_hn = totalsegmentator(ct_img, None, ml=True, fast=False, statistics=True, 
                                                 task="headneck_bones_vessels",
                                                 roi_subset=None, statistics_exclude_masks_at_border=False,
                                                 quiet=True, stats_aggregation="median")
-        # print(f"hn took: {time.time()-st:.2f}s")
+        if not quiet:
+            print(f"  took: {time.time()-st:.2f}s")
     else:
         stats_hn = {organ: {"intensity": 0.0} for organ in organs_hn}
 
+    if not quiet:
+        print("Predicting phase...")
     features = []
     for organ in organs:
         features.append(stats[organ]["intensity"])
@@ -145,7 +152,7 @@ def main():
 
     args = parser.parse_args()
 
-    res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file)
+    res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file, args.quiet)
 
     if not args.quiet:
         print("Result:")
