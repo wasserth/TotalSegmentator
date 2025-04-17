@@ -67,7 +67,7 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None, quie
 
     st = time.time()
     if not quiet:
-        print(f"Running TotalSegmentator...")
+        print("Running TotalSegmentator...")
     seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
                                       roi_subset=None, statistics_exclude_masks_at_border=False,
                                       quiet=True, stats_aggregation="median")
@@ -76,7 +76,7 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None, quie
     
     if stats["brain"]["volume"] > 100:
         if not quiet:
-            print(f"Running headneck model...")
+            print("Running headneck model...")
         st = time.time()
         seg_img_hn, stats_hn = totalsegmentator(ct_img, None, ml=True, fast=False, statistics=True, 
                                                 task="headneck_bones_vessels",
