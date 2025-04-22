@@ -43,6 +43,27 @@ def convert_device_to_cuda(device):
         return f"cuda:{device.split(':')[1]}"
 
 
+def select_device(device):
+    device = convert_device_to_cuda(device)
+
+    # available devices: gpu | cpu | mps | gpu:1, gpu:2, etc.
+    if device == "gpu": 
+        device = "cuda"
+    if device.startswith("cuda"): 
+        if device == "cuda": device = "cuda:0"
+        if not torch.cuda.is_available():
+            print("No GPU detected. Running on CPU. This can be very slow. The '--fast' or the `--roi_subset` option can help to reduce runtime.")
+            device = "cpu"
+        else:
+            device_id = int(device[5:])
+            if device_id < torch.cuda.device_count():
+                device = torch.device(device)
+            else:
+                print("Invalid GPU config, running on the CPU")
+                device = "cpu"
+    return device
+
+
 def show_license_info():
     status, message = has_valid_license_offline()
     if status == "missing_license":
@@ -97,31 +118,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     initial_num_threads = torch.get_num_threads()
 
     validate_device_type_api(device)
-    device = convert_device_to_cuda(device)
-
+    device = select_device(device)
+    if verbose: print(f"Using Device: {device}")
+    
     if output_type == "dicom":
         try:
             from rt_utils import RTStructBuilder
         except ImportError:
             raise ImportError("rt_utils is required for output_type='dicom'. Please install it with 'pip install rt_utils'.")
-
-    # available devices: gpu | cpu | mps | gpu:1, gpu:2, etc.
-    if device == "gpu": 
-        device = "cuda"
-    if device.startswith("cuda"): 
-        if device == "cuda": device = "cuda:0"
-        if not torch.cuda.is_available():
-            print("No GPU detected. Running on CPU. This can be very slow. The '--fast' or the `--roi_subset` option can help to reduce runtime.")
-            device = "cpu"
-        else:
-            device_id = int(device[5:])
-            if device_id < torch.cuda.device_count():
-                device = torch.device(device)
-            else:
-                print("Invalid GPU config, running on the CPU")
-                device = "cpu"
-    if verbose: print(f"Using Device: {device}")
-
 
     if not quiet:
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")

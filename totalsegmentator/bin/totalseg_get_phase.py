@@ -55,7 +55,8 @@ def pi_time_to_phase(pi_time: float) -> str:
         # return "delayed", 0.7  # not enough good training data for this
 
 
-def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None, quiet: bool = False):
+def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None, 
+                          quiet: bool = False, device: str = "gpu"):
 
     organs = ["liver", "pancreas", "urinary_bladder", "gallbladder",
               "heart", "aorta", "inferior_vena_cava", "portal_vein_and_splenic_vein",
@@ -70,7 +71,7 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None, quie
         print("Running TotalSegmentator...")
     seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
                                       roi_subset=None, statistics_exclude_masks_at_border=False,
-                                      quiet=True, stats_aggregation="median")
+                                      quiet=True, stats_aggregation="median", device=device)
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
     
@@ -146,13 +147,16 @@ def main():
     parser.add_argument("-m", metavar="filepath", dest="model_file",
                         help="path to classifier model",
                         type=lambda p: Path(p).absolute(), required=False, default=None)
+
+    parser.add_argument("-d",'--device', type=str, default="gpu",
+                        help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
     
     parser.add_argument("-q", dest="quiet", action="store_true",
                         help="Print no output to stdout", default=False)
 
     args = parser.parse_args()
 
-    res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file, args.quiet)
+    res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file, args.quiet, args.device)
 
     if not args.quiet:
         print("Result:")

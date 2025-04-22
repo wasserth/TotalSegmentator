@@ -65,7 +65,7 @@ def get_modality(img: nib.Nifti1Image):
 
 
 # use normalized intensities only within rois; slower but also works if HU values are normalized
-def get_modality_from_rois(img: nib.Nifti1Image):
+def get_modality_from_rois(img: nib.Nifti1Image, device: str = "gpu"):
     """
     Predict modality
     
@@ -84,7 +84,8 @@ def get_modality_from_rois(img: nib.Nifti1Image):
 
     seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, task="total_mr",
                                       roi_subset=None, statistics_exclude_masks_at_border=False,
-                                      quiet=True, stats_aggregation="median", statistics_normalized_intensities=True)
+                                      quiet=True, stats_aggregation="median", statistics_normalized_intensities=True,
+                                      device=device)
 
     features = []
     for organ in organs:
@@ -124,7 +125,10 @@ def main():
     parser.add_argument("-o", metavar="filepath", dest="output_file",
                         help="path to output json file",
                         type=lambda p: Path(p).absolute(), required=True)
-    
+
+    parser.add_argument("-d",'--device', type=str, default="gpu",
+                        help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
+        
     parser.add_argument("-q", dest="quiet", action="store_true",
                         help="Print no output to stdout", default=False)
 
@@ -135,7 +139,7 @@ def main():
     args = parser.parse_args()
 
     if args.normalized_intensities:
-        res = get_modality_from_rois(nib.load(args.input_file))
+        res = get_modality_from_rois(nib.load(args.input_file), args.device)
     else:
         res = get_modality(nib.load(args.input_file))
 
