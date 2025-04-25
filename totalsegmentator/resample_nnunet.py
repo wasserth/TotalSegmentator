@@ -74,7 +74,7 @@ def resample_patient(data, seg, original_spacing, target_spacing, order_data=3, 
         shape = np.array(data[0].shape)
     else:
         shape = np.array(seg[0].shape)
-    new_shape = np.round(((np.array(original_spacing) / np.array(target_spacing)).astype(float) * shape)).astype(int)
+    new_shape = np.round((np.array(original_spacing) / np.array(target_spacing)).astype(float) * shape).astype(int)
 
     if force_separate_z is not None:
         do_separate_z = force_separate_z
@@ -98,7 +98,7 @@ def resample_patient(data, seg, original_spacing, target_spacing, order_data=3, 
             # every axis has the spacing
             axis = (0, )
         elif len(axis) == 2:
-            print("WARNING: axis has len 2, axis: %s, spacing: %s, target_spacing: %s" % (str(axis), original_spacing, target_spacing))
+            print("WARNING: axis has len 2, axis: {}, spacing: {}, target_spacing: {}".format(str(axis), original_spacing, target_spacing))
             do_separate_z = False
         else:
             pass
