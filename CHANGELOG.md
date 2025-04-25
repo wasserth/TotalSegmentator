@@ -1,4 +1,5 @@
 ## Master
+* use `--higher_order_resampling` argument
 
 
 ## Release 2.8.0

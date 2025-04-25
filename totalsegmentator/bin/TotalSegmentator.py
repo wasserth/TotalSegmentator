@@ -78,6 +78,10 @@ def main():
     parser.add_argument("-rc", "--robust_crop", action="store_true", help="For cropping (which is required for several task) or roi_subset, use the more robust 3mm model instead of the default and faster 6mm model.",
                         default=False)
 
+    parser.add_argument("-ho", "--higher_order_resampling", action="store_true", 
+                        help="Use higher order resampling for segmentations. Results in smoother segmentations on high resolution images but uses more runtime + memory.",
+                        default=False)
+
     parser.add_argument("-s", "--statistics", action="store_true",
                         help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
                         default=False)
@@ -150,7 +154,7 @@ def main():
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
                      args.device, args.license_number, not args.stats_include_incomplete,
                      args.no_derived_masks, args.v1_order, args.fastest, args.roi_subset_robust,
-                     "mean", args.remove_small_blobs, False, args.robust_crop)
+                     "mean", args.remove_small_blobs, False, args.robust_crop, args.higher_order_resampling)
 
 
 if __name__ == "__main__":

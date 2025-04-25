@@ -76,7 +76,8 @@ def resample_img_cucim(img, zoom=0.5, order=0, nr_cpus=-1):
     return resampled_img
 
 
-def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.0):
+def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.0,
+                       order_data=3, order_seg=0):
     """
     Args:
         data: [x,y,z]
@@ -100,8 +101,9 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
         target_spacing = [target_spacing,] * 3
     target_spacing = np.array(target_spacing)
 
-    data = data.transpose((2, 0, 1))  # z is in front for nnUnet
-    data = data[None, ...]  # [1,z,x,y], nnunet requires a channel dimension
+    if data is not None:
+        data = data.transpose((2, 0, 1))  # z is in front for nnUnet
+        data = data[None, ...]  # [1,z,x,y], nnunet requires a channel dimension
     if mask is not None:
         mask = mask.transpose((2, 0, 1))
         mask = mask[None, ...]
@@ -112,10 +114,12 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
     # if anisotropy too big, then will resample z axis separately with order=0
     original_spacing = move_last_elem_to_front(original_spacing)
     target_spacing = move_last_elem_to_front(target_spacing)
-    data_res, mask_res = resample_patient(data, mask, original_spacing, target_spacing, force_separate_z=None)
+    data_res, mask_res = resample_patient(data, mask, original_spacing, target_spacing, 
+                                          force_separate_z=None, order_data=order_data, order_seg=order_seg)
 
-    data_res = data_res[0,...] # remove channel dimension
-    data_res = data_res.transpose((1, 2, 0)) # Move z to back
+    if data is not None:
+        data_res = data_res[0,...] # remove channel dimension
+        data_res = data_res.transpose((1, 2, 0)) # Move z to back
     if mask is not None:
         mask_res = mask_res[0,...]
         mask_res = mask_res.transpose((1, 2, 0))
@@ -196,7 +200,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     # spacing = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
 
     if nnunet_resample:
-        new_data, _ = resample_img_nnunet(data, None, img_spacing, new_spacing)
+        # new_data, _ = resample_img_nnunet(data, None, img_spacing, new_spacing, order_data=order, order_seg=order)
+        _, new_data = resample_img_nnunet(None, data, img_spacing, new_spacing, order_data=order, order_seg=order)
     else:
         if cupy_available and cucim_available:
             new_data = resample_img_cucim(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # gpu resampling

@@ -318,7 +318,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
-                         normalized_intensities=False):
+                         normalized_intensities=False, nnunet_resampling=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -624,9 +624,29 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if verbose: print(f"  back to original shape: {img_in_shape}")
             # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
             # by undo_canonical)
-            img_pred = change_spacing(img_pred, resample, img_in_shape,
-                                      order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
-                                      force_affine=img_in.affine)
+
+            # Advantage of nnunet_resampling: Will convert multilabel to one-hot and then high order 
+            # resampling (= smoother) is possible. Disadvantage: slower and uses a lot of memory if many labels.
+            # Ok if using with "roi_subset" because then only a few labels, otherwise infeasible runtime+memory.
+            if nnunet_resampling:
+                if roi_subset is not None:
+                    img_data_tmp = img_pred.get_fdata()
+                    img_data_tmp *= np.isin(img_data_tmp, list(label_map.keys()))
+                    img_pred = nib.Nifti1Image(img_data_tmp, img_pred.affine)
+            
+                # Order:
+                # 0: roughy and uneven
+                # 1: best (smoothest)
+                # 2: somehow more uneven again
+                # 3: identical to 2
+                img_pred = change_spacing(img_pred, resample, img_in_shape,
+                                          order=1, dtype=np.uint8, nr_cpus=nr_threads_resampling,
+                                          force_affine=img_in.affine, nnunet_resample=True)
+            else:
+                img_pred = change_spacing(img_pred, resample, img_in_shape,
+                                        order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
+                                        force_affine=img_in.affine)
+            
 
         if verbose: print("Undoing canonical...")
         img_pred = undo_canonical(img_pred, img_in_orig)
