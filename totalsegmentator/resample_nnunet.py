@@ -98,7 +98,7 @@ def resample_patient(data, seg, original_spacing, target_spacing, order_data=3, 
             # every axis has the spacing
             axis = (0, )
         elif len(axis) == 2:
-            print("WARNING: axis has len 2, axis: {}, spacing: {}, target_spacing: {}".format(str(axis), original_spacing, target_spacing))
+            print(f"WARNING: axis has len 2, axis: {str(axis)}, spacing: {original_spacing}, target_spacing: {target_spacing}")
             do_separate_z = False
         else:
             pass
