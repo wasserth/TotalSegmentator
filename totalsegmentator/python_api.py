@@ -164,6 +164,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             crop = None
         model = "3d_fullres"
         folds = [0]
+    # todo: add to download and preview
+    elif task == "total_highres_test":
+        task_id = 955
+        resample = [0.75, 0.75, 1.0]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop_addon = [30, 30, 30]
+        crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
+        model = "3d_fullres_high"
+        # model = "3d_fullres_high_bigPS"
+        folds = [0]
     elif task == "total_mr":
         if fast:
             task_id = 852

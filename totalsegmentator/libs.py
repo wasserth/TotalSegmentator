@@ -241,6 +241,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 552:
         weights_path = config_dir / "Dataset552_ventricle_parts_38subj"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset552_ventricle_parts_38subj.zip"
+    elif task_id == 955:
+        weights_path = config_dir / "Dataset955_TotalSegmentator_highres_part1_organs_110subj"
+        WEIGHTS_URL = "TODO"
                 
     # MR models
     elif task_id == 850:

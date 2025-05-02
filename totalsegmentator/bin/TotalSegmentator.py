@@ -62,7 +62,8 @@ def main():
                         "head_glands_cavities", "head_muscles", "headneck_bones_vessels", "headneck_muscles",
                         "brain_structures", "liver_vessels", "oculomotor_muscles",
                         "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules", "kidney_cysts", 
-                        "breasts", "ventricle_parts", "aortic_sinuses", "liver_segments", "liver_segments_mr"],
+                        "breasts", "ventricle_parts", "aortic_sinuses", "liver_segments", "liver_segments_mr",
+                        "total_highres_test"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 
