@@ -265,7 +265,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             folds = [0]
     elif task == "vertebrae_mr":
         task_id = 756
-        resample = None
+        resample = 1.5
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop = None
         model = "3d_fullres"

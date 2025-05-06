@@ -253,14 +253,21 @@ def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task
             scene.add(cont_actor)
 
 
+# Images are passed here before being resampled back to original space. Therefore
+# most of the image they are rather isotropic when being passed here. So we skip
+# doing a resampling here.
 def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
                  task_name="total"):
-    subject_width = 330
-    # subject_height = 700
-    nr_cols = 10
 
-    window_size = (1800, 400)
-    # window_size = (1800, 1200)  # if we need higher res image of single class
+    nr_cols = len(roi_groups[task_name]) + 1
+
+    ct_img_shape = ct_img.shape
+    ct_img_zooms = ct_img.header.get_zooms()
+
+    subject_width = int(ct_img_shape[0] * ct_img_zooms[0] * 0.9)
+    subject_height = int(ct_img_shape[2] * ct_img_zooms[2] * 0.9)
+
+    window_size = (subject_width * nr_cols, subject_height)
 
     scene = window.Scene()
     showm = window.ShowManager(scene=scene, size=window_size, reset_camera=False)
@@ -295,10 +302,11 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
 
     scene.projection(proj_type="parallel")
     scene.reset_camera_tight(margin_factor=1.02)  # need to do reset_camera=False in record for this to work in
+    reset_camera = False
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     window.record(scene=scene, size=window_size,
-                  out_path=output_path, reset_camera=False)  # , reset_camera=False
+                  out_path=output_path, reset_camera=reset_camera)
     scene.clear()
 
 
