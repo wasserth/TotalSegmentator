@@ -142,7 +142,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
     crop_addon = [3, 3, 3]  # default value
-    cascade = False
+    cascade = None
     
     if task == "total":
         if fast:
@@ -651,7 +651,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
                             normalized_intensities=statistics_normalized_intensities, 
                             nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities,
-                            cascade=organ_seg)
+                            cascade=cascade)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:

@@ -437,11 +437,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 return img_out, img_in_orig, None
                 
             img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32, verbose=verbose)
-            print(f"img_in.shape: {img_in.shape}")
             if cascade:
-                print("Cropping cascade")
                 cascade, _ = crop_to_mask(cascade, crop_mask_img, addon=crop_addon, dtype=np.uint8, verbose=verbose)
-                print(f"cascade.shape: {cascade.shape}")
             if not quiet:
                 print(f"  cropping from {crop_mask_img.shape} to {img_in.shape}")
 
