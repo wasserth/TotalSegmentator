@@ -1,5 +1,7 @@
 ## Master
 * use `--higher_order_resampling` argument
+* add `--save_probabilities` argument: save softmax probabilites. Very experimental. Requires python skills.
+* bugfix in task `brain_structures`: resampling was in different order than model. resulted in slower runtime and higher RAM usage and slightly reduced accuracy.
 
 
 ## Release 2.8.0
