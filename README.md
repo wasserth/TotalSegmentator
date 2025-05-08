@@ -103,6 +103,8 @@ Confused by all the structures and tasks? Check [this](https://backend.totalsegm
 
 The mapping from label ID to class name can be found [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/map_to_binary.py).
 
+If you have a nnU-Net model for some structures not supported yet, you can contribute it. This will enable all TotalSegmentator users to easily use it and at the same time increase the reach of your research. Contact jakob.wasserthal@usb.ch.
+
 
 ### Advanced settings
 * `--device`: Choose `cpu` or `gpu` or `gpu:X (e.g., gpu:1 -> cuda:1)`
