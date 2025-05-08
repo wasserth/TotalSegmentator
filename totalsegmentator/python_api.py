@@ -93,7 +93,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
                      v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean",
                      remove_small_blobs=False, statistics_normalized_intensities=False, 
-                     robust_crop=False, higher_order_resampling=False):
+                     robust_crop=False, higher_order_resampling=False, save_probabilities=None):
     """
     Run TotalSegmentator from within python.
 
@@ -644,7 +644,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             no_derived_masks=no_derived_masks, v1_order=v1_order,
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
                             normalized_intensities=statistics_normalized_intensities, 
-                            nnunet_resampling=higher_order_resampling)
+                            nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:

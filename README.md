@@ -147,6 +147,13 @@ After acquiring a license number for the non-open tasks you can set it with the 
 totalseg_set_license -l aca_12345678910
 ```
 
+You can output the softmax probabilities. This will give you a `.npz` file you can load with numpy. The geometry
+might not be identical to your input image. There will also be a `.pkl` output file with geometry
+information. This does not work well for the `total` task since this is based on multiple models.
+```
+TotalSegmentator -i ct.nii.gz -o seg -ta lung_nodules --save_probabilities probs.npz
+```
+
 If you do not have internet access on the machine you want to run TotalSegmentator on:
 1. Install TotalSegmentator [and set up the license] on a machine with internet.
 2. Run TotalSegmentator for one subject on this machine. This will download the weights and save them to `~/.totalsegmentator`.

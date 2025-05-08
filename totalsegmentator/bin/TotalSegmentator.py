@@ -130,6 +130,9 @@ def main():
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
 
+    parser.add_argument("-sp", "--save_probabilities", help="Save probabilities to this path. Only for experienced users. Python skills required.",
+                        type=lambda p: Path(p).absolute())
+
     parser.add_argument("-v", "--verbose", action="store_true", help="Show more intermediate output",
                         default=False)
 
@@ -155,7 +158,8 @@ def main():
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
                      args.device, args.license_number, not args.stats_include_incomplete,
                      args.no_derived_masks, args.v1_order, args.fastest, args.roi_subset_robust,
-                     "mean", args.remove_small_blobs, False, args.robust_crop, args.higher_order_resampling)
+                     "mean", args.remove_small_blobs, False, args.robust_crop, args.higher_order_resampling,
+                     args.save_probabilities)
 
 
 if __name__ == "__main__":
