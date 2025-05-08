@@ -484,7 +484,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         show_license_info()
     elif task == "brain_structures":
         task_id = 409
-        resample = [1.0, 0.5, 0.5]
+        resample = [0.5, 0.5, 1.0]
         trainer = "nnUNetTrainer_DASegOrd0"
         crop = ["brain"]
         crop_addon = [10, 10, 10]
