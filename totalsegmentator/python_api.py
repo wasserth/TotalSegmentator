@@ -142,7 +142,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
     crop_addon = [3, 3, 3]  # default value
-
+    cascade = False
+    
     if task == "total":
         if fast:
             task_id = 297
@@ -166,13 +167,17 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
     # todo: add to download and preview
     elif task == "total_highres_test":
-        task_id = 955
-        resample = [0.75, 0.75, 1.0]
+        # task_id = 955
+        task_id = 956
+        # resample = [0.75, 0.75, 1.0]
+        resample = [0.78125, 0.78125, 1.0]
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop_addon = [30, 30, 30]
         crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
-        model = "3d_fullres_high"
+        # model = "3d_fullres_high"
         # model = "3d_fullres_high_bigPS"
+        model = "3d_fullres"
+        cascade = True
         folds = [0]
     elif task == "total_mr":
         if fast:
@@ -578,7 +583,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
     # (for "fast" on GPU it makes no big difference, but on CPU it can help even for "fast")
-    if crop is not None or roi_subset is not None:
+    if crop is not None or roi_subset is not None or cascade:
 
         body_seg = False  # can not be used together with body_seg
         st = time.time()
@@ -616,6 +621,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop_mask = nib.Nifti1Image(crop_mask, organ_seg.affine)
         crop_addon = [20,20,20]
         crop = crop_mask
+        cascade = crop_mask if cascade else None
         if verbose: print(f"Rough organ segmentation generated in {time.time()-st:.2f}s")
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
@@ -644,7 +650,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             no_derived_masks=no_derived_masks, v1_order=v1_order,
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
                             normalized_intensities=statistics_normalized_intensities, 
-                            nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities)
+                            nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities,
+                            cascade=organ_seg)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:

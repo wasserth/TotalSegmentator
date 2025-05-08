@@ -327,10 +327,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, nnunet_resampling=False,
-                         save_probabilities=None):
+                         save_probabilities=None, cascade=None):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
+    cascade: nibabel image or None
     """
     if not isinstance(file_in, Nifti1Image):
         file_in = Path(file_in)
@@ -435,12 +436,18 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
                 return img_out, img_in_orig, None
                 
-            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32,
-                                      verbose=verbose)
+            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32, verbose=verbose)
+            print(f"img_in.shape: {img_in.shape}")
+            if cascade:
+                print("Cropping cascade")
+                cascade, _ = crop_to_mask(cascade, crop_mask_img, addon=crop_addon, dtype=np.uint8, verbose=verbose)
+                print(f"cascade.shape: {cascade.shape}")
             if not quiet:
                 print(f"  cropping from {crop_mask_img.shape} to {img_in.shape}")
 
         img_in = as_closest_canonical(img_in)
+        if cascade:
+            cascade = as_closest_canonical(cascade)
 
         if resample is not None:
             if not quiet: print("Resampling...")
@@ -449,6 +456,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_in_zooms = img_in.header.get_zooms()
             img_in_rsp = change_spacing(img_in, resample,
                                         order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
+            if cascade:
+                cascade = change_spacing(cascade, resample,
+                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
             if verbose:
                 print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
             if not quiet: print(f"  Resampled in {time.time() - st:.2f}s")
@@ -456,6 +466,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_in_rsp = img_in
 
         nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
+
+        if cascade:
+            nib.save(cascade, tmp_dir / "s01_0001.nii.gz")
 
         # todo important: change
         nr_voxels_thr = 512*512*900
@@ -467,6 +480,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         do_triple_split = np.prod(ss) > nr_voxels_thr and ss[2] > 200 and multimodel
         if force_split:
             do_triple_split = True
+        if cascade:
+            do_triple_split = False
         if do_triple_split:
             if not quiet: print("Splitting into subparts...")
             img_parts = ["s01", "s02", "s03"]
