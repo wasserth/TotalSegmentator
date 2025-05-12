@@ -63,7 +63,7 @@ def main():
                         "brain_structures", "liver_vessels", "oculomotor_muscles",
                         "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules", "kidney_cysts", 
                         "breasts", "ventricle_parts", "aortic_sinuses", "liver_segments", "liver_segments_mr",
-                        "total_highres_test"],
+                        "total_highres_test", "craniofacial_structures"],
                         help="Select which model to use. This determines what is predicted.",
                         default="total")
 

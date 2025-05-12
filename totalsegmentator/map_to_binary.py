@@ -652,6 +652,15 @@ class_map = {
         7: "liver_segment_7",
         8: "liver_segment_8"
     },
+    "craniofacial_structures": {
+        1: "mandible",
+        2: "teeth_lower",
+        3: "skull",
+        4: "head",
+        5: "sinus_maxillary",
+        6: "sinus_frontal",
+        7: "teeth_upper"
+    },
     "test": {
         1: "carpal"
     }

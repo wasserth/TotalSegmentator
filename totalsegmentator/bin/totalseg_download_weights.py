@@ -61,7 +61,8 @@ def main():
         "ventricle_parts": [552],
         "liver_segments": [570],
         "liver_segments_mr": [576],
-
+        "craniofacial_structures": [115],
+        
         "heartchambers_highres": [301],
         "appendicular_bones": [304],
         "appendicular_bones_mr": [855],
