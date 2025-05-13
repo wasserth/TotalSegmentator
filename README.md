@@ -76,7 +76,7 @@ Openly available for any usage (Apache-2.0 license):
 * **breasts**: breast
 * **liver_segments**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (Couinaud segments)
 * **liver_segments_mr**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (for MR images) (Couinaud segments)
-
+* **craniofacial_structures**: mandible, teeth_lower, skull, head, sinus_maxillary, sinus_frontal, teeth_upper
 *: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
 Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch):
