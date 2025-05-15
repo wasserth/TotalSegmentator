@@ -249,8 +249,9 @@ pip install SimpleITK==2.0.2
 Alternatively you can try
 ```
 fslorient -copysform2qform input_file
-fslreorient2std input_file output_file
+[fslreorient2std input_file output_file]
 ```
+or use [this python command](https://github.com/MIC-DKFZ/nnDetection/issues/24#issuecomment-2627684467).
 
 **Bad segmentations**
 When you get bad segmentation results check the following:
