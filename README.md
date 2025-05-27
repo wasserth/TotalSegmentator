@@ -105,6 +105,8 @@ The mapping from label ID to class name can be found [here](https://github.com/w
 
 If you have a nnU-Net model for some structures not supported yet, you can contribute it. This will enable all TotalSegmentator users to easily use it and at the same time increase the reach of your work by more people citing your paper. Contact jakob.wasserthal@usb.ch.
 
+Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiologists to support some of the data annotations.
+
 
 ### Advanced settings
 * `--device`: Choose `cpu` or `gpu` or `gpu:X (e.g., gpu:1 -> cuda:1)`
