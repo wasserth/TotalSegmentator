@@ -247,6 +247,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 956:
         weights_path = config_dir / "Dataset956_TotalSegmentator_highres_part1_organs_cascade_110subj"
         WEIGHTS_URL = "TODO"
+    elif task_id == 957:
+        weights_path = config_dir / "Dataset957_TotalSegmentator_highres_part1_organs_cropBody_127subj"
+        WEIGHTS_URL = "TODO"
                 
     # MR models
     elif task_id == 850:

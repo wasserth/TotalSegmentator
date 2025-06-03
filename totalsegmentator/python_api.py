@@ -166,18 +166,32 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
     # todo: add to download and preview
+    # elif task == "total_highres_test":
+    #     # task_id = 955
+    #     task_id = 956
+    #     # resample = [0.75, 0.75, 1.0]
+    #     resample = [0.78125, 0.78125, 1.0]
+    #     trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+    #     crop_addon = [30, 30, 30]
+    #     crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
+    #     # model = "3d_fullres_high"
+    #     # model = "3d_fullres_high_bigPS"
+    #     model = "3d_fullres"
+    #     cascade = True
+    #     folds = [0]
     elif task == "total_highres_test":
-        # task_id = 955
-        task_id = 956
+        task_id = 957
         # resample = [0.75, 0.75, 1.0]
-        resample = [0.78125, 0.78125, 1.0]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop_addon = [30, 30, 30]
-        crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
-        # model = "3d_fullres_high"
-        # model = "3d_fullres_high_bigPS"
+        resample = [0.765625, 0.779296875, 1.0]
+        trainer = "nnUNetTrainerNoMirroring"
+        # crop_addon = [30, 30, 30]
+        # crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
+        crop = None
         model = "3d_fullres"
-        cascade = True
+        # model = "3d_fullres_high"
+        # model = "3d_fullres_high_filt8"
+        # model = "3d_fullres_high_bigPS"
+        cascade = False
         folds = [0]
     elif task == "total_mr":
         if fast:
