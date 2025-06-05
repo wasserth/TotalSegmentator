@@ -193,7 +193,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     dir_in = str(dir_in)
     dir_out = str(dir_out)
 
-    # if task_id == 957:
+    # if task_id in [291, 292, 293, 294, 295, 957]:
     #     plans = "nnUNetResEncUNetLPlans_8"
 
     model_folder = get_output_folder(task_id, trainer, plans, model)

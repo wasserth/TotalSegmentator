@@ -162,6 +162,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             task_id = [291, 292, 293, 294, 295]
             resample = 1.5
             trainer = "nnUNetTrainerNoMirroring"
+            # trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
             crop = None
         model = "3d_fullres"
         folds = [0]
@@ -181,15 +182,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     #     folds = [0]
     elif task == "total_highres_test":
         task_id = 957
-        # resample = [0.75, 0.75, 1.0]
-        resample = [0.765625, 0.779296875, 1.0]
+        resample = [0.75, 0.75, 1.0]
         trainer = "nnUNetTrainerNoMirroring"
         # crop_addon = [30, 30, 30]
         # crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
         crop = None
-        model = "3d_fullres"
-        # model = "3d_fullres_high"
-        # model = "3d_fullres_high_filt8"
+        model = "3d_fullres_high"
         # model = "3d_fullres_high_bigPS"
         cascade = False
         folds = [0]
