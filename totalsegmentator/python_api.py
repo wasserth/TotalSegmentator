@@ -418,6 +418,17 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task craniofacial_structures does not work with option --fast")
+    # This model only segments within T4-L4. In training only labels in this region were annotated. Therefore,
+    # I do not have to crop to this region, but model automatically only predicts in this region.
+    elif task == "abdominal_muscles":
+        task_id = 952
+        resample = [0.75, 0.75, 1]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = ["body_trunc"]
+        crop_addon = [5, 5, 5]
+        model = "3d_fullres_high"
+        folds = [0]
+        if fast: raise ValueError("task abdominal_muscles does not work with option --fast")
 
         
     # Commercial models
@@ -624,6 +635,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 crop_spacing = 6.0
         crop_task = "total_mr" if task.endswith("_mr") else "total"
         crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"
+        if "body_trunc" in crop or "body_extremities" in crop:
+            crop_model_task = 300
+            crop_spacing = 6.0
+            crop_trainer = "nnUNetTrainer"
+            crop_task = "body"
         download_pretrained_weights(crop_model_task)
         
         organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],

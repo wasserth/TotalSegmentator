@@ -62,6 +62,7 @@ def main():
         "liver_segments": [570],
         "liver_segments_mr": [576],
         "craniofacial_structures": [115],
+        "abdominal_muscles": [952],
         
         "heartchambers_highres": [301],
         "appendicular_bones": [304],

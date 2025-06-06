@@ -239,6 +239,15 @@ roi_groups = {
         ["skull"],
         ["mandible", "teeth_lower", "sinus_maxillary", "sinus_frontal", "teeth_upper"],  
     ],
+    "abdominal_muscles": [
+        ["pectoralis_major_right", "pectoralis_major_left", "rectus_abdominis_right", 
+         "rectus_abdominis_left", "serratus_anterior_right", "serratus_anterior_left"], 
+        ["latissimus_dorsi_right", "latissimus_dorsi_left", 
+         "trapezius_right", "trapezius_left", "external_oblique_right", "external_oblique_left"], 
+        ["internal_oblique_right", "internal_oblique_left", "erector_spinae_right", "erector_spinae_left", 
+         "transversospinalis_right", "transversospinalis_left", "psoas_major_right", "psoas_major_left", 
+         "quadratus_lumborum_right", "quadratus_lumborum_left"]
+    ],
     "test": [
         ["ulna"]
     ]

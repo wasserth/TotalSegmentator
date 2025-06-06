@@ -661,6 +661,30 @@ class_map = {
         6: "sinus_frontal",
         7: "teeth_upper"
     },
+    "abdominal_muscles": {
+        1: "pectoralis_major_right",
+        2: "pectoralis_major_left",
+        3: "rectus_abdominis_right",
+        4: "rectus_abdominis_left",
+        5: "serratus_anterior_right",
+        6: "serratus_anterior_left",
+        7: "latissimus_dorsi_right",
+        8: "latissimus_dorsi_left",
+        9: "trapezius_right",
+        10: "trapezius_left",
+        11: "external_oblique_right",
+        12: "external_oblique_left",
+        13: "internal_oblique_right",
+        14: "internal_oblique_left",
+        15: "erector_spinae_right",
+        16: "erector_spinae_left",
+        17: "transversospinalis_right",
+        18: "transversospinalis_left",
+        19: "psoas_major_right",
+        20: "psoas_major_left",
+        21: "quadratus_lumborum_right",
+        22: "quadratus_lumborum_left"
+    },
     "test": {
         1: "carpal"
     }
