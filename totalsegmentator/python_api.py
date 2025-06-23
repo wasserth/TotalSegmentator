@@ -173,7 +173,7 @@ def totalsegmentator(
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
-    task: Task = get_task(task)
+    task: Task = get_task(task, fast, fastest, quiet)
 
     crop_path = output if crop_path is None else crop_path
 
@@ -219,7 +219,7 @@ def totalsegmentator(
 
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
     # (for "fast" on GPU it makes no big difference, but on CPU it can help even for "fast")
-    if task.crop is not None or roi_subset is not None or cascade:
+    if task.crop is not None or roi_subset is not None or task.cascade:
 
         body_seg = False  # can not be used together with body_seg
         st = time.time()
@@ -243,7 +243,9 @@ def totalsegmentator(
             if task.task.endswith("_mr")
             else "nnUNetTrainer_4000epochs_NoMirroring"
         )
-        if crop is not None and ("body_trunc" in crop or "body_extremities" in crop):
+        if crop is not None and (
+            "body_trunc" in crop or "body_extremities" in task.crop
+        ):
             crop_model_task = 300
             crop_spacing = 6.0
             crop_trainer = "nnUNetTrainer"
@@ -285,13 +287,13 @@ def totalsegmentator(
         for roi in roi_subset_crop:
             crop_mask[organ_seg_data == class_map_inv[roi]] = 1
         crop_mask = nib.Nifti1Image(crop_mask, organ_seg.affine)
-        crop_addon = [20,20,20]
-        crop = crop_mask
-        cascade = crop_mask if task.cascade else None
+        task.crop_addon = [20, 20, 20]
+        task.crop = crop_mask
+        task.cascade = crop_mask if task.cascade else None
         if verbose: print(f"Rough organ segmentation generated in {time.time()-st:.2f}s")
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
-    if crop is None and body_seg:
+    if task.crop is None and body_seg:
         download_pretrained_weights(300)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
@@ -313,7 +315,7 @@ def totalsegmentator(
             save_binary=True,
             nr_threads_resampling=nr_thr_resamp,
             nr_threads_saving=1,
-            crop_addon=crop_addon,
+            crop_addon=task.crop_addon,
             output_type=output_type,
             statistics=False,
             quiet=quiet,
@@ -322,7 +324,7 @@ def totalsegmentator(
             skip_saving=False,
             device=device,
         )
-        crop = body_seg
+        task.crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
     seg_img, ct_img, stats = nnUNet_predict_image(
@@ -335,15 +337,15 @@ def totalsegmentator(
         tta=False,
         multilabel_image=ml,
         resample=task.resample,
-        crop=crop,
+        crop=task.crop,
         crop_path=crop_path,
-        task_name=task,
+        task_name=task.task,
         nora_tag=nora_tag,
         preview=preview,
         nr_threads_resampling=nr_thr_resamp,
         nr_threads_saving=nr_thr_saving,
         force_split=force_split,
-        crop_addon=crop_addon,
+        crop_addon=task.crop_addon,
         roi_subset=roi_subset,
         output_type=output_type,
         statistics=statistics_fast,
@@ -360,7 +362,7 @@ def totalsegmentator(
         normalized_intensities=statistics_normalized_intensities,
         nnunet_resampling=higher_order_resampling,
         save_probabilities=save_probabilities,
-        cascade=cascade,
+        cascade=task.cascade,
     )
     seg = seg_img.get_fdata().astype(np.uint8)
 
