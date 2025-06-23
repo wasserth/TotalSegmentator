@@ -20,7 +20,7 @@ classifiers = [
     "Operating System :: MacOS"
 ]
 dependencies = [
-    "torch>=2.1.2",  # torch < 2.6.0 required if using nnunetv2 < 2.6.0
+    "torch>=2.1.2", # torch < 2.6.0 required if using nnunetv2 < 2.6.0
     "numpy<2",
     "SimpleITK",
     "nibabel>=2.3.0",
@@ -30,7 +30,11 @@ dependencies = [
     'requests==2.27.1;python_version<"3.10"',
     'requests;python_version>="3.10"',
     "dicom2nifti",
-    "pyarrow"
+    "pyarrow",
+    "pytest>=8.4.1",
+    "psutil>=7.0.0",
+    "p-tqdm>=1.4.2",
+    "surface-distance>=0.1",
 ]
 
 [project.optional-dependencies]
@@ -144,3 +148,6 @@ skip-magic-trailing-comma = false
 
 # Like Black, automatically detect the appropriate line ending.
 line-ending = "auto"
+
+[dependency-groups]
+dev = []
