@@ -7,7 +7,7 @@ name = "TotalSegmentator"
 version = "2.9.0"
 description = "Robust segmentation of 104 classes in CT images."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {text = "Apache 2.0"}
 authors = [
     {name = "Jakob Wasserthal", email = "jakob.wasserthal@usb.ch"}
@@ -36,6 +36,7 @@ dependencies = [
     "p-tqdm>=1.4.2",
     "surface-distance>=0.1",
     "blosc2>=2.5.1",
+    "pydicom>=3",
 ]
 
 [project.optional-dependencies]
