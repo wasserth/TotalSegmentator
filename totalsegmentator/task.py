@@ -108,7 +108,7 @@ class Task:
     task_id: int = field(default=None)
     resample: Union[float, list[float]] = field(default=1.5)
     trainer: str = field(default="nnUNetTrainer")
-    crop: list[str] = field(default=None)
+    crop: Union[list[str], None] = field(default=None)
     model: str = field(default="3d_fullres")
     cascade: bool = field(default=None)
     folds: list[int] = field(default_factory=lambda: [0])
