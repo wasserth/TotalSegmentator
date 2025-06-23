@@ -35,6 +35,7 @@ dependencies = [
     "psutil>=7.0.0",
     "p-tqdm>=1.4.2",
     "surface-distance>=0.1",
+    "blosc2>=2.5.1",
 ]
 
 [project.optional-dependencies]

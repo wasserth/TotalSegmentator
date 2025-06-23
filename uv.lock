@@ -45,7 +45,7 @@ resolution-markers = [
 ]
 dependencies = [
     { name = "batchgenerators", marker = "python_full_version >= '3.10'" },
-    { name = "blosc2", marker = "python_full_version >= '3.10'" },
+    { name = "blosc2", version = "3.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "connected-components-3d", marker = "python_full_version >= '3.10'" },
     { name = "numpy", marker = "python_full_version >= '3.10'" },
     { name = "scikit-image", version = "0.25.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
@@ -98,8 +98,58 @@ sdist = { url = "https://files.pythonhosted.org/packages/c6/de/18e980df1ae1a1a74
 
 [[package]]
 name = "blosc2"
+version = "2.5.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+dependencies = [
+    { name = "msgpack", marker = "python_full_version < '3.10'" },
+    { name = "ndindex", marker = "python_full_version < '3.10'" },
+    { name = "numpy", marker = "python_full_version < '3.10'" },
+    { name = "py-cpuinfo", marker = "python_full_version < '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f7/60/5bc8601f8ffcd5d8787b346898de8a0b454d031c3e158e3bbc312003984e/blosc2-2.5.1.tar.gz", hash = "sha256:47d5df50e7286edf81e629ece35f87f13f55c13c5e8545832188c420c75d1659", size = 4676483 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b2/75/4511f1f9cea0aad8c5464736720a9de1e762e60e359cde6b7d69186e97b0/blosc2-2.5.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:c861262b7fe317c1614a9b59b6c9edf409532b4a6aaf5b2f4ad0d79c6f800b57", size = 4417584 },
+    { url = "https://files.pythonhosted.org/packages/c0/8a/c7ce322f90750eb7fdde0948e5c6b9c47ed03e276f2481b701f9d2360d3a/blosc2-2.5.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:8f35b5d69a7a41e9d5054297d2540c25f8af5ea3c62e4a80ca7359292d783c04", size = 3471945 },
+    { url = "https://files.pythonhosted.org/packages/32/72/32bbaf583eea51b27c91ddb145de017d970ec0a835ec70e966925b00c9cf/blosc2-2.5.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:546fa39f397dd54b13d7c42a4f890afaf16c70fe478712070942d464c440ce03", size = 4210024 },
+    { url = "https://files.pythonhosted.org/packages/a5/8c/d4ab68a40004f93c1fd20dceb1899e54477425542bffa1f5ebab2647956f/blosc2-2.5.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5455af77e7e94159bb4966cae554f232ca2d52bb80cd3f878ecef39cf569da2a", size = 4374211 },
+    { url = "https://files.pythonhosted.org/packages/16/7d/c81b1caa0aded9f3e63c4dbab7a334681ded12ad80a18de34e7199939df5/blosc2-2.5.1-cp310-cp310-musllinux_1_1_x86_64.whl", hash = "sha256:b4dc4f595bf95c350c50bb77a8749cdd08a5dc2bdf3bdb18983d49a52d60b595", size = 4467025 },
+    { url = "https://files.pythonhosted.org/packages/9b/cd/56150f9367516f039b62923a5cb243771e2a1f440de0232b195f6e79f1ab/blosc2-2.5.1-cp310-cp310-win32.whl", hash = "sha256:873483bd5c6afb8d139039180ee57b74373232e87b032cb80389fd8bb883ea8e", size = 1948573 },
+    { url = "https://files.pythonhosted.org/packages/67/ff/0cf994e434b5ae860546cfe6941c58bdcdc27ed10009caffac9a29b66651/blosc2-2.5.1-cp310-cp310-win_amd64.whl", hash = "sha256:d5a7ef00b82fbca069e949335f9c92ce7cbe2039a9fa2e2bd4f5f418043d6262", size = 2343858 },
+    { url = "https://files.pythonhosted.org/packages/c3/f4/25a82b7191109beb0fc20c580f35667a2e86087ebac2f6a9e50469f618d7/blosc2-2.5.1-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:da826d42d616f8a939f27e1501b40e764fded66bc80177eeaefcebdbf3b3afb8", size = 4419509 },
+    { url = "https://files.pythonhosted.org/packages/03/50/b1d2bad6b9f77c3540b511b5dee77f213c8b179e942bbc34f5c410b92ede/blosc2-2.5.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ae2e0c5dc8561a6b17842ee4320b49621434c20e622c9e9f5c67c9c6eb3b06a3", size = 3472870 },
+    { url = "https://files.pythonhosted.org/packages/17/26/d34d521fc60b164738d986144642c58675bcdc344cc9fbb8c08e58bb11ab/blosc2-2.5.1-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:af3cab9c12a4364c643266ee7d9583b526c0f484a291d72ec6efb09ea7ffbbf9", size = 4208463 },
+    { url = "https://files.pythonhosted.org/packages/2a/00/35169a0765044be69a3bfb73441ff8b9ea05d92d4660be622bbf90c46913/blosc2-2.5.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:22f03a723130cf07e4309fe34b1360c868f4376e862f8ff664eb40d019fdd3f6", size = 4371942 },
+    { url = "https://files.pythonhosted.org/packages/8f/9b/923e29af25f4c34b5b331829a87bc8397b18e8a361551230b70e6b0a785a/blosc2-2.5.1-cp311-cp311-musllinux_1_1_x86_64.whl", hash = "sha256:0fd109eef815ea1e50fde4f676388aa2f3bb5543502d125fb63f16ec7a014464", size = 4468495 },
+    { url = "https://files.pythonhosted.org/packages/9f/39/21d6d1dc00d765f5c1671f8c0b323096f0dde360e8e1d8005160679b4831/blosc2-2.5.1-cp311-cp311-win32.whl", hash = "sha256:1a3edc3256bad04d3db30c9de7eac3a820f96e741fc754cdabb6a9991e5c37e8", size = 1948151 },
+    { url = "https://files.pythonhosted.org/packages/d1/48/7d4be4e57342ec60c05d11478257b235cf33dc96c31049fb47e6ae98b652/blosc2-2.5.1-cp311-cp311-win_amd64.whl", hash = "sha256:e7499e277c13334d54f84e74f429f32341f99f7b978deaf9a7c2e963904cb48c", size = 2344506 },
+    { url = "https://files.pythonhosted.org/packages/5b/4d/00824754a3b5b5c6ffb92a043b5122be6202039fc76a25fa913fe0d4e235/blosc2-2.5.1-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:ab849d3adaeb035f2f16cf495cff1792b28d58dfb3de21b9459ee355c6bb8df3", size = 4414447 },
+    { url = "https://files.pythonhosted.org/packages/9b/21/9a887c9fdc46a5cfe4aa250eac4ed4f18213bf1996e113c1d1c662e31678/blosc2-2.5.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:dd66e60dafcc93d4c1f815d726d76f9fb067ecc9106a6c661010e709135c79ce", size = 3470989 },
+    { url = "https://files.pythonhosted.org/packages/92/8d/b13ea33ea4d5da344d1170638b2d7b3cc63a921b97f9a8184128fd78aacd/blosc2-2.5.1-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:eb5fcd1775b3884d9825aa51fb45253f45cfa21c77f4135fad5dc5db710c2a34", size = 4190080 },
+    { url = "https://files.pythonhosted.org/packages/33/bf/52c8385aa71ed8c42296016d48c80dcc41dd005e951a83970bde4e6d4ff2/blosc2-2.5.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:19f79071a336fcf1eda01cd0171291a4ab82b16cf9a15d2b4d26c010146f13b5", size = 4355536 },
+    { url = "https://files.pythonhosted.org/packages/78/21/f1815f711f98c04eba5116d55041b2f64e17e8a9437d7c832d1168ed2fa8/blosc2-2.5.1-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:956a63231f1b448803e9b4bc3e704ea424c89fc14418d99093472c74f19c19e1", size = 4448554 },
+    { url = "https://files.pythonhosted.org/packages/a1/e6/e05e987db27986ca8bdaaf442b94212e116a1eb937a8cd35250548704aa6/blosc2-2.5.1-cp312-cp312-win32.whl", hash = "sha256:5856e57e0e81f9018f1a12e803b9f768fa5533175092d72d165ac60069c7d2ab", size = 1940131 },
+    { url = "https://files.pythonhosted.org/packages/29/80/871cf959e5e0d3d2a177caf7b9f4b714850a50c33bb5cedd86a95c6e05b2/blosc2-2.5.1-cp312-cp312-win_amd64.whl", hash = "sha256:585d780c5e85f251dec72b75a47666e4a261dbfe1d228769bca545e9fe07f480", size = 2338243 },
+    { url = "https://files.pythonhosted.org/packages/c9/4b/799dcec670a1d511d11a40e919241c26a273cfd2305a4f3fe7444c39758a/blosc2-2.5.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:0cb9a6ac1abc466c12bdc90052f17545512de8f854e672a1ea4d2b40292323f5", size = 4417609 },
+    { url = "https://files.pythonhosted.org/packages/07/cb/e97de5b2c40b6c2106d5b68c1d823707a16386fc08781a6c7c609000866e/blosc2-2.5.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:3def4650faa1db43143d821228ef58797108cc95d6698c4b1581909cc2b149ca", size = 3471971 },
+    { url = "https://files.pythonhosted.org/packages/65/c4/0c9740c4f5efb7adde87ed8b5af88c171a3ec007df912cc2fbfb2736963d/blosc2-2.5.1-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:cf6efecc1a22da26c73ff5c60d0dc086db1e7edcceb6b360dd193cda893bef28", size = 4209984 },
+    { url = "https://files.pythonhosted.org/packages/a6/e2/a1367ad174006e5625a1c8ef1b526fc135adc6f546bfc46264ac8e508ebe/blosc2-2.5.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b473472b977b770aab3bf20d0feeee84ecd5bb8b15a675287e090ce818c1cd40", size = 4374484 },
+    { url = "https://files.pythonhosted.org/packages/62/88/a185ab2a50b930011396b601ae8e82e83dfa24597e5f1fd91f483f178a94/blosc2-2.5.1-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:7afe59d35d93bf8da7db8de43f4d8aef277514de43953c1e5e416ca839b9023a", size = 4466917 },
+    { url = "https://files.pythonhosted.org/packages/b5/7c/6a7d46a6094a100e1bdfba7e1df584971efea00732006fdddcf0320d4846/blosc2-2.5.1-cp39-cp39-win32.whl", hash = "sha256:4315ae8d467fe91efa0dbe22004e967008f5fe021ebb3945518f5213d7c4511f", size = 1948282 },
+    { url = "https://files.pythonhosted.org/packages/5c/c1/f80115c66a181e2ff18027818d3e1f37a3d5133b350b3e25189e53e28cd8/blosc2-2.5.1-cp39-cp39-win_amd64.whl", hash = "sha256:73eb5e569a91fbe67f7dd78efe6a1ca9a54afff2c847db5dfa675bfd6a424f60", size = 2343778 },
+]
+
+[[package]]
+name = "blosc2"
 version = "3.4.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12'",
+    "python_full_version == '3.11.*'",
+    "python_full_version == '3.10.*'",
+]
 dependencies = [
     { name = "msgpack", marker = "python_full_version >= '3.10'" },
     { name = "ndindex", marker = "python_full_version >= '3.10'" },
@@ -1496,7 +1546,7 @@ dependencies = [
     { name = "acvl-utils", version = "0.2.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "batchgenerators", marker = "python_full_version >= '3.10'" },
     { name = "batchgeneratorsv2", marker = "python_full_version >= '3.10'" },
-    { name = "blosc2", marker = "python_full_version >= '3.10'" },
+    { name = "blosc2", version = "3.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "dynamic-network-architectures", version = "0.4.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "einops", marker = "python_full_version >= '3.10'" },
     { name = "graphviz", marker = "python_full_version >= '3.10'" },
@@ -2893,6 +2943,8 @@ name = "totalsegmentator"
 version = "2.9.0"
 source = { editable = "." }
 dependencies = [
+    { name = "blosc2", version = "2.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "blosc2", version = "3.4.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "dicom2nifti", version = "2.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "dicom2nifti", version = "2.6.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "nibabel" },
@@ -2914,6 +2966,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "blosc2", specifier = ">=2.5.1" },
     { name = "dicom2nifti" },
     { name = "nibabel", specifier = ">=2.3.0" },
     { name = "nnunetv2", specifier = ">=2.2.1" },
