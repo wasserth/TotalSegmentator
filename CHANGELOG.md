@@ -1,5 +1,9 @@
 ## Master
-* add `abdominal_muscles`task
+
+
+## Release 2.10.0
+* add `abdominal_muscles` task
+
 
 ## Release 2.9.0
 * use `--higher_order_resampling` argument
