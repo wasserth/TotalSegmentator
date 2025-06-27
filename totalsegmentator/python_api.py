@@ -8,8 +8,10 @@ import numpy as np
 import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 import torch
-from totalsegmentator.statistics import get_basic_statistics, get_radiomics_features_for_entire_dir
-from totalsegmentator.libs import download_pretrained_weights
+from totalsegmentator.statistics import (
+    get_basic_statistics,
+    get_radiomics_features_for_entire_dir,
+)
 from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_prediction_counter
 from totalsegmentator.config import send_usage_stats, set_license_number
 from totalsegmentator.config import get_config_key, set_config_key
@@ -50,7 +52,8 @@ def convert_device_to_cuda(device: str) -> str:
     Convert device to CUDA format.
 
     Args:
-        device (str): Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.
+        device (str): Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an
+            integer representing the GPU device ID.
 
     Returns:
         str: Device type in CUDA format.
@@ -189,12 +192,6 @@ def totalsegmentator(
     else:
         statistics_fast = False
 
-    if isinstance(task.task_id, list):
-        for tid in task.task_id:
-            download_pretrained_weights(tid)
-    else:
-        download_pretrained_weights(task.task_id)
-
     # For MR always run 3mm model for roi_subset, because 6mm too bad results
     #  (runtime for 3mm still very good for MR)
     if task.task.endswith("_mr") and roi_subset is not None:
@@ -226,45 +223,34 @@ def totalsegmentator(
         if not quiet: print("Generating rough segmentation for cropping...")
         if robust_rs or robust_crop:
             print("  (Using more robust (but slower) 3mm model for cropping.)")
-            crop_model_task = 852 if task.task.endswith("_mr") else 297
-            crop_spacing = 3.0
+            if task.task.endswith("_mr"):
+                crop_task = get_task("total_mr", True, False)
+            else:
+                crop_task = get_task("total", True, False)
         else:
             # For MR always run 3mm model for cropping, because 6mm too bad results
             #  (runtime for 3mm still very good for MR)
             if task.task.endswith("_mr"):
-                crop_model_task = 852
-                crop_spacing = 3.0
+                crop_task = get_task("total_mr", True, False)
             else:
-                crop_model_task = 298
-                crop_spacing = 6.0
-        crop_task = "total_mr" if task.task.endswith("_mr") else "total"
-        crop_trainer = (
-            "nnUNetTrainer_2000epochs_NoMirroring"
-            if task.task.endswith("_mr")
-            else "nnUNetTrainer_4000epochs_NoMirroring"
-        )
-        if crop is not None and (
-            "body_trunc" in crop or "body_extremities" in task.crop
+                crop_task = get_task("total", True, False)
+        if task.crop is not None and (
+            "body_trunc" in task.crop or "body_extremities" in task.crop
         ):
-            crop_model_task = 300
-            crop_spacing = 6.0
-            crop_trainer = "nnUNetTrainer"
-            crop_task = "body"
-        download_pretrained_weights(crop_model_task)
+            crop_task = get_task("body", True, False)
 
         organ_seg, _, _ = nnUNet_predict_image(
             input,
             None,
-            crop_model_task,
+            crop_task.task_id,
             model="3d_fullres",
             folds=[0],
-            trainer=crop_trainer,
+            trainer=crop_task.trainer,
             tta=False,
             multilabel_image=True,
-            resample=crop_spacing,
             crop=None,
             crop_path=None,
-            task_name=crop_task,
+            task_name=crop_task.task,
             nora_tag="None",
             preview=False,
             save_binary=False,
@@ -279,7 +265,7 @@ def totalsegmentator(
             skip_saving=False,
             device=device,
         )
-        class_map_inv = {v: k for k, v in class_map[crop_task].items()}
+        class_map_inv = {v: k for k, v in class_map[crop_task.task].items()}
         crop_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
         organ_seg_data = organ_seg.get_fdata()
         # roi_subset_crop = [map_to_total[roi] if roi in map_to_total else roi for roi in roi_subset]
@@ -294,13 +280,13 @@ def totalsegmentator(
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
     if task.crop is None and body_seg:
-        download_pretrained_weights(300)
+        crop_task = get_task("body", True, False)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
         body_seg, _, _ = nnUNet_predict_image(
             input,
             None,
-            300,
+            crop_task.task_id,
             model="3d_fullres",
             folds=[0],
             trainer="nnUNetTrainer",
@@ -309,7 +295,7 @@ def totalsegmentator(
             resample=6.0,
             crop=None,
             crop_path=None,
-            task_name="body",
+            task_name=crop_task.task,
             nora_tag="None",
             preview=False,
             save_binary=True,
@@ -370,9 +356,18 @@ def totalsegmentator(
         # this can result in error if running multiple processes in parallel because all try to write the same file.
         # Trying to fix with lock from portalocker did not work. Network drive seems to not support this locking.
         config = increase_prediction_counter()
-        send_usage_stats(config, {"task": task, "fast": fast, "preview": preview,
-                                "multilabel": ml, "roi_subset": roi_subset,
-                                "statistics": statistics, "radiomics": radiomics})
+        send_usage_stats(
+            config,
+            {
+                "task": task.task,
+                "fast": fast,
+                "preview": preview,
+                "multilabel": ml,
+                "roi_subset": roi_subset,
+                "statistics": statistics,
+                "radiomics": radiomics,
+            },
+        )
     except Exception as e:
         # print(f"Error while sending usage stats: {e}")
         pass
@@ -385,11 +380,17 @@ def totalsegmentator(
             stats_file = stats_dir / "statistics.json"
         else:
             stats_file = None
-        stats = get_basic_statistics(seg, ct_img, stats_file, 
-                                     quiet, task, statistics_exclude_masks_at_border,
-                                     roi_subset, 
-                                     metric=stats_aggregation,
-                                     normalized_intensities=statistics_normalized_intensities)
+        stats = get_basic_statistics(
+            seg,
+            ct_img,
+            stats_file,
+            quiet,
+            task,
+            statistics_exclude_masks_at_border,
+            roi_subset,
+            metric=stats_aggregation,
+            normalized_intensities=statistics_normalized_intensities,
+        )
         # get_radiomics_features_for_entire_dir(input, output, output / "statistics_radiomics.json")
         if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
@@ -407,7 +408,9 @@ def totalsegmentator(
                 nib.save(input, input_path)
             else:
                 input_path = input
-            get_radiomics_features_for_entire_dir(input_path, output, stats_dir / "statistics_radiomics.json")
+            get_radiomics_features_for_entire_dir(
+                input_path, output, stats_dir / "statistics_radiomics.json"
+            )
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
     # Restore initial torch settings
