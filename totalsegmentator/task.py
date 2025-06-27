@@ -1,9 +1,18 @@
 import sys
+import os
 import textwrap
 from typing import Union
-from totalsegmentator.config import has_valid_license_offline
 from dataclasses import dataclass, field
 
+from totalsegmentator.config import has_valid_license_offline, get_weights_dir
+from totalsegmentator.libs import (
+    old_model_cleanup,
+    download_url_and_unpack,
+    download_model_with_license_and_unpack,
+)
+
+
+WEIGHTS_URL = "https://github.com/wasserth/TotalSegmentator/releases/download"
 TASKS_FAST_SUPPORT = ["total", "total_mr", "body", "body_mr"]
 TASKS_FASTEST_SUPPORT = ["total", "total_mr"]
 TASKS_FAST_IS_6MM = ["body", "body_mr"]
@@ -73,34 +82,182 @@ TASK_TO_ID = {
     "aortic_sinuses": 920,
 }
 
-
-def show_license_info() -> None:
-    """
-    Show license info for commercial models.
-    """
-    status, message = has_valid_license_offline()
-    if status == "missing_license":
-        # textwarp needed to remove the indentation of the multiline string
-        print(
-            textwrap.dedent(
-                """\
-              In contrast to the other tasks this task is not openly available.
-              It requires a license. For non-commercial usage a free license can be
-              acquired here:
-              https://backend.totalsegmentator.com/license-academic/
-
-              For commercial usage contact: jakob.wasserthal@usb.ch
-              """
-            )
-        )
-        sys.exit(1)
-    elif status == "invalid_license":
-        print(message)
-        sys.exit(1)
-    elif status == "missing_config_file":
-        print(message)
-        sys.exit(1)
-
+TASK_WEIGHTS = {
+    291: {
+        "path": "Dataset291_TotalSegmentator_part1_organs_1559subj",
+        "url": "v2.0.0-weights/Dataset291_TotalSegmentator_part1_organs_1559subj.zip",
+    },
+    292: {
+        "path": "Dataset292_TotalSegmentator_part2_vertebrae_1532subj",
+        "url": "v2.0.0-weights/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip",
+    },
+    293: {
+        "path": "Dataset293_TotalSegmentator_part3_cardiac_1559subj",
+        "url": "v2.0.0-weights/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip",
+    },
+    294: {
+        "path": "Dataset294_TotalSegmentator_part4_muscles_1559subj",
+        "url": "v2.0.0-weights/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip",
+    },
+    295: {
+        "path": "Dataset295_TotalSegmentator_part5_ribs_1559subj",
+        "url": "v2.0.0-weights/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip",
+    },
+    297: {
+        "path": "Dataset297_TotalSegmentator_total_3mm_1559subj",
+        "url": "v2.0.0-weights/Dataset297_TotalSegmentator_total_3mm_1559subj.zip",
+    },
+    298: {
+        "path": "Dataset298_TotalSegmentator_total_6mm_1559subj",
+        "url": "v2.0.0-weights/Dataset298_TotalSegmentator_total_6mm_1559subj.zip",
+    },
+    299: {
+        "path": "Dataset299_body_1559subj",
+        "url": "v2.0.0-weights/Dataset299_body_1559subj.zip",
+    },
+    300: {
+        "path": "Dataset300_body_6mm_1559subj",
+        "url": "v2.0.0-weights/Dataset300_body_6mm_1559subj.zip",
+    },
+    775: {
+        "path": "Dataset775_head_glands_cavities_492subj",
+        "url": "v2.3.0-weights/Dataset775_head_glands_cavities_492subj.zip",
+    },
+    776: {
+        "path": "Dataset776_headneck_bones_vessels_492subj",
+        "url": "v2.3.0-weights/Dataset776_headneck_bones_vessels_492subj.zip",
+    },
+    777: {
+        "path": "Dataset777_head_muscles_492subj",
+        "url": "v2.3.0-weights/Dataset777_head_muscles_492subj.zip",
+    },
+    778: {
+        "path": "Dataset778_headneck_muscles_part1_492subj",
+        "url": "v2.3.0-weights/Dataset778_headneck_muscles_part1_492subj.zip",
+    },
+    779: {
+        "path": "Dataset779_headneck_muscles_part2_492subj",
+        "url": "v2.3.0-weights/Dataset779_headneck_muscles_part2_492subj.zip",
+    },
+    351: {
+        "path": "Dataset351_oculomotor_muscles_18subj",
+        "url": "v2.4.0-weights/Dataset351_oculomotor_muscles_18subj.zip",
+    },
+    789: {
+        "path": "Dataset789_kidney_cyst_501subj",
+        "url": "v2.5.0-weights/Dataset789_kidney_cyst_501subj.zip",
+    },
+    527: {
+        "path": "Dataset527_breasts_1559subj",
+        "url": "v2.5.0-weights/Dataset527_breasts_1559subj.zip",
+    },
+    552: {
+        "path": "Dataset552_ventricle_parts_38subj",
+        "url": "v2.5.0-weights/Dataset552_ventricle_parts_38subj.zip",
+    },
+    955: {
+        "path": "Dataset955_TotalSegmentator_highres_part1_organs_110subj",
+        "url": "TODO",
+    },
+    956: {
+        "path": "Dataset956_TotalSegmentator_highres_part1_organs_cascade_110subj",
+        "url": "TODO",
+    },
+    957: {
+        "path": "Dataset957_TotalSegmentator_highres_part1_organs_cropBody_127subj",
+        "url": "TODO",
+    },
+    850: {
+        "path": "Dataset850_TotalSegMRI_part1_organs_1088subj",
+        "url": "v2.5.0-weights/Dataset850_TotalSegMRI_part1_organs_1088subj.zip",
+    },
+    851: {
+        "path": "Dataset851_TotalSegMRI_part2_muscles_1088subj",
+        "url": "v2.5.0-weights/Dataset851_TotalSegMRI_part2_muscles_1088subj.zip",
+    },
+    852: {
+        "path": "Dataset852_TotalSegMRI_total_3mm_1088subj",
+        "url": "v2.5.0-weights/Dataset852_TotalSegMRI_total_3mm_1088subj.zip",
+    },
+    853: {
+        "path": "Dataset853_TotalSegMRI_total_6mm_1088subj",
+        "url": "v2.5.0-weights/Dataset853_TotalSegMRI_total_6mm_1088subj.zip",
+    },
+    597: {
+        "path": "Dataset597_mri_body_139subj",
+        "url": "v2.5.0-weights/Dataset597_mri_body_139subj.zip",
+    },
+    598: {
+        "path": "Dataset598_mri_body_6mm_139subj",
+        "url": "v2.5.0-weights/Dataset598_mri_body_6mm_139subj.zip",
+    },
+    756: {
+        "path": "Dataset756_mri_vertebrae_1076subj",
+        "url": "v2.5.0-weights/Dataset756_mri_vertebrae_1076subj.zip",
+    },
+    258: {
+        "path": "Dataset258_lung_vessels_248subj",
+        "url": "v2.0.0-weights/Dataset258_lung_vessels_248subj.zip",
+    },
+    200: {
+        "path": "Task200_covid_challenge",
+        "url": "TODO",
+    },
+    201: {
+        "path": "Task201_covid",
+        "url": "TODO",
+    },
+    150: {
+        "path": "Dataset150_icb_v0",
+        "url": "v2.0.0-weights/Dataset150_icb_v0.zip",
+    },
+    260: {
+        "path": "Dataset260_hip_implant_71subj",
+        "url": "v2.0.0-weights/Dataset260_hip_implant_71subj.zip",
+    },
+    315: {
+        "path": "Dataset315_thoraxCT",
+        "url": "v2.0.0-weights/Dataset315_thoraxCT.zip",
+    },
+    8: {
+        "path": "Dataset008_HepaticVessel",
+        "url": "v2.4.0-weights/Dataset008_HepaticVessel.zip",
+    },
+    913: {
+        "path": "Dataset913_lung_nodules",
+        "url": "v2.5.0-weights/Dataset913_lung_nodules.zip",
+    },
+    570: {
+        "path": "Dataset570_ct_liver_segments",
+        "url": "v2.5.0-weights/Dataset570_ct_liver_segments.zip",
+    },
+    576: {
+        "path": "Dataset576_mri_liver_segments_120subj",
+        "url": "v2.5.0-weights/Dataset576_mri_liver_segments_120subj.zip",
+    },
+    115: {
+        "path": "Dataset115_mandible",
+        "url": "v2.5.0-weights/Dataset115_mandible.zip",
+    },
+    952: {
+        "path": "Dataset952_abdominal_muscles_167subj",
+        "url": "v2.5.0-weights/Dataset952_abdominal_muscles_167subj.zip",
+    },
+    # Commercial models
+    304: {"path": "Dataset304_appendicular_bones_ext_1559subj"},
+    855: {"path": "Dataset855_TotalSegMRI_appendicular_bones_1088subj"},
+    301: {"path": "Dataset301_heart_highres_1559subj"},
+    303: {"path": "Dataset303_face_1559subj"},
+    481: {"path": "Dataset481_tissue_1559subj"},
+    485: {"path": "Dataset485_tissue_4types_1559subj"},
+    305: {"path": "Dataset305_vertebrae_discs_1559subj"},
+    925: {"path": "Dataset925_MRI_tissue_subset_903subj"},
+    856: {"path": "Dataset856_TotalSegMRI_face_1088subj"},
+    409: {"path": "Dataset409_neuro_550subj"},
+    857: {"path": "Dataset857_TotalSegMRI_thigh_shoulder_1088subj"},
+    507: {"path": "Dataset507_coronary_arteries_cm_nativ_400subj"},
+    920: {"path": "Dataset920_aortic_sinuses_cm_nativ_400subj"},
+}
 
 @dataclass
 class Task:
@@ -120,6 +277,36 @@ class Task:
 
         if self.task in TASKS_COMMERCIAL:
             show_license_info()
+
+    def download_weights(self):
+        config_dir = get_weights_dir()
+        config_dir.mkdir(exist_ok=True, parents=True)
+
+        if self.task_id not in TASK_WEIGHTS:
+            raise ValueError(f"Task {self.task_id} not found.")
+        self.weights_path = config_dir / TASK_WEIGHTS[self.task_id]["path"]
+
+        if not os.path.exists(self.weights_path):
+            old_model_cleanup(config_dir)
+            if self.task in TASKS_COMMERCIAL:
+                print(
+                    f"Downloading weights for commercial task {self.task_id}..."
+                )
+                download_model_with_license_and_unpack(self.task, config_dir)
+                return
+            if "url" not in TASK_WEIGHTS[self.task_id]:
+                raise ValueError(
+                    f"Task {self.task_id} is commercial and automatic download is not supported."
+                )
+            elif TASK_WEIGHTS[self.task_id]["url"] == "TODO":
+                raise ValueError(
+                    f"Task {self.task_id} weights not available yet."
+                )
+            self.weights_url = (
+                f"{WEIGHTS_URL}/{TASK_WEIGHTS[self.task_id]['url']}"
+            )
+            print(f"Downloading weights for task {self.task_id}...")
+            download_url_and_unpack(self.weights_url, config_dir)
 
     def check_fast(self, fast: bool, fastest: bool, quiet: bool):
         if not self.supports_fast and fast:
@@ -149,7 +336,35 @@ class Task:
                 )
 
 
-def get_task(task: str, fast: bool, fastest: bool, quiet: bool) -> Task:
+def show_license_info() -> None:
+    """
+    Show license info for commercial models.
+    """
+    status, message = has_valid_license_offline()
+    if status == "missing_license":
+        # textwarp needed to remove the indentation of the multiline string
+        print(
+            textwrap.dedent(
+                """\
+              In contrast to the other tasks this task is not openly available.
+              It requires a license. For non-commercial usage a free license can be
+              acquired here:
+              https://backend.totalsegmentator.com/license-academic/
+
+              For commercial usage contact: jakob.wasserthal@usb.ch
+              """
+            )
+        )
+        sys.exit(1)
+    elif status == "invalid_license":
+        print(message)
+        sys.exit(1)
+    elif status == "missing_config_file":
+        print(message)
+        sys.exit(1)
+
+
+def get_task(task: str, fast: bool, fastest: bool, quiet: bool = True) -> Task:
     task_id = TASK_TO_ID.get(task)
     if task_id is None:
         raise ValueError(f"Unknown task: {task}")
@@ -547,4 +762,5 @@ def get_task(task: str, fast: bool, fastest: bool, quiet: bool) -> Task:
         )
 
     output_task.check_fast(fast, fastest, quiet)
+    output_task.download_weights()
     return output_task
