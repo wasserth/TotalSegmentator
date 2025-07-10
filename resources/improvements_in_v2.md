@@ -79,9 +79,9 @@ Still open problems:
 * increased number of classes from 104 to 117 (all classes of the `total` task)
 * removed heart chamber classes
 * improved label quality (see above) (better than before but probably still some errors)
+* more metadata per image (scanner, pathology, ...)
 * less intrusive defacing
 * No more corrupted files
-* more metadata per image (scanner, pathology, ...)
 * example code for converting to nnU-Net format
 * example code for evaluation
 * same subjects as in v1 for training and validation (we did not publish the additional subjects we used for TotalSegmentator v2 training)
