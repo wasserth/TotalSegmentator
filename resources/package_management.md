@@ -14,6 +14,7 @@ Increase version number in code and commit
 - CHANGELOG.md
 
 ```bash
+git add .
 git commit -m "increase version to 1.5.1"
 git push
 git tag -a v1.5.1 -m "version 1.5.1"
