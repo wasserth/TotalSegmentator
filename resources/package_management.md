@@ -2,8 +2,8 @@
 
 
 ## Run pre-commit checks
-```
-pre-commit run --all-file
+```bash
+pre-commit run --all-files
 ```
 
 
@@ -11,10 +11,10 @@ pre-commit run --all-file
 
 Increase version number in code and commit
 - setup.py
-- Changelog
+- CHANGELOG.md
 
-```
-comm "increase version to 1.5.1"
+```bash
+git commit -m "increase version to 1.5.1"
 git push
 git tag -a v1.5.1 -m "version 1.5.1"
 git push origin --tags
