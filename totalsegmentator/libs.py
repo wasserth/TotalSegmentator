@@ -17,7 +17,7 @@ import nibabel as nib
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, commercial_models
 from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_license, has_valid_license, has_valid_license_offline, get_version
-
+from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 """
 Helpers to suppress stdout prints from nnunet
 https://stackoverflow.com/questions/2828953/silence-the-stdout-of-a-function-in-python-without-trashing-sys-stdout-and-resto
@@ -434,20 +434,30 @@ def combine_masks(mask_dir, class_type):
     elif class_type == "body":
         masks = ["body_trunc", "body_extremities"]
 
-    ref_img = None
-    for mask in masks:
-        if (mask_dir / f"{mask}.nii.gz").exists():
-            ref_img = nib.load(mask_dir / f"{masks[0]}.nii.gz")
-        else:
-            raise ValueError(f"Could not find {mask_dir / mask}.nii.gz. Did you run TotalSegmentator successfully?")
+    if mask_dir.is_file():
+        img, label_map = load_multilabel_nifti(mask_dir)  # label_map: {id:name}
+        label_map_inv = {name: id for id, name in label_map.items()}
+        target_label_ids = [label_map_inv[mask_name] for mask_name in masks]
+        img_data = img.get_fdata()
+        combined = np.zeros(img_data.shape, dtype=np.uint8)
+        for label_id in target_label_ids:
+            combined[img_data == label_id] = 1
+        return nib.Nifti1Image(combined, img.affine)
+    else:
+        ref_img = None
+        for mask in masks:
+            if (mask_dir / f"{mask}.nii.gz").exists():
+                ref_img = nib.load(mask_dir / f"{masks[0]}.nii.gz")
+            else:
+                raise ValueError(f"Could not find {mask_dir / mask}.nii.gz. Did you run TotalSegmentator successfully?")
 
-    combined = np.zeros(ref_img.shape, dtype=np.uint8)
-    for idx, mask in enumerate(masks):
-        if (mask_dir / f"{mask}.nii.gz").exists():
-            img = nib.load(mask_dir / f"{mask}.nii.gz").get_fdata()
-            combined[img > 0.5] = 1
+        combined = np.zeros(ref_img.shape, dtype=np.uint8)
+        for idx, mask in enumerate(masks):
+            if (mask_dir / f"{mask}.nii.gz").exists():
+                img = nib.load(mask_dir / f"{mask}.nii.gz").get_fdata()
+                combined[img > 0.5] = 1
 
-    return nib.Nifti1Image(combined, ref_img.affine)
+        return nib.Nifti1Image(combined, ref_img.affine)
 
 
 def compress_nifti(file_in, file_out, dtype=np.int32, force_3d=True):
