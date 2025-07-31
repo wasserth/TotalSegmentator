@@ -1,4 +1,5 @@
 ## Master
+* add multilabel input support to `totalseg_combine_masks`
 
 
 ## Release 2.10.0
