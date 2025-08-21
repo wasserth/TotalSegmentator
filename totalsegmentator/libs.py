@@ -322,6 +322,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 952:
         weights_path = config_dir / "Dataset952_abdominal_muscles_167subj"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset952_abdominal_muscles_167subj.zip"
+    elif task_id == 113:
+        weights_path = config_dir / "Dataset113_ToothFairy3"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset113_ToothFairy3.zip"
 
     # Commercial models
     elif task_id == 304:

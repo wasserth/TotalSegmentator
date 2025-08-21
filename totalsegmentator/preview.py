@@ -248,6 +248,37 @@ roi_groups = {
          "transversospinalis_right", "transversospinalis_left", "psoas_major_right", "psoas_major_left", 
          "quadratus_lumborum_right", "quadratus_lumborum_left"]
     ],
+    "teeth": [
+        ["lower_jawbone", "upper_jawbone", "left_inferior_alveolar_canal", "right_inferior_alveolar_canal",
+         "left_maxillary_sinus", "right_maxillary_sinus", "pharynx", "left_mandibular_incisive_canal_fdi103",
+         "right_mandibular_incisive_canal_fdi104", "lingual_canal"],
+        ["upper_right_central_incisor_fdi11", "upper_right_lateral_incisor_fdi12", "upper_right_canine_fdi13",
+         "upper_right_first_premolar_fdi14", "upper_right_second_premolar_fdi15", "upper_right_first_molar_fdi16",
+         "upper_right_second_molar_fdi17", "upper_right_third_molar_fdi18",
+         "upper_left_central_incisor_fdi21", "upper_left_lateral_incisor_fdi22", "upper_left_canine_fdi23",
+         "upper_left_first_premolar_fdi24", "upper_left_second_premolar_fdi25", "upper_left_first_molar_fdi26",
+         "upper_left_second_molar_fdi27", "upper_left_third_molar_fdi28",
+         "lower_left_central_incisor_fdi31", "lower_left_lateral_incisor_fdi32", "lower_left_canine_fdi33",
+         "lower_left_first_premolar_fdi34", "lower_left_second_premolar_fdi35", "lower_left_first_molar_fdi36",
+         "lower_left_second_molar_fdi37", "lower_left_third_molar_fdi38",
+         "lower_right_central_incisor_fdi41", "lower_right_lateral_incisor_fdi42", "lower_right_canine_fdi43",
+         "lower_right_first_premolar_fdi44", "lower_right_second_premolar_fdi45", "lower_right_first_molar_fdi46",
+         "lower_right_second_molar_fdi47", "lower_right_third_molar_fdi48"],
+        ["bridge", "crown", "implant"],
+        ["upper_right_central_incisor_pulp_fdi111", "upper_right_lateral_incisor_pulp_fdi112", "upper_right_canine_pulp_fdi113",
+         "upper_right_first_premolar_pulp_fdi114", "upper_right_second_premolar_pulp_fdi115", "upper_right_first_molar_pulp_fdi116",
+         "upper_right_second_molar_pulp_fdi117", "upper_right_third_molar_pulp_fdi118",
+         "upper_left_central_incisor_pulp_fdi121", "upper_left_lateral_incisor_pulp_fdi122", "upper_left_canine_pulp_fdi123",
+         "upper_left_first_premolar_pulp_fdi124", "upper_left_second_premolar_pulp_fdi125", "upper_left_first_molar_pulp_fdi126",
+         "upper_left_second_molar_pulp_fdi127", "upper_left_third_molar_pulp_fdi128",
+         "lower_left_central_incisor_pulp_fdi131", "lower_left_lateral_incisor_pulp_fdi132", "lower_left_canine_pulp_fdi133",
+         "lower_left_first_premolar_pulp_fdi134", "lower_left_second_premolar_pulp_fdi135", "lower_left_first_molar_pulp_fdi136",
+         "lower_left_second_molar_pulp_fdi137", "lower_left_third_molar_pulp_fdi138",
+         "lower_right_central_incisor_pulp_fdi141", "lower_right_lateral_incisor_pulp_fdi142", "lower_right_canine_pulp_fdi143",
+         "lower_right_first_premolar_pulp_fdi144", "lower_right_second_premolar_pulp_fdi145", "lower_right_first_molar_pulp_fdi146",
+         "lower_right_second_molar_pulp_fdi147", "lower_right_third_molar_pulp_fdi148"]
+    ],
+    
     "test": [
         ["ulna"]
     ]

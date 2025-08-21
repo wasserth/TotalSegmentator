@@ -1,6 +1,8 @@
 ## Master
 * add multilabel input support to `totalseg_combine_masks`
 * remove numpy < 2 requirement
+* add `teeth` task
+* **IMPORTANT**: increase nnunetv2 requirement from >=2.2.1 to >=2.3.1 to support model trained on the latest nnunetv2 version (2.6.2) (i.e. `teeth` task)
 
 
 ## Release 2.10.0
