@@ -1,4 +1,7 @@
 ## Master
+
+
+## Release 2.11.0
 * add multilabel input support to `totalseg_combine_masks`
 * remove numpy < 2 requirement
 * add `teeth` task
