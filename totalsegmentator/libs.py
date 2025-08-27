@@ -413,8 +413,8 @@ def combine_masks(mask_dir, class_type):
     """
     Combine classes to masks
 
-    mask_dir: directory of totalsegmetator masks
-    class_type: ribs | vertebrae | vertebrae_ribs | lung | heart
+    mask_dir: directory of totalsegmetator masks or path to a multilabel nifti file
+    class_type: ribs | vertebrae | vertebrae_ribs | lung | heart | list of custom class names
 
     returns: nibabel image
     """
@@ -436,6 +436,8 @@ def combine_masks(mask_dir, class_type):
         masks = ["femur_left", "femur_right", "hip_left", "hip_right"]
     elif class_type == "body":
         masks = ["body_trunc", "body_extremities"]
+    else:
+        masks = class_type
 
     if mask_dir.is_file():
         img, label_map = load_multilabel_nifti(mask_dir)  # label_map: {id:name}

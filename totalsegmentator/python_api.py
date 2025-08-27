@@ -152,6 +152,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     crop_model = None
     crop_addon = [3, 3, 3]  # default value
     cascade = None
+    remove_outside = None
+    remove_outside_dilation = None
+    remove_mask = None
     
     if task == "total":
         if fast:
@@ -468,6 +471,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         trainer = "nnUNetTrainer"
         crop = ["heart"]
         crop_addon = [5, 5, 5]
+        remove_outside = ["heart", "aorta", "inferior_vena_cava"]
+        remove_outside_dilation = 10  # mm
+        robust_crop = True
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task heartchambers_highres does not work with option --fast")
@@ -592,7 +598,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
 
-    crop_path = output if crop_path is None else crop_path
+    crop_path = output.parent if crop_path is None else crop_path
 
     if isinstance(input, Nifti1Image) or input.suffix == ".nii" or input.suffixes == [".nii", ".gz"]:
         img_type = "nifti"
@@ -690,6 +696,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = crop_mask
         cascade = crop_mask if cascade else None
 
+        if remove_outside is not None:
+            remove_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
+            for roi in remove_outside:
+                remove_mask[organ_seg_data == class_map_inv[roi]] = 1
+            remove_mask = nib.Nifti1Image(remove_mask, organ_seg.affine)
+
         if verbose: print(f"Rough organ segmentation generated in {time.time()-st:.2f}s")
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
@@ -719,7 +731,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
                             normalized_intensities=statistics_normalized_intensities, 
                             nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities,
-                            cascade=cascade)
+                            cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:

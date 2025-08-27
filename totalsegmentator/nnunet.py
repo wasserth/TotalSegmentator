@@ -330,7 +330,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, nnunet_resampling=False,
-                         save_probabilities=None, cascade=None):
+                         save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -421,6 +421,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
         if crop is not None:
             if type(crop) is str:
+                # This seems to never being used. Probably can be removed, but keep it to not run
+                # into unexpected errors.
+                print("DEPRECATION WARNING: Using crop as string is deprecated. Please use a nibabel image instead.")
                 if crop == "lung" or crop == "pelvis":
                     crop_mask_img = combine_masks(crop_path, crop)
                 else:
@@ -702,6 +705,14 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         # Keep only voxel values corresponding to the roi_subset
         if roi_subset is not None:
             img_data *= np.isin(img_data, list(label_map.keys()))
+
+        # Apply remove_outside postprocessing
+        if remove_outside_dilation is not None:
+            if not quiet: print("Applying postprocessing: remove outside of crop mask...")
+            st = time.time()
+            remove_outside_dilation_vx = int(remove_outside_dilation / np.mean(img_in_orig.header.get_zooms()))
+            img_data = remove_outside_of_mask(img_data, remove_outside_mask.get_fdata(), addon=remove_outside_dilation_vx)
+            if not quiet: print(f"  Applied in {time.time() - st:.2f}s")
 
         # Prepare output nifti
         # Copy header to make output header exactly the same as input. But change dtype otherwise it will be
