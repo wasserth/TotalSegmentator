@@ -311,13 +311,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task pleural_pericard_effusion does not work with option --fast")
     elif task == "liver_vessels":
         task_id = 8
-        resample = None
+        resample = None  # Keep original resolution for Mac's good performance
         trainer = "nnUNetTrainer"
         crop = ["liver"]
-        crop_addon = [20, 20, 20]
+        crop_addon = [30, 30, 30]  # Increased from [20,20,20] for better context
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task liver_vessels does not work with option --fast")
+        
+        # Mac-specific optimization flags
+        use_mps = True  # Enable Apple Silicon GPU if available
     elif task == "head_glands_cavities":
         task_id = 775
         resample = [0.75, 0.75, 1.0]
