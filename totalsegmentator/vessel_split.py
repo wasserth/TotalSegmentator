@@ -1,24 +1,24 @@
 """
 Heuristic splitting of intrahepatic vessels into portal vein branches vs hepatic veins.
 
-Outputs in output_dir:
+Outputs (unless suppressed by caller removing files later):
   portal_vein_branches.nii.gz
   hepatic_veins.nii.gz
   liver_vessels_labeled.nii.gz  (1=portal, 2=hepatic)
-  (optional) liver_vessels_skeleton_labeled.nii.gz
+  (optional) liver_vessels_skeleton_labeled.nii.gz (debug only)
 
-QC dict returned (and can be recorded in metadata):
+QC dict returned:
   portal_voxels, hepatic_voxels, total_vessel_voxels,
   portal_fraction, hepatic_fraction,
   portal_seed_voxels, hepatic_seed_voxels, use_skeleton
 """
 
 from __future__ import annotations
+from pathlib import Path
+import warnings
 import numpy as np
 import nibabel as nib
-from pathlib import Path
 from scipy import ndimage
-import warnings
 
 try:
     from skimage.morphology import skeletonize_3d
@@ -27,7 +27,9 @@ except Exception:
     _HAVE_SKIMAGE = False
 
 
-def _load_mask(path: Path, binary=True):
+# ---------------- Utility ---------------- #
+
+def _load_mask(path: Path | None, binary=True):
     if path is None or not path.exists():
         return None, None
     img = nib.load(str(path))
@@ -40,6 +42,10 @@ def _load_mask(path: Path, binary=True):
 def _multi_source_geodesic(vessel_mask: np.ndarray,
                            portal_seed: np.ndarray,
                            hepatic_seed: np.ndarray) -> np.ndarray:
+    """
+    Simple 6-neighborhood BFS distance competition restricted to vessel_mask.
+    Returns label map with 1=portal, 2=hepatic (0=unlabeled).
+    """
     shape = vessel_mask.shape
     labels = np.zeros(shape, dtype=np.uint8)
 
@@ -98,10 +104,12 @@ def _multi_source_geodesic(vessel_mask: np.ndarray,
         elif dh < dp:
             labels[x,y,z] = 2
         else:
-            labels[x,y,z] = 1  # tie-breaker
+            labels[x,y,z] = 1  # tie-break (arbitrary)
 
     return labels
 
+
+# ---------------- Main Splitting ---------------- #
 
 def split_portal_hepatic(
     liver_vessels_path: Path,
@@ -112,8 +120,14 @@ def split_portal_hepatic(
     use_skeleton: bool = True,
     portal_dilate_mm: float = 3.0,
     ivc_distance_mm: float = 5.0,
-    min_component_voxels: int = 20
+    min_component_voxels: int = 20,
+    save_skeleton_debug: bool = False
 ):
+    """
+    Perform heuristic split of enhanced liver vessel tree into portal vs hepatic.
+
+    Returns QC dict.
+    """
     img_lv, vessels = _load_mask(liver_vessels_path)
     if img_lv is None:
         raise FileNotFoundError(f"Liver vessels file not found: {liver_vessels_path}")
@@ -130,26 +144,27 @@ def split_portal_hepatic(
             "use_skeleton": False
         }
 
+    # Liver mask (fallback = full volume)
     _, liver = _load_mask(liver_path) if liver_path and liver_path.exists() else (None, None)
     if liver is None:
-        # fallback full volume union (not ideal but allows code path)
         liver = np.ones_like(vessels, dtype=np.uint8)
 
     zooms = img_lv.header.get_zooms()[:3]
     voxel_avg = float(sum(zooms) / 3.0)
 
-    # Portal seeds
+    # ---------------- Seeds ---------------- #
+
     portal_seed = np.zeros_like(vessels, dtype=np.uint8)
     if portal_trunk_path and portal_trunk_path.exists():
         _, portal_trunk = _load_mask(portal_trunk_path)
         if portal_trunk is not None:
             portal_seed = (portal_trunk & liver & vessels).astype(np.uint8)
             if portal_seed.sum() == 0:
+                # Distance OUTSIDE trunk then threshold for a small dilation region
                 dist = ndimage.distance_transform_edt(1 - portal_trunk)
                 rad = portal_dilate_mm / voxel_avg
                 portal_seed = ((dist <= rad) & liver & vessels).astype(np.uint8)
 
-    # Hepatic seeds
     hepatic_seed = np.zeros_like(vessels, dtype=np.uint8)
     if ivc_path and ivc_path.exists():
         _, ivc = _load_mask(ivc_path)
@@ -158,53 +173,74 @@ def split_portal_hepatic(
             dist_ivc = ndimage.distance_transform_edt(inv, sampling=zooms)
             hepatic_seed = ((dist_ivc <= ivc_distance_mm) & vessels & liver).astype(np.uint8)
 
-    # Fallback seeds
-    if portal_seed.sum() == 0 and vessels.sum() > 0:
+    # ---------------- Fallback Seeds (geometric) ---------------- #
+
+    if portal_seed.sum() == 0:
         coords = np.argwhere(vessels)
         if coords.size:
-            z_cut = np.percentile(coords[:,2], 40)
-            subset = coords[coords[:,2] <= z_cut]
+            z_cut = np.percentile(coords[:, 2], 40)
+            subset = coords[coords[:, 2] <= z_cut]
             if subset.size:
                 center = subset.mean(axis=0)
-                dist = np.sqrt(((coords - center)**2).sum(1))
+                dist = np.sqrt(((coords - center) ** 2).sum(1))
                 sel = coords[dist < np.percentile(dist, 15)]
                 portal_seed[tuple(sel.T)] = 1
-    if hepatic_seed.sum() == 0 and vessels.sum() > 0:
+
+    if hepatic_seed.sum() == 0:
         coords = np.argwhere(vessels)
         if coords.size:
-            z_cut = np.percentile(coords[:,2], 70)
-            subset = coords[coords[:,2] >= z_cut]
+            z_cut = np.percentile(coords[:, 2], 70)
+            subset = coords[coords[:, 2] >= z_cut]
             if subset.size:
                 center = subset.mean(axis=0)
-                dist = np.sqrt(((coords - center)**2).sum(1))
+                dist = np.sqrt(((coords - center) ** 2).sum(1))
                 sel = coords[dist < np.percentile(dist, 20)]
                 hepatic_seed[tuple(sel.T)] = 1
 
-    # Skeleton path classification
+    # ---------------- Skeleton-assisted Labeling ---------------- #
+
     use_skel = bool(use_skeleton and _HAVE_SKIMAGE and vessels.sum() > 0)
     if use_skel:
         skel = skeletonize_3d(vessels.astype(bool)).astype(np.uint8)
-        portal_seed = (portal_seed & skel) if portal_seed.sum() else portal_seed
-        hepatic_seed = (hepatic_seed & skel) if hepatic_seed.sum() else hepatic_seed
+
+        # Constrain seeds to skeleton if they already exist
+        if portal_seed.sum():
+            portal_seed = (portal_seed & skel).astype(np.uint8)
+        if hepatic_seed.sum():
+            hepatic_seed = (hepatic_seed & skel).astype(np.uint8)
+
         labels_skel = _multi_source_geodesic(skel, portal_seed, hepatic_seed)
+
         if (labels_skel > 0).any():
-            # map each vessel voxel to nearest labeled skeleton voxel
+            # PROBLEMATIC ORIGINAL BEHAVIOR:
+            #   distance_transform_edt over full volume + return_indices caused labeling EVERY voxel.
+            # FIX: Only map labels back onto vessel voxels.
+            full_labels = np.zeros_like(vessels, dtype=np.uint8)
+            # Distance only to know nearest labeled skeleton for vessel voxels
             label_mask = labels_skel > 0
-            dist, inds = ndimage.distance_transform_edt(1 - label_mask, return_indices=True)
+            # Compute distance map indices ONCE for whole volume (ok), but restrict assignment:
+            _, inds = ndimage.distance_transform_edt(1 - label_mask, return_indices=True)
             skx, sky, skz = inds
-            full_labels = labels_skel[skx, sky, skz]
+            vessel_idx = np.where(vessels > 0)
+            full_labels[vessel_idx] = labels_skel[skx[vessel_idx], sky[vessel_idx], skz[vessel_idx]]
         else:
             full_labels = _multi_source_geodesic(vessels, portal_seed, hepatic_seed)
     else:
         full_labels = _multi_source_geodesic(vessels, portal_seed, hepatic_seed)
 
-    # Remove tiny components per class
+    # Ensure we NEVER label outside the vessel mask (safety net)
+    full_labels[vessels == 0] = 0
+
+    # ---------------- Prune Tiny Components ---------------- #
+
     def prune(labelmap, cls):
         mask = (labelmap == cls)
         if mask.sum() == 0:
             return
         lab, n = ndimage.label(mask)
-        sizes = ndimage.sum(mask, lab, range(1, n+1))
+        if n == 0:
+            return
+        sizes = ndimage.sum(mask, lab, range(1, n + 1))
         for idx, sz in enumerate(sizes, start=1):
             if sz < min_component_voxels:
                 labelmap[lab == idx] = 0
@@ -215,7 +251,9 @@ def split_portal_hepatic(
     portal_mask = (full_labels == 1).astype(np.uint8)
     hepatic_mask = (full_labels == 2).astype(np.uint8)
 
-    # Save
+    # ---------------- Save Outputs ---------------- #
+
+    output_dir.mkdir(parents=True, exist_ok=True)
     nib.save(nib.Nifti1Image(portal_mask, img_lv.affine, img_lv.header),
              str(output_dir / "portal_vein_branches.nii.gz"))
     nib.save(nib.Nifti1Image(hepatic_mask, img_lv.affine, img_lv.header),
@@ -223,19 +261,23 @@ def split_portal_hepatic(
     nib.save(nib.Nifti1Image(full_labels, img_lv.affine, img_lv.header),
              str(output_dir / "liver_vessels_labeled.nii.gz"))
 
-    if use_skel and 'skel' in locals():
-        skel_labels = np.zeros_like(skel, dtype=np.uint8)
-        skel_labels[skel > 0] = full_labels[skel > 0]
+    if use_skel and save_skeleton_debug:
+        skel_labels = np.zeros_like(vessels, dtype=np.uint8)
+        skel_labels[(vessels > 0) & (skel > 0)] = full_labels[(vessels > 0) & (skel > 0)]
         nib.save(nib.Nifti1Image(skel_labels, img_lv.affine, img_lv.header),
                  str(output_dir / "liver_vessels_skeleton_labeled.nii.gz"))
 
-    total_v = vessels.sum()
+    # ---------------- QC ---------------- #
+
+    total_v = int(vessels.sum())
+    portal_v = int(portal_mask.sum())
+    hepatic_v = int(hepatic_mask.sum())
     qc = {
-        "portal_voxels": int(portal_mask.sum()),
-        "hepatic_voxels": int(hepatic_mask.sum()),
-        "total_vessel_voxels": int(total_v),
-        "portal_fraction": float(portal_mask.sum() / total_v) if total_v else 0.0,
-        "hepatic_fraction": float(hepatic_mask.sum() / total_v) if total_v else 0.0,
+        "portal_voxels": portal_v,
+        "hepatic_voxels": hepatic_v,
+        "total_vessel_voxels": total_v,
+        "portal_fraction": float(portal_v / total_v) if total_v else 0.0,
+        "hepatic_fraction": float(hepatic_v / total_v) if total_v else 0.0,
         "portal_seed_voxels": int(portal_seed.sum()),
         "hepatic_seed_voxels": int(hepatic_seed.sum()),
         "use_skeleton": bool(use_skel)
