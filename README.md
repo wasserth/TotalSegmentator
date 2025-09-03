@@ -30,6 +30,8 @@ Optionally:
 Install Totalsegmentator
 ```bash
 pip install TotalSegmentator
+
+source /Users/abeez/Documents/GitHub/TotalSegmentator/totalseg_env/bin/activate 
 ```
 
 

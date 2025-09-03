@@ -1,0 +1,69 @@
+{
+	"Modality": "CT",
+	"Manufacturer": "GE",
+	"ManufacturersModelName": "LightSpeed VCT",
+	"BodyPart": "STOMACH",
+	"PatientPosition": "FFS",
+	"ProcedureStepDescription": "AS AI",
+	"SoftwareVersions": "09MW08.11",
+	"StudyDescription": "AS AI",
+	"SeriesDescription": "PORTAL 1.25mm",
+	"ProtocolName": "6.1 ABDOME 2 FASES VOLUME *",
+	"ScanOptions": "HELICAL MODE",
+	"ImageType": ["ORIGINAL", "PRIMARY", "AXIAL"],
+	"DeidentificationMethod": ["Per DICOM PS 3.15 AnnexE. Details in 0012,0064"],
+	"DeidentificationMethodCodeSequence": [ 
+	  { 
+		"CodeValue": "113100",
+		"CodingSchemeDesignator": "DCM",
+		"CodeMeaning": "Basic Application Confidentiality Profile"
+	  },
+	  { 
+		"CodeValue": "113101",
+		"CodingSchemeDesignator": "DCM",
+		"CodeMeaning": "Clean Pixel Data Option"
+	  },
+	  { 
+		"CodeValue": "113105",
+		"CodingSchemeDesignator": "DCM",
+		"CodeMeaning": "Clean Descriptors Option"
+	  },
+	  { 
+		"CodeValue": "113107",
+		"CodingSchemeDesignator": "DCM",
+		"CodeMeaning": "Retain Longitudinal With Modified Dates Option"
+	  },
+	  { 
+		"CodeValue": "113108",
+		"CodingSchemeDesignator": "DCM",
+		"CodeMeaning": "Retain Patient Characteristics Option"
+	  },
+	  { 
+		"CodeValue": "113109",
+		"CodingSchemeDesignator": "DCM",
+		"CodeMeaning": "Retain Device Identity Option"
+	  },
+	  { 
+		"CodeValue": "113111",
+		"CodingSchemeDesignator": "DCM",
+		"CodeMeaning": "Retain Safe Private Option"
+	  }
+	],
+	"SeriesNumber": 3,
+	"AcquisitionTime": "12:18:12.986130",
+	"AcquisitionNumber": 1,
+	"ConvolutionKernel": "STANDARD",
+	"ExposureTime": 0.6,
+	"XRayTubeCurrent": 168,
+	"XRayExposure": 2,
+	"ImageOrientationPatientDICOM": [
+		1,
+		0,
+		0,
+		0,
+		1,
+		0	],
+	"BidsGuess": ["CT","CT"],
+	"ConversionSoftware": "dcm2niix",
+	"ConversionSoftwareVersion": "v1.0.20250505"
+}
