@@ -60,7 +60,7 @@ cd TotalSegmentator
 # Create & activate a virtual environment
 python -m venv totalseg_env
 source totalseg_env/bin/activate   # (Linux/Mac)
-# Windows: .\totalseg_env\Scripts\activate
+.\totalseg_env\Scripts\activate    # (Windows)
 
 # Upgrade build tooling
 pip install --upgrade pip setuptools wheel
@@ -130,6 +130,9 @@ Outputs (core):
 Option A: Provide support labels (faster):
 ```bash
 # Generate only needed supporting structures
+
+TotalSegmentatorEnhanced -i data/case01.nii.gz -o results --mode enhanced_liver --labeled_only --remove_enhanced_binary
+
 TotalSegmentator -i data/case01.nii.gz -o split_support \
   --roi_subset portal_vein_and_splenic_vein inferior_vena_cava liver --robust_crop
 
