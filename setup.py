@@ -39,6 +39,13 @@ setup(name='TotalSegmentator',
             'dicom2nifti',
             'pyarrow'
         ],
+        extras_require={
+            'enhanced': [
+                'scikit-image',  # For smoothing and mesh processing
+                'trimesh',       # For STL export to Blender
+                'scipy'          # For advanced image processing
+            ]
+        },
         zip_safe=False,
         classifiers=[
             'Intended Audience :: Science/Research',
@@ -51,6 +58,7 @@ setup(name='TotalSegmentator',
             'console_scripts': [
                 'TotalSegmentator=totalsegmentator.bin.TotalSegmentator:main',
                 'TotalSegmentatorEnhanced=totalsegmentator.bin.TotalSegmentatorEnhanced:main',
+                'TotalSegmentatorImproved=totalsegmentator.bin.TotalSegmentatorImproved:main',
                 'totalseg_combine_masks=totalsegmentator.bin.totalseg_combine_masks:main',
                 'crop_to_body=totalsegmentator.bin.crop_to_body:main',
                 'totalseg_import_weights=totalsegmentator.bin.totalseg_import_weights:main',
