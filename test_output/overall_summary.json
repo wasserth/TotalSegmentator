@@ -1,0 +1,57 @@
+{
+  "input_file": "test.nii.gz",
+  "output_directory": "test_output",
+  "tasks_requested": [
+    "liver_vessels"
+  ],
+  "smoothing_level": "medium",
+  "stl_export_enabled": false,
+  "device_used": "auto",
+  "results": {
+    "liver_vessels": {
+      "error": "TotalSegmentator API not available"
+    }
+  },
+  "task_definitions": {
+    "liver_segments": {
+      "title": "liver: segments",
+      "task_name": "liver_segments",
+      "results": [
+        "liver_segment_1",
+        "liver_segment_2",
+        "liver_segment_3",
+        "liver_segment_4",
+        "liver_segment_5",
+        "liver_segment_6",
+        "liver_segment_7",
+        "liver_segment_8"
+      ],
+      "output_mapping": {}
+    },
+    "liver_vessels": {
+      "title": "liver: vessels",
+      "task_name": "liver_vessels",
+      "results": [
+        "blood_vessel",
+        "neoplasm"
+      ],
+      "output_mapping": {
+        "liver_vessels.nii.gz": "blood_vessel.nii.gz",
+        "liver_tumor.nii.gz": "neoplasm.nii.gz"
+      }
+    },
+    "total_vessels": {
+      "title": "total",
+      "task_name": "total",
+      "results": [
+        "inferior_vena_cava",
+        "portal_vein_and_splenic_vein"
+      ],
+      "roi_subset": [
+        "inferior_vena_cava",
+        "portal_vein_and_splenic_vein"
+      ],
+      "output_mapping": {}
+    }
+  }
+}

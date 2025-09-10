@@ -110,6 +110,42 @@ This repository includes an optional, heuristic post-processing pipeline to:
 | `totalsegmentator/bin/TotalSegmentatorEnhanced.py` | CLI wrapping baseline liver + vessel enhancement + (optional) splitting |
 | `totalsegmentator/vessel_split.py` | Heuristic portal vs hepatic classification |
 
+---
+
+## TotalSegmentatorImproved - Organized Outputs & Enhanced Workflow (NEW)
+
+For users who want organized outputs with clear task titles, smoothing for better 3D visualization, and Blender compatibility, we provide `TotalSegmentatorImproved`:
+
+### Features
+- **Organized Output Structure**: Clear task titles and result mappings  
+- **Automatic Renaming**: Maps internal names to user-friendly names (e.g., `liver_vessels` → `blood_vessel`)
+- **Smoothing Options**: Improves 3D visualization in Slicer and Blender
+- **STL Export**: Direct export to Blender-compatible format
+- **Comprehensive Reporting**: JSON summaries of all processing
+
+### Supported Task Groups
+1. **"liver: segments"** → `liver_segment_1` through `liver_segment_8`
+2. **"liver: vessels"** → `blood_vessel`, `neoplasm` (renamed from `liver_vessels`, `liver_tumor`)  
+3. **"total"** → `inferior_vena_cava`, `portal_vein_and_splenic_vein`
+
+### Quick Start
+```bash
+# Install with enhanced features
+pip install TotalSegmentator[enhanced]
+
+# Run all tasks with medium smoothing
+TotalSegmentatorImproved -i input.nii.gz -o results --smoothing medium
+
+# Liver analysis only with STL export for Blender
+TotalSegmentatorImproved -i input.nii.gz -o results \
+  --tasks liver_segments liver_vessels \
+  --smoothing heavy --export-stl
+```
+
+See [TotalSegmentatorImproved documentation](docs/TotalSegmentatorImproved.md) for complete usage guide.
+
+---
+
 ### When to Use
 Use on contrast-enhanced abdominal CT (preferably portal venous phase). Non-contrast or atypical phases may reduce split reliability. The splitting is heuristic (no learned classifier yet).
 
