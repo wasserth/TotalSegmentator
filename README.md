@@ -74,7 +74,7 @@ Openly available for any usage (Apache-2.0 license):
 * **lung_nodules**: lung, lung_nodules (provided by [BLUEMIND AI](https://bluemind.co/): Fitzjalen R., Aladin M., Nanyan G.) (trained on 1353 subjects, partly from LIDC-IDRI)
 * **kidney_cysts**: kidney_cyst_left, kidney_cyst_right (strongly improved accuracy compared to kidney_cysts inside of `total` task)
 * **breasts**: breast
-* **liver_segments**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (Couinaud segments)*
+* **liver_segments**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (Couinaud segments) (cite [paper](https://doi.org/10.1007/978-3-030-32692-0_32))*
 * **liver_segments_mr**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (for MR images) (Couinaud segments)*
 * **craniofacial_structures**: mandible, teeth_lower, skull, head, sinus_maxillary, sinus_frontal, teeth_upper
 * **abdominal_muscles**: pectoralis_major_right, pectoralis_major_left, rectus_abdominis_right, rectus_abdominis_left, serratus_anterior_right, serratus_anterior_left, latissimus_dorsi_right, latissimus_dorsi_left, trapezius_right, trapezius_left, external_oblique_right, external_oblique_left, internal_oblique_right, internal_oblique_left, erector_spinae_right, erector_spinae_left, transversospinalis_right, transversospinalis_left, psoas_major_right, psoas_major_left, quadratus_lumborum_right, quadratus_lumborum_left (cite [paper](https://doi.org/10.1101/2025.01.13.25319967)) (only segments within T4-L4)*
