@@ -134,6 +134,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             from rt_utils import RTStructBuilder
         except ImportError:
             raise ImportError("rt_utils is required for output_type='dicom'. Please install it with 'pip install rt_utils'.")
+    
+    if output_type == "dicom_seg":
+        try:
+            import highdicom
+        except ImportError:
+            raise ImportError("highdicom is required for output_type='dicom_seg'. Please install it with 'pip install highdicom'.")
 
     if not quiet:
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")

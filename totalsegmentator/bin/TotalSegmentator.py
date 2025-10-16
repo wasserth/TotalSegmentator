@@ -26,8 +26,8 @@ def main():
                         help="Output directory for segmentation masks",
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("-ot", "--output_type", choices=["nifti", "dicom"],
-                    help="Select if segmentations shall be saved as Nifti or as Dicom RT Struct image.",
+    parser.add_argument("-ot", "--output_type", choices=["nifti", "dicom", "dicom_seg"],
+                    help="Select if segmentations shall be saved as Nifti, Dicom RT Struct, or Dicom SEG image.",
                     default="nifti")
 
     parser.add_argument("-ml", "--ml", action="store_true", help="Save one multilabel image for all classes",

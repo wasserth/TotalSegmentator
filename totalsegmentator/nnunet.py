@@ -51,7 +51,7 @@ from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonica
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical, reorder_multilabel_like_v1
-from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct
+from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct, save_mask_as_dicomseg
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin, remove_auxiliary_labels
@@ -350,8 +350,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         file_out = Path(file_out)
     multimodel = type(task_id) is list
 
-    if img_type == "nifti" and output_type == "dicom":
-        raise ValueError("To use output type dicom you also have to use a Dicom image as input.")
+    if img_type == "nifti" and (output_type == "dicom" or output_type == "dicom_seg"):
+        raise ValueError("To use output type dicom or dicom_seg you also have to use a Dicom image as input.")
 
     if task_name == "total":
         class_map_parts = class_map_5_parts
@@ -734,6 +734,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if output_type == "dicom":
                 file_out.mkdir(exist_ok=True, parents=True)
                 save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out / "segmentations.dcm")
+            elif output_type == "dicom_seg":
+                file_out.mkdir(exist_ok=True, parents=True)
+                save_mask_as_dicomseg(img_data, selected_classes, file_in_dcm, file_out / "segmentations.dcm", img_out.affine)
             else:
                 st = time.time()
                 if multilabel_image:
