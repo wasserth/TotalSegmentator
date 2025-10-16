@@ -177,7 +177,6 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     import pydicom
     from pydicom.sr.codedict import codes
     from highdicom.seg.content import SegmentDescription
-    from pathlib import Path
     
     # Get TotalSegmentator version
     version = importlib.metadata.version("TotalSegmentator")
