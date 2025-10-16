@@ -10,7 +10,7 @@ def rgb_to_cielab_dicom(rgb):
         tuple of (L, a, b) values encoded as unsigned integers (0-65535) for DICOM
     """
     # Normalize RGB to 0-1
-    r, g, b = [x / 255.0 for x in rgb]
+    r, g, b = (x / 255.0 for x in rgb)
     
     # Convert RGB to XYZ (using sRGB color space)
     # Apply gamma correction
@@ -106,7 +106,7 @@ def load_snomed_mapping():
     csv_path = Path(__file__).parent / "resources" / "totalsegmentator_snomed_mapping.csv"
     
     snomed_map = {}
-    with open(csv_path, 'r') as f:
+    with open(csv_path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             structure = row['Structure']

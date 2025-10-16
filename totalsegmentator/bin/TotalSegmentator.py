@@ -23,11 +23,13 @@ def main():
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-o", metavar="directory", dest="output",
-                        help="Output directory for segmentation masks",
+                        help="Output directory for segmentation masks. " + 
+                             "Or path of multilabel output nifti file if --ml option is used." + 
+                             "Or path of output dicom seg file if --output_type is set to 'dicom_seg' or 'dicom_rtstruct'",
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("-ot", "--output_type", choices=["nifti", "dicom", "dicom_seg"],
-                    help="Select if segmentations shall be saved as Nifti, Dicom RT Struct, or Dicom SEG image.",
+    parser.add_argument("-ot", "--output_type", choices=["nifti", "dicom_rtstruct", "dicom_seg"],
+                    help="Select if segmentations shall be saved as Nifti, Dicom RT Struct, or Dicom SEG file.",
                     default="nifti")
 
     parser.add_argument("-ml", "--ml", action="store_true", help="Save one multilabel image for all classes",

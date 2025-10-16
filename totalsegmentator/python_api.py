@@ -129,11 +129,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     device = select_device(device)
     if verbose: print(f"Using Device: {device}")
     
-    if output_type == "dicom":
+    if output_type == "dicom_rtstruct":
         try:
             from rt_utils import RTStructBuilder
         except ImportError:
-            raise ImportError("rt_utils is required for output_type='dicom'. Please install it with 'pip install rt_utils'.")
+            raise ImportError("rt_utils is required for output_type='dicom_rtstruct'. Please install it with 'pip install rt_utils'.")
     
     if output_type == "dicom_seg":
         try:
