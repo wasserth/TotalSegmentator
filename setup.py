@@ -37,7 +37,9 @@ setup(name='TotalSegmentator',
             'requests==2.27.1;python_version<"3.10"',
             'requests;python_version>="3.10"',
             'dicom2nifti',
-            'pyarrow'
+            'pyarrow',
+            'Pillow',
+            'pydicom'
         ],
         extras_require={
             'enhanced': [
@@ -67,7 +69,11 @@ setup(name='TotalSegmentator',
                 'totalseg_set_license=totalsegmentator.bin.totalseg_set_license:main',
                 'totalseg_get_phase=totalsegmentator.bin.totalseg_get_phase:main',
                 'totalseg_get_modality=totalsegmentator.bin.totalseg_get_modality:main',
-                'totalseg_evans_index=totalsegmentator.bin.totalseg_evans_index:main'
+                'totalseg_evans_index=totalsegmentator.bin.totalseg_evans_index:main',
+                'totalseg_dicom_to_png=totalsegmentator.bin.totalseg_dicom_to_png:main',
+                'totalseg_dataset_build=totalsegmentator.bin.totalseg_dataset_build:main',
+                'totalseg_blender_import=totalsegmentator.bin.totalseg_blender_import:main',
+                'totalseg_blender_slider=totalsegmentator.bin.totalseg_blender_slider:main'
             ],
         },
     )
