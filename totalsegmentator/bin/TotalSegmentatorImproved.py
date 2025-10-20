@@ -387,8 +387,8 @@ def main():
                         help="Laplacian smoothing iterations on the surface mesh")
 
     # Device and performance options
-    parser.add_argument("--device", default="auto",
-                        help="Device to use: auto, cpu, cuda, etc.")
+    parser.add_argument("--device", default="gpu",
+                        help="Device: 'gpu', 'cpu', 'mps', or 'gpu:X' (e.g., gpu:0)")
     parser.add_argument("--robust-crop", action="store_true",
                         help="Use robust cropping for better accuracy")
 

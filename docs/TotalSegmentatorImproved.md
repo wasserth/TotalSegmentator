@@ -7,7 +7,7 @@ An enhanced version of TotalSegmentator that provides organized outputs with tas
 - **Organized Output Structure**: Clear task titles and result mappings
 - **Automatic Output Renaming**: Maps internal names to user-friendly names
 - **Smoothing Options**: Improves 3D visualization in Slicer and Blender
-- **STL Export**: Direct export to Blender-compatible format
+- **Mesh Export**: Direct export to Blender-compatible formats (STL/OBJ/PLY)
 - **Comprehensive Reporting**: JSON summaries of all processing
 
 ## Supported Tasks
@@ -88,19 +88,38 @@ TotalSegmentatorImproved -i input.nii.gz -o output_directory --smoothing heavy
 TotalSegmentatorImproved -i input.nii.gz -o output_directory --smoothing none
 ```
 
-### STL Export for Blender
+### Mesh Export for Blender (STL/OBJ/PLY)
 
-Export segmentations directly to STL format:
+Export segmentations directly to meshes. You can choose the format, output units, and optional surface smoothing:
 
 ```bash
-TotalSegmentatorImproved -i input.nii.gz -o output_directory --export-stl
+# Linux/macOS
+TotalSegmentatorImproved \
+  -i input.nii.gz \
+  -o output_directory \
+  --export-mesh \
+  --export-format stl \
+  --units m \
+  --mesh-smooth-iters 20
+
+# Windows (PowerShell/CMD)
+TotalSegmentatorImproved -i ".\data\1\case01.nii.gz" -o mac-test --smoothing heavy --device gpu --export-mesh --export-format stl --units m --mesh-smooth-iters 20
 ```
+
+Notes
+- `--export-mesh` enables mesh export.
+- `--export-format` can be `stl`, `obj`, or `ply` (default: `stl`).
+- `--units` controls output scale; `m` is recommended for Blender (mm are auto-scaled in the Blender import helper too).
+- `--mesh-smooth-iters` applies Laplacian smoothing to the exported surface mesh.
 
 ### Performance Options
 
 ```bash
-# Use GPU (if available)
-TotalSegmentatorImproved -i input.nii.gz -o output_directory --device cuda
+# Use GPU (if available) or CPU/mps
+TotalSegmentatorImproved -i input.nii.gz -o output_directory --device gpu
+TotalSegmentatorImproved -i input.nii.gz -o output_directory --device cpu
+TotalSegmentatorImproved -i input.nii.gz -o output_directory --device mps      # Apple Silicon
+TotalSegmentatorImproved -i input.nii.gz -o output_directory --device gpu:0    # specific GPU index
 
 # Use robust cropping for better accuracy
 TotalSegmentatorImproved -i input.nii.gz -o output_directory --robust-crop
@@ -137,11 +156,11 @@ output_directory/
 2. Load the smoothed segmentation files as Label Maps
 3. Import into Segmentations module
 4. Enable 3D display for better visualization
-5. Use the Export function to create STL files for Blender (or use the --export-stl option)
+5. Use the Export function to create STL files for Blender (or use `--export-mesh --export-format stl`)
 
 ## Using Results in Blender
 
-1. Use the `--export-stl` option to generate STL files directly
+1. Use `--export-mesh --export-format stl` to generate STL files directly
 2. In Blender: File → Import → STL
 3. The smoothed segmentations will provide better mesh quality
 
@@ -153,7 +172,10 @@ output_directory/
 | `-o, --output` | Output directory | Required |
 | `--tasks` | Tasks to run: liver_segments, liver_vessels, total_vessels, all | all |
 | `--smoothing` | Smoothing level: none, light, medium, heavy | medium |
-| `--export-stl` | Export to STL format for Blender | False |
+| `--export-mesh` | Export meshes (enable) | False |
+| `--export-format` | Mesh format: stl, obj, ply | stl |
+| `--units` | Mesh units: mm or m | m |
+| `--mesh-smooth-iters` | Surface smoothing iterations | 0 |
 | `--device` | Device: auto, cpu, cuda, etc. | auto |
 | `--robust-crop` | Use robust cropping | False |
 
