@@ -17,6 +17,8 @@ import sys
 from pathlib import Path
 import warnings
 from typing import Optional, Iterable
+import time
+from datetime import datetime
 
 # -----------------------------
 # Optional dependencies
@@ -79,6 +81,13 @@ SEGMENTATION_TASKS = {
         ],
         "roi_subset": ["inferior_vena_cava", "portal_vein_and_splenic_vein"],
         "output_mapping": {},  # No renaming needed
+    },
+    "total_all": {
+        "title": "total: all classes",
+        "task_name": "total",
+        # Full CT task produces 100+ classes; keep display concise.
+        "results": ["(many classes)"],
+        "output_mapping": {},
     },
 }
 
@@ -271,6 +280,8 @@ def run_segmentation_task(
     """
     Run a specific segmentation task with the given configuration.
     """
+    task_t0 = time.time()
+    started_at = datetime.utcnow().isoformat() + "Z"
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -326,6 +337,8 @@ def run_segmentation_task(
             processed_files.append(str(output_path))
 
         # Create task summary
+        duration_s = max(0.0, time.time() - task_t0)
+        finished_at = datetime.utcnow().isoformat() + "Z"
         summary = {
             "title": task_config["title"],
             "task_name": task_config["task_name"],
@@ -337,6 +350,9 @@ def run_segmentation_task(
             "units": units if export_mesh else None,
             "mesh_smooth_iters": mesh_smooth_iters if export_mesh else None,
             "timestamp": str(Path(input_path).stat().st_mtime),
+            "started_at": started_at,
+            "finished_at": finished_at,
+            "duration_seconds": round(duration_s, 3),
         }
 
         summary_path = output_dir / "task_summary.json"
@@ -392,6 +408,10 @@ def main():
     parser.add_argument("--robust-crop", action="store_true",
                         help="Use robust cropping for better accuracy")
 
+    # Add-ons for composed tasks
+    parser.add_argument("--with-liver-vessels", action="store_true",
+                        help="When using 'total_all', also run the liver_vessels subtask and include outputs in total_all/")
+
     args = parser.parse_args()
 
     # Validate input
@@ -406,6 +426,8 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
 
     results = {}
+    overall_t0 = time.time()
+    overall_started_at = datetime.utcnow().isoformat() + "Z"
     for task_name in tasks_to_run:
         print(f"\n🔬 Running task: {SEGMENTATION_TASKS[task_name]['title']}")
         print(f"   Expected results: {', '.join(SEGMENTATION_TASKS[task_name]['results'])}")
@@ -431,10 +453,36 @@ def main():
             print(f"❌ Failed task {task_name}: {e}")
             results[task_name] = {"error": str(e)}
 
+    # If total_all is selected and addon requested, run liver_vessels into the same folder
+    if "total_all" in tasks_to_run and args.with_liver_vessels:
+        addon_task = "liver_vessels"
+        print(f"\n➕ Running addon task into total_all/: {SEGMENTATION_TASKS[addon_task]['title']}")
+        try:
+            addon_summary = run_segmentation_task(
+                input_path=args.input,
+                output_dir=args.output / "total_all",
+                task_config=SEGMENTATION_TASKS[addon_task],
+                smoothing=args.smoothing,
+                export_mesh=args.export_mesh,
+                device=args.device,
+                robust_crop=args.robust_crop,
+                export_format=args.export_format,
+                units=args.units,
+                mesh_smooth_iters=args.mesh_smooth_iters,
+            )
+            results[addon_task] = addon_summary
+            print("✅ Added liver_vessels outputs to total_all/")
+        except Exception as e:
+            print(f"❌ Addon liver_vessels failed: {e}")
+            results[addon_task] = {"error": str(e)}
+
+    overall_duration_s = max(0.0, time.time() - overall_t0)
+    overall_finished_at = datetime.utcnow().isoformat() + "Z"
     overall_summary = {
         "input_file": str(args.input),
         "output_directory": str(args.output),
         "tasks_requested": tasks_to_run,
+        "addons": {"with_liver_vessels": bool(args.with_liver_vessels)} if "total_all" in tasks_to_run else {},
         "smoothing_level": args.smoothing,
         "mesh_export_enabled": args.export_mesh,
         "mesh_format": args.export_format if args.export_mesh else None,
@@ -443,6 +491,9 @@ def main():
         "device_used": args.device,
         "results": results,
         "task_definitions": SEGMENTATION_TASKS,
+        "started_at": overall_started_at,
+        "finished_at": overall_finished_at,
+        "duration_seconds": round(overall_duration_s, 3),
     }
 
     summary_path = args.output / "overall_summary.json"

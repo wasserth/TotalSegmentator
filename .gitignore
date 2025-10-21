@@ -28,3 +28,7 @@ unittest_prediction_fast_force_split.nii.gz
 *.ipynb
 /totalseg_env
 /baseline_full
+/out_total_all
+/test_input_data
+/test_out_dir
+/woking-checking-mac

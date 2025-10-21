@@ -29,6 +29,7 @@ Optional extras:
 
 - `TotalSegmentatorImproved` — Organized outputs, optional NIfTI smoothing, STL/OBJ/PLY export (Blender-compatible). See docs/TotalSegmentatorImproved.md.
 - `totalseg_dicom_to_png` — DICOM → PNG/JPEG with window presets and custom WL/WW.
+- `totalseg_mpr_widget` — Interactive sliders (Jupyter or window) to preview WL/WW, slice and export 3-plane MPR.
 - `totalseg_dataset_build` — Build a 2D PNG dataset from a volume + segmentation (per-class or multi-label PNGs, manifest).
 - `totalseg_blender_import` — Import meshes into Blender with units, materials, and collection grouping.
 - `totalseg_blender_slider` — Create a visibility slider or timeline sequence to cycle through organs.
@@ -49,9 +50,11 @@ Script locations for reference:
 - Abdomen preset: `totalseg_dicom_to_png -i <dicom_dir> -o <out_dir> --window abdomen`
 - Custom W/L: `totalseg_dicom_to_png -i <dicom_dir> -o <out_dir> --window custom --wl 40 --ww 400`
 - JPEG output: `--format jpeg --jpeg-quality 95`
+- 3-plane MPR folders: `totalseg_dicom_to_png -i <dicom_dir> -o out_iso_views --multi-views --metadata`
 
 2) Segment + export meshes (improved)
 - `TotalSegmentatorImproved -i <ct.nii.gz> -o <results_dir> --smoothing medium --export-mesh`
+  - Per-task and overall runtimes are saved into `task_summary.json` and `overall_summary.json` (`duration_seconds`, `started_at`, `finished_at`).
 
 3) Build 2D PNG dataset (images + masks)
 - From multi-label NIfTI: `totalseg_dataset_build -i <ct.nii.gz> -s <seg_multilabel.nii.gz> -o <dataset_dir> --mode both`
@@ -150,4 +153,8 @@ You can open `out/scene.blend` or `out/scene_slider.blend` in Blender to inspect
 ## License and Attribution
 
 These tools integrate DICOM conversion, dataset building, and Blender viewing concepts inspired by the referenced repositories, adapted to work natively within TotalSegmentator’s CLI and file conventions.
-
+6) Interactive MPR (sliders)
+- In Jupyter: `%run -m totalsegmentator.bin.totalseg_mpr_widget --dicom <dicom_dir>`
+- As a window: `totalseg_mpr_widget --dicom <dicom_dir>`
+  - Adjust WL (l), WW (k), slice index, plane and export.
+  - Install extras: `pip install ipywidgets matplotlib scipy`

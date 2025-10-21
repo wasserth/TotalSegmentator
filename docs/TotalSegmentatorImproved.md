@@ -28,8 +28,15 @@ An enhanced version of TotalSegmentator that provides organized outputs with tas
 - **Title**: "total"
 - **Results**:
   - `inferior_vena_cava`
-  - `portal_vein_and_splenic_vein`
+    - `portal_vein_and_splenic_vein`
 - **Task**: Uses the `total` model with ROI subset
+
+### 4. Total All (Whole Body)
+- **Title**: "total: all classes"
+- **Results**: full CT "total" task (100+ classes)
+- **Includes**: vessels (e.g., aorta, inferior_vena_cava, portal_vein_and_splenic_vein, iliacs, carotids, pulmonary_vein, etc.)
+- **Task**: Uses the `total` model (no ROI subset)
+  - Optional addon: `--with-liver-vessels` also runs the dedicated liver_vessels subtask and puts its outputs into `total_all/`.
 
 ## Installation
 
@@ -148,6 +155,12 @@ output_directory/
     ├── inferior_vena_cava.nii.gz
     ├── portal_vein_and_splenic_vein.nii.gz
     └── task_summary.json
+└── total_all/                    # Whole-body (all classes) results
+    ├── aorta.nii.gz
+    ├── inferior_vena_cava.nii.gz
+    ├── portal_vein_and_splenic_vein.nii.gz
+    ├── ... many more ...
+    └── task_summary.json
 ```
 
 ## Using Results in 3D Slicer
@@ -188,6 +201,7 @@ Contains information about each task:
 - Processed files
 - Smoothing settings
 - Processing metadata
+- Runtime metadata: `started_at`, `finished_at`, `duration_seconds`
 
 ### Overall Summary (overall_summary.json)
 Contains complete processing information:
@@ -195,6 +209,7 @@ Contains complete processing information:
 - All task results
 - Configuration used
 - Task definitions reference
+- Overall runtime: `started_at`, `finished_at`, `duration_seconds`
 
 ## Troubleshooting
 
@@ -248,3 +263,20 @@ TotalSegmentatorImproved \
 ```
 
 This improved CLI provides a streamlined workflow for getting organized, smoothed segmentations ready for 3D visualization and analysis.
+
+### Example 4: Whole Body (All Classes) + STL Export
+
+```bash
+TotalSegmentatorImproved \
+  -i ct.nii.gz \
+  -o out_total_all \
+  --tasks total_all \
+  --with-liver-vessels \
+  --smoothing medium \
+  --export-mesh --export-format stl --units m --mesh-smooth-iters 10
+```
+
+Notes
+- This runs the full CT `total` task (100+ classes). Expect longer runtimes and many output files.
+- Blood vessels are included among the exported classes. The optional `--with-liver-vessels` addon adds the high-detail intrahepatic vascular network (`blood_vessel` / `neoplasm`) into `out_total_all/total_all/`.
+- Runtime for each subtask and overall is recorded in JSON summaries.
