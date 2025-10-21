@@ -189,6 +189,11 @@ def export_to_blender_format(
     laplacian_iters: int = 0,              # optional surface smoothing on mesh
     is_binary: Optional[bool] = None,      # auto-detect if None
     level: float = 0.5,                    # iso-level for marching cubes
+    pad_edges: bool = True,                # pad volume to avoid open caps at scan bounds
+    fill_holes: bool = True,               # try to fill mesh holes (watertight)
+    pre_dilate_mm: float = 0.0,            # thicken mask before meshing (mm)
+    min_mask_voxels: int = 1,              # minimum voxels to consider non-empty
+    force_empty_stl: bool = False,         # write placeholder STL even if empty
 ) -> Optional[Path]:
     """
     Convert a NIfTI segmentation (binary or multi-label) into a mesh in a Blender-friendly format.
@@ -223,12 +228,41 @@ def export_to_blender_format(
         unique = np.unique(data)
         is_binary = (len(unique) <= 2)
 
+    def _maybe_dilate(mask: np.ndarray) -> np.ndarray:
+        if pre_dilate_mm > 0:
+            try:
+                from scipy.ndimage import binary_dilation
+                # Use voxel units based on smallest spacing to approximate a spherical dilation
+                vox = max(1, int(np.ceil(pre_dilate_mm / min(sx, sy, sz))))
+                for _ in range(vox):
+                    mask = binary_dilation(mask)
+            except Exception:
+                pass
+        return mask
+
     def _march(mask: np.ndarray) -> Optional["trimesh.Trimesh"]:
+        m = mask.astype(np.float32)
+        offset = np.array([0.0, 0.0, 0.0], dtype=float)
+        if pad_edges:
+            # Pad by 1 voxel so surfaces are closed at array borders
+            m = np.pad(m, 1, mode='constant', constant_values=0)
+            offset = np.array([sx, sy, sz], dtype=float)
         # Marching cubes with correct physical spacing
-        verts, faces, _, _ = measure.marching_cubes(
-            mask.astype(np.float32), level=level, spacing=(sx, sy, sz)
-        )
+        verts, faces, _, _ = measure.marching_cubes(m, level=level, spacing=(sx, sy, sz))
+        # Shift back if padded
+        if pad_edges:
+            verts = verts - offset
         mesh = trimesh.Trimesh(vertices=verts, faces=faces, process=True)
+        # Optional repairs to make watertight
+        if fill_holes:
+            try:
+                import trimesh.repair as trepair
+                trepair.fill_holes(mesh)
+                trepair.fix_normals(mesh)
+                mesh.remove_unreferenced_vertices()
+                mesh.remove_degenerate_faces()
+            except Exception:
+                pass
         if mm_to_meters:
             mesh.apply_scale(0.001)  # mm -> m
         mesh = _laplacian_smooth_trimesh(mesh, iterations=laplacian_iters)
@@ -236,27 +270,52 @@ def export_to_blender_format(
 
     written_paths: list[Path] = []
 
+    def _write_empty_placeholder(path: Path):
+        try:
+            text = f"solid {path.stem}\nendsolid {path.stem}\n"
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(text)
+        except Exception:
+            pass
+
     if is_binary:
         mask = (data > 0.5)
-        if mask.any():
+        if mask.sum() < max(1, int(min_mask_voxels)):
+            if force_empty_stl:
+                _write_empty_placeholder(output_path)
+                written_paths.append(output_path)
+        else:
+            mask = _maybe_dilate(mask)
             mesh = _march(mask)
             if mesh:
                 mesh.export(str(output_path))
+                written_paths.append(output_path)
+            elif force_empty_stl:
+                _write_empty_placeholder(output_path)
                 written_paths.append(output_path)
     else:
         labels: Iterable[float] = [l for l in np.unique(data) if l != 0]
         for l in labels:
             mask = (data == l)
-            if not mask.any():
+            per_label = output_path.with_name(f"{output_path.stem}_label{int(l)}{ext}")
+            if mask.sum() < max(1, int(min_mask_voxels)):
+                if force_empty_stl:
+                    _write_empty_placeholder(per_label)
+                    written_paths.append(per_label)
                 continue
+            mask = _maybe_dilate(mask)
             mesh = _march(mask)
             if mesh:
-                per_label = output_path.with_name(f"{output_path.stem}_label{int(l)}{ext}")
                 mesh.export(str(per_label))
+                written_paths.append(per_label)
+            elif force_empty_stl:
+                _write_empty_placeholder(per_label)
                 written_paths.append(per_label)
 
     if not written_paths:
-        warnings.warn(f"No meshes written for {segmentation_path}")
+        # Only warn if we truly produced nothing and didn't request placeholders
+        if not force_empty_stl:
+            warnings.warn(f"No meshes written for {segmentation_path}")
         return None
 
     return written_paths[0] if len(written_paths) == 1 else output_path.parent
@@ -276,6 +335,11 @@ def run_segmentation_task(
     export_format="stl",
     units="m",
     mesh_smooth_iters=0,
+    mesh_pad_edges=True,
+    mesh_fill_holes=True,
+    dilate_mm=0.0,
+    min_mask_voxels=1,
+    write_empty_stl=False,
 ):
     """
     Run a specific segmentation task with the given configuration.
@@ -330,6 +394,11 @@ def run_segmentation_task(
                     mm_to_meters=(units == "m"),
                     laplacian_iters=mesh_smooth_iters,
                     is_binary=None,  # auto
+                    pad_edges=mesh_pad_edges,
+                    fill_holes=mesh_fill_holes,
+                    pre_dilate_mm=float(dilate_mm),
+                    min_mask_voxels=int(min_mask_voxels),
+                    force_empty_stl=bool(write_empty_stl),
                 )
                 if mesh_path:
                     processed_files.append(str(mesh_path))
@@ -401,6 +470,16 @@ def main():
                         help="Scale meshes to these units (Blender default is meters)")
     parser.add_argument("--mesh-smooth-iters", type=int, default=0,
                         help="Laplacian smoothing iterations on the surface mesh")
+    parser.add_argument("--no-mesh-pad-edges", action="store_true",
+                        help="Disable 1-voxel padding before meshing (may leave open caps at scan bounds)")
+    parser.add_argument("--no-mesh-fill-holes", action="store_true",
+                        help="Disable mesh hole filling/repairs during export")
+    parser.add_argument("--dilate-mm", type=float, default=0.0,
+                        help="Pre-dilate masks by this many millimeters before meshing (thickens thin structures)")
+    parser.add_argument("--min-mask-voxels", type=int, default=1,
+                        help="Minimum number of voxels to treat a mask as non-empty for meshing")
+    parser.add_argument("--write-empty-stl", action="store_true",
+                        help="Write placeholder empty STL files when a mask is empty or cannot be meshed")
 
     # Device and performance options
     parser.add_argument("--device", default="gpu",
@@ -446,6 +525,11 @@ def main():
                 export_format=args.export_format,
                 units=args.units,
                 mesh_smooth_iters=args.mesh_smooth_iters,
+                mesh_pad_edges=not args.no_mesh_pad_edges,
+                mesh_fill_holes=not args.no_mesh_fill_holes,
+                dilate_mm=args.dilate_mm,
+                min_mask_voxels=args.min_mask_voxels,
+                write_empty_stl=args.write_empty_stl,
             )
             results[task_name] = summary
             print(f"✅ Completed: {summary['title']}")
@@ -469,6 +553,11 @@ def main():
                 export_format=args.export_format,
                 units=args.units,
                 mesh_smooth_iters=args.mesh_smooth_iters,
+                mesh_pad_edges=not args.no_mesh_pad_edges,
+                mesh_fill_holes=not args.no_mesh_fill_holes,
+                dilate_mm=args.dilate_mm,
+                min_mask_voxels=args.min_mask_voxels,
+                write_empty_stl=args.write_empty_stl,
             )
             results[addon_task] = addon_summary
             print("✅ Added liver_vessels outputs to total_all/")

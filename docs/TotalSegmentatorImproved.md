@@ -118,6 +118,12 @@ Notes
 - `--export-format` can be `stl`, `obj`, or `ply` (default: `stl`).
 - `--units` controls output scale; `m` is recommended for Blender (mm are auto-scaled in the Blender import helper too).
 - `--mesh-smooth-iters` applies Laplacian smoothing to the exported surface mesh.
+- To reduce open caps at scan bounds and make meshes more watertight, the exporter pads edges and repairs holes by default. You can tune:
+  - `--no-mesh-pad-edges` (disable capping at volume edges)
+  - `--no-mesh-fill-holes` (disable hole-filling repairs)
+  - `--dilate-mm 0.5` (thicken thin masks before meshing)
+  - `--write-empty-stl` (emit placeholder STL when a mask is empty or unmeshable)
+  - `--min-mask-voxels 50`(many tiny spurious masks exist and you only want “real” meshes)
 
 ### Performance Options
 
@@ -175,7 +181,7 @@ output_directory/
 
 1. Use `--export-mesh --export-format stl` to generate STL files directly
 2. In Blender: File → Import → STL
-3. The smoothed segmentations will provide better mesh quality
+3. The exporter pads edges and attempts to fill mesh holes by default so meshes are closed where anatomy meets scan bounds. Disable with `--no-mesh-pad-edges` / `--no-mesh-fill-holes` if needed.
 
 ## Command-Line Options
 
@@ -189,6 +195,13 @@ output_directory/
 | `--export-format` | Mesh format: stl, obj, ply | stl |
 | `--units` | Mesh units: mm or m | m |
 | `--mesh-smooth-iters` | Surface smoothing iterations | 0 |
+| `--no-mesh-pad-edges` | Disable capping at volume edges | off |
+| `--no-mesh-fill-holes` | Disable hole-filling repairs | off |
+| `--dilate-mm` | Pre-dilate mask before meshing (mm) | 0.0 |
+| `--min-mask-voxels` | Minimum voxels to consider non-empty | 1 |
+| `--write-empty-stl` | Write placeholder STL when mask empty | off |
+| `--no-mesh-pad-edges` | Disable capping at volume edges | off |
+| `--no-mesh-fill-holes` | Disable hole-filling repairs | off |
 | `--device` | Device: auto, cpu, cuda, etc. | auto |
 | `--robust-crop` | Use robust cropping | False |
 
