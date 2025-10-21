@@ -481,6 +481,14 @@ def main():
     parser.add_argument("--write-empty-stl", action="store_true",
                         help="Write placeholder empty STL files when a mask is empty or cannot be meshed")
 
+    # Mesh-only export mode (skip inference)
+    parser.add_argument("--export-only-dir", type=Path, default=None,
+                        help="Export meshes only from NIfTI masks in this directory (skip inference)")
+    parser.add_argument("--export-recursive", action="store_true",
+                        help="Recurse into subdirectories when using --export-only-dir")
+    parser.add_argument("--export-pattern", type=str, default="*.nii.gz",
+                        help="Glob pattern for NIfTI files in --export-only-dir (default: *.nii.gz)")
+
     # Device and performance options
     parser.add_argument("--device", default="gpu",
                         help="Device: 'gpu', 'cpu', 'mps', or 'gpu:X' (e.g., gpu:0)")
@@ -497,6 +505,56 @@ def main():
     if not args.input.exists():
         print(f"Error: Input file {args.input} does not exist")
         sys.exit(1)
+
+    # Mesh-only export mode
+    if args.export_only_dir is not None:
+        src = args.export_only_dir
+        if not src.exists():
+            print(f"Error: export-only dir {src} does not exist")
+            sys.exit(1)
+        args.output.mkdir(parents=True, exist_ok=True)
+        files = list(src.rglob(args.export_pattern)) if args.export_recursive else list(src.glob(args.export_pattern))
+        exported = []
+        for f in sorted(files):
+            if f.suffix not in [".gz", ".nii", ".nii.gz"] and not str(f).endswith(".nii.gz"):
+                continue
+            # Compute output path in target dir
+            name = f.name[:-7] if f.name.endswith('.nii.gz') else f.stem
+            out_mesh = args.output / f"{name}.{args.export_format}"
+            mesh_path = export_to_blender_format(
+                f,
+                output_path=out_mesh,
+                export_format=args.export_format,
+                mm_to_meters=(args.units == "m"),
+                laplacian_iters=args.mesh_smooth_iters,
+                is_binary=None,
+                pad_edges=not args.no_mesh_pad_edges,
+                fill_holes=not args.no_mesh_fill_holes,
+                pre_dilate_mm=float(args.dilate_mm),
+                min_mask_voxels=int(args.min_mask_voxels),
+                force_empty_stl=bool(args.write_empty_stl),
+            )
+            if mesh_path:
+                exported.append(str(mesh_path))
+        summary = {
+            "mode": "export_only",
+            "source_dir": str(src),
+            "pattern": args.export_pattern,
+            "recursive": bool(args.export_recursive),
+            "export_format": args.export_format,
+            "units": args.units,
+            "mesh_smooth_iters": args.mesh_smooth_iters,
+            "pad_edges": not args.no_mesh_pad_edges,
+            "fill_holes": not args.no_mesh_fill_holes,
+            "dilate_mm": args.dilate_mm,
+            "min_mask_voxels": args.min_mask_voxels,
+            "write_empty_stl": bool(args.write_empty_stl),
+            "exported_count": len(exported),
+        }
+        with open(args.output / "export_only_summary.json", "w") as f:
+            json.dump(summary, f, indent=2)
+        print(f"Exported {len(exported)} mesh(es) to {args.output}")
+        return
 
     # Determine tasks
     tasks_to_run = list(SEGMENTATION_TASKS.keys()) if "all" in args.tasks else args.tasks

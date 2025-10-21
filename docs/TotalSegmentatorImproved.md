@@ -123,6 +123,25 @@ Notes
   - `--no-mesh-fill-holes` (disable hole-filling repairs)
   - `--dilate-mm 0.5` (thicken thin masks before meshing)
   - `--write-empty-stl` (emit placeholder STL when a mask is empty or unmeshable)
+
+### Mesh-Only Export (existing segmentations)
+
+Export meshes from an existing folder of NIfTI masks (skip inference):
+
+```bash
+# Linux/macOS
+TotalSegmentatorImproved \
+  -i ct.nii.gz \
+  -o out_mesh \
+  --export-only-dir out_total_all/total_all \
+  --export-mesh --export-format stl --units m \
+  --mesh-smooth-iters 20 --dilate-mm 0.5 --write-empty-stl
+
+# Windows (PowerShell)
+TotalSegmentatorImproved -i .\ct.nii.gz -o out_mesh --export-only-dir .\out_total_all\total_all --export-mesh --export-format stl --units m --mesh-smooth-iters 20 --dilate-mm 0.5 --write-empty-stl
+```
+
+Flags like `--no-mesh-pad-edges`, `--no-mesh-fill-holes`, `--min-mask-voxels`, and `--export-recursive/--export-pattern` are also supported in mesh-only mode.
   - `--min-mask-voxels 50`(many tiny spurious masks exist and you only want “real” meshes)
 
 ### Performance Options

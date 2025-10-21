@@ -74,7 +74,8 @@ setup(name='TotalSegmentator',
                 'totalseg_dataset_build=totalsegmentator.bin.totalseg_dataset_build:main',
                 'totalseg_blender_import=totalsegmentator.bin.totalseg_blender_import:main',
                 'totalseg_blender_slider=totalsegmentator.bin.totalseg_blender_slider:main',
-                'totalseg_mpr_widget=totalsegmentator.bin.totalseg_mpr_widget:main'
+                'totalseg_mpr_widget=totalsegmentator.bin.totalseg_mpr_widget:main',
+                'totalseg_export_slicer_style=totalsegmentator.bin.totalseg_export_slicer_style:main'
             ],
         },
     )
