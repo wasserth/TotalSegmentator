@@ -6,11 +6,9 @@ import time
 from typing import Union
 
 import numpy as np
-import pandas as pd
 import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 from tqdm import tqdm
-import numpy.ma as ma
 
 from totalsegmentator.map_to_binary import class_map
 

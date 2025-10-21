@@ -8,8 +8,6 @@ import gc
 
 import nibabel as nib
 import numpy as np
-import pandas as pd
-from tqdm import tqdm
 from fury import window, actor, ui, io, utils
 
 from totalsegmentator.vtk_utils import contour_from_roi_smooth, plot_mask
