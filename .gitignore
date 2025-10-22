@@ -32,3 +32,4 @@ unittest_prediction_fast_force_split.nii.gz
 /test_input_data
 /test_out_dir
 /woking-checking-mac
+dicom_slices
