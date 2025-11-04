@@ -18,7 +18,7 @@ from pathlib import Path
 import warnings
 from typing import Optional, Iterable
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 # -----------------------------
 # Optional dependencies
@@ -260,7 +260,8 @@ def export_to_blender_format(
                 trepair.fill_holes(mesh)
                 trepair.fix_normals(mesh)
                 mesh.remove_unreferenced_vertices()
-                mesh.remove_degenerate_faces()
+                # mesh.remove_degenerate_faces()
+                mesh.update_faces(mesh.nondegenerate_faces())
             except Exception:
                 pass
         if mm_to_meters:
@@ -345,7 +346,7 @@ def run_segmentation_task(
     Run a specific segmentation task with the given configuration.
     """
     task_t0 = time.time()
-    started_at = datetime.utcnow().isoformat() + "Z"
+    started_at = datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 

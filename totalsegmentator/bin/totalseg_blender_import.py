@@ -201,7 +201,7 @@ def parse_args(argv=None):
     p.add_argument("--scale", type=float, default=1.0, help="Extra uniform scale after unit conversion")
     p.add_argument("--recenter", action="store_true", help="Recenter imported meshes to origin")
     p.add_argument("--group-categories", action="store_true", help="Create category subcollections and place objects accordingly")
-    p.add_argument("--mirror-x", type=str, choices=["true", "false"], default="true", help="Mirror imported meshes across global X (fix mirrored exports)")
+    p.add_argument("--mirror-x", type=str, choices=["true", "false"], default="false", help="Mirror objects across X-axis and flip X location")
     p.add_argument("--rotate-x-deg", type=float, default=90.0, help="Rotate imported meshes around X in degrees (e.g., -90)")
     p.add_argument("--remesh", choices=["none", "voxel", "quad", "smooth", "sharp"], default="none", help="Apply a remesh modifier to imported meshes")
     p.add_argument("--voxel-size", type=float, default=0.003, help="Voxel size for voxel remesh (in scene units; 0.003 ≈ 3 mm if scene is meters)")
@@ -270,7 +270,10 @@ def _apply_rotate_and_mirror(obj, rotate_x_deg: float = 0.0, mirror_x: bool = Fa
     if abs(rotate_x_deg) > 1e-6:
         obj.rotation_euler[0] += math.radians(rotate_x_deg)
     
-    # Mirror across global X axis
+    # ADDED: Rotate 180 degrees around Z-axis to fix upside-down orientation
+    obj.rotation_euler[2] += math.radians(180.0)
+    
+    # Mirror across global X axis ONLY if requested
     if mirror_x:
         # Ensure only this obj is selected and active
         view = bpy.context.view_layer
@@ -283,33 +286,13 @@ def _apply_rotate_and_mirror(obj, rotate_x_deg: float = 0.0, mirror_x: bool = Fa
                 orient_type='GLOBAL',
                 orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
                 orient_matrix_type='GLOBAL',
-                constraint_axis=(True, False, False)
+                constraint_axis=(True, False, False)  # Only X-axis
             )
         except Exception:
             # Fallback: negative X scale
             obj.scale[0] *= -1.0
-        # Match user's intent to flip X location sign
+        # Flip X location sign to move organs to opposite side
         obj.location.x = -obj.location.x
-    
-    # ADDED: Mirror across global Y axis by default
-    # Ensure only this obj is selected and active
-    view = bpy.context.view_layer
-    for o in bpy.context.selected_objects:
-        o.select_set(False)
-    obj.select_set(True)
-    view.objects.active = obj
-    try:
-        bpy.ops.transform.mirror(
-            orient_type='GLOBAL',
-            orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)),
-            orient_matrix_type='GLOBAL',
-            constraint_axis=(False, True, False)
-        )
-    except Exception:
-        # Fallback: negative Y scale
-        obj.scale[1] *= -1.0
-    # Flip Y location sign
-    obj.location.y = -obj.location.y
 
 
 def import_mesh(filepath: Path, units: str = "m", extra_scale: float = 1.0, recenter: bool = False, collection=None, remesh_mode: str = "none", voxel_size: float = 0.003, palette: str = "exact", rotate_x_deg: float = 0.0, mirror_x: bool = False):
