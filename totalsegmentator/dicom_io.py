@@ -149,9 +149,13 @@ def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output
     for class_idx, class_name in tqdm(selected_classes.items()):
         binary_img = img_data == class_idx
         if binary_img.sum() > 0:  # only save none-empty images
-
+            print(f'BINARY ROI SHAPE BEFORE ROTATION: {binary_img.shape}')
             # rotate nii to match DICOM orientation
-            binary_img = np.rot90(binary_img, 1, (0, 1))  # rotate segmentation in-plane
+            if len(rtstruct.series_data) == binary_img.shape[0]:
+                binary_img = np.rot90(binary_img, 1, (0, 2))
+            elif len(rtstruct.series_data) == binary_img.shape[1]:
+                binary_img = np.rot90(binary_img, 1, (0, 1))  # rotate segmentation in-plane
+            print(f'BINARY ROI SHAPE AFTER ROTATION: {binary_img.shape}')
 
             # add segmentation to RT Struct
             rtstruct.add_roi(
@@ -216,6 +220,12 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     if seg_shape == (dcm_cols, dcm_rows, dcm_slices):
         # Need to transpose to swap rows and cols
         img_data = np.transpose(img_data, (1, 0, 2))
+    elif seg_shape == (dcm_slices, dcm_cols, dcm_rows):
+        # For saggital slicing
+        print(f'Flipping saggital segmentation for DICOM SEG to fit reference scan.\nShape before transp: {img_data.shape}')
+        img_data = np.transpose(img_data, (2, 1, 0))
+        print(f'Shape after transp: {img_data.shape}')
+        img_data = np.flip(img_data, 1)
     elif seg_shape != (dcm_rows, dcm_cols, dcm_slices):
         raise ValueError(f"Segmentation shape {seg_shape} does not match DICOM dimensions ({dcm_rows}, {dcm_cols}, {dcm_slices}). "
                         "Cannot create DICOM SEG with mismatched dimensions.")
@@ -320,8 +330,11 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
         manufacturer="TotalSegmentator",
         manufacturer_model_name="TotalSegmentator",
         software_versions=version,
-        device_serial_number="1"
+        device_serial_number="1",
+        content_description=source_images[0].SeriesDescription
     )
     
+    seg.SeriesDescription = source_images[0].SeriesDescription
+
     # Save DICOM SEG file
     seg.save_as(str(output_path))
