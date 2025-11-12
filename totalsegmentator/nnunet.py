@@ -413,8 +413,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             raise ValueError("TotalSegmentator does not work for 2D images. Use a 3D image.")
         if len(img_in_orig.shape) > 3:
             print(f"WARNING: Input image has {len(img_in_orig.shape)} dimensions. Only using first three dimensions.")
+
             img_in_orig = nib.Nifti1Image(img_in_orig.get_fdata()[:,:,:,0], img_in_orig.affine)
-            
+            #img_in_orig = nib.Nifti1Image(img_in_orig.get_fdata().transpose(3,0,1,2).reshape(-1, img_in_orig.shape[1], img_in_orig.shape[2]), img_in_orig.affine)
+        print(f'INPUT IMAGE SHAPE: {img_in_orig.shape}')
+
         img_dtype = img_in_orig.get_data_dtype()
         if img_dtype.fields is not None:
             raise TypeError(f"Invalid dtype {img_dtype}. Expected a simple dtype, not a structured one.")
@@ -736,11 +739,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
             if "dicom_rtstruct" in output_type:
                 # file_out.mkdir(exist_ok=True, parents=True)
-                file_out_rt = file_out.with_name(f'rtstruct_{file_out.stem}.dcm') if len(output_type) > 1 else file_out.with_suffix('.dcm')
+                file_out_rt = file_out.with_name(f'rtstruct_{file_out.name.removesuffix(".nii.gz")}.dcm')
+                print(f'OUTPUT SEGMENTATION SHAPE{img_data.shape}')
                 save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out_rt)
             if "dicom_seg" in output_type:
                 # file_out.mkdir(exist_ok=True, parents=True)
-                file_out_dcmseg = file_out.with_name(f'dicomseg_{file_out.stem}.dcm') if len(output_type) > 1 else file_out.with_suffix('.dcm')
+                file_out_dcmseg = file_out.with_name(f'dicomseg_{file_out.name.removesuffix(".nii.gz")}.dcm')
                 save_mask_as_dicomseg(img_data, selected_classes, file_in_dcm, file_out_dcmseg, img_out.affine)
             if "nifti" in output_type:
                 st = time.time()
@@ -749,7 +753,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 else:
                     file_out.mkdir(exist_ok=True, parents=True)
                 if multilabel_image:
-                    file_out = file_out.with_suffix('.nii.gz')
+                    if '.nii.gz' not in file_out.name:
+                        file_out = file_out.with_name(f'{file_out.name.removesuffix(".dcm")}.nii.gz')
                     nib.save(img_out, file_out)
                     if nora_tag != "None":
                         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
