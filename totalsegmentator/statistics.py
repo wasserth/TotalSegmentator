@@ -79,11 +79,11 @@ def touches_border(mask):
     is incomplete.
     Do not check last two slices but the previous one, because segmentation on last slices often bad.
     """
-    if np.any(mask[2, :, :]) or np.any(mask[-3, :, :]):
+    if np.any(mask[:3, :, :]) or np.any(mask[-3:, :, :]):
         return True
-    if np.any(mask[:, 2, :]) or np.any(mask[:, -3, :]):
+    if np.any(mask[:, :3, :]) or np.any(mask[:, -3:, :]):
         return True
-    if np.any(mask[:, :, 2]) or np.any(mask[:, :, -3]):
+    if np.any(mask[:, :, :3]) or np.any(mask[:, :, -3:]):
         return True
     return False
 
