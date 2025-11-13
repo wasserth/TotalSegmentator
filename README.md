@@ -181,7 +181,7 @@ We provide the following web applications to easily process your images:
 ### Run via docker
 We also provide a docker container which can be used the following way
 ```bash
-docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.2.1 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
+docker run --gpus 'device=0' --shm-size=4G -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.2.1 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
 ```
 
 
