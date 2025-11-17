@@ -196,6 +196,25 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     # Load all DICOM slices
     source_images = [pydicom.dcmread(str(f)) for f in dcm_files]
     
+    # Validate and fix SOPClassUID if missing or empty
+    for img in source_images:
+        if not hasattr(img, 'SOPClassUID') or img.SOPClassUID == '':
+            # Set to CT Image Storage by default (most common for TotalSegmentator)
+            # If it's an MR image, we could check Modality tag to determine the correct UID
+            if hasattr(img, 'Modality'):
+                if img.Modality == 'CT':
+                    img.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
+                elif img.Modality == 'MR':
+                    img.SOPClassUID = '1.2.840.10008.5.1.4.1.1.4'  # MR Image Storage
+                elif img.Modality == 'PT':
+                    img.SOPClassUID = '1.2.840.10008.5.1.4.1.1.128'  # PET Image Storage
+                else:
+                    # Default to Secondary Capture Image Storage for unknown modalities
+                    img.SOPClassUID = '1.2.840.10008.5.1.4.1.1.7'  # Secondary Capture Image Storage
+            else:
+                # If no Modality tag, default to CT Image Storage
+                img.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
+    
     # Sort by Instance Number or Image Position Patient
     if hasattr(source_images[0], 'InstanceNumber'):
         source_images = sorted(source_images, key=lambda x: x.InstanceNumber)
