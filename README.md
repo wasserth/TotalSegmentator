@@ -21,7 +21,7 @@ TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU and GPU.
 
 Install dependencies:
 * Python >= 3.9
-* [PyTorch](http://pytorch.org/) >= 2.0.0 and <2.6.0 (and <2.4 for Windows)
+* [PyTorch](http://pytorch.org/) >= 2.0.0
 
 Optionally:
 * if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`) and fury (`pip install fury`)
@@ -74,11 +74,13 @@ Openly available for any usage (Apache-2.0 license):
 * **lung_nodules**: lung, lung_nodules (provided by [BLUEMIND AI](https://bluemind.co/): Fitzjalen R., Aladin M., Nanyan G.) (trained on 1353 subjects, partly from LIDC-IDRI)
 * **kidney_cysts**: kidney_cyst_left, kidney_cyst_right (strongly improved accuracy compared to kidney_cysts inside of `total` task)
 * **breasts**: breast
-* **liver_segments**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (Couinaud segments)*
+* **liver_segments**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (Couinaud segments) (cite [paper](https://doi.org/10.1007/978-3-030-32692-0_32))*
 * **liver_segments_mr**: liver_segment_1, liver_segment_2, liver_segment_3, liver_segment_4, liver_segment_5, liver_segment_6, liver_segment_7, liver_segment_8 (for MR images) (Couinaud segments)*
 * **craniofacial_structures**: mandible, teeth_lower, skull, head, sinus_maxillary, sinus_frontal, teeth_upper
 * **abdominal_muscles**: pectoralis_major_right, pectoralis_major_left, rectus_abdominis_right, rectus_abdominis_left, serratus_anterior_right, serratus_anterior_left, latissimus_dorsi_right, latissimus_dorsi_left, trapezius_right, trapezius_left, external_oblique_right, external_oblique_left, internal_oblique_right, internal_oblique_left, erector_spinae_right, erector_spinae_left, transversospinalis_right, transversospinalis_left, psoas_major_right, psoas_major_left, quadratus_lumborum_right, quadratus_lumborum_left (cite [paper](https://doi.org/10.1101/2025.01.13.25319967)) (only segments within T4-L4)*
- 
+* **teeth**: "lower_jawbone", "upper_jawbone", "left_inferior_alveolar_canal", "right_inferior_alveolar_canal", "left_maxillary_sinus", "right_maxillary_sinus", "pharynx", "bridge", "crown", "implant", "upper_right_central_incisor_fdi11", "upper_right_lateral_incisor_fdi12", "upper_right_canine_fdi13", "upper_right_first_premolar_fdi14", "upper_right_second_premolar_fdi15", "upper_right_first_molar_fdi16", "upper_right_second_molar_fdi17", "upper_right_third_molar_fdi18", "upper_left_central_incisor_fdi21", "upper_left_lateral_incisor_fdi22", "upper_left_canine_fdi23", "upper_left_first_premolar_fdi24", "upper_left_second_premolar_fdi25", "upper_left_first_molar_fdi26", "upper_left_second_molar_fdi27", "upper_left_third_molar_fdi28", "lower_left_central_incisor_fdi31", "lower_left_lateral_incisor_fdi32", "lower_left_canine_fdi33", "lower_left_first_premolar_fdi34", "lower_left_second_premolar_fdi35", "lower_left_first_molar_fdi36", "lower_left_second_molar_fdi37", "lower_left_third_molar_fdi38", "lower_right_central_incisor_fdi41", "lower_right_lateral_incisor_fdi42", "lower_right_canine_fdi43", "lower_right_first_premolar_fdi44", "lower_right_second_premolar_fdi45", "lower_right_first_molar_fdi46", "lower_right_second_molar_fdi47", "lower_right_third_molar_fdi48", "left_mandibular_incisive_canal_fdi103", "right_mandibular_incisive_canal_fdi104", "lingual_canal", "upper_right_central_incisor_pulp_fdi111", "upper_right_lateral_incisor_pulp_fdi112", "upper_right_canine_pulp_fdi113", "upper_right_first_premolar_pulp_fdi114", "upper_right_second_premolar_pulp_fdi115", "upper_right_first_molar_pulp_fdi116", "upper_right_second_molar_pulp_fdi117", "upper_right_third_molar_pulp_fdi118", "upper_left_central_incisor_pulp_fdi121", "upper_left_lateral_incisor_pulp_fdi122", "upper_left_canine_pulp_fdi123", "upper_left_first_premolar_pulp_fdi124", "upper_left_second_premolar_pulp_fdi125", "upper_left_first_molar_pulp_fdi126", "upper_left_second_molar_pulp_fdi127", "upper_left_third_molar_pulp_fdi128", "lower_left_central_incisor_pulp_fdi131", "lower_left_lateral_incisor_pulp_fdi132", "lower_left_canine_pulp_fdi133", "lower_left_first_premolar_pulp_fdi134", "lower_left_second_premolar_pulp_fdi135", "lower_left_first_molar_pulp_fdi136", "lower_left_second_molar_pulp_fdi137", "lower_left_third_molar_pulp_fdi138", "lower_right_central_incisor_pulp_fdi141", "lower_right_lateral_incisor_pulp_fdi142", "lower_right_canine_pulp_fdi143", "lower_right_first_premolar_pulp_fdi144", "lower_right_second_premolar_pulp_fdi145", "lower_right_first_molar_pulp_fdi146", "lower_right_second_molar_pulp_fdi147", "lower_right_third_molar_pulp_fdi148" (based on the ToothFairy3 dataset, cite [paper](https://openaccess.thecvf.com/content/CVPR2025/html/Bolelli_Segmenting_Maxillofacial_Structures_in_CBCT_Volumes_CVPR_2025_paper.html))
+* **trunk_cavities**: abdominal_cavity, thoracic_cavity, pericardium, mediastinum
+
 *: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
 Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch):
@@ -119,6 +121,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
+* `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
 
 
 ### Other commands
@@ -179,7 +182,7 @@ We provide the following web applications to easily process your images:
 ### Run via docker
 We also provide a docker container which can be used the following way
 ```bash
-docker run --gpus 'device=0' --ipc=host -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.2.1 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
+docker run --gpus 'device=0' --shm-size=4G -v /absolute/path/to/my/data/directory:/tmp wasserth/totalsegmentator:2.2.1 TotalSegmentator -i /tmp/ct.nii.gz -o /tmp/segmentations
 ```
 
 

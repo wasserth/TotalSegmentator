@@ -6,11 +6,9 @@ import time
 from typing import Union
 
 import numpy as np
-import pandas as pd
 import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 from tqdm import tqdm
-import numpy.ma as ma
 
 from totalsegmentator.map_to_binary import class_map
 
@@ -81,11 +79,11 @@ def touches_border(mask):
     is incomplete.
     Do not check last two slices but the previous one, because segmentation on last slices often bad.
     """
-    if np.any(mask[2, :, :]) or np.any(mask[-3, :, :]):
+    if np.any(mask[:3, :, :]) or np.any(mask[-3:, :, :]):
         return True
-    if np.any(mask[:, 2, :]) or np.any(mask[:, -3, :]):
+    if np.any(mask[:, :3, :]) or np.any(mask[:, -3:, :]):
         return True
-    if np.any(mask[:, :, 2]) or np.any(mask[:, :, -3]):
+    if np.any(mask[:, :, :3]) or np.any(mask[:, :, -3:]):
         return True
     return False
 

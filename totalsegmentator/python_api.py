@@ -43,6 +43,14 @@ def convert_device_to_cuda(device):
         return f"cuda:{device.split(':')[1]}"
 
 
+def convert_device_to_string(device):
+    if hasattr(device, 'type'):  # torch.device object
+        if device.type == "cuda":
+            return "gpu"
+        else:
+            return device.type
+
+
 def select_device(device):
     device = convert_device_to_cuda(device)
 
@@ -121,11 +129,17 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     device = select_device(device)
     if verbose: print(f"Using Device: {device}")
     
-    if output_type == "dicom":
+    if output_type == "dicom_rtstruct":
         try:
             from rt_utils import RTStructBuilder
         except ImportError:
-            raise ImportError("rt_utils is required for output_type='dicom'. Please install it with 'pip install rt_utils'.")
+            raise ImportError("rt_utils is required for output_type='dicom_rtstruct'. Please install it with 'pip install rt_utils'.")
+    
+    if output_type == "dicom_seg":
+        try:
+            import highdicom
+        except ImportError:
+            raise ImportError("highdicom is required for output_type='dicom_seg'. Please install it with 'pip install highdicom'.")
 
     if not quiet:
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
@@ -141,8 +155,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
+    crop_model = None
     crop_addon = [3, 3, 3]  # default value
     cascade = None
+    remove_outside = None
+    remove_outside_dilation = None
+    remove_mask = None
     
     if task == "total":
         if fast:
@@ -429,7 +447,26 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres_high"
         folds = [0]
         if fast: raise ValueError("task abdominal_muscles does not work with option --fast")
-
+    elif task == "teeth":
+        task_id = 113  # trained with nnUNet v2.6.2; might not be compatible with older nnunet versions
+        resample = [0.5, 0.5, 0.5]
+        trainer = "nnUNetTrainer_onlyMirror01"
+        # mandible not included, because would increase FOV way too much -> many wrong segmentation in regions outside of teeth
+        # (model was trained on pretty narrow FOV because of CBCT data)
+        crop = ["teeth_lower", "teeth_upper"]
+        crop_model = "craniofacial_structures"
+        crop_addon = [10, 10, 10]
+        model = "3d_lowres_high"
+        folds = [0]
+        if fast: raise ValueError("task teeth does not work with option --fast")
+    elif task == "trunk_cavities":
+        task_id = 343
+        resample = [1.5, 1.5, 1.5]
+        trainer = "nnUNetTrainer"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task trunk_cavities does not work with option --fast")
         
     # Commercial models
     elif task == "vertebrae_body":
@@ -447,6 +484,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         trainer = "nnUNetTrainer"
         crop = ["heart"]
         crop_addon = [5, 5, 5]
+        remove_outside = ["heart", "aorta", "inferior_vena_cava"]
+        remove_outside_dilation = 10  # mm
+        robust_crop = True
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task heartchambers_highres does not work with option --fast")
@@ -571,7 +611,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
 
-    crop_path = output if crop_path is None else crop_path
+    if crop_path is None:
+        crop_path = output.parent if output is not None else None
+    else:
+        crop_path = crop_path
 
     if isinstance(input, Nifti1Image) or input.suffix == ".nii" or input.suffixes == [".nii", ".gz"]:
         img_type = "nifti"
@@ -620,35 +663,44 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         body_seg = False  # can not be used together with body_seg
         st = time.time()
         if not quiet: print("Generating rough segmentation for cropping...")
-        if robust_rs or robust_crop:
-            print("  (Using more robust (but slower) 3mm model for cropping.)")
-            crop_model_task = 852 if task.endswith("_mr") else 297
-            crop_spacing = 3.0
-        else:
-            # For MR always run 3mm model for cropping, because 6mm too bad results
-            #  (runtime for 3mm still very good for MR)
-            if task.endswith("_mr"):
-                crop_model_task = 852
+
+        if crop_model is None:  # use default "total" model for cropping
+            if robust_rs or robust_crop:
+                print("  (Using more robust (but slower) 3mm model for cropping.)")
+                crop_model_task = 852 if task.endswith("_mr") else 297
                 crop_spacing = 3.0
             else:
-                crop_model_task = 298
+                # For MR always run 3mm model for cropping, because 6mm too bad results
+                #  (runtime for 3mm still very good for MR)
+                if task.endswith("_mr"):
+                    crop_model_task = 852
+                    crop_spacing = 3.0
+                else:
+                    crop_model_task = 298
+                    crop_spacing = 6.0
+            crop_task = "total_mr" if task.endswith("_mr") else "total"
+            crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"
+            if crop is not None and ("body_trunc" in crop or "body_extremities" in crop):
+                crop_model_task = 300
                 crop_spacing = 6.0
-        crop_task = "total_mr" if task.endswith("_mr") else "total"
-        crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"
-        if crop is not None and ("body_trunc" in crop or "body_extremities" in crop):
-            crop_model_task = 300
-            crop_spacing = 6.0
-            crop_trainer = "nnUNetTrainer"
-            crop_task = "body"
-        download_pretrained_weights(crop_model_task)
-        
-        organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
-                            trainer=crop_trainer, tta=False, multilabel_image=True, resample=crop_spacing,
-                            crop=None, crop_path=None, task_name=crop_task, nora_tag="None", preview=False,
-                            save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
-                            crop_addon=crop_addon, output_type=output_type, statistics=False,
-                            quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
-        class_map_inv = {v: k for k, v in class_map[crop_task].items()}
+                crop_trainer = "nnUNetTrainer"
+                crop_task = "body"
+            download_pretrained_weights(crop_model_task)
+            
+            organ_seg, _, _ = nnUNet_predict_image(input, None, crop_model_task, model="3d_fullres", folds=[0],
+                                trainer=crop_trainer, tta=False, multilabel_image=True, resample=crop_spacing,
+                                crop=None, crop_path=None, task_name=crop_task, nora_tag="None", preview=False,
+                                save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
+                                crop_addon=None, output_type=output_type, statistics=False,
+                                quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device)
+            class_map_inv = {v: k for k, v in class_map[crop_task].items()}
+            
+        else:
+            # If crop_model is specified, run totalsegmentator for the crop model
+            organ_seg = totalsegmentator(input, None, task=crop_model, nr_thr_resamp=nr_thr_resamp, 
+                                         device=convert_device_to_string(device), quiet=quiet, verbose=verbose)
+            class_map_inv = {v: k for k, v in class_map[crop_model].items()}
+
         crop_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
         organ_seg_data = organ_seg.get_fdata()
         # roi_subset_crop = [map_to_total[roi] if roi in map_to_total else roi for roi in roi_subset]
@@ -656,9 +708,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         for roi in roi_subset_crop:
             crop_mask[organ_seg_data == class_map_inv[roi]] = 1
         crop_mask = nib.Nifti1Image(crop_mask, organ_seg.affine)
-        crop_addon = [20,20,20]
+        crop_addon = [20,20,20] if crop_model is None else crop_addon  # default to 20,20,20 for roi_subset
         crop = crop_mask
         cascade = crop_mask if cascade else None
+
+        if remove_outside is not None:
+            remove_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
+            for roi in remove_outside:
+                remove_mask[organ_seg_data == class_map_inv[roi]] = 1
+            remove_mask = nib.Nifti1Image(remove_mask, organ_seg.affine)
+
         if verbose: print(f"Rough organ segmentation generated in {time.time()-st:.2f}s")
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
@@ -688,7 +747,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
                             normalized_intensities=statistics_normalized_intensities, 
                             nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities,
-                            cascade=cascade)
+                            cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:
@@ -706,7 +765,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if not quiet: print("Calculating statistics...")
         st = time.time()
         if output is not None:
-            stats_dir = output.parent if ml else output
+            # For DICOM output types, output is always a file path, so use parent directory
+            if output_type in ["dicom_seg", "dicom_rtstruct"]:
+                stats_dir = output.parent
+            else:
+                stats_dir = output.parent if ml else output
             stats_file = stats_dir / "statistics.json"
         else:
             stats_file = None

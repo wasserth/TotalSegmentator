@@ -12,11 +12,24 @@ jobs:
         python-version: ["3.12"]  # save action minutes; not relevant: for open source unlimited minutes
     steps:
       - uses: actions/checkout@v5
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: false
+          haskell: false
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
       - name: Set up Python ${{matrix.python-version}}
         uses: actions/setup-python@v5
         with:
           python-version: ${{matrix.python-version}}
-
+          cache: 'pip'
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

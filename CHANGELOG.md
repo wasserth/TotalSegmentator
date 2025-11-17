@@ -1,6 +1,16 @@
 ## Master
+* update `heartchambers_highres` task: add postprocessing to remove segmentations outside of heart (+10mm). This fixes the issue of sometimes wrong heart segmentations in the liver or spleen. Also use the `robust_crop` option per default now for the heart chambers task.
+* add support for dicom_seg output type
+* **BREAKING CHANGE**: The option `--output_type dicom` is now `--output_type dicom_rtstruct`
+* **BREAKING CHANGE**: If setting `--output_type dicom_seg` or `--output_type dicom_rtstruct` the output path (`-o`) is not treated as a directory anymore but as a file path. So if you did `-o dicom_rt_struct_output_dir` you now have to do `-o dicom_rt_struct_output_dir/segmentations.dcm`
+* add `trunk_cavities` task
+
+
+## Release 2.11.0
 * add multilabel input support to `totalseg_combine_masks`
 * remove numpy < 2 requirement
+* add `teeth` task
+* **IMPORTANT**: increase nnunetv2 requirement from >=2.2.1 to >=2.3.1 to support model trained on the latest nnunetv2 version (2.6.2) (i.e. `teeth` task)
 
 
 ## Release 2.10.0

@@ -51,7 +51,7 @@ from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonica
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical, reorder_multilabel_like_v1
-from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct
+from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct, save_mask_as_dicomseg
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin, remove_auxiliary_labels
@@ -330,7 +330,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, nnunet_resampling=False,
-                         save_probabilities=None, cascade=None):
+                         save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -350,8 +350,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         file_out = Path(file_out)
     multimodel = type(task_id) is list
 
-    if img_type == "nifti" and output_type == "dicom":
-        raise ValueError("To use output type dicom you also have to use a Dicom image as input.")
+    if img_type == "nifti" and (output_type == "dicom_rtstruct" or output_type == "dicom_seg"):
+        raise ValueError("To use output type dicom_rtstruct or dicom_seg you also have to use a Dicom image as input.")
+
+    # These outputs always result in a single multilabel file
+    if output_type == "dicom_rtstruct" or output_type == "dicom_seg":
+        multilabel_image = True
 
     if task_name == "total":
         class_map_parts = class_map_5_parts
@@ -421,6 +425,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
         if crop is not None:
             if type(crop) is str:
+                # This seems to never being used. Probably can be removed, but keep it to not run
+                # into unexpected errors.
+                print("DEPRECATION WARNING: Using crop as string is deprecated. Please use a nibabel image instead.")
                 if crop == "lung" or crop == "pelvis":
                     crop_mask_img = combine_masks(crop_path, crop)
                 else:
@@ -642,7 +649,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if not quiet: print("Calculating statistics fast...")
             st = time.time()
             if file_out is not None:
-                stats_dir = file_out.parent if multilabel_image else file_out
+                # For DICOM output types, file_out is always a file path, so use parent directory
+                if output_type in ["dicom_seg", "dicom_rtstruct"]:
+                    stats_dir = file_out.parent
+                else:
+                    stats_dir = file_out.parent if multilabel_image else file_out
                 stats_dir.mkdir(exist_ok=True)
                 stats_file = stats_dir / "statistics.json"
             else:
@@ -703,6 +714,14 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if roi_subset is not None:
             img_data *= np.isin(img_data, list(label_map.keys()))
 
+        # Apply remove_outside postprocessing
+        if remove_outside_dilation is not None:
+            if not quiet: print("Applying postprocessing: remove outside of crop mask...")
+            st = time.time()
+            remove_outside_dilation_vx = int(remove_outside_dilation / np.mean(img_in_orig.header.get_zooms()))
+            img_data = remove_outside_of_mask(img_data, remove_outside_mask.get_fdata(), addon=remove_outside_dilation_vx)
+            if not quiet: print(f"  Applied in {time.time() - st:.2f}s")
+
         # Prepare output nifti
         # Copy header to make output header exactly the same as input. But change dtype otherwise it will be
         # float or int and therefore the masks will need a lot more space.
@@ -720,9 +739,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if roi_subset is not None:
                 selected_classes = {k:v for k, v in selected_classes.items() if v in roi_subset}
 
-            if output_type == "dicom":
-                file_out.mkdir(exist_ok=True, parents=True)
-                save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out / "segmentations.dcm")
+            if output_type == "dicom_rtstruct":
+                # file_out.mkdir(exist_ok=True, parents=True)
+                save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out)
+            elif output_type == "dicom_seg":
+                # file_out.mkdir(exist_ok=True, parents=True)
+                save_mask_as_dicomseg(img_data, selected_classes, file_in_dcm, file_out, img_out.affine)
             else:
                 st = time.time()
                 if multilabel_image:

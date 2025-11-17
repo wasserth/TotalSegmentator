@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='TotalSegmentator',
-        version='2.10.0',
+        version='2.11.0',
         description='Robust segmentation of 104 classes in CT images.',
         long_description="See Readme.md on github for more details.",
         url='https://github.com/wasserth/TotalSegmentator',
@@ -33,7 +33,7 @@ setup(name='TotalSegmentator',
             'nibabel>=2.3.0',
             'tqdm>=4.45.0',
             'xvfbwrapper',
-            'nnunetv2>=2.2.1',
+            'nnunetv2>=2.3.1',
             'requests==2.27.1;python_version<"3.10"',
             'requests;python_version>="3.10"',
             'dicom2nifti',

@@ -23,7 +23,7 @@ print(get_full_task_name_v2($dataset_id))
     echo "Processing $task_name..."
     
     # Copy dataset folder
-    cp -r "$nnUNet_results/$task_name" .
+    # cp -r "$nnUNet_results/$task_name" .
     
     # Get the only folder inside task_name
     trainer_folder=$(ls "$task_name" | head -n 1)
