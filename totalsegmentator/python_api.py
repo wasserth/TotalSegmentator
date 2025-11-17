@@ -765,7 +765,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if not quiet: print("Calculating statistics...")
         st = time.time()
         if output is not None:
-            stats_dir = output.parent if ml else output
+            # For DICOM output types, output is always a file path, so use parent directory
+            if output_type in ["dicom_seg", "dicom_rtstruct"]:
+                stats_dir = output.parent
+            else:
+                stats_dir = output.parent if ml else output
             stats_file = stats_dir / "statistics.json"
         else:
             stats_file = None
