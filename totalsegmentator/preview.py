@@ -276,6 +276,9 @@ roi_groups = {
          "lower_right_first_premolar_pulp_fdi144", "lower_right_second_premolar_pulp_fdi145", "lower_right_first_molar_pulp_fdi146",
          "lower_right_second_molar_pulp_fdi147", "lower_right_third_molar_pulp_fdi148"]
     ],
+    "trunk_cavities": [
+        ["abdominal_cavity", "thoracic_cavity", "pericardium", "mediastinum"]
+    ],
     
     "test": [
         ["ulna"]

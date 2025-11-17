@@ -764,6 +764,12 @@ class_map = {
         76: "lower_right_second_molar_pulp_fdi147",
         77: "lower_right_third_molar_pulp_fdi148"
     },
+    "trunk_cavities": {
+        1: "abdominal_cavity",
+        2: "thoracic_cavity",
+        3: "pericardium",
+        4: "mediastinum"
+    },
     "test": {
         1: "carpal"
     }

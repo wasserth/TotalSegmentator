@@ -459,7 +459,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_lowres_high"
         folds = [0]
         if fast: raise ValueError("task teeth does not work with option --fast")
-
+    elif task == "trunk_cavities":
+        task_id = 343
+        resample = [1.5, 1.5, 1.5]
+        trainer = "nnUNetTrainer"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task trunk_cavities does not work with option --fast")
         
     # Commercial models
     elif task == "vertebrae_body":
