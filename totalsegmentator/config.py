@@ -106,7 +106,7 @@ def get_license_number():
 
 def is_valid_license(license_number):
     try:
-        url = "http://backend.totalsegmentator.com:80/"
+        url = "https://backend.totalsegmentator.com:443/"
         r = requests.post(url + "is_valid_license_number",
                           json={"license_number": license_number}, timeout=5)
         if r.ok:
@@ -223,7 +223,7 @@ def send_usage_stats(config, params):
 
         try:
             st = time.time()
-            url = "http://stats.totalsegmentator.com:80/"
+            url = "https://stats.totalsegmentator.com:443/"
             r = requests.post(url + "log_totalseg_run",
                               json={"totalseg_id": config["totalseg_id"],
                                     "prediction_counter": config["prediction_counter"],
@@ -241,14 +241,14 @@ def send_usage_stats(config, params):
                                     "cuda_available": torch.cuda.is_available(),
                                     "license_number": license_number
                                     }, timeout=5)
-            # if r.ok:
-            #     print(f"status: {r.json()['status']}")
-            # else:
-            #     print(f"status code: {r.status_code}")
-            #     print(f"message: {r.json()['message']}")
-            # print(f"Request took {time.time()-st:.3f}s")
+            if r.ok:
+                print(f"status: {r.json()['status']}")
+            else:
+                print(f"status code: {r.status_code}")
+                print(f"message: {r.json()['message']}")
+            print(f"Request took {time.time()-st:.3f}s")
         except Exception as e:
-            # print(f"An Exception occurred: {e}")
+            print(f"An Exception occurred: {e}")
             pass
 
 
@@ -258,7 +258,7 @@ def send_usage_stats_application(application_name):
 
         try:
             st = time.time()
-            url = "http://stats.totalsegmentator.com:80/"
+            url = "https://stats.totalsegmentator.com:443/"
             r = requests.post(url + "log_totalseg_application_run",
                               json={"totalseg_id": config["totalseg_id"],
                                     "application": application_name,
