@@ -241,14 +241,14 @@ def send_usage_stats(config, params):
                                     "cuda_available": torch.cuda.is_available(),
                                     "license_number": license_number
                                     }, timeout=5)
-            if r.ok:
-                print(f"status: {r.json()['status']}")
-            else:
-                print(f"status code: {r.status_code}")
-                print(f"message: {r.json()['message']}")
-            print(f"Request took {time.time()-st:.3f}s")
+            # if r.ok:
+            #     print(f"status: {r.json()['status']}")
+            # else:
+            #     print(f"status code: {r.status_code}")
+            #     print(f"message: {r.json()['message']}")
+            # print(f"Request took {time.time()-st:.3f}s")
         except Exception as e:
-            print(f"An Exception occurred: {e}")
+            # print(f"An Exception occurred: {e}")
             pass
 
 
