@@ -50,7 +50,7 @@ def download_model_with_license_and_unpack(task_name, config_dir):
         return False
 
     tempfile = config_dir / "tmp_download_file.zip"
-    url = "http://backend.totalsegmentator.com:80/"
+    url = "https://backend.totalsegmentator.com:443/"
 
     # Download
     try:

@@ -286,6 +286,7 @@ roi_groups = {
 }
 
 
+
 def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):
     for idx, roi in enumerate(rois):
         color = random_colors[idx]
