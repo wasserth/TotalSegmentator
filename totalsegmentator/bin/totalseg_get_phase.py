@@ -56,7 +56,7 @@ def pi_time_to_phase(pi_time: float) -> str:
 
 
 def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None, 
-                          quiet: bool = False, device: str = "gpu"):
+                          quiet: bool = False, device: str = "gpu", existing_stats: dict = None):
 
     organs = ["liver", "pancreas", "urinary_bladder", "gallbladder",
               "heart", "aorta", "inferior_vena_cava", "portal_vein_and_splenic_vein",
@@ -67,11 +67,16 @@ def get_ct_contrast_phase(ct_img: nib.Nifti1Image, model_file: Path = None,
                  "internal_jugular_vein_right", "internal_jugular_vein_left"]
 
     st = time.time()
-    if not quiet:
-        print("Running TotalSegmentator...")
-    seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
-                                      roi_subset=None, statistics_exclude_masks_at_border=False,
-                                      quiet=True, stats_aggregation="median", device=device)
+    if existing_stats is None:
+        if not quiet:
+            print("Running TotalSegmentator...")
+        seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
+                                        roi_subset=None, statistics_exclude_masks_at_border=False,
+                                        quiet=True, stats_aggregation="median", device=device)
+    else:
+        if not quiet:
+            print("Using existing statistics...")
+        stats = existing_stats
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
     
@@ -147,6 +152,10 @@ def main():
     parser.add_argument("-m", metavar="filepath", dest="model_file",
                         help="path to classifier model",
                         type=lambda p: Path(p).absolute(), required=False, default=None)
+    
+    parser.add_argument("-s", metavar="filepath", dest="existing_stats",
+                        help="path to existing statistics json file. The script will not run TotalSegmentator but use the existing statistics.",
+                        type=lambda p: Path(p).absolute(), required=False, default=None)
 
     parser.add_argument("-d",'--device', type=str, default="gpu",
                         help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
@@ -156,7 +165,9 @@ def main():
 
     args = parser.parse_args()
 
-    res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file, args.quiet, args.device)
+    existing_stats = json.load(open(args.existing_stats, "r")) if args.existing_stats is not None else None
+
+    res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file, args.quiet, args.device, existing_stats)
 
     if not args.quiet:
         print("Result:")
