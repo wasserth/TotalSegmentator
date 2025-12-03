@@ -165,7 +165,7 @@ def main():
 
     args = parser.parse_args()
 
-    existing_stats = json.load(open(args.existing_stats, "r")) if args.existing_stats is not None else None
+    existing_stats = json.load(open(args.existing_stats)) if args.existing_stats is not None else None
 
     res = get_ct_contrast_phase(nib.load(args.input_file), args.model_file, args.quiet, args.device, existing_stats)
 
