@@ -1,0 +1,12 @@
+{
+  "generate_dicom_seg": true,
+  "generate_dicom_rtstruct": false,
+  "use_mixed_precision": true,
+  "split_to_chunks": false,
+  "3mm_model": false,
+  "6mm_model": false,
+  "use_gpu": true,
+  "remove_small_blobs": false,
+  "high_order_resampling": false,
+  "verbose": true
+}
