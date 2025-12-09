@@ -43,8 +43,8 @@ def calc_metrics(subject, gt_dir=None, pred_dir=None, class_map=None):
             r[f"surface_dice_3-{roi_name}"] = compute_surface_dice_at_tolerance(sd, 3.0)
         # gt.max() == 0 which means we can not calculate any score because roi not in the image
         else:
-            r[f"dice-{roi_name}"] = np.NaN
-            r[f"surface_dice_3-{roi_name}"] = np.NaN
+            r[f"dice-{roi_name}"] = np.nan
+            r[f"surface_dice_3-{roi_name}"] = np.nan
     return r
 
 
