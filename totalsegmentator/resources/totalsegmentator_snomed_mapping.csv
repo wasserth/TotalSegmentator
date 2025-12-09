@@ -1,171 +1,171 @@
-Structure,SegmentedPropertyCategoryCodeSequence.CodingSchemeDesignator,SegmentedPropertyCategoryCodeSequence.CodeValue,SegmentedPropertyCategoryCodeSequence.CodeMeaning,SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator,SegmentedPropertyTypeCodeSequence.CodeValue,SegmentedPropertyTypeCodeSequence.CodeMeaning,SegmentedPropertyTypeModifierCodeSequence.CodingSchemeDesignator,SegmentedPropertyTypeModifierCodeSequence.CodeValue,SegmentedPropertyTypeModifierCodeSequence.CodeMeaning,AnatomicRegionSequence.CodingSchemeDesignator,AnatomicRegionSequence.CodeValue,AnatomicRegionSequence.CodeMeaning,AnatomicRegionModifierSequence.CodingSchemeDesignator,AnatomicRegionModifierSequence.CodeValue,AnatomicRegionModifierSequence.CodeMeaning
-adrenal_gland_left,SCT,123037004,Anatomical Structure,SCT,23451007,Adrenal gland,SCT,7771000,Left,,,,,,
-adrenal_gland_right,SCT,123037004,Anatomical Structure,SCT,23451007,Adrenal gland,SCT,24028007,Right,,,,,,
-aorta,SCT,123037004,Anatomical Structure,SCT,15825003,Aorta,,,,,,,,,
-autochthon_left,SCT,123037004,Anatomical Structure,SCT,244849004,Deep muscle of back,SCT,7771000,Left,,,,,,
-autochthon_right,SCT,123037004,Anatomical Structure,SCT,244849004,Deep muscle of back,SCT,24028007,Right,,,,,,
-brain,SCT,123037004,Anatomical Structure,SCT,12738006,Brain,,,,,,,,,
-clavicula_left,SCT,123037004,Anatomical Structure,SCT,51299004,Clavicle,SCT,7771000,Left,,,,,,
-clavicula_right,SCT,123037004,Anatomical Structure,SCT,51299004,Clavicle,SCT,24028007,Right,,,,,,
-colon,SCT,123037004,Anatomical Structure,SCT,71854001,Colon,,,,,,,,,
-duodenum,SCT,123037004,Anatomical Structure,SCT,38848004,Duodenum,,,,,,,,,
-esophagus,SCT,123037004,Anatomical Structure,SCT,32849002,Esophagus,,,,,,,,,
-face,SCT,123037004,Anatomical Structure,SCT,89545001,Face,,,,,,,,,
-femur_left,SCT,123037004,Anatomical Structure,SCT,71341001,Femur,SCT,7771000,Left,,,,,,
-femur_right,SCT,123037004,Anatomical Structure,SCT,71341001,Femur,SCT,24028007,Right,,,,,,
-gallbladder,SCT,123037004,Anatomical Structure,SCT,28231008,Gallbladder,,,,,,,,,
-gluteus_maximus_left,SCT,123037004,Anatomical Structure,SCT,181674001,Gluteus maximus muscle,SCT,7771000,Left,,,,,,
-gluteus_maximus_right,SCT,123037004,Anatomical Structure,SCT,181674001,Gluteus maximus muscle,SCT,24028007,Right,,,,,,
-gluteus_medius_left,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,SCT,7771000,Left,,,,,,
-gluteus_medius_right,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,SCT,24028007,Right,,,,,,
-gluteus_minimus_left,SCT,123037004,Anatomical Structure,SCT,75297007,Gluteus minius muscle,SCT,7771000,Left,,,,,,
-gluteus_minimus_right,SCT,123037004,Anatomical Structure,SCT,75297007,Gluteus minius muscle,SCT,24028007,Right,,,,,,
-heart_atrium_left,SCT,123037004,Anatomical Structure,SCT,82471001,Left atrium,,,,,,,,,
-heart_atrium_right,SCT,123037004,Anatomical Structure,SCT,73829009,Right atrium,,,,,,,,,
-heart_myocardium,SCT,123037004,Anatomical Structure,SCT,74281007,Myocardium,,,,,,,,,
-heart_ventricle_left,SCT,123037004,Anatomical Structure,SCT,87878005,Left ventricle of heart,,,,,,,,,
-heart_ventricle_right,SCT,123037004,Anatomical Structure,SCT,53085002,Right ventricle of heart,,,,,,,,,
-hip_left,SCT,123037004,Anatomical Structure,SCT,29836001,Hip,SCT,7771000,Left,,,,,,
-hip_right,SCT,123037004,Anatomical Structure,SCT,29836001,Hip,SCT,24028007,Right,,,,,,
-humerus_left,SCT,123037004,Anatomical Structure,SCT,85050009,Humerus,SCT,7771000,Left,,,,,,
-humerus_right,SCT,123037004,Anatomical Structure,SCT,85050009,Humerus,SCT,24028007,Right,,,,,,
-iliac_artery_left,SCT,123037004,Anatomical Structure,SCT,73634005,Common iliac artery,SCT,7771000,Left,,,,,,
-iliac_artery_right,SCT,123037004,Anatomical Structure,SCT,73634005,Common iliac artery,SCT,24028007,Right,,,,,,
-iliac_vena_left,SCT,123037004,Anatomical Structure,SCT,46027005,Common iliac vein,SCT,7771000,Left,,,,,,
-iliac_vena_right,SCT,123037004,Anatomical Structure,SCT,46027005,Common iliac vein,SCT,24028007,Right,,,,,,
-iliopsoas_left,SCT,123037004,Anatomical Structure,SCT,68455001,Iliopsoas muscle,SCT,7771000,Left,,,,,,
-iliopsoas_right,SCT,123037004,Anatomical Structure,SCT,68455001,Iliopsoas muscle,SCT,24028007,Right,,,,,,
-inferior_vena_cava,SCT,123037004,Anatomical Structure,SCT,64131007,Inferior vena cava,,,,,,,,,
-kidney_left,SCT,123037004,Anatomical Structure,SCT,64033007,Kidney,SCT,7771000,Left,,,,,,
-kidney_right,SCT,123037004,Anatomical Structure,SCT,64033007,Kidney,SCT,24028007,Right,,,,,,
-liver,SCT,123037004,Anatomical Structure,SCT,10200004,Liver,,,,,,,,,
-lung_lower_lobe_left,SCT,123037004,Anatomical Structure,SCT,90572001,Lower lobe of lung,SCT,7771000,Left,,,,,,
-lung_lower_lobe_right,SCT,123037004,Anatomical Structure,SCT,90572001,Lower lobe of lung,SCT,24028007,Right,,,,,,
-lung_middle_lobe_right,SCT,123037004,Anatomical Structure,SCT,72481006,Middle lobe of right lung,,,,,,,,,
-lung_upper_lobe_left,SCT,123037004,Anatomical Structure,SCT,45653009,Upper lobe of lung,SCT,7771000,Left,,,,,,
-lung_upper_lobe_right,SCT,123037004,Anatomical Structure,SCT,45653009,Upper lobe of lung,SCT,24028007,Right,,,,,,
-pancreas,SCT,123037004,Anatomical Structure,SCT,15776009,Pancreas,,,,,,,,,
-portal_vein_and_splenic_vein,SCT,123037004,Anatomical Structure,SCT,110765007,Portal vein and splenic vein,,,,,,,,,
-pulmonary_artery,SCT,123037004,Anatomical Structure,SCT,81040000,Pulmonary artery,,,,,,,,,
-rib_left_1,SCT,123037004,Anatomical Structure,SCT,48535007,First rib,SCT,7771000,Left,,,,,,
-rib_left_2,SCT,123037004,Anatomical Structure,SCT,78247007,Second rib,SCT,7771000,Left,,,,,,
-rib_left_3,SCT,123037004,Anatomical Structure,SCT,25888004,Third rib,SCT,7771000,Left,,,,,,
-rib_left_4,SCT,123037004,Anatomical Structure,SCT,25523003,Fourth rib,SCT,7771000,Left,,,,,,
-rib_left_5,SCT,123037004,Anatomical Structure,SCT,15339008,Fifth rib,SCT,7771000,Left,,,,,,
-rib_left_6,SCT,123037004,Anatomical Structure,SCT,59558009,Sixth rib,SCT,7771000,Left,,,,,,
-rib_left_7,SCT,123037004,Anatomical Structure,SCT,24915002,Seventh rib,SCT,7771000,Left,,,,,,
-rib_left_8,SCT,123037004,Anatomical Structure,SCT,5953002,Eighth rib,SCT,7771000,Left,,,,,,
-rib_left_9,SCT,123037004,Anatomical Structure,SCT,22565002,Ninth rib,SCT,7771000,Left,,,,,,
-rib_left_10,SCT,123037004,Anatomical Structure,SCT,77644006,Tenth rib,SCT,7771000,Left,,,,,,
-rib_left_11,SCT,123037004,Anatomical Structure,SCT,58830002,Eleventh rib,SCT,7771000,Left,,,,,,
-rib_left_12,SCT,123037004,Anatomical Structure,SCT,43993008,Twelfth rib,SCT,7771000,Left,,,,,,
-rib_right_1,SCT,123037004,Anatomical Structure,SCT,48535007,First rib,SCT,24028007,Right,,,,,,
-rib_right_2,SCT,123037004,Anatomical Structure,SCT,78247007,Second rib,SCT,24028007,Right,,,,,,
-rib_right_3,SCT,123037004,Anatomical Structure,SCT,25888004,Third rib,SCT,24028007,Right,,,,,,
-rib_right_4,SCT,123037004,Anatomical Structure,SCT,25523003,Fourth rib,SCT,24028007,Right,,,,,,
-rib_right_5,SCT,123037004,Anatomical Structure,SCT,15339008,Fifth rib,SCT,24028007,Right,,,,,,
-rib_right_6,SCT,123037004,Anatomical Structure,SCT,59558009,Sixth rib,SCT,24028007,Right,,,,,,
-rib_right_7,SCT,123037004,Anatomical Structure,SCT,24915002,Seventh rib,SCT,24028007,Right,,,,,,
-rib_right_8,SCT,123037004,Anatomical Structure,SCT,5953002,Eighth rib,SCT,24028007,Right,,,,,,
-rib_right_9,SCT,123037004,Anatomical Structure,SCT,22565002,Ninth rib,SCT,24028007,Right,,,,,,
-rib_right_10,SCT,123037004,Anatomical Structure,SCT,77644006,Tenth rib,SCT,24028007,Right,,,,,,
-rib_right_11,SCT,123037004,Anatomical Structure,SCT,58830002,Eleventh rib,SCT,24028007,Right,,,,,,
-rib_right_12,SCT,123037004,Anatomical Structure,SCT,43993008,Twelfth rib,SCT,24028007,Right,,,,,,
-sacrum,SCT,123037004,Anatomical Structure,SCT,54735007,Sacrum,,,,,,,,,
-scapula_left,SCT,123037004,Anatomical Structure,SCT,79601000,Scapula,SCT,7771000,Left,,,,,,
-scapula_right,SCT,123037004,Anatomical Structure,SCT,79601000,Scapula,SCT,24028007,Right,,,,,,
-small_bowel,SCT,123037004,Anatomical Structure,SCT,30315005,Small Intestine,,,,,,,,,
-spleen,SCT,123037004,Anatomical Structure,SCT,78961009,Spleen,,,,,,,,,
-stomach,SCT,123037004,Anatomical Structure,SCT,69695003,Stomach,,,,,,,,,
-trachea,SCT,123037004,Anatomical Structure,SCT,44567001,Trachea,,,,,,,,,
-urinary_bladder,SCT,123037004,Anatomical Structure,SCT,89837001,Urinary bladder,,,,,,,,,
-vertebrae_S1,SCT,123037004,Anatomical Structure,SCT,65985001,S1 vertebra,,,,,,,,,
-vertebrae_C1,SCT,123037004,Anatomical Structure,SCT,14806007,C1 vertebra,,,,,,,,,
-vertebrae_C2,SCT,123037004,Anatomical Structure,SCT,39976000,C2 vertebra,,,,,,,,,
-vertebrae_C3,SCT,123037004,Anatomical Structure,SCT,113205007,C3 vertebra,,,,,,,,,
-vertebrae_C4,SCT,123037004,Anatomical Structure,SCT,5329002,C4 vertebra,,,,,,,,,
-vertebrae_C5,SCT,123037004,Anatomical Structure,SCT,36978003,C5 vertebra,,,,,,,,,
-vertebrae_C6,SCT,123037004,Anatomical Structure,SCT,36054005,C6 vertebra,,,,,,,,,
-vertebrae_C7,SCT,123037004,Anatomical Structure,SCT,87391001,C7 vertebra,,,,,,,,,
-vertebrae_L1,SCT,123037004,Anatomical Structure,SCT,66794005,L1 vertebra,,,,,,,,,
-vertebrae_L2,SCT,123037004,Anatomical Structure,SCT,14293000,L2 vertebra,,,,,,,,,
-vertebrae_L3,SCT,123037004,Anatomical Structure,SCT,36470004,L3 vertebra,,,,,,,,,
-vertebrae_L4,SCT,123037004,Anatomical Structure,SCT,11994002,L4 vertebra,,,,,,,,,
-vertebrae_L5,SCT,123037004,Anatomical Structure,SCT,49668003,L5 vertebra,,,,,,,,,
-vertebrae_T1,SCT,123037004,Anatomical Structure,SCT,64864005,T1 vertebra,,,,,,,,,
-vertebrae_T2,SCT,123037004,Anatomical Structure,SCT,53733008,T2 vertebra,,,,,,,,,
-vertebrae_T3,SCT,123037004,Anatomical Structure,SCT,1626008,T3 vertebra,,,,,,,,,
-vertebrae_T4,SCT,123037004,Anatomical Structure,SCT,73071006,T4 vertebra,,,,,,,,,
-vertebrae_T5,SCT,123037004,Anatomical Structure,SCT,56401006,T5 vertebra,,,,,,,,,
-vertebrae_T6,SCT,123037004,Anatomical Structure,SCT,45296009,T6 vertebra,,,,,,,,,
-vertebrae_T7,SCT,123037004,Anatomical Structure,SCT,62487009,T7 vertebra,,,,,,,,,
-vertebrae_T8,SCT,123037004,Anatomical Structure,SCT,11068009,T8 vertebra,,,,,,,,,
-vertebrae_T9,SCT,123037004,Anatomical Structure,SCT,82687006,T9 vertebra,,,,,,,,,
-vertebrae_T10,SCT,123037004,Anatomical Structure,SCT,7610001,T10 vertebra,,,,,,,,,
-vertebrae_T11,SCT,123037004,Anatomical Structure,SCT,12989004,T11 vertebra,,,,,,,,,
-vertebrae_T12,SCT,123037004,Anatomical Structure,SCT,23215003,T12 vertebra,,,,,,,,,
-heart,SCT,123037004,Anatomical Structure,SCT,80891009,Heart,,,,,,,,,
-pulmonary_vein,SCT,123037004,Anatomical Structure,SCT,122972007,Pulmonary vein,,,,,,,,,
-brachiocephalic_trunk,SCT,123037004,Anatomical Structure,SCT,12691009,Brachiocephalic artery,,,,,,,,,
-subclavian_artery_right,SCT,123037004,Anatomical Structure,SCT,29700009,Subclavian artery,SCT,24028007,Right,,,,,,
-subclavian_artery_left,SCT,123037004,Anatomical Structure,SCT,29700009,Subclavian artery,SCT,7771000,Left,,,,,,
-common_carotid_artery_right,SCT,123037004,Anatomical Structure,SCT,32062004,Common carotid artery,SCT,24028007,Right,,,,,,
-common_carotid_artery_left,SCT,123037004,Anatomical Structure,SCT,32062004,Common carotid artery,SCT,7771000,Left,,,,,,
-brachiocephalic_vein_left,SCT,123037004,Anatomical Structure,SCT,8887007,Brachiocephalic vein,SCT,7771000,Left,,,,,,
-brachiocephalic_vein_right,SCT,123037004,Anatomical Structure,SCT,8887007,Brachiocephalic vein,SCT,24028007,Right,,,,,,
-atrial_appendage_left,SCT,123037004,Anatomical Structure,SCT,68786006,Auricular appendage,SCT,7771000,Left,,,,,,
-superior_vena_cava,SCT,123037004,Anatomical Structure,SCT,48345005,Superior vena cava,,,,,,,,,
-kidney_cyst_left,SCT,49755003,Morphologically Altered Structure,SCT,367643001,Cyst,,,,SCT,64033007,Kidney,SCT,7771000,Left
-kidney_cyst_right,SCT,49755003,Morphologically Altered Structure,SCT,367643001,Cyst,,,,SCT,64033007,Kidney,SCT,24028007,Right
-prostate,SCT,123037004,Anatomical Structure,SCT,41216001,Prostate,,,,,,,,,
-femur,SCT,123037004,Anatomical Structure,SCT,71341001,Femur,,,,,,,,,
-patella,SCT,123037004,Anatomical Structure,SCT,64234005,Patella,,,,,,,,,
-tibia,SCT,123037004,Anatomical Structure,SCT,12611008,Tibia,,,,,,,,,
-fibula,SCT,123037004,Anatomical Structure,SCT,87342007,Fibula,,,,,,,,,
-tarsal,SCT,123037004,Anatomical Structure,SCT,108371006,Tarsal bones,,,,,,,,,
-metatarsal,SCT,123037004,Anatomical Structure,SCT,53884002,Metatarsal,,,,,,,,,
-phalanges_feet,SCT,123037004,Anatomical Structure,SCT,28641004,Phalanx structure,,,,,,,,,
-humerus,SCT,123037004,Anatomical Structure,SCT,85050009,Humerus,,,,,,,,,
-ulna,SCT,123037004,Anatomical Structure,SCT,23416004,Ulna,,,,,,,,,
-radius,SCT,123037004,Anatomical Structure,SCT,62413002,Radius,,,,,,,,,
-carpal,SCT,123037004,Anatomical Structure,SCT,83936004,Carpus,,,,,,,,,
-metacarpal,SCT,123037004,Anatomical Structure,SCT,36455000,Metacarpal bones,,,,,,,,,
-phalanges_hand,SCT,123037004,Anatomical Structure,SCT,28641004,Phalanx structure,,,,,,,,,
-sternum,SCT,123037004,Anatomical Structure,SCT,56873002,Sternum,,,,,,,,,
-skull,SCT,123037004,Anatomical Structure,SCT,89546000,Skull,,,,,,,,,
-subcutaneous_fat,SCT,85756007,Tissue,SCT,67769002,Subcutaneous fatty tissue,,,,,,,,,
-skeletal_muscle,SCT,123037004,Anatomical Structure,SCT,127954009,Skeletal muscle,,,,,,,,,
-torso_fat,SCT,85756007,Tissue,SCT,55603005,Fat,,,,SCT,22943007,Trunk,,,
-spinal_cord,SCT,123037004,Anatomical Structure,SCT,2748008,Spinal cord,,,,,,,,,
-lung_covid_infiltrate,SCT,49755003,Morphologically Altered Structure,SCT,47351003,Infiltrate,SCT,840539006,COVID-19,SCT,39607008,Lung,,,
-intracerebral_hemorrhage,SCT,49755003,Morphologically Altered Structure,SCT,50960005,Hemorrhage,,,,SCT,12738006,Brain,,,
-hip_implant,SCT,260787004,Physical object,SCT,40388003,Implant,,,,SCT,24136001,Hip joint,,,
-coronary_arteries,SCT,123037004,Anatomical Structure,SCT,41801008,Coronary artery,,,,,,,,,
-kidney,SCT,123037004,Anatomical Structure,SCT,64033007,Kidney,,,,,,,,,
-adrenal_gland,SCT,123037004,Anatomical Structure,SCT,23451007,Adrenal gland,,,,,,,,,
-thyroid_gland,SCT,123037004,Anatomical Structure,SCT,69748006,Thyroid gland,,,,,,,,,
-vertebrae_lumbar,SCT,123037004,Anatomical Structure,SCT,51282000,Vertebra,,,,SCT,122496007,Lumbar spine,,,
-vertebrae_thoracic,SCT,123037004,Anatomical Structure,SCT,51282000,Vertebra,,,,SCT,122495006,Thoracic spine,,,
-vertebrae_cervical,SCT,123037004,Anatomical Structure,SCT,51282000,Vertebra,,,,SCT,122494005,Cervical spine,,,
-iliac_artery,SCT,123037004,Anatomical Structure,SCT,73634005,Common iliac artery,,,,,,,,,
-iliac_vena,SCT,123037004,Anatomical Structure,SCT,46027005,Common iliac vein,,,,,,,,,
-ribs,SCT,123037004,Anatomical Structure,SCT,113197003,Rib,,,,,,,,,
-scapula,SCT,123037004,Anatomical Structure,SCT,79601000,Scapula,,,,,,,,,
-clavicula,SCT,123037004,Anatomical Structure,SCT,51299004,Clavicle,,,,,,,,,
-hip,SCT,123037004,Anatomical Structure,SCT,29836001,Hip,,,,,,,,,
-gluteus_maximus,SCT,123037004,Anatomical Structure,SCT,181674001,Gluteus maximus muscle,,,,,,,,,
-gluteus_medius,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,,,,,,,,,
-gluteus_minimus,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,,,,,,,,,
-autochthon,SCT,123037004,Anatomical Structure,SCT,244849004,Deep muscle of back,,,,,,,,,
-iliopsoas,SCT,123037004,Anatomical Structure,SCT,68455001,Iliopsoas muscle,,,,,,,,,
-lung_vessels,SCT,123037004,Anatomical Structure,SCT,59820001,Blood vessel,,,,SCT,39607008,Lung,,,
-lung_trachea_bronchia,SCT,123037004,Anatomical Structure,SCT,110726009,Trachea and bronchus,,,,,,,,,
-body_trunc,SCT,123037004,Anatomical Structure,SCT,22943007,Trunk,,,,,,,,,
-body_extremities,SCT,123037004,Anatomical Structure,SCT,66019005,Limb,,,,,,,,,
-vertebrae_body,SCT,123037004,Anatomical Structure,SCT,3572006,Vertebral body,,,,,,,,,
-lung_pleural,SCT,123037004,Anatomical Structure,SCT,3120008,Pleural membrane,,,,,,,,,
-pleural_effusion,SCT,49755003,Morphologically Altered Structure,SCT,41699000,Effusion,,,,SCT,91381003,Pleural cavity,,,
-pericardial_effusion,SCT,49755003,Morphologically Altered Structure,SCT,41699000,Effusion,,,,SCT,25489000,Pericardial cavity,,,
-liver_vessels,SCT,123037004,Anatomical Structure,SCT,59820001,Blood vessel,,,,SCT,10200004,Liver,,,
-liver_tumor,SCT,49755003,Morphologically Altered Structure,SCT,108369006,Neoplasm,,,,SCT,10200004,Liver,,,
-costal_cartilages,SCT,123037004,Anatomical Structure,SCT,50016007,Costal cartilage,,,,,,,,,
+Structure,SegmentedPropertyCategoryCodeSequence.CodingSchemeDesignator,SegmentedPropertyCategoryCodeSequence.CodeValue,SegmentedPropertyCategoryCodeSequence.CodeMeaning,SegmentedPropertyTypeCodeSequence.CodingSchemeDesignator,SegmentedPropertyTypeCodeSequence.CodeValue,SegmentedPropertyTypeCodeSequence.CodeMeaning,SegmentedPropertyTypeModifierCodeSequence.CodingSchemeDesignator,SegmentedPropertyTypeModifierCodeSequence.CodeValue,SegmentedPropertyTypeModifierCodeSequence.CodeMeaning,AnatomicRegionSequence.CodingSchemeDesignator,AnatomicRegionSequence.CodeValue,AnatomicRegionSequence.CodeMeaning,AnatomicRegionModifierSequence.CodingSchemeDesignator,AnatomicRegionModifierSequence.CodeValue,AnatomicRegionModifierSequence.CodeMeaning,DicomRGBColor
+adrenal_gland_left,SCT,123037004,Anatomical Structure,SCT,23451007,Adrenal gland,SCT,7771000,Left,,,,,,,"241,172,34"
+adrenal_gland_right,SCT,123037004,Anatomical Structure,SCT,23451007,Adrenal gland,SCT,24028007,Right,,,,,,,"178,128,26"
+aorta,SCT,123037004,Anatomical Structure,SCT,15825003,Aorta,,,,,,,,,,"216,108,54"
+autochthon_left,SCT,123037004,Anatomical Structure,SCT,244849004,Deep muscle of back,SCT,7771000,Left,,,,,,,"241,126,57"
+autochthon_right,SCT,123037004,Anatomical Structure,SCT,244849004,Deep muscle of back,SCT,24028007,Right,,,,,,,"178,94,42"
+brain,SCT,123037004,Anatomical Structure,SCT,12738006,Brain,,,,,,,,,,"216,54,149"
+clavicula_left,SCT,123037004,Anatomical Structure,SCT,51299004,Clavicle,SCT,7771000,Left,,,,,,,"255,236,201"
+clavicula_right,SCT,123037004,Anatomical Structure,SCT,51299004,Clavicle,SCT,24028007,Right,,,,,,,"191,174,149"
+colon,SCT,123037004,Anatomical Structure,SCT,71854001,Colon,,,,,,,,,,"150,40,170"
+duodenum,SCT,123037004,Anatomical Structure,SCT,38848004,Duodenum,,,,,,,,,,"170,80,190"
+esophagus,SCT,123037004,Anatomical Structure,SCT,32849002,Esophagus,,,,,,,,,,"190,90,170"
+face,SCT,123037004,Anatomical Structure,SCT,89545001,Face,,,,,,,,,,"192,216,54"
+femur_left,SCT,123037004,Anatomical Structure,SCT,71341001,Femur,SCT,7771000,Left,,,,,,,"248,212,62"
+femur_right,SCT,123037004,Anatomical Structure,SCT,71341001,Femur,SCT,24028007,Right,,,,,,,"46,184,60"
+gallbladder,SCT,123037004,Anatomical Structure,SCT,28231008,Gallbladder,,,,,,,,,,"54,216,119"
+gluteus_maximus_left,SCT,123037004,Anatomical Structure,SCT,181674001,Gluteus maximus muscle,SCT,7771000,Left,,,,,,,"253,115,34"
+gluteus_maximus_right,SCT,123037004,Anatomical Structure,SCT,181674001,Gluteus maximus muscle,SCT,24028007,Right,,,,,,,"187,85,26"
+gluteus_medius_left,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,SCT,7771000,Left,,,,,,,"255,126,46"
+gluteus_medius_right,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,SCT,24028007,Right,,,,,,,"196,94,34"
+gluteus_minimus_left,SCT,123037004,Anatomical Structure,SCT,75297007,Gluteus minius muscle,SCT,7771000,Left,,,,,,,"255,138,57"
+gluteus_minimus_right,SCT,123037004,Anatomical Structure,SCT,75297007,Gluteus minius muscle,SCT,24028007,Right,,,,,,,"204,102,42"
+heart_atrium_left,SCT,123037004,Anatomical Structure,SCT,82471001,Left atrium,,,,,,,,,,"184,0,69"
+heart_atrium_right,SCT,123037004,Anatomical Structure,SCT,73829009,Right atrium,,,,,,,,,,"136,0,51"
+heart_myocardium,SCT,123037004,Anatomical Structure,SCT,74281007,Myocardium,,,,,,,,,,"200,0,20"
+heart_ventricle_left,SCT,123037004,Anatomical Structure,SCT,87878005,Left ventricle of heart,,,,,,,,,,"161,0,92"
+heart_ventricle_right,SCT,123037004,Anatomical Structure,SCT,53085002,Right ventricle of heart,,,,,,,,,,"119,0,68"
+hip_left,SCT,123037004,Anatomical Structure,SCT,29836001,Hip,SCT,7771000,Left,,,,,,,"230,248,62"
+hip_right,SCT,123037004,Anatomical Structure,SCT,29836001,Hip,SCT,24028007,Right,,,,,,,"184,46,184"
+humerus_left,SCT,123037004,Anatomical Structure,SCT,85050009,Humerus,SCT,7771000,Left,,,,,,,"71,62,248"
+humerus_right,SCT,123037004,Anatomical Structure,SCT,85050009,Humerus,SCT,24028007,Right,,,,,,,"115,46,184"
+iliac_artery_left,SCT,123037004,Anatomical Structure,SCT,73634005,Common iliac artery,SCT,7771000,Left,,,,,,,"218,0,0"
+iliac_artery_right,SCT,123037004,Anatomical Structure,SCT,73634005,Common iliac artery,SCT,24028007,Right,,,,,,,"162,0,0"
+iliac_vena_left,SCT,123037004,Anatomical Structure,SCT,46027005,Common iliac vein,SCT,7771000,Left,,,,,,,"0,92,230"
+iliac_vena_right,SCT,123037004,Anatomical Structure,SCT,46027005,Common iliac vein,SCT,24028007,Right,,,,,,,"0,68,170"
+iliopsoas_left,SCT,123037004,Anatomical Structure,SCT,68455001,Iliopsoas muscle,SCT,7771000,Left,,,,,,,"230,115,46"
+iliopsoas_right,SCT,123037004,Anatomical Structure,SCT,68455001,Iliopsoas muscle,SCT,24028007,Right,,,,,,,"170,85,34"
+inferior_vena_cava,SCT,123037004,Anatomical Structure,SCT,64131007,Inferior vena cava,,,,,,,,,,"0,70,200"
+kidney_left,SCT,123037004,Anatomical Structure,SCT,64033007,Kidney,SCT,7771000,Left,,,,,,,"46,138,184"
+kidney_right,SCT,123037004,Anatomical Structure,SCT,64033007,Kidney,SCT,24028007,Right,,,,,,,"34,102,136"
+liver,SCT,123037004,Anatomical Structure,SCT,10200004,Liver,,,,,,,,,,"40,140,40"
+lung_lower_lobe_left,SCT,123037004,Anatomical Structure,SCT,90572001,Lower lobe of lung,SCT,7771000,Left,,,,,,,"34,195,207"
+lung_lower_lobe_right,SCT,123037004,Anatomical Structure,SCT,90572001,Lower lobe of lung,SCT,24028007,Right,,,,,,,"26,144,153"
+lung_middle_lobe_right,SCT,123037004,Anatomical Structure,SCT,72481006,Middle lobe of right lung,,,,,,,,,,"63,181,190"
+lung_upper_lobe_left,SCT,123037004,Anatomical Structure,SCT,45653009,Upper lobe of lung,SCT,7771000,Left,,,,,,,"71,232,244"
+lung_upper_lobe_right,SCT,123037004,Anatomical Structure,SCT,45653009,Upper lobe of lung,SCT,24028007,Right,,,,,,,"100,218,227"
+pancreas,SCT,123037004,Anatomical Structure,SCT,15776009,Pancreas,,,,,,,,,,"60,150,80"
+portal_vein_and_splenic_vein,SCT,123037004,Anatomical Structure,SCT,110765007,Portal vein and splenic vein,,,,,,,,,,"0,90,220"
+pulmonary_artery,SCT,123037004,Anatomical Structure,SCT,81040000,Pulmonary artery,,,,,,,,,,"180,0,0"
+rib_left_1,SCT,123037004,Anatomical Structure,SCT,48535007,First rib,SCT,7771000,Left,,,,,,,"214,54,216"
+rib_left_2,SCT,123037004,Anatomical Structure,SCT,78247007,Second rib,SCT,7771000,Left,,,,,,,"181,54,216"
+rib_left_3,SCT,123037004,Anatomical Structure,SCT,25888004,Third rib,SCT,7771000,Left,,,,,,,"216,54,162"
+rib_left_4,SCT,123037004,Anatomical Structure,SCT,25523003,Fourth rib,SCT,7771000,Left,,,,,,,"54,121,216"
+rib_left_5,SCT,123037004,Anatomical Structure,SCT,15339008,Fifth rib,SCT,7771000,Left,,,,,,,"54,216,146"
+rib_left_6,SCT,123037004,Anatomical Structure,SCT,59558009,Sixth rib,SCT,7771000,Left,,,,,,,"121,216,54"
+rib_left_7,SCT,123037004,Anatomical Structure,SCT,24915002,Seventh rib,SCT,7771000,Left,,,,,,,"149,54,216"
+rib_left_8,SCT,123037004,Anatomical Structure,SCT,5953002,Eighth rib,SCT,7771000,Left,,,,,,,"216,81,54"
+rib_left_9,SCT,123037004,Anatomical Structure,SCT,22565002,Ninth rib,SCT,7771000,Left,,,,,,,"216,54,167"
+rib_left_10,SCT,123037004,Anatomical Structure,SCT,77644006,Tenth rib,SCT,7771000,Left,,,,,,,"54,146,216"
+rib_left_11,SCT,123037004,Anatomical Structure,SCT,58830002,Eleventh rib,SCT,7771000,Left,,,,,,,"158,253,91"
+rib_left_12,SCT,123037004,Anatomical Structure,SCT,43993008,Twelfth rib,SCT,7771000,Left,,,,,,,"216,54,86"
+rib_right_1,SCT,123037004,Anatomical Structure,SCT,48535007,First rib,SCT,24028007,Right,,,,,,,"91,158,253"
+rib_right_2,SCT,123037004,Anatomical Structure,SCT,78247007,Second rib,SCT,24028007,Right,,,,,,,"211,216,54"
+rib_right_3,SCT,123037004,Anatomical Structure,SCT,25888004,Third rib,SCT,24028007,Right,,,,,,,"216,54,59"
+rib_right_4,SCT,123037004,Anatomical Structure,SCT,25523003,Fourth rib,SCT,24028007,Right,,,,,,,"216,54,67"
+rib_right_5,SCT,123037004,Anatomical Structure,SCT,15339008,Fifth rib,SCT,24028007,Right,,,,,,,"157,216,54"
+rib_right_6,SCT,123037004,Anatomical Structure,SCT,59558009,Sixth rib,SCT,24028007,Right,,,,,,,"216,54,189"
+rib_right_7,SCT,123037004,Anatomical Structure,SCT,24915002,Seventh rib,SCT,24028007,Right,,,,,,,"216,54,132"
+rib_right_8,SCT,123037004,Anatomical Structure,SCT,5953002,Eighth rib,SCT,24028007,Right,,,,,,,"216,203,54"
+rib_right_9,SCT,123037004,Anatomical Structure,SCT,22565002,Ninth rib,SCT,24028007,Right,,,,,,,"216,197,54"
+rib_right_10,SCT,123037004,Anatomical Structure,SCT,77644006,Tenth rib,SCT,24028007,Right,,,,,,,"216,159,54"
+rib_right_11,SCT,123037004,Anatomical Structure,SCT,58830002,Eleventh rib,SCT,24028007,Right,,,,,,,"54,135,216"
+rib_right_12,SCT,123037004,Anatomical Structure,SCT,43993008,Twelfth rib,SCT,24028007,Right,,,,,,,"181,216,54"
+sacrum,SCT,123037004,Anatomical Structure,SCT,54735007,Sacrum,,,,,,,,,,"100,216,54"
+scapula_left,SCT,123037004,Anatomical Structure,SCT,79601000,Scapula,SCT,7771000,Left,,,,,,,"253,230,195"
+scapula_right,SCT,123037004,Anatomical Structure,SCT,79601000,Scapula,SCT,24028007,Right,,,,,,,"187,170,144"
+small_bowel,SCT,123037004,Anatomical Structure,SCT,30315005,Small Intestine,,,,,,,,,,"160,60,180"
+spleen,SCT,123037004,Anatomical Structure,SCT,78961009,Spleen,,,,,,,,,,"50,170,60"
+stomach,SCT,123037004,Anatomical Structure,SCT,69695003,Stomach,,,,,,,,,,"180,70,160"
+trachea,SCT,123037004,Anatomical Structure,SCT,44567001,Trachea,,,,,,,,,,"0,180,200"
+urinary_bladder,SCT,123037004,Anatomical Structure,SCT,89837001,Urinary bladder,,,,,,,,,,"54,94,216"
+vertebrae_S1,SCT,123037004,Anatomical Structure,SCT,65985001,S1 vertebra,,,,,,,,,,"205,180,145"
+vertebrae_C1,SCT,123037004,Anatomical Structure,SCT,14806007,C1 vertebra,,,,,,,,,,"242,217,182"
+vertebrae_C2,SCT,123037004,Anatomical Structure,SCT,39976000,C2 vertebra,,,,,,,,,,"23,254,219"
+vertebrae_C3,SCT,123037004,Anatomical Structure,SCT,113205007,C3 vertebra,,,,,,,,,,"60,35,0"
+vertebrae_C4,SCT,123037004,Anatomical Structure,SCT,5329002,C4 vertebra,,,,,,,,,,"97,72,37"
+vertebrae_C5,SCT,123037004,Anatomical Structure,SCT,36978003,C5 vertebra,,,,,,,,,,"134,109,74"
+vertebrae_C6,SCT,123037004,Anatomical Structure,SCT,36054005,C6 vertebra,,,,,,,,,,"171,146,111"
+vertebrae_C7,SCT,123037004,Anatomical Structure,SCT,87391001,C7 vertebra,,,,,,,,,,"208,183,148"
+vertebrae_L1,SCT,123037004,Anatomical Structure,SCT,66794005,L1 vertebra,,,,,,,,,,"245,220,185"
+vertebrae_L2,SCT,123037004,Anatomical Structure,SCT,14293000,L2 vertebra,,,,,,,,,,"26,1,222"
+vertebrae_L3,SCT,123037004,Anatomical Structure,SCT,36470004,L3 vertebra,,,,,,,,,,"63,38,3"
+vertebrae_L4,SCT,123037004,Anatomical Structure,SCT,11994002,L4 vertebra,,,,,,,,,,"100,75,40"
+vertebrae_L5,SCT,123037004,Anatomical Structure,SCT,49668003,L5 vertebra,,,,,,,,,,"137,112,77"
+vertebrae_T1,SCT,123037004,Anatomical Structure,SCT,64864005,T1 vertebra,,,,,,,,,,"174,149,114"
+vertebrae_T2,SCT,123037004,Anatomical Structure,SCT,53733008,T2 vertebra,,,,,,,,,,"211,186,151"
+vertebrae_T3,SCT,123037004,Anatomical Structure,SCT,1626008,T3 vertebra,,,,,,,,,,"248,223,188"
+vertebrae_T4,SCT,123037004,Anatomical Structure,SCT,73071006,T4 vertebra,,,,,,,,,,"29,4,225"
+vertebrae_T5,SCT,123037004,Anatomical Structure,SCT,56401006,T5 vertebra,,,,,,,,,,"66,41,6"
+vertebrae_T6,SCT,123037004,Anatomical Structure,SCT,45296009,T6 vertebra,,,,,,,,,,"103,78,43"
+vertebrae_T7,SCT,123037004,Anatomical Structure,SCT,62487009,T7 vertebra,,,,,,,,,,"140,115,80"
+vertebrae_T8,SCT,123037004,Anatomical Structure,SCT,11068009,T8 vertebra,,,,,,,,,,"177,152,117"
+vertebrae_T9,SCT,123037004,Anatomical Structure,SCT,82687006,T9 vertebra,,,,,,,,,,"214,189,154"
+vertebrae_T10,SCT,123037004,Anatomical Structure,SCT,7610001,T10 vertebra,,,,,,,,,,"251,226,191"
+vertebrae_T11,SCT,123037004,Anatomical Structure,SCT,12989004,T11 vertebra,,,,,,,,,,"32,7,228"
+vertebrae_T12,SCT,123037004,Anatomical Structure,SCT,23215003,T12 vertebra,,,,,,,,,,"69,44,9"
+heart,SCT,123037004,Anatomical Structure,SCT,80891009,Heart,,,,,,,,,,"180,0,40"
+pulmonary_vein,SCT,123037004,Anatomical Structure,SCT,122972007,Pulmonary vein,,,,,,,,,,"37,107,237"
+brachiocephalic_trunk,SCT,123037004,Anatomical Structure,SCT,12691009,Brachiocephalic artery,,,,,,,,,,"190,10,10"
+subclavian_artery_right,SCT,123037004,Anatomical Structure,SCT,29700009,Subclavian artery,SCT,24028007,Right,,,,,,,"162,26,26"
+subclavian_artery_left,SCT,123037004,Anatomical Structure,SCT,29700009,Subclavian artery,SCT,7771000,Left,,,,,,,"218,34,34"
+common_carotid_artery_right,SCT,123037004,Anatomical Structure,SCT,32062004,Common carotid artery,SCT,24028007,Right,,,,,,,"170,17,17"
+common_carotid_artery_left,SCT,123037004,Anatomical Structure,SCT,32062004,Common carotid artery,SCT,7771000,Left,,,,,,,"230,23,23"
+brachiocephalic_vein_left,SCT,123037004,Anatomical Structure,SCT,8887007,Brachiocephalic vein,SCT,7771000,Left,,,,,,,"0,92,241"
+brachiocephalic_vein_right,SCT,123037004,Anatomical Structure,SCT,8887007,Brachiocephalic vein,SCT,24028007,Right,,,,,,,"0,68,178"
+atrial_appendage_left,SCT,123037004,Anatomical Structure,SCT,68786006,Auricular appendage,SCT,7771000,Left,,,,,,,"68,248,62"
+superior_vena_cava,SCT,123037004,Anatomical Structure,SCT,48345005,Superior vena cava,,,,,,,,,,"74,144,18"
+kidney_cyst_left,SCT,49755003,Morphologically Altered Structure,SCT,367643001,Cyst,,,,SCT,64033007,Kidney,SCT,7771000,Left,"83,175,221"
+kidney_cyst_right,SCT,49755003,Morphologically Altered Structure,SCT,367643001,Cyst,,,,SCT,64033007,Kidney,SCT,24028007,Right,"71,139,173"
+prostate,SCT,123037004,Anatomical Structure,SCT,41216001,Prostate,,,,,,,,,,"91,253,156"
+femur,SCT,123037004,Anatomical Structure,SCT,71341001,Femur,,,,,,,,,,"216,54,56"
+patella,SCT,123037004,Anatomical Structure,SCT,64234005,Patella,,,,,,,,,,"229,253,91"
+tibia,SCT,123037004,Anatomical Structure,SCT,12611008,Tibia,,,,,,,,,,"216,54,146"
+fibula,SCT,123037004,Anatomical Structure,SCT,87342007,Fibula,,,,,,,,,,"54,216,67"
+tarsal,SCT,123037004,Anatomical Structure,SCT,108371006,Tarsal bones,,,,,,,,,,"195,216,54"
+metatarsal,SCT,123037004,Anatomical Structure,SCT,53884002,Metatarsal,,,,,,,,,,"216,151,54"
+phalanges_feet,SCT,123037004,Anatomical Structure,SCT,28641004,Phalanx structure,,,,,,,,,,"54,200,216"
+humerus,SCT,123037004,Anatomical Structure,SCT,85050009,Humerus,,,,,,,,,,"216,111,54"
+ulna,SCT,123037004,Anatomical Structure,SCT,23416004,Ulna,,,,,,,,,,"178,54,216"
+radius,SCT,123037004,Anatomical Structure,SCT,62413002,Radius,,,,,,,,,,"162,216,54"
+carpal,SCT,123037004,Anatomical Structure,SCT,83936004,Carpus,,,,,,,,,,"216,54,205"
+metacarpal,SCT,123037004,Anatomical Structure,SCT,36455000,Metacarpal bones,,,,,,,,,,"216,54,216"
+phalanges_hand,SCT,123037004,Anatomical Structure,SCT,28641004,Phalanx structure,,,,,,,,,,"83,54,216"
+sternum,SCT,123037004,Anatomical Structure,SCT,56873002,Sternum,,,,,,,,,,"215,195,165"
+skull,SCT,123037004,Anatomical Structure,SCT,89546000,Skull,,,,,,,,,,"245,225,200"
+subcutaneous_fat,SCT,85756007,Tissue,SCT,67769002,Subcutaneous fatty tissue,,,,,,,,,,"255,242,178"
+skeletal_muscle,SCT,123037004,Anatomical Structure,SCT,127954009,Skeletal muscle,,,,,,,,,,"230,130,40"
+torso_fat,SCT,85756007,Tissue,SCT,55603005,Fat,,,,SCT,22943007,Trunk,,,,"250,235,160"
+spinal_cord,SCT,123037004,Anatomical Structure,SCT,2748008,Spinal cord,,,,,,,,,,"255,215,0"
+lung_covid_infiltrate,SCT,49755003,Morphologically Altered Structure,SCT,47351003,Infiltrate,SCT,840539006,COVID-19,SCT,39607008,Lung,,,,"255,90,0"
+intracerebral_hemorrhage,SCT,49755003,Morphologically Altered Structure,SCT,50960005,Hemorrhage,,,,SCT,12738006,Brain,,,,"220,0,0"
+hip_implant,SCT,260787004,Physical object,SCT,40388003,Implant,,,,SCT,24136001,Hip joint,,,,"120,120,120"
+coronary_arteries,SCT,123037004,Anatomical Structure,SCT,41801008,Coronary artery,,,,,,,,,,"200,0,0"
+kidney,SCT,123037004,Anatomical Structure,SCT,64033007,Kidney,,,,,,,,,,"40,120,160"
+adrenal_gland,SCT,123037004,Anatomical Structure,SCT,23451007,Adrenal gland,,,,,,,,,,"210,150,30"
+thyroid_gland,SCT,123037004,Anatomical Structure,SCT,69748006,Thyroid gland,,,,,,,,,,"250,210,60"
+vertebrae_lumbar,SCT,123037004,Anatomical Structure,SCT,51282000,Vertebra,,,,SCT,122496007,Lumbar spine,,,,"106,81,46"
+vertebrae_thoracic,SCT,123037004,Anatomical Structure,SCT,51282000,Vertebra,,,,SCT,122495006,Thoracic spine,,,,"143,118,83"
+vertebrae_cervical,SCT,123037004,Anatomical Structure,SCT,51282000,Vertebra,,,,SCT,122494005,Cervical spine,,,,"180,155,120"
+iliac_artery,SCT,123037004,Anatomical Structure,SCT,73634005,Common iliac artery,,,,,,,,,,"190,0,0"
+iliac_vena,SCT,123037004,Anatomical Structure,SCT,46027005,Common iliac vein,,,,,,,,,,"0,80,200"
+ribs,SCT,123037004,Anatomical Structure,SCT,113197003,Rib,,,,,,,,,,"230,210,180"
+scapula,SCT,123037004,Anatomical Structure,SCT,79601000,Scapula,,,,,,,,,,"220,200,170"
+clavicula,SCT,123037004,Anatomical Structure,SCT,51299004,Clavicle,,,,,,,,,,"225,205,175"
+hip,SCT,123037004,Anatomical Structure,SCT,29836001,Hip,,,,,,,,,,"216,184,54"
+gluteus_maximus,SCT,123037004,Anatomical Structure,SCT,181674001,Gluteus maximus muscle,,,,,,,,,,"220,100,30"
+gluteus_medius,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,,,,,,,,,,"230,110,40"
+gluteus_minimus,SCT,123037004,Anatomical Structure,SCT,78333006,Gluteus medius muscle,,,,,,,,,,"240,120,50"
+autochthon,SCT,123037004,Anatomical Structure,SCT,244849004,Deep muscle of back,,,,,,,,,,"210,110,50"
+iliopsoas,SCT,123037004,Anatomical Structure,SCT,68455001,Iliopsoas muscle,,,,,,,,,,"200,100,40"
+lung_vessels,SCT,123037004,Anatomical Structure,SCT,59820001,Blood vessel,,,,SCT,39607008,Lung,,,,"0,150,190"
+lung_trachea_bronchia,SCT,123037004,Anatomical Structure,SCT,110726009,Trachea and bronchus,,,,,,,,,,"37,217,237"
+body_trunc,SCT,123037004,Anatomical Structure,SCT,22943007,Trunk,,,,,,,,,,"216,54,178"
+body_extremities,SCT,123037004,Anatomical Structure,SCT,66019005,Limb,,,,,,,,,,"216,208,54"
+vertebrae_body,SCT,123037004,Anatomical Structure,SCT,3572006,Vertebral body,,,,,,,,,,"190,160,130"
+lung_pleural,SCT,123037004,Anatomical Structure,SCT,3120008,Pleural membrane,,,,,,,,,,"40,200,210"
+pleural_effusion,SCT,49755003,Morphologically Altered Structure,SCT,41699000,Effusion,,,,SCT,91381003,Pleural cavity,,,,"0,210,255"
+pericardial_effusion,SCT,49755003,Morphologically Altered Structure,SCT,41699000,Effusion,,,,SCT,25489000,Pericardial cavity,,,,"0,200,255"
+liver_vessels,SCT,123037004,Anatomical Structure,SCT,59820001,Blood vessel,,,,SCT,10200004,Liver,,,,"60,160,60"
+liver_tumor,SCT,49755003,Morphologically Altered Structure,SCT,108369006,Neoplasm,,,,SCT,10200004,Liver,,,,"255,0,200"
+costal_cartilages,SCT,123037004,Anatomical Structure,SCT,50016007,Costal cartilage,,,,,,,,,,"250,220,190"

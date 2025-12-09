@@ -139,3 +139,36 @@ def load_snomed_mapping():
             }
     
     return snomed_map
+
+
+# Deterministic color mapping loader
+def load_color_mapping():
+    """Load predefined RGB color mapping for structures from CSV.
+    Returns dict mapping structure name to (R,G,B) tuple; empty if not found or invalid.
+    Reads from totalsegmentator_snomed_mapping.csv column 'DicomRGBColor'.
+    """
+    import csv
+    from pathlib import Path
+
+    csv_path = Path(__file__).parent / "resources" / "totalsegmentator_snomed_mapping.csv"
+
+    color_map = {}
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f)
+        # Expect 'Structure' and 'DicomRGBColor' columns
+        for row in reader:
+            name = row.get("Structure")
+            rgb = row.get("DicomRGBColor")
+            if not name:
+                continue
+            if not rgb:
+                continue
+            # Accept forms like "r,g,b" possibly with spaces
+            parts = [p.strip() for p in rgb.split(",")]
+            if len(parts) == 3:
+                try:
+                    color_map[name] = tuple(int(p) for p in parts)
+                except ValueError:
+                    # ignore malformed
+                    pass
+    return color_map
