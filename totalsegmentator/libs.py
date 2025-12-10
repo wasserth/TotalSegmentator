@@ -328,6 +328,9 @@ def download_pretrained_weights(task_id):
     elif task_id == 343:
         weights_path = config_dir / "Dataset343_mediastinum_1786subj"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset343_mediastinum_1786subj.zip"
+    elif task_id == 615:
+        weights_path = config_dir / "Dataset615_MAXIMUS"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset615_MAXIMUS.zip"
 
     # Commercial models
     elif task_id == 304:

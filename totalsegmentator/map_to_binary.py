@@ -770,6 +770,9 @@ class_map = {
         3: "pericardium",
         4: "mediastinum"
     },
+    "brain_aneurysm": {
+        1: "brain_aneurysm"
+    },
     "test": {
         1: "carpal"
     }

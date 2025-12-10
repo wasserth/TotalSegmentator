@@ -65,6 +65,7 @@ def main():
         "abdominal_muscles": [952],
         "teeth": [113],
         "trunk_cavities": [343],
+        "brain_aneurysm": [615],
         
         "heartchambers_highres": [301],
         "appendicular_bones": [304],

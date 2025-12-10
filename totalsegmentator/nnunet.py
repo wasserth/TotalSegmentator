@@ -26,11 +26,12 @@ from totalsegmentator.libs import nostdout
 
 # --- monkey-patch snippet (custom trainers) --- #
 from nnunetv2.utilities.find_class_by_name import recursive_find_python_class
-from totalsegmentator.custom_trainers import nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring
+from totalsegmentator.custom_trainers import nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring, nnUNetTrainerDiceTopK10Loss_2000epochs
 def recursive_find_python_class_custom(folder: str, class_name: str, current_module: str):
     if class_name == "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring":
         return nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring
-    
+    elif class_name == "nnUNetTrainerDiceTopK10Loss_2000epochs":
+        return nnUNetTrainerDiceTopK10Loss_2000epochs
     return recursive_find_python_class(folder, class_name, current_module)
 # monkey-patch
 import nnunetv2

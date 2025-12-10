@@ -279,7 +279,9 @@ roi_groups = {
     "trunk_cavities": [
         ["abdominal_cavity", "thoracic_cavity", "pericardium", "mediastinum"]
     ],
-    
+    "brain_aneurysm": [
+        ["brain_aneurysm"]
+    ],
     "test": [
         ["ulna"]
     ]

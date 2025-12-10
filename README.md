@@ -97,6 +97,8 @@ Available with a license (free licenses available for non-commercial usage [here
 * **thigh_shoulder_muscles**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii
 * **thigh_shoulder_muscles_mr**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (for MR images)
 * **coronary_arteries**: coronary_arteries (also works on non-contrast images)
+* **brain_aneurysm**: aneurysm (only works with TOF MRI images; trained on 1094 TOF images from University Hospital Basel, RSNA Kaggle, Rocal Brisbane, Lausanne and ADAM Challenge) (CC BY-NC 4.0 license, no commercial license available)
+
 
 Usage:
 ```bash

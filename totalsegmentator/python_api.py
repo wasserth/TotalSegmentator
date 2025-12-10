@@ -161,6 +161,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     remove_outside = None
     remove_outside_dilation = None
     remove_mask = None
+    modality = None
+    
+    # Important: 'resample' expects [x,y,z] but in nnUNet plans.json file it is [z,y,x]. So when copying from plans.json make sure to reverse the order.
     
     if task == "total":
         if fast:
@@ -467,7 +470,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task trunk_cavities does not work with option --fast")
-        
+    elif task == "brain_aneurysm":
+        task_id = 615
+        resample = [0.390625, 0.390625, 0.5000016391277313]
+        trainer = "nnUNetTrainerDiceTopK10Loss_2000epochs"
+        crop = None  # no cropping needed, because TOF MRI images only cover brain
+        model = "3d_fullres"
+        folds = None
+        if not quiet: print("INFO: This task only works with TOF MRI images.\n")
+        if fast: raise ValueError("task brain_aneurysm does not work with option --fast")
+
     # Commercial models
     elif task == "vertebrae_body":
         task_id = 305
@@ -678,7 +690,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 else:
                     crop_model_task = 298
                     crop_spacing = 6.0
-            crop_task = "total_mr" if task.endswith("_mr") else "total"
+            if task.endswith("_mr") or modality == "mr":
+                crop_task = "total_mr"
+            else:
+                crop_task = "total"
             crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"
             if crop is not None and ("body_trunc" in crop or "body_extremities" in crop):
                 crop_model_task = 300
@@ -734,7 +749,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
-    folds = [0]  # None
     seg_img, ct_img, stats = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
                             trainer=trainer, tta=False, multilabel_image=ml, resample=resample,
                             crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview,

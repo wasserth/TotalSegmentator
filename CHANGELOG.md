@@ -4,6 +4,7 @@
 * **BREAKING CHANGE**: The option `--output_type dicom` is now `--output_type dicom_rtstruct`
 * **BREAKING CHANGE**: If setting `--output_type dicom_seg` or `--output_type dicom_rtstruct` the output path (`-o`) is not treated as a directory anymore but as a file path. So if you did `-o dicom_rt_struct_output_dir` you now have to do `-o dicom_rt_struct_output_dir/segmentations.dcm`
 * add `trunk_cavities` task
+* add `brain_aneurysm` task
 
 
 ## Release 2.11.0
