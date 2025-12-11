@@ -97,7 +97,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **thigh_shoulder_muscles**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii
 * **thigh_shoulder_muscles_mr**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (for MR images)
 * **coronary_arteries**: coronary_arteries (also works on non-contrast images)
-* **brain_aneurysm**: aneurysm (only works with TOF MRI images; [model details](https://zenodo.org/records/13386859)) (CC BY-NC 4.0 license, no commercial license available) (cite [paper](https://doi.org/10.1007/s10278-025-01533-3))
+* **brain_aneurysm**: aneurysm (only works with TOF MRI images; [model details](https://doi.org/10.5281/zenodo.17894703)) (CC BY-NC 4.0 license, no commercial license available) (cite [paper](https://doi.org/10.1007/s10278-025-01533-3))
 
 
 Usage:
