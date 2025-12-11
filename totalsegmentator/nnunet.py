@@ -359,11 +359,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     multimodel = type(task_id) is list
 
     # Validate that DICOM output types are only used with DICOM input
-    if img_type == "nifti" and any(ot in ["dicom_rtstruct", "dicom_seg"] for ot in output_types):
+    if img_type == "nifti" and any(out_type in ["dicom_rtstruct", "dicom_seg"] for out_type in output_types):
         raise ValueError("To use output type dicom_rtstruct or dicom_seg you also have to use a Dicom image as input.")
 
     # If any dicom output selected enforce multilabel output
-    if any(ot in ["dicom_rtstruct", "dicom_seg"] for ot in output_types):
+    if any(out_type in ["dicom_rtstruct", "dicom_seg"] for out_type in output_types):
         multilabel_image = True
 
     if task_name == "total":
@@ -761,18 +761,18 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 
                 # DELETE
                 # Only create temporary nifti if needed later (either for binary decomposition or explicit nifti output)
-                # need_tmp_nifti = ("nifti" in output_types) or (not multilabel_image and any(ot.startswith("dicom") for ot in output_types))
+                # need_tmp_nifti = ("nifti" in output_types) or (not multilabel_image and any(out_type.startswith("dicom") for out_type in output_types))
                 # if need_tmp_nifti:
                 #     nib.save(img_out, base_dir / f"{base_name}_multilabel_tmp.nii.gz")
 
-                for ot in output_types:
-                    if ot == "nifti":
+                for out_type in output_types:
+                    if out_type == "nifti":
                         nifti_path = base_dir / f"{base_name}.nii.gz"
                         nib.save(img_out, nifti_path)
-                    elif ot == "dicom_rtstruct":
+                    elif out_type == "dicom_rtstruct":
                         rtstruct_path = base_dir / f"{base_name}_rtstruct.dcm"
                         save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, rtstruct_path)
-                    elif ot == "dicom_seg":
+                    elif out_type == "dicom_seg":
                         seg_path = base_dir / f"{base_name}_seg.dcm"
                         save_mask_as_dicomseg(img_data, selected_classes, file_in_dcm, seg_path, img_out.affine, use_gpu=use_gpu)
                     else:
