@@ -5,6 +5,10 @@
 * **BREAKING CHANGE**: If setting `--output_type dicom_seg` or `--output_type dicom_rtstruct` the output path (`-o`) is not treated as a directory anymore but as a file path. So if you did `-o dicom_rt_struct_output_dir` you now have to do `-o dicom_rt_struct_output_dir/segmentations.dcm`
 * add `trunk_cavities` task
 * add `brain_aneurysm` task
+* improve runtime of `dicom_seg` output type by using GPU if available
+* for DICOM output use consistent colors
+* if DICOM input automatically detect modality and check if correct model for this modality is used. If not, warn the user and use the correct model.
+* allow multiple output types to store segmentation as e.g. nifti and dicom_seg at the same time
 
 
 ## Release 2.11.0

@@ -127,7 +127,8 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
 
 
 def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus=1,
-                   nnunet_resample=False, dtype=None, remove_negative=False, force_affine=None):
+                   nnunet_resample=False, dtype=None, remove_negative=False, force_affine=None,
+                   use_gpu=False):
     """
     Resample nifti image to the new spacing (uses resample_img() internally).
 
@@ -203,7 +204,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
         # new_data, _ = resample_img_nnunet(data, None, img_spacing, new_spacing, order_data=order, order_seg=order)
         _, new_data = resample_img_nnunet(None, data, img_spacing, new_spacing, order_data=order, order_seg=order)
     else:
-        if cupy_available and cucim_available:
+        # GPU path only if available AND globally allowed
+        if cupy_available and cucim_available and use_gpu:
             new_data = resample_img_cucim(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # gpu resampling
         else:
             new_data = resample_img(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # cpu resampling

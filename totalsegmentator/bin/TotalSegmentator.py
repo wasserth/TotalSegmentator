@@ -14,6 +14,23 @@ def validate_device_type(value):
             f"Invalid device type: '{value}'. Must be 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
 
 
+def normalize_output_types(values):
+
+    VALID_OUTPUT_TYPES = {"nifti", "dicom_rtstruct", "dicom_seg"}
+
+    # Split on commas and flatten
+    result = []
+    for v in values:
+        result.extend(v.split(","))
+    
+    # Validate
+    invalid = [x for x in result if x not in VALID_OUTPUT_TYPES]
+    if invalid:
+        raise ValueError(f"Invalid output types: {invalid}. Allowed are: {sorted(VALID_OUTPUT_TYPES)}")
+    
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description="Segment 104 anatomical structures in CT images.",
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
@@ -28,9 +45,9 @@ def main():
                              "Or path of output dicom seg file if --output_type is set to 'dicom_seg' or 'dicom_rtstruct'",
                         type=lambda p: Path(p).absolute(), required=True)
 
-    parser.add_argument("-ot", "--output_type", choices=["nifti", "dicom_rtstruct", "dicom_seg"],
-                    help="Select if segmentations shall be saved as Nifti, Dicom RT Struct, or Dicom SEG file.",
-                    default="nifti")
+    parser.add_argument("-ot", "--output_type", type=str, nargs="+",
+                    help="Select output type(s). Choices: nifti, dicom_rtstruct, dicom_seg. Multiple are allowed e.g. -ot nifti dicom_seg OR -ot nifti,dicom_seg).",
+                    default=None)
 
     parser.add_argument("-ml", "--ml", action="store_true", help="Save one multilabel image for all classes",
                         default=False)
@@ -155,15 +172,37 @@ def main():
 
     args = parser.parse_args()
 
+    normalized_output_type = ["nifti"] if args.output_type is None else normalize_output_types(args.output_type)
+    # Backward compatibility: single element stays a string
+    args.output_type = normalized_output_type[0] if len(normalized_output_type) == 1 else normalized_output_type
+
+    # Auto-select task from DICOM Modality when input is DICOM
+    if args.input.exists() and not str(args.input).endswith((".nii", ".nii.gz")):
+        try:
+            from totalsegmentator.dicom_io import detect_dicom_modality
+            modality = detect_dicom_modality(args.input)
+            if modality is not None:
+                if modality.upper() == "CT" and args.task == "total_mr":
+                    print("WARNING: you tried to run MR model, but input modality is CT. Will run CT model instead.")
+                    args.task = "total"
+                elif modality.upper() == "MR" and args.task == "total":
+                    print("WARNING: you tried to run CT model, but input modality is MR. Will run MR model instead.")
+                    args.task = "total_mr"
+        except Exception:
+            pass
+
     totalsegmentator(args.input, args.output, args.ml, args.nr_thr_resamp, args.nr_thr_saving,
                      args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
                      args.statistics, args.radiomics, args.crop_path, args.body_seg,
                      args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
-                     args.device, args.license_number, not args.stats_include_incomplete,
-                     args.no_derived_masks, args.v1_order, args.fastest, args.roi_subset_robust,
-                     "mean", args.remove_small_blobs, False, args.robust_crop, args.higher_order_resampling,
-                     args.save_probabilities)
+                     device=args.device, license_number=args.license_number,
+                     statistics_exclude_masks_at_border=not args.stats_include_incomplete,
+                     no_derived_masks=args.no_derived_masks, v1_order=args.v1_order, fastest=args.fastest,
+                     roi_subset_robust=args.roi_subset_robust, stats_aggregation="mean", 
+                     remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
+                     robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
+                     save_probabilities=args.save_probabilities)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -7,6 +7,7 @@ from pathlib import Path
 import subprocess
 import platform
 import importlib.metadata
+import importlib
 
 from tqdm import tqdm
 import numpy as np
@@ -14,7 +15,7 @@ import nibabel as nib
 import dicom2nifti
 
 from totalsegmentator.config import get_weights_dir
-from totalsegmentator.dicom_utils import rgb_to_cielab_dicom, generate_random_color, load_snomed_mapping
+from totalsegmentator.dicom_utils import rgb_to_cielab_dicom, generate_random_color, load_snomed_mapping, load_color_mapping
 
 
 def command_exists(command):
@@ -129,9 +130,39 @@ def dcm_to_nifti(input_path, output_path, tmp_dir=None, verbose=False):
         with zipfile.ZipFile(input_path, 'r') as zip_ref:
             zip_ref.extractall(extract_dir)
             input_path = extract_dir
-    
+
     # Convert to nifti
     dicom2nifti.dicom_series_to_nifti(input_path, output_path, reorient_nifti=True)
+
+
+def detect_dicom_modality(series_path: Path) -> str | None:
+    """Return DICOM Modality from a series directory (e.g., 'CT' or 'MR').
+    Looks for any file in the directory and reads its Modality tag using pydicom.
+    Returns None if not found or unreadable.
+    """
+    try:
+        import pydicom
+    except Exception:
+        return None
+    try:
+        p = Path(series_path)
+        if p.is_file():
+            candidates = [p]
+        else:
+            # Prefer .dcm files but fall back to any file
+            dcm_files = sorted(p.glob("*.dcm"))
+            candidates = dcm_files if dcm_files else [f for f in p.iterdir() if f.is_file()]
+        for f in candidates:
+            try:
+                ds = pydicom.dcmread(str(f), stop_before_pixels=True)
+                modality = getattr(ds, 'Modality', None)
+                if modality:
+                    return str(modality)
+            except Exception:
+                continue
+    except Exception:
+        return None
+    return None
 
 
 def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output_path):
@@ -141,6 +172,12 @@ def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output
     from rt_utils import RTStructBuilder
     import logging
     logging.basicConfig(level=logging.WARNING)  # avoid messages from rt_utils
+
+    # Load deterministic color mapping (same as used for DICOM SEG)
+    try:
+        color_map = load_color_mapping()
+    except Exception:
+        color_map = {}
 
     # create new RT Struct - requires original DICOM
     rtstruct = RTStructBuilder.create_new(dicom_series_path=dcm_reference_file)
@@ -153,36 +190,65 @@ def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output
             # rotate nii to match DICOM orientation
             binary_img = np.rot90(binary_img, 1, (0, 1))  # rotate segmentation in-plane
 
-            # add segmentation to RT Struct
+            # Determine RGB color: deterministic if available, else fallback vibrant random (same logic as DICOM SEG)
+            rgb_color = color_map.get(class_name)
+            if rgb_color is None:
+                rgb_color = generate_random_color()
+
+            # add segmentation to RT Struct with color
             rtstruct.add_roi(
                 mask=binary_img,  # has to be a binary numpy array
-                name=class_name
+                name=class_name,
+                color=list(rgb_color)
             )
 
     rtstruct.save(str(output_path))
 
 
-def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output_path, nifti_affine):
+def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output_path, nifti_affine, use_gpu=False):
     """
     Save segmentation as DICOM SEG using highdicom library.
+
+    This version optionally accelerates heavy array operations (mask creation, stacking,
+    flipping, transposing) using CuPy when available. Final pixel data is converted back
+    to NumPy before passing to highdicom.
     
     Args:
         img_data: segmentation data (multilabel image)
         selected_classes: dict mapping class indices to class names
         dcm_reference_file: a directory with dcm slices
-        output_path: output path for the DICOM SEG file
+        output_path: output path for the DICOM SEG file  (file or directory)
         nifti_affine: affine transformation matrix from nifti image
+        use_gpu: whether to use GPU for heavy array operations
     """
     import highdicom as hd
     import pydicom
     from pydicom.sr.codedict import codes
     from highdicom.seg.content import SegmentDescription
+
+    # Try to import CuPy; fall back to NumPy if unavailable
+    try:
+        cp = importlib.import_module("cupy")  # dynamic import, may fail
+        cupy_available = True and use_gpu
+    except Exception:
+        cp = None
+        cupy_available = False
+
+    # Decide computation backend (xp is either numpy or cupy)
+    if cupy_available:
+        xp = cp
+        # Ensure data is on GPU
+        if not isinstance(img_data, cp.ndarray):
+            img_data = cp.asarray(img_data)
+    else:
+        xp = np
     
     # Get TotalSegmentator version
     version = importlib.metadata.version("TotalSegmentator")
     
     # Load SNOMED CT codes mapping
     snomed_map = load_snomed_mapping()
+    color_map = load_color_mapping()  # deterministic colors
     
     # Read reference DICOM series
     dcm_files = sorted(Path(dcm_reference_file).glob("*.dcm"))
@@ -225,114 +291,101 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     dcm_rows = source_images[0].Rows
     dcm_cols = source_images[0].Columns
     dcm_slices = len(source_images)
-    
+
     # The segmentation comes in NIfTI orientation, need to reorient to match DICOM
     # NIfTI typically has shape that might need transposing to match DICOM rows x cols x slices
     seg_shape = img_data.shape
-    
-    # Transpose if needed to match DICOM orientation (rows, cols, slices)
-    # Segmentation is typically (height, width, depth), DICOM expects (rows, cols, slices)
+
+    # Orientation handling
     if seg_shape == (dcm_cols, dcm_rows, dcm_slices):
-        # Need to transpose to swap rows and cols
-        img_data = np.transpose(img_data, (1, 0, 2))
+        img_data = xp.transpose(img_data, (1, 0, 2))
     elif seg_shape != (dcm_rows, dcm_cols, dcm_slices):
-        raise ValueError(f"Segmentation shape {seg_shape} does not match DICOM dimensions ({dcm_rows}, {dcm_cols}, {dcm_slices}). "
-                        "Cannot create DICOM SEG with mismatched dimensions.")
-    
-    # Prepare segment descriptions
-    segment_descriptions = []
-    pixel_arrays = []
-    
+        raise ValueError(
+            f"Segmentation shape {seg_shape} does not match DICOM dimensions ({dcm_rows}, {dcm_cols}, {dcm_slices}). Cannot create DICOM SEG with mismatched dimensions."
+        )
+
+    # Check if remapping of labels is needed
+    inferred_classes = xp.unique(img_data)
+    need_remap = img_data.max() != (len(inferred_classes) - 1)  # labels not contiguous (excluding background 0)
+    remapped_image = xp.zeros_like(img_data) if need_remap else None
+
+    segment_descriptions = []     # Prepare segment descriptions
+
     for class_idx, class_name in tqdm(selected_classes.items(), desc="Preparing segments"):
-        binary_mask = (img_data == class_idx).astype(np.uint8)
-        
-        if binary_mask.sum() > 0:  # only save non-empty segments
-            
-            # Generate random color for this segment
-            random_rgb = generate_random_color()
-            random_cielab = rgb_to_cielab_dicom(random_rgb)
-            
-            # Get SNOMED codes for this structure
-            if class_name in snomed_map:
-                snomed = snomed_map[class_name]
-                
-                # Create property category code
-                property_category = hd.sr.CodedConcept(
-                    value=snomed['property_category']['value'],
-                    scheme_designator=snomed['property_category']['scheme'],
-                    meaning=snomed['property_category']['meaning']
+        binary_mask = img_data == class_idx
+
+        if binary_mask.sum() == 0:  # skip empty segments
+            continue
+
+        if class_name in snomed_map:
+            snomed = snomed_map[class_name]
+            property_category = hd.sr.CodedConcept(
+                value=snomed['property_category']['value'],
+                scheme_designator=snomed['property_category']['scheme'],
+                meaning=snomed['property_category']['meaning']
+            )
+            property_type = hd.sr.CodedConcept(
+                value=snomed['property_type']['value'],
+                scheme_designator=snomed['property_type']['scheme'],
+                meaning=snomed['property_type']['meaning']
+            )
+            segment_desc = SegmentDescription(
+                segment_number=len(segment_descriptions) + 1,
+                segment_label=class_name,
+                segmented_property_category=property_category,
+                segmented_property_type=property_type,
+                algorithm_type=hd.seg.SegmentAlgorithmTypeValues.AUTOMATIC,
+                algorithm_identification=hd.AlgorithmIdentificationSequence(
+                    name="TotalSegmentator",
+                    version=version,
+                    family=codes.DCM.ArtificialIntelligence
                 )
-                
-                # Create property type code
-                property_type = hd.sr.CodedConcept(
-                    value=snomed['property_type']['value'],
-                    scheme_designator=snomed['property_type']['scheme'],
-                    meaning=snomed['property_type']['meaning']
+            )
+            segment_desc.RecommendedDisplayCIELabValue = list(rgb_to_cielab_dicom(color_map.get(class_name)))
+        else:
+            segment_desc = SegmentDescription(
+                segment_number=len(segment_descriptions) + 1,
+                segment_label=class_name,
+                segmented_property_category=codes.SCT.Tissue,
+                segmented_property_type=codes.SCT.Tissue,
+                algorithm_type=hd.seg.SegmentAlgorithmTypeValues.AUTOMATIC,
+                algorithm_identification=hd.AlgorithmIdentificationSequence(
+                    name="TotalSegmentator",
+                    version=version,
+                    family=codes.DCM.ArtificialIntelligence
                 )
-                
-                # Create segment description
-                # Note: The segment label already contains full descriptive name including laterality
-                segment_desc = SegmentDescription(
-                    segment_number=len(segment_descriptions) + 1,
-                    segment_label=class_name,
-                    segmented_property_category=property_category,
-                    segmented_property_type=property_type,
-                    algorithm_type=hd.seg.SegmentAlgorithmTypeValues.AUTOMATIC,
-                    algorithm_identification=hd.AlgorithmIdentificationSequence(
-                        name="TotalSegmentator",
-                        version=version,
-                        family=codes.DCM.ArtificialIntelligence
-                    )
-                )
-                # Set the recommended display color
-                segment_desc.RecommendedDisplayCIELabValue = list(random_cielab)
-            else:
-                # Fallback to generic codes if structure not in mapping
-                segment_desc = SegmentDescription(
-                    segment_number=len(segment_descriptions) + 1,
-                    segment_label=class_name,
-                    segmented_property_category=codes.SCT.Tissue,
-                    segmented_property_type=codes.SCT.Tissue,
-                    algorithm_type=hd.seg.SegmentAlgorithmTypeValues.AUTOMATIC,
-                    algorithm_identification=hd.AlgorithmIdentificationSequence(
-                        name="TotalSegmentator",
-                        version=version,
-                        family=codes.DCM.ArtificialIntelligence
-                    )
-                )
-                # Set the recommended display color
-                segment_desc.RecommendedDisplayCIELabValue = list(random_cielab)
-            
-            segment_descriptions.append(segment_desc)
-            pixel_arrays.append(binary_mask)
-    
+            )
+            segment_desc.RecommendedDisplayCIELabValue = list(rgb_to_cielab_dicom(generate_random_color()))
+
+        segment_descriptions.append(segment_desc)
+
+        if need_remap:
+            remapped_image[binary_mask] = segment_desc.SegmentNumber
+
     if len(segment_descriptions) == 0:
         raise ValueError("No non-empty segments found to save")
-    
-    # Stack all binary masks into a single array
-    # highdicom expects: (slices, rows, cols, num_segments)
-    # Stack segments along the first axis: (num_segments, rows, cols, slices)
-    pixel_array = np.stack(pixel_arrays, axis=0)
-    
-    # Flip along x and z axes to correct coordinate system difference between NIfTI and DICOM
-    # Flip axis 1 (rows/x-axis) and axis 3 (slices/z-axis)
-    pixel_array = pixel_array[:, ::-1, :, ::-1]
-    
-    # Transpose to move segments to last dimension and rearrange axes: (slices, rows, cols, num_segments)
-    pixel_array = np.transpose(pixel_array, (3, 1, 2, 0))
-    
-    # For debugging
-    # print(f"  Source_images: {len(source_images)} slices, {source_images[0].Rows} rows, {source_images[0].Columns} cols")
-    # print(f"  Pixel_array: {pixel_array.shape[0]} slices, {pixel_array.shape[1]} rows, {pixel_array.shape[2]} cols, {pixel_array.shape[3]} segments")
-    
+
+    if need_remap:
+        img_data = remapped_image
+
+    # 1) NIFI segmentation is typically (col, row, slices), DICOM expects (rows, cols, slices), and
+    #    HIGHDICOM expects (slices, rows, cols)
+    # 2) Flip along x and z axes to correct coordinate system difference between NIfTI and DICOM
+    img_data = xp.transpose(img_data, (2, 0, 1))[::-1, ::-1, :]
+
+    # Convert back to NumPy array if using CuPy
+    if cupy_available and isinstance(img_data, cp.ndarray):
+        img_data = cp.asnumpy(img_data)
+
+    series_instance_uid = hd.UID()
     # Create DICOM SEG
     # Note: highdicom will handle the proper encoding of the multi-frame structure
     seg = hd.seg.Segmentation(
         source_images=source_images,
-        pixel_array=pixel_array,
+        pixel_array=img_data,
         segmentation_type=hd.seg.SegmentationTypeValues.BINARY,
         segment_descriptions=segment_descriptions,
-        series_instance_uid=hd.UID(),
+        series_instance_uid=series_instance_uid,
         series_number=100,
         sop_instance_uid=hd.UID(),
         instance_number=1,
@@ -341,6 +394,11 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
         software_versions=version,
         device_serial_number="1"
     )
+
+    if output_path.is_dir():
+        output_path = output_path / f"{series_instance_uid}.dcm"
     
-    # Save DICOM SEG file
-    seg.save_as(str(output_path))
+    # Save DICOM SEG file with explicit endianness and VR settings to avoid deprecation warnings
+    seg.save_as(str(output_path), little_endian=True, implicit_vr=False)
+
+

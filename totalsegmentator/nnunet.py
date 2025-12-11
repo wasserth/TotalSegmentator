@@ -336,7 +336,14 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
     cascade: nibabel image or None
+
+    output_type may be a string or a list of strings (multi-output support)
     """
+    # Normalize output_type to list for internal processing
+    output_types = [output_type] if isinstance(output_type, str) else list(output_type)
+
+    use_gpu = str(device).startswith("cuda")
+
     if not isinstance(file_in, Nifti1Image):
         file_in = Path(file_in)
         if str(file_in).endswith(".nii") or str(file_in).endswith(".nii.gz"):
@@ -351,11 +358,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         file_out = Path(file_out)
     multimodel = type(task_id) is list
 
-    if img_type == "nifti" and (output_type == "dicom_rtstruct" or output_type == "dicom_seg"):
+    # Validate that DICOM output types are only used with DICOM input
+    if img_type == "nifti" and any(ot in ["dicom_rtstruct", "dicom_seg"] for ot in output_types):
         raise ValueError("To use output type dicom_rtstruct or dicom_seg you also have to use a Dicom image as input.")
 
-    # These outputs always result in a single multilabel file
-    if output_type == "dicom_rtstruct" or output_type == "dicom_seg":
+    # If any dicom output selected enforce multilabel output
+    if any(ot in ["dicom_rtstruct", "dicom_seg"] for ot in output_types):
         multilabel_image = True
 
     if task_name == "total":
@@ -471,10 +479,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
             img_in_rsp = change_spacing(img_in, resample,
-                                        order=3, dtype=np.int32, nr_cpus=nr_threads_resampling)  # 4 cpus instead of 1 makes it a bit slower
+                                        order=3, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
             if cascade:
                 cascade = change_spacing(cascade, resample,
-                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling)
+                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)
             if verbose:
                 print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
             if not quiet: print(f"  Resampled in {time.time() - st:.2f}s")
@@ -687,11 +695,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 # 3: identical to 2
                 img_pred = change_spacing(img_pred, resample, img_in_shape,
                                           order=1, dtype=np.uint8, nr_cpus=nr_threads_resampling,
-                                          force_affine=img_in.affine, nnunet_resample=True)
+                                          force_affine=img_in.affine, nnunet_resample=True, use_gpu=use_gpu)
             else:
                 img_pred = change_spacing(img_pred, resample, img_in_shape,
                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
-                                        force_affine=img_in.affine)
+                                        force_affine=img_in.affine, use_gpu=use_gpu)
             
 
         if verbose: print("Undoing canonical...")
@@ -740,54 +748,73 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if roi_subset is not None:
                 selected_classes = {k:v for k, v in selected_classes.items() if v in roi_subset}
 
-            if output_type == "dicom_rtstruct":
-                # file_out.mkdir(exist_ok=True, parents=True)
-                save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out)
-            elif output_type == "dicom_seg":
-                # file_out.mkdir(exist_ok=True, parents=True)
-                save_mask_as_dicomseg(img_data, selected_classes, file_in_dcm, file_out, img_out.affine)
-            else:
-                st = time.time()
-                if multilabel_image:
-                    file_out.parent.mkdir(exist_ok=True, parents=True)
+            # Multi-output saving logic
+            if len(output_types) > 1:
+                # Derive base directory
+                base_dir = file_out if file_out.is_dir() else file_out.parent
+                base_dir.mkdir(exist_ok=True, parents=True)
+                # Determine a base name for files
+                if file_out.is_dir():
+                    base_name = f"{task_name}_segmentation"
                 else:
-                    file_out.mkdir(exist_ok=True, parents=True)
-                if multilabel_image:
-                    nib.save(img_out, file_out)
-                    if nora_tag != "None":
-                        subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
-                else:  # save each class as a separate binary image
-                    file_out.mkdir(exist_ok=True, parents=True)
+                    base_name = file_out.stem.split('.')[0]  # file_out may be a file specifying one of the outputs
+                
+                # DELETE
+                # Only create temporary nifti if needed later (either for binary decomposition or explicit nifti output)
+                # need_tmp_nifti = ("nifti" in output_types) or (not multilabel_image and any(ot.startswith("dicom") for ot in output_types))
+                # if need_tmp_nifti:
+                #     nib.save(img_out, base_dir / f"{base_name}_multilabel_tmp.nii.gz")
 
-                    if np.prod(img_data.shape) > 512*512*1000:
-                        print("Shape of output image is very big. Setting nr_threads_saving=1 to save memory.")
-                        nr_threads_saving = 1
-
-                    # Code for single threaded execution  (runtime:24s)
-                    if nr_threads_saving == 1:
-                        for k, v in selected_classes.items():
-                            binary_img = img_data == k
-                            output_path = str(file_out / f"{v}.nii.gz")
-                            nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine, new_header), output_path)
-                            if nora_tag != "None":
-                                subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+                for ot in output_types:
+                    if ot == "nifti":
+                        nifti_path = base_dir / f"{base_name}.nii.gz"
+                        nib.save(img_out, nifti_path)
+                    elif ot == "dicom_rtstruct":
+                        rtstruct_path = base_dir / f"{base_name}_rtstruct.dcm"
+                        save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, rtstruct_path)
+                    elif ot == "dicom_seg":
+                        seg_path = base_dir / f"{base_name}_seg.dcm"
+                        save_mask_as_dicomseg(img_data, selected_classes, file_in_dcm, seg_path, img_out.affine, use_gpu=use_gpu)
                     else:
-                        nib.save(img_pred, tmp_dir / "s01.nii.gz")  # needed inside of threads
+                        # future types can be added here
+                        pass
+            else:
+                # Original single-output behavior
+                single_ot = output_types[0]
+                if single_ot == "dicom_rtstruct":
+                    save_mask_as_rtstruct(img_data, selected_classes, file_in_dcm, file_out)
+                elif single_ot == "dicom_seg":
+                    save_mask_as_dicomseg(img_data, selected_classes, file_in_dcm, file_out, img_out.affine, use_gpu=use_gpu)
+                else:
+                    st = time.time()
+                    out_dir = file_out.parent if multilabel_image else file_out
+                    out_dir.mkdir(exist_ok=True, parents=True)
 
-                        # Code for multithreaded execution
-                        #   Speed with different number of threads:
-                        #   1: 46s, 2: 24s, 6: 11s, 10: 8s, 14: 8s
-                        # _ = p_map(partial(save_segmentation_nifti, tmp_dir=tmp_dir, file_out=file_out, nora_tag=nora_tag, header=new_header, task_name=task_name, quiet=quiet),
-                        #         selected_classes.items(), num_cpus=nr_threads_saving, disable=quiet)
+                    if multilabel_image:
+                        nib.save(img_out, file_out)
+                        if nora_tag != "None":
+                            subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
+                    else:  # save each class as a separate binary image
+                        if np.prod(img_data.shape) > 512*512*1000:
+                            print("Shape of output image is very big. Setting nr_threads_saving=1 to save memory.")
+                            nr_threads_saving = 1
 
-                        # Multihreaded saving with same functions as in nnUNet -> same speed as p_map
-                        pool = Pool(nr_threads_saving)
-                        results = []
-                        for k, v in selected_classes.items():
-                            results.append(pool.starmap_async(save_segmentation_nifti, [((k, v), tmp_dir, file_out, nora_tag, new_header, task_name, quiet)]))
-                        _ = [i.get() for i in results]  # this actually starts the execution of the async functions
-                        pool.close()
-                        pool.join()
+                        if nr_threads_saving == 1:
+                            for k, v in selected_classes.items():
+                                binary_img = img_data == k
+                                output_path = str(file_out / f"{v}.nii.gz")
+                                nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine, new_header), output_path)
+                                if nora_tag != "None":
+                                    subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+                        else:
+                            nib.save(img_pred, tmp_dir / "s01.nii.gz")  # needed inside of threads
+                            pool = Pool(nr_threads_saving)
+                            results = []
+                            for k, v in selected_classes.items():
+                                results.append(pool.starmap_async(save_segmentation_nifti, [((k, v), tmp_dir, file_out, nora_tag, new_header, task_name, quiet)]))
+                            _ = [i.get() for i in results]
+                            pool.close()
+                            pool.join()
             if not quiet: print(f"  Saved in {time.time() - st:.2f}s")
 
             # Postprocessing single files
@@ -815,4 +842,3 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 nib.save(skin, file_out / "skin.nii.gz")
 
     return img_out, img_in_orig, stats
-
