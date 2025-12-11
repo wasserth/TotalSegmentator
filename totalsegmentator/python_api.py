@@ -405,7 +405,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task breasts does not work with option --fast")
     elif task == "ventricle_parts":
         task_id = 552
-        resample = [1.0, 0.4345703125, 0.4384765625]
+        resample = [0.4384765625, 0.4345703125, 1.0]
         trainer = "nnUNetTrainerNoMirroring"
         crop = ["brain"]
         crop_addon = [0, 0, 0]
@@ -414,7 +414,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task ventricle_parts does not work with option --fast")
     elif task == "liver_segments":
         task_id = 570
-        resample = [1.5, 0.8046879768371582, 0.8046879768371582]
+        resample = [0.8046879768371582, 0.8046879768371582, 1.5]
         trainer = "nnUNetTrainerNoMirroring"
         crop = ["liver"]
         crop_addon = [10, 10, 10]
@@ -423,7 +423,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task liver_segments does not work with option --fast")
     elif task == "liver_segments_mr":
         task_id = 576
-        resample = [3.0, 1.1875, 1.1250001788139343]
+        resample = [1.1250001788139343, 1.1875, 3.0]
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop = ["liver"]
         crop_addon = [10, 10, 10]
