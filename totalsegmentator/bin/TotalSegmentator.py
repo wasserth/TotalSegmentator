@@ -22,6 +22,9 @@ def normalize_output_types(values):
     result = []
     for v in values:
         result.extend(v.split(","))
+
+    # Make "dicom" the same as "dicom_rtstruct" for backward compatibility
+    result = ["dicom_rtstruct" if r == "dicom" else r for r in result]
     
     # Validate
     invalid = [x for x in result if x not in VALID_OUTPUT_TYPES]
