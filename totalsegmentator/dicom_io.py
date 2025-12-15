@@ -113,6 +113,86 @@ def dcm_to_nifti_LEGACY(input_path, output_path, verbose=False):
     os.remove(str(output_path)[:-7] + ".json")
 
 
+def _infer_plane_from_iop(iop):
+    """Infer image plane (axial/coronal/sagittal/oblique) from ImageOrientationPatient.
+    iop: list/tuple of 6 floats [rx, ry, rz, cx, cy, cz] for row and column direction cosines.
+    Returns one of 'axial', 'coronal', 'sagittal', or 'oblique'.
+    """
+    try:
+        import math
+        rx, ry, rz, cx, cy, cz = [float(x) for x in iop]
+        # Normal = row x col
+        nx = ry * cz - rz * cy
+        ny = rz * cx - rx * cz
+        nz = rx * cy - ry * cx
+        # Compare absolute components of normal to axes
+        ax = abs(nx)
+        ay = abs(ny)
+        az = abs(nz)
+        # A simple threshold to decide planarity vs oblique
+        # If the normal is mostly along one axis, we consider it that plane
+        dominant = max(ax, ay, az)
+        if dominant < 0.9:
+            return 'oblique'
+        if az == dominant:
+            return 'axial'
+        if ay == dominant:
+            return 'coronal'
+        return 'sagittal'
+    except Exception:
+        return 'oblique'
+
+
+def _extract_orientation_from_datasets(datasets):
+    """Extract orientation metadata from a list of already loaded pydicom datasets.
+    Returns a dict with keys similar to extract_orientation_metadata.
+    """
+    try:
+        if not datasets:
+            return None
+        first = datasets[0]
+        iop = list(getattr(first, 'ImageOrientationPatient', []))
+        # Collect first few IPP values
+        ipp_list = []
+        for ds in datasets[:5]:
+            ipp = getattr(ds, 'ImagePositionPatient', None)
+            if ipp is not None:
+                ipp_list.append([float(x) for x in ipp])
+        slice_spacing = None
+        if len(iop) == 6 and len(ipp_list) >= 2:
+            try:
+                rx, ry, rz, cx, cy, cz = [float(x) for x in iop]
+                nx = ry * cz - rz * cy
+                ny = rz * cx - rx * cz
+                nz = rx * cy - ry * cx
+                p0 = np.array(ipp_list[0], dtype=float)
+                p1 = np.array(ipp_list[1], dtype=float)
+                diff = p1 - p0
+                slice_spacing = float(abs(diff[0]*nx + diff[1]*ny + diff[2]*nz))
+            except Exception:
+                slice_spacing = None
+        pixel_spacing = None
+        try:
+            ps = getattr(first, 'PixelSpacing', None)
+            if ps is not None:
+                pixel_spacing = [float(ps[0]), float(ps[1])]
+        except Exception:
+            pixel_spacing = None
+        modality = getattr(first, 'Modality', None)
+        plane = _infer_plane_from_iop(iop) if len(iop) == 6 else None
+        return {
+            "modality": str(modality) if modality else None,
+            "image_orientation_patient": iop if len(iop) == 6 else None,
+            "image_position_patient_first": ipp_list[0] if ipp_list else None,
+            "pixel_spacing": pixel_spacing,
+            "slice_thickness": float(getattr(first, 'SliceThickness', 0)) or None,
+            "slice_spacing": slice_spacing,
+            "plane": plane
+        }
+    except Exception:
+        return None
+
+
 def dcm_to_nifti(input_path, output_path, tmp_dir=None, verbose=False):
     """
     Uses dicom2nifti package (also works on windows)
@@ -181,6 +261,7 @@ def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output
 
     # create new RT Struct - requires original DICOM
     rtstruct = RTStructBuilder.create_new(dicom_series_path=dcm_reference_file)
+    orientation_metadata = _extract_orientation_from_datasets(rtstruct.series_data)
 
     # add mask to RT Struct
     for class_idx, class_name in tqdm(selected_classes.items()):
@@ -188,7 +269,16 @@ def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output
         if binary_img.sum() > 0:  # only save none-empty images
 
             # rotate nii to match DICOM orientation
-            binary_img = np.rot90(binary_img, 1, (0, 1))  # rotate segmentation in-plane
+            if orientation_metadata.get("plane") == "axial":
+                binary_img = np.transpose(binary_img, (1, 0, 2))[::-1, :, :]
+            elif orientation_metadata.get("plane") == "coronal":
+                binary_img = np.transpose(binary_img, (2, 0, 1))[::-1, :, ::-1]
+            elif orientation_metadata.get("plane") == "sagittal":
+                binary_img = np.transpose(binary_img, (2, 1, 0))[::-1, ::-1, ::-1]
+            else:
+                raise ValueError(
+                    f"Segmentation shape {binary_img.shape} does not match DICOM dimensions. Cannot create DICOM SEG with mismatched dimensions."
+                )
 
             # Determine RGB color: deterministic if available, else fallback vibrant random (same logic as DICOM SEG)
             rgb_color = color_map.get(class_name)
@@ -261,7 +351,10 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     
     # Load all DICOM slices
     source_images = [pydicom.dcmread(str(f)) for f in dcm_files]
-    
+
+    # Derive orientation metadata directly from loaded datasets
+    orientation_metadata = _extract_orientation_from_datasets(source_images)
+
     # Validate and fix SOPClassUID if missing or empty
     for img in source_images:
         if not hasattr(img, 'SOPClassUID') or img.SOPClassUID == '':
@@ -280,25 +373,37 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
             else:
                 # If no Modality tag, default to CT Image Storage
                 img.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
-    
-    # Sort by Instance Number or Image Position Patient
-    if hasattr(source_images[0], 'InstanceNumber'):
-        source_images = sorted(source_images, key=lambda x: x.InstanceNumber)
-    elif hasattr(source_images[0], 'ImagePositionPatient'):
-        source_images = sorted(source_images, key=lambda x: float(x.ImagePositionPatient[2]))
-    
-    # Get the dimensions of the source DICOM images
-    dcm_rows = source_images[0].Rows
-    dcm_cols = source_images[0].Columns
+
+    # Dimensions of the DICOM image grid
+    dcm_rows = int(source_images[0].Rows)
+    dcm_cols = int(source_images[0].Columns)
     dcm_slices = len(source_images)
 
     # The segmentation comes in NIfTI orientation, need to reorient to match DICOM
     # NIfTI typically has shape that might need transposing to match DICOM rows x cols x slices
     seg_shape = img_data.shape
 
-    # Orientation handling
-    if seg_shape == (dcm_cols, dcm_rows, dcm_slices):
+    # Orientation handling based on DICOM dimensions
+    if seg_shape == (dcm_cols, dcm_rows, dcm_slices) and orientation_metadata.get("plane") == "axial":
         img_data = xp.transpose(img_data, (1, 0, 2))
+        # Sort by Image Position Patient
+        if hasattr(source_images[0], 'ImagePositionPatient'):
+            source_images = sorted(source_images, key=lambda x: float(x.ImagePositionPatient[2]))
+
+    elif seg_shape == (dcm_cols, dcm_slices, dcm_rows) and orientation_metadata.get("plane") == "coronal":
+        img_data = xp.transpose(img_data, (0, 2, 1))
+
+        # Sort by Image Position Patient
+        if hasattr(source_images[0], 'ImagePositionPatient'):
+            source_images = sorted(source_images, key=lambda x: float(x.ImagePositionPatient[1]))
+
+    elif seg_shape == (dcm_slices, dcm_rows, dcm_cols) and orientation_metadata.get("plane") == "sagittal":
+        img_data = xp.transpose(img_data, (1, 2, 0))
+
+        # Sort by Image Position Patient
+        if hasattr(source_images[0], 'ImagePositionPatient'):
+            source_images = sorted(source_images, key=lambda x: float(x.ImagePositionPatient[0]))
+
     elif seg_shape != (dcm_rows, dcm_cols, dcm_slices):
         raise ValueError(
             f"Segmentation shape {seg_shape} does not match DICOM dimensions ({dcm_rows}, {dcm_cols}, {dcm_slices}). Cannot create DICOM SEG with mismatched dimensions."
@@ -368,10 +473,14 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     if need_remap:
         img_data = remapped_image
 
-    # 1) NIFI segmentation is typically (col, row, slices), DICOM expects (rows, cols, slices), and
-    #    HIGHDICOM expects (slices, rows, cols)
-    # 2) Flip along x and z axes to correct coordinate system difference between NIfTI and DICOM
-    img_data = xp.transpose(img_data, (2, 0, 1))[::-1, ::-1, :]
+    # 1) DICOM has orientation (rows, cols, slices), while HIGHDICOM expects (slices, rows, cols)
+    # 2) Flip along x and z axes to correct coordinate system difference between DICOM and HIGHDICOM
+    if orientation_metadata.get("plane") == "axial":
+        img_data = xp.transpose(img_data, (2, 0, 1))[:, ::-1, :]
+    elif orientation_metadata.get("plane") == "coronal":
+        img_data = xp.transpose(img_data, (2, 1, 0))[::-1, ::-1, :]
+    elif orientation_metadata.get("plane") == "sagittal":
+        img_data = xp.transpose(img_data, (2, 1, 0))[:, ::-1, ::-1]
 
     # Convert back to NumPy array if using CuPy
     if cupy_available and isinstance(img_data, cp.ndarray):
