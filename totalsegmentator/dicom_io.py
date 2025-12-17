@@ -120,7 +120,7 @@ def _infer_plane_from_iop(iop):
     """
     try:
         import math
-        rx, ry, rz, cx, cy, cz = [float(x) for x in iop]
+        rx, ry, rz, cx, cy, cz = (float(x) for x in iop)
         # Normal = row x col
         nx = ry * cz - rz * cy
         ny = rz * cx - rx * cz
@@ -161,7 +161,7 @@ def _extract_orientation_from_datasets(datasets):
         slice_spacing = None
         if len(iop) == 6 and len(ipp_list) >= 2:
             try:
-                rx, ry, rz, cx, cy, cz = [float(x) for x in iop]
+                rx, ry, rz, cx, cy, cz = (float(x) for x in iop)
                 nx = ry * cz - rz * cy
                 ny = rz * cx - rx * cz
                 nz = rx * cy - ry * cx
