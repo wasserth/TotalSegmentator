@@ -1,4 +1,6 @@
 ## Master
+* when saving DICOM SEG or RT Struct try to infer orientation from DICOM input and rotate segmentation to match
+* Remove version pinning of `requests` package for python < 3.10. Connected openssl issue seems to be resolved in python >= 3.9
 
 
 ## Release 2.12.0
