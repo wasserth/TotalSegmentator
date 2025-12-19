@@ -11,6 +11,7 @@ import importlib.metadata
 
 import nibabel as nib
 import numpy as np
+import xgboost as xgb
 
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.config import send_usage_stats_application
@@ -20,6 +21,16 @@ from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 Additional requirements for this script:
 xgboost
 """
+
+
+def load_models(classifier_path):
+    clfs = {}
+    for fold in range(5):  # assuming 5 folds
+        clf = xgb.XGBClassifier()
+        clf.load_model(f"{classifier_path}.{fold}")
+        clfs[fold] = clf
+    return clfs
+
 
 def combine_lung_lobes(stats):
     """Combine 5 lung lobes into left and right lung ROIs for CT data."""
@@ -203,11 +214,11 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
-            classifier_path = str(importlib.resources.files('totalsegmentator') / f'resources/{target}_classifiers_2025_12_19.pkl')
+            classifier_path = str(importlib.resources.files('totalsegmentator') / f'resources/{target}_{modality}_classifiers_2025_12_19.json')
         else: 
             # manually set model file
             classifier_path = model_file
-        clfs = pickle.load(open(classifier_path, "rb"))
+        clfs = load_models(classifier_path)
 
         # ensemble across folds
         preds = []
