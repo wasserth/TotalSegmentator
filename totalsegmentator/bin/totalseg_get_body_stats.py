@@ -14,7 +14,7 @@ import numpy as np
 import xgboost as xgb
 
 from totalsegmentator.python_api import totalsegmentator
-from totalsegmentator.config import send_usage_stats_application
+from totalsegmentator.config import get_totalseg_dir, send_usage_stats_application
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 
 """
@@ -23,10 +23,13 @@ xgboost
 """
 
 
-def load_models(classifier_path):
+def load_models(classifier_path, target):
     clfs = {}
     for fold in range(5):  # assuming 5 folds
-        clf = xgb.XGBClassifier()
+        if target == "sex":
+            clf = xgb.XGBClassifier(device="cpu")
+        else:
+            clf = xgb.XGBRegressor(device="cpu")
         clf.load_model(f"{classifier_path}.{fold}")
         clfs[fold] = clf
     return clfs
@@ -60,7 +63,7 @@ def combine_lung_lobes(stats):
     return stats
 
 
-def tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, tissue_types):
+def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, tissue_types):
     """
     At each vertebrae get the centroid and at this z-level cut one slice through all classes
     of the segmentation file. Calc stats (volume, intensity) for each class.
@@ -168,6 +171,8 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
 
     tissue_types = ['subcutaneous_fat', 'torso_fat', 'skeletal_muscle']
 
+    tissue_types_slices = [f"{tissue}_{vertebra}" for tissue in tissue_types for vertebra in vertebrae]
+
     st = time.time()
     if existing_stats is None:
         if not quiet:
@@ -197,33 +202,43 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
     
-    stats_tissue_slices = tissue_types_slices(img, seg_img, seg_img_tissue, vertebrae, tissue_types)
+    stats_tissue_slices = get_tissue_types_slices(img, seg_img, seg_img_tissue, vertebrae, tissue_types)
 
     if not quiet:
         print("Preparing features...")
     features = []
     features += [stats[roi]["volume"] for roi in organs + vertebrae]
-    features += [stats["volume"] for stats in stats_tissue_slices.values()]
+    features += [stats_tissue_slices[roi]["volume"] for roi in tissue_types_slices]
     features += [stats[roi]["intensity"] for roi in organs + vertebrae]
-    features += [stats["intensity"] for stats in stats_tissue_slices.values()]
+    features += [stats_tissue_slices[roi]["intensity"] for roi in tissue_types_slices]
 
-    # todo: make sure order is correct of features (same as in training!!)
-    
+    # DEBUG: features have same order as in training
+    # features_names = []
+    # features_names += [roi + "_volume" for roi in organs + vertebrae]
+    # features_names += [roi + "_volume" for roi in tissue_types_slices]
+    # features_names += [roi + "_intensity" for roi in organs + vertebrae]
+    # features_names += [roi + "_intensity" for roi in tissue_types_slices]
+    # pprint(features_names)
+
     result = {}
-    for target in ["weight", "size", "age", "sex"]:
+    # for target in ["weight", "size", "age", "sex"]:
+    for target in ["weight"]:
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
-            classifier_path = str(importlib.resources.files('totalsegmentator') / f'resources/{target}_{modality}_classifiers_2025_12_19.json')
+            # classifier_path = str(importlib.resources.files('totalsegmentator') / f'resources/{target}_{modality}_classifiers_2025_12_19.json')
+            classifier_path = get_totalseg_dir() / f'models/{target}_{modality}_classifiers_2025_12_19.json'
         else: 
             # manually set model file
             classifier_path = model_file
-        clfs = load_models(classifier_path)
+            
+        # TODO: download models if not present
+        clfs = load_models(classifier_path, target)
 
         # ensemble across folds
         preds = []
         for fold, clf in clfs.items():
-            preds.append(clf.predict([features])[0])
+            preds.append(clf.predict([features])[0])  # very fast
         preds = np.array(preds)
         pred = round(float(np.mean(preds)), 2)
         pred_std = round(float(np.std(preds)), 4)
