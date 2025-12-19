@@ -142,8 +142,7 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
                    existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None):
     """
     Predict body weight, body size, age and sex based on a CT or MR scan.
-    
-    todo: in the end also calc BMI and body surface area
+    Also calculates BMI and body surface area based on the predicted values.
 
     Args:
         img: nib.Nifti1Image
@@ -221,8 +220,7 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     # pprint(features_names)
 
     result = {}
-    # for target in ["weight", "size", "age", "sex"]:
-    for target in ["weight"]:
+    for target in ["weight", "size", "age", "sex"]:
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
@@ -236,23 +234,62 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
         clfs = load_models(classifier_path, target)
 
         # ensemble across folds
-        preds = []
-        for fold, clf in clfs.items():
-            preds.append(clf.predict([features])[0])  # very fast
-        preds = np.array(preds)
-        pred = round(float(np.mean(preds)), 2)
-        pred_std = round(float(np.std(preds)), 4)
+        if target == "sex":
+            # For classification: use predict_proba and ensemble the probabilities
+            probs = []
+            for fold, clf in clfs.items():
+                prob = clf.predict_proba([features])[0]  # returns [prob_class_0, prob_class_1]
+                probs.append(prob[1])  # probability of class 1 (male)
+            probs = np.array(probs)
+            mean_prob = float(np.mean(probs))
+            # Final prediction: threshold at 0.5, map to M/F (1=male, 0=female)
+            pred_binary = int(mean_prob >= 0.5)
+            pred = "M" if pred_binary == 1 else "F"
+            # Invert probability for female to show confidence in the predicted class
+            reported_prob = mean_prob if pred == "M" else 1.0 - mean_prob
+            pred_std = round(float(np.std(probs)), 4)
+            
+            result[target] = {"value": pred,
+                              "probability": round(reported_prob, 4),
+                              "stddev": pred_std,
+                              "unit": None
+                              }
+        else:
+            # For regression: use predict and ensemble predictions
+            preds = []
+            for fold, clf in clfs.items():
+                preds.append(clf.predict([features])[0])  # very fast
+            preds = np.array(preds)
+            pred = round(float(np.mean(preds)), 2)
+            pred_std = round(float(np.std(preds)), 4)
 
-        # print("Ensemble res:")
-        # print(preds)
-        # print(f"mean: {pred} +/- {pred_std}")
-        # print(f"mean: {pred} [{preds.min():.1f}-{preds.max():.1f}]")
+            # print("Ensemble res:")
+            # print(preds)
+            # print(f"mean: {pred} +/- {pred_std}")
+            # print(f"mean: {pred} [{preds.min():.1f}-{preds.max():.1f}]")
 
-        result[target] = {"value": pred, 
-                          "min": round(float(preds.min()), 2), 
-                          "max": round(float(preds.max()), 2),
-                          "stddev": pred_std  # measure of uncertainty
-                          }
+            result[target] = {"value": pred, 
+                              "min": round(float(preds.min()), 2), 
+                              "max": round(float(preds.max()), 2),
+                              "stddev": pred_std,  # measure of uncertainty
+                              "unit": "kg" if target == "weight" else "cm" if target == "size" else None
+                              }
+    
+    # Calculate BMI and Body Surface Area based on predicted values
+    weight_kg = result["weight"]["value"]
+    height_cm = result["size"]["value"]
+    height_m = height_cm / 100.0
+    
+    # BMI = weight(kg) / height(m)^2
+    bmi = weight_kg / (height_m ** 2)
+    result["bmi"] = {"value": round(bmi, 2), 
+                     "unit": "kg/m^2"}
+    
+    # Body Surface Area (Mosteller formula): BSA = sqrt(height(cm) x weight(kg) / 3600)
+    bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
+    result["bsa"] = {"value": round(bsa, 2), 
+                     "unit": "m^2"}
+    
     return result
 
 
@@ -270,7 +307,7 @@ def main():
 
     parser.add_argument("-o", metavar="filepath", dest="output_file",
                         help="path to output json file",
-                        type=lambda p: Path(p).absolute(), required=True)
+                        type=lambda p: Path(p).absolute(), required=False, default=None)
     
     parser.add_argument("-mf", metavar="filepath", dest="model_file",
                         help="path to classifier model",
@@ -299,8 +336,9 @@ def main():
         print("Result:")
         pprint(res)
 
-    with open(args.output_file, "w") as f:
-        f.write(json.dumps(res, indent=4))
+    if args.output_file is not None:
+        with open(args.output_file, "w") as f:
+            f.write(json.dumps(res, indent=4))
 
     # TODO: add usage stats
     # send_usage_stats_application("get_body_stats")
