@@ -1,197 +1,144 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { spawn } from 'child_process';
 import path from 'path';
-import fs from 'fs/promises';
-import { existsSync } from 'fs';
-
-const execAsync = promisify(exec);
-
-const TOTALSEG_ROOT = path.resolve(process.cwd(), '..');
-const PYTHON_VENV = path.join(TOTALSEG_ROOT, '.venv', 'bin', 'python');
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
-const OUTPUT_DIR = path.join(process.cwd(), 'outputs');
-
-async function ensureDirectories() {
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  await fs.mkdir(OUTPUT_DIR, { recursive: true });
-}
+import fs from 'fs';
 
 export async function POST(request: NextRequest) {
   try {
-    await ensureDirectories();
-
     const body = await request.json();
     const { 
       dicomDir, 
-      outputDir, 
+      outputDir,
       projectName = 'Project-01', 
       scale = '0.01',
       mode = 'all' // 'all', 'step1', 'step2', etc.
     } = body;
 
-    if (!dicomDir || !outputDir) {
-      return NextResponse.json(
-        { error: 'Missing required parameters: dicomDir and outputDir' },
-        { status: 400 }
-      );
-    }
+    // Get paths from environment variables
+    const pythonPath = process.env.PYTHON_PATH || 'python';
+    const totalSegPath = process.env.TOTALSEGMENTATOR_PATH || '..';
 
-    const inputPath = path.join(UPLOAD_DIR, dicomDir);
-    const outputPath = path.join(OUTPUT_DIR, outputDir);
+    // Resolve the actual Python path (support both relative and absolute)
+    const resolvedPythonPath = path.isAbsolute(pythonPath) 
+      ? pythonPath 
+      : path.resolve(process.cwd(), pythonPath);
 
-    if (!existsSync(inputPath)) {
-      const uploadContents = existsSync(UPLOAD_DIR) 
-        ? await fs.readdir(UPLOAD_DIR) 
-        : [];
-      
+    // Validate Python path exists
+    if (!fs.existsSync(resolvedPythonPath)) {
       return NextResponse.json(
         { 
-          error: 'Input directory does not exist. Please upload DICOM files first.',
-          detail: {
-            expectedPath: inputPath,
-            uploadsFolder: UPLOAD_DIR,
-            uploadsExists: existsSync(UPLOAD_DIR),
-            uploadsContents: uploadContents
-          }
+          error: 'Python virtual environment not found',
+          details: `Python path not found at: ${resolvedPythonPath}`,
+          hint: 'Please check your .env.local file and ensure PYTHON_PATH is correct. After updating, restart the dev server.'
         },
-        { status: 400 }
-      );
-    }
-
-    if (!existsSync(PYTHON_VENV)) {
-      return NextResponse.json(
-        { error: `Python virtual environment not found at: ${PYTHON_VENV}` },
         { status: 500 }
       );
     }
 
-    // Use the GUI script's CLI mode - it does everything!
-    const cliCmd = [
-      PYTHON_VENV,
-      '-m', 'totalsegmentator.bin.totalseg_gui',
-      '--cli',
-      '--dicom', `"${inputPath}"`,
-      '--output', `"${outputPath}"`,
-      '--case-name', projectName,
-      '--scale', scale
-    ].join(' ');
-
-    const logs: string[] = [];
-    logs.push('='.repeat(70) + '\n');
-    logs.push('TotalSegmentator Pipeline\n');
-    logs.push('='.repeat(70) + '\n\n');
-    logs.push(`📁 Input:   ${inputPath}\n`);
-    logs.push(`📂 Output:  ${outputPath}\n`);
-    logs.push(`📋 Project: ${projectName}\n`);
-    logs.push(`📏 Scale:   ${scale}\n\n`);
-    logs.push('Starting pipeline...\n\n');
-
-    try {
-      const { stdout, stderr } = await execAsync(cliCmd, {
-        maxBuffer: 50 * 1024 * 1024,
-        timeout: 90 * 60 * 1000,
-        env: {
-          ...process.env,
-          PYTHONIOENCODING: 'utf-8',
-          PYTHONUTF8: '1'
+    // Build the Python script path (go up one level from web-app)
+    const scriptPath = path.resolve(process.cwd(), '..', 'run_pipeline.py');
+    
+    console.log('Looking for script at:', scriptPath);
+    
+    if (!fs.existsSync(scriptPath)) {
+      return NextResponse.json(
+        { 
+          error: 'Pipeline script not found',
+          details: `Script not found at: ${scriptPath}`,
+          hint: 'Make sure run_pipeline.py exists in the TotalSegmentator directory (parent of web-app)'
         },
-        cwd: TOTALSEG_ROOT
-      });
-      
-      logs.push(stdout);
-      if (stderr && !stderr.includes('FutureWarning') && !stderr.includes('DeprecationWarning')) {
-        logs.push('\n⚠️  Warnings:\n');
-        logs.push(stderr);
-      }
-
-      logs.push('\n' + '='.repeat(70) + '\n');
-      logs.push('✅ PIPELINE COMPLETED SUCCESSFULLY\n');
-      logs.push('='.repeat(70) + '\n\n');
-
-      // Check outputs
-      const outputFiles: any = {};
-      const checks = [
-        ['nifti', path.join(outputPath, 'out_nii'), 'NIfTI files'],
-        ['slices', path.join(outputPath, 'dicom_slices'), 'PNG slices'],
-        ['segmentation', path.join(outputPath, 'out_total_all'), 'Segmentation'],
-        ['blender', path.join(outputPath, 'out'), 'Blender scenes']
-      ];
-
-      for (const [key, dir, label] of checks) {
-        if (existsSync(dir)) {
-          const files = await fs.readdir(dir);
-          outputFiles[key] = { path: dir, count: files.length };
-          logs.push(`  ${label}: ${dir} (${files.length} items)\n`);
-        }
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'Pipeline completed successfully',
-        outputPath,
-        outputFiles,
-        logs
-      });
-
-    } catch (error: any) {
-      logs.push(`\n❌ Pipeline execution failed:\n`);
-      logs.push(`Error: ${error.message}\n`);
-      if (error.stdout) logs.push('\nStdout:\n' + error.stdout + '\n');
-      if (error.stderr) logs.push('\nStderr:\n' + error.stderr + '\n');
-      
-      return NextResponse.json({ 
-        error: 'Pipeline execution failed', 
-        details: error.message,
-        logs 
-      }, { status: 500 });
+        { status: 500 }
+      );
     }
+
+    // Prepare arguments
+    const args = [
+      scriptPath,
+      '--dicom-dir', dicomDir,
+      '--output-dir', outputDir,
+      '--project-name', projectName,
+      '--scale', scale
+    ];
+
+    if (mode && mode !== 'all') {
+      args.push('--mode', mode);
+    }
+
+    console.log('Running pipeline:', resolvedPythonPath, args.join(' '));
+
+    // Run the Python pipeline with streaming
+    const logs: string[] = [];
+    let lastProgress = 0;
+    
+    const result = await new Promise((resolve, reject) => {
+      const env = { ...process.env };
+      if (process.platform === 'win32') {
+        env.PYTHONIOENCODING = 'utf-8';
+        env.PYTHONUTF8 = '1';
+      }
+      env.PYTHONUNBUFFERED = '1';
+      
+      const pythonProcess = spawn(resolvedPythonPath, args, {
+        cwd: path.resolve(process.cwd(), '..'),
+        env: env,
+      });
+
+      pythonProcess.stdout.on('data', (data) => {
+        const lines = data.toString('utf-8').split('\n');
+        
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          
+          // Parse progress updates
+          if (line.includes('__PROGRESS__:')) {
+            const match = line.match(/__PROGRESS__:(\d+):(.+)/);
+            if (match) {
+              const percent = parseInt(match[1]);
+              const stepName = match[2];
+              logs.push(`__PROGRESS__:${percent}:${stepName}\n`);
+              lastProgress = percent;
+              console.log(`Progress: ${percent}% - ${stepName}`);
+            }
+          } else {
+            console.log(line);
+            logs.push(line + '\n');
+          }
+        }
+      });
+
+      pythonProcess.stderr.on('data', (data) => {
+        const log = data.toString('utf-8');
+        console.error(log);
+        logs.push(log);
+      });
+
+      pythonProcess.on('close', (code) => {
+        if (code === 0) {
+          resolve({ success: true, logs });
+        } else {
+          reject(new Error(`Pipeline exited with code ${code}`));
+        }
+      });
+
+      pythonProcess.on('error', (err) => {
+        reject(err);
+      });
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      logs,
+      message: 'Pipeline completed successfully'
+    });
 
   } catch (error: any) {
     console.error('Pipeline error:', error);
     return NextResponse.json(
-      { error: error.message || 'Pipeline execution failed', stack: error.stack },
+      { 
+        error: error.message || 'Pipeline failed',
+        detail: error.stack
+      },
       { status: 500 }
     );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const outputDir = searchParams.get('outputDir');
-
-  if (!outputDir) {
-    return NextResponse.json({ error: 'Missing outputDir parameter' }, { status: 400 });
-  }
-
-  const outputPath = path.join(OUTPUT_DIR, outputDir);
-  
-  try {
-    const exists = existsSync(outputPath);
-    if (!exists) {
-      return NextResponse.json({ exists: false });
-    }
-
-    const status: any = { exists: true };
-    const checks = [
-      ['nifti', 'out_nii'],
-      ['slices', 'dicom_slices'],
-      ['segmentation', 'out_total_all'],
-      ['blender', 'out']
-    ];
-
-    for (const [key, folder] of checks) {
-      const dir = path.join(outputPath, folder);
-      if (existsSync(dir)) {
-        const files = await fs.readdir(dir);
-        status[key] = { exists: true, fileCount: files.length };
-      } else {
-        status[key] = { exists: false };
-      }
-    }
-    
-    return NextResponse.json(status);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

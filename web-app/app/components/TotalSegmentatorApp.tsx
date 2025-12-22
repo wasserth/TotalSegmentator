@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +22,7 @@ import {
 export default function TotalSegmentatorApp() {
   const [files, setFiles] = useState<FileList | null>(null);
   const [folderName, setFolderName] = useState('Patient');
-  const [outputName, setOutputName] = useState('Output');
+  const [outputPath, setOutputPath] = useState('');
   const [projectName, setProjectName] = useState('Project-01');
   const [scale, setScale] = useState('0.01');
   
@@ -38,7 +38,26 @@ export default function TotalSegmentatorApp() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showLog, setShowLog] = useState(false);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const outputFolderRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+
+  // Get default Downloads folder path on component mount
+  useEffect(() => {
+    // Set default to Downloads folder
+    const getDownloadsPath = async () => {
+      try {
+        const response = await fetch('/api/get-downloads-path');
+        const data = await response.json();
+        if (data.path) {
+          setOutputPath(data.path);
+        }
+      } catch (err) {
+        console.error('Failed to get downloads path:', err);
+      }
+    };
+    getDownloadsPath();
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -47,6 +66,39 @@ export default function TotalSegmentatorApp() {
       setError(null);
       setUploadComplete(false);
       setSuccess(null);
+    }
+  };
+
+  const handleOutputFolderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (selectedFiles && selectedFiles.length > 0) {
+      // Extract the full path from the first file
+      const firstFile = selectedFiles[0];
+      
+      // Get the full directory path
+      if (firstFile.webkitRelativePath) {
+        const parts = firstFile.webkitRelativePath.split('/');
+        parts.pop(); // Remove filename
+        const folderPath = parts.join('/');
+        
+        // Try to get absolute path from file
+        // @ts-ignore - path property exists in some browsers
+        const filePath = firstFile.path || '';
+        
+        if (filePath) {
+          // Extract directory from full file path
+          const pathParts = filePath.split(/[/\\]/);
+          pathParts.pop(); // Remove filename
+          const absolutePath = pathParts.join('/');
+          setOutputPath(absolutePath);
+        } else {
+          // Fallback to relative path
+          setOutputPath(folderPath);
+        }
+      }
+      
+      // Clear the input so user can select the same folder again if needed
+      e.target.value = '';
     }
   };
 
@@ -111,6 +163,11 @@ export default function TotalSegmentatorApp() {
       return;
     }
 
+    if (!outputPath.trim()) {
+      setError('Please select an output folder');
+      return;
+    }
+
     setIsProcessing(true);
     setError(null);
     setSuccess(null);
@@ -119,33 +176,60 @@ export default function TotalSegmentatorApp() {
     setLogs(prev => [...prev, '\n' + '='.repeat(70) + '\n']);
     setLogs(prev => [...prev, '🚀 STARTING PIPELINE\n']);
     setLogs(prev => [...prev, '='.repeat(70) + '\n\n']);
+    setLogs(prev => [...prev, `📂 Output will be saved to: ${outputPath}\n\n`]);
     if (!showLog) setShowLog(true);
 
     try {
+      setLogs(prev => [...prev, '📡 Sending request to /api/pipeline...\n']);
+      
       const response = await fetch('/api/pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           dicomDir: folderName,
-          outputDir: outputName,
+          outputDir: outputPath,
           projectName,
           scale,
           mode
         }),
       });
 
+      setLogs(prev => [...prev, `📥 Response status: ${response.status}\n`]);
+
       const data = await response.json();
+      
+      setLogs(prev => [...prev, `📦 Response data received\n\n`]);
 
       if (!response.ok) {
-        if (data.detail) {
-          console.error('Pipeline error details:', data.detail);
-          setLogs(prev => [...prev, '\n📋 Debug Info:\n']);
-          setLogs(prev => [...prev, JSON.stringify(data.detail, null, 2) + '\n\n']);
+        setLogs(prev => [...prev, '❌ Pipeline failed!\n']);
+        if (data.details) {
+          setLogs(prev => [...prev, `Details: ${data.details}\n`]);
         }
-        throw new Error(data.error || data.details || 'Pipeline failed');
+        if (data.hint) {
+          setLogs(prev => [...prev, `Hint: ${data.hint}\n`]);
+        }
+        throw new Error(data.error || 'Pipeline failed');
       }
 
-      setLogs(prev => [...prev, ...data.logs]);
+      // Process logs and extract progress
+      if (data.logs && Array.isArray(data.logs)) {
+        for (const log of data.logs) {
+          // Parse progress updates
+          if (log.includes('__PROGRESS__:')) {
+            const match = log.match(/__PROGRESS__:(\d+):(.+)/);
+            if (match) {
+              const percent = parseInt(match[1]);
+              const stepName = match[2].trim();
+              setProgress(percent);
+              setCurrentStep(stepName);
+              setLogs(prev => [...prev, `\n[${percent}%] ${stepName}\n`]);
+            }
+          } else {
+            setLogs(prev => [...prev, log]);
+          }
+        }
+      }
+      
       setProgress(100);
       setCurrentStep('Complete');
       setSuccess('Pipeline completed successfully!');
@@ -153,7 +237,7 @@ export default function TotalSegmentatorApp() {
     } catch (err: any) {
       console.error('Pipeline error:', err);
       setError(`Pipeline failed: ${err.message}`);
-      setLogs(prev => [...prev, `\n❌ Pipeline failed: ${err.message}\n`]);
+      setLogs(prev => [...prev, `\n❌ Error: ${err.message}\n`]);
       setCurrentStep('Failed');
     } finally {
       setIsProcessing(false);
@@ -194,29 +278,72 @@ export default function TotalSegmentatorApp() {
             </h3>
             
             <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="folder-upload" className="text-base">DICOM Folder</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      id="folder-upload"
-                      type="file"
-                      // @ts-ignore
-                      webkitdirectory=""
-                      directory=""
-                      multiple
-                      onChange={handleFileChange}
-                      disabled={isUploading || isProcessing}
-                      className="cursor-pointer"
-                    />
+              {/* DICOM Input */}
+              <div>
+                <Label htmlFor="folder-upload" className="text-base">DICOM Input Folder</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Select the folder containing your DICOM files
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    id="folder-upload"
+                    type="file"
+                    ref={fileInputRef}
+                    // @ts-ignore
+                    webkitdirectory=""
+                    directory=""
+                    multiple
+                    onChange={handleFileChange}
+                    disabled={isUploading || isProcessing}
+                    className="cursor-pointer"
+                  />
+                </div>
+                {files && (
+                  <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                    <FileText className="h-4 w-4" />
+                    <span>{files.length} file(s) selected</span>
+                    {uploadComplete && <CheckCircle className="h-4 w-4 text-green-600" />}
                   </div>
-                  {files && (
-                    <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                      <FileText className="h-4 w-4" />
-                      <span>{files.length} file(s) selected</span>
-                      {uploadComplete && <CheckCircle className="h-4 w-4 text-green-600" />}
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-blue-200 my-4"></div>
+
+              {/* Output Folder Selection */}
+              <div>
+                <Label htmlFor="output-folder" className="text-base">Output Destination</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Choose where the processed results will be saved
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Input
+                    id="output-folder"
+                    type="file"
+                    ref={outputFolderRef}
+                    // @ts-ignore
+                    webkitdirectory=""
+                    directory=""
+                    onChange={handleOutputFolderChange}
+                    disabled={isUploading || isProcessing}
+                    className="cursor-pointer"
+                    accept=""
+                    title="Select output folder"
+                  />
+                </div>
+                <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+                  <div className="flex items-start gap-2">
+                    <FolderOpen className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-blue-900 mb-1">Results will be saved to:</p>
+                      <code className="text-xs text-blue-800 break-all block bg-white px-2 py-1 rounded border border-blue-200">
+                        {outputPath || 'Loading default (Downloads folder)...'}
+                      </code>
+                      <p className="text-xs text-blue-600 mt-2">
+                        💡 Click above to browse and select your preferred output location
+                      </p>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -229,9 +356,9 @@ export default function TotalSegmentatorApp() {
               Configuration
             </h3>
             
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="folder-name">Folder Name</Label>
+                <Label htmlFor="folder-name">Input Folder Name</Label>
                 <Input
                   id="folder-name"
                   value={folderName}
@@ -239,16 +366,7 @@ export default function TotalSegmentatorApp() {
                   placeholder="Patient"
                   disabled={isProcessing || isUploading}
                 />
-              </div>
-              <div>
-                <Label htmlFor="output-name">Output Name</Label>
-                <Input
-                  id="output-name"
-                  value={outputName}
-                  onChange={(e) => setOutputName(e.target.value)}
-                  placeholder="Output"
-                  disabled={isProcessing || isUploading}
-                />
+                <p className="text-xs text-muted-foreground mt-1">Used for organizing uploads</p>
               </div>
               <div>
                 <Label htmlFor="project-name">Project Name</Label>
@@ -259,6 +377,7 @@ export default function TotalSegmentatorApp() {
                   placeholder="Project-01"
                   disabled={isProcessing || isUploading}
                 />
+                <p className="text-xs text-muted-foreground mt-1">Name for Blender scene</p>
               </div>
               <div>
                 <Label htmlFor="scale">Blender Scale</Label>
@@ -269,6 +388,7 @@ export default function TotalSegmentatorApp() {
                   placeholder="0.01"
                   disabled={isProcessing || isUploading}
                 />
+                <p className="text-xs text-muted-foreground mt-1">Scale factor for 3D models</p>
               </div>
             </div>
           </div>
