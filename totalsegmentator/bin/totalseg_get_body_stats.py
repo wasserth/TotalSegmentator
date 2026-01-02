@@ -14,8 +14,9 @@ import numpy as np
 import xgboost as xgb
 
 from totalsegmentator.python_api import totalsegmentator
-from totalsegmentator.config import get_totalseg_dir, send_usage_stats_application
+from totalsegmentator.config import get_totalseg_dir, get_weights_dir, send_usage_stats_application
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
+from totalsegmentator.libs import download_pretrained_weights
 
 """
 Additional requirements for this script:
@@ -27,6 +28,21 @@ resources/body_stats_prediction.md
 Info for me:
 Training script is in: predict_body_size/body_size_training.py (not public)
 """
+
+
+def check_body_stats_models_exist():
+    """Check if all body stats models exist."""
+    models_dir = get_weights_dir() / "body_stats_models_2025_12_19"
+    
+    for modality in ["ct", "mr"]:
+        for target in ["weight", "size", "age", "sex"]:
+            base_path = models_dir / f"{target}_{modality}_classifiers_2025_12_19.json"
+            # Check if all 5 folds exist
+            for fold in range(5):
+                model_file = Path(f"{base_path}.{fold}")
+                if not model_file.exists():
+                    return False
+    return True
 
 
 def load_models(classifier_path, target):
@@ -178,6 +194,9 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
 
     tissue_types_slices = [f"{tissue}_{vertebra}" for tissue in tissue_types for vertebra in vertebrae]
 
+    if model_file is None and not check_body_stats_models_exist():
+        download_pretrained_weights("body_stats")
+
     st = time.time()
     if existing_stats is None:
         if not quiet:
@@ -208,8 +227,8 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     )
     
     if not fov_check_passed:
-        print(f"ERROR: Field of view too small for proper prediction. Stopping.")
-        print(f"       At least one of these must be present: liver, colon, lung, hip")
+        print("ERROR: Field of view too small for proper prediction. Stopping.")
+        print("       At least one of these must be present: liver, colon, lung, hip")
         return None
 
     if not quiet:
@@ -246,12 +265,12 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
             print(f"Predicting {target}...")
         if model_file is None:
             # classifier_path = str(importlib.resources.files('totalsegmentator') / f'resources/{target}_{modality}_classifiers_2025_12_19.json')
-            classifier_path = get_totalseg_dir() / f'models/{target}_{modality}_classifiers_2025_12_19.json'
+            # classifier_path = get_totalseg_dir() / f'models/{target}_{modality}_classifiers_2025_12_19.json'
+            classifier_path = get_weights_dir() / f'body_stats_models_2025_12_19/{target}_{modality}_classifiers_2025_12_19.json'
         else: 
             # manually set model file
             classifier_path = model_file
             
-        # TODO: download models if not present
         clfs = load_models(classifier_path, target)
 
         # ensemble across folds
