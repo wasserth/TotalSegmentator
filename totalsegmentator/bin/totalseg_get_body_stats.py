@@ -20,6 +20,12 @@ from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 """
 Additional requirements for this script:
 xgboost
+
+More details: 
+resources/body_stats_prediction.md
+
+Info for me:
+Training script is in: predict_body_size/body_size_training.py (not public)
 """
 
 
@@ -191,6 +197,21 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     if modality == "ct":
         stats = combine_lung_lobes(stats)
 
+    # Check FOV requirement: at least one of the key organs must be present
+    fov_check_passed = (
+        ("liver" in stats and stats["liver"]["volume"] > 10) or
+        ("colon" in stats and stats["colon"]["volume"] > 10) or
+        ("lung_left" in stats and stats["lung_left"]["volume"] > 10) or
+        ("lung_right" in stats and stats["lung_right"]["volume"] > 10) or
+        ("hip_left" in stats and stats["hip_left"]["volume"] > 10) or
+        ("hip_right" in stats and stats["hip_right"]["volume"] > 10)
+    )
+    
+    if not fov_check_passed:
+        print(f"ERROR: Field of view too small for proper prediction. Stopping.")
+        print(f"       At least one of these must be present: liver, colon, lung, hip")
+        return None
+
     if not quiet:
         print("Running tissue types model...")
     st = time.time()
@@ -332,6 +353,10 @@ def main():
 
     res = get_body_stats(nib.load(args.input_file), args.modality, args.model_file, args.quiet, args.device, existing_stats)
 
+    if res is None:
+        # FOV check failed, processing was skipped
+        return
+
     if not args.quiet:
         print("Result:")
         pprint(res)
@@ -340,8 +365,7 @@ def main():
         with open(args.output_file, "w") as f:
             f.write(json.dumps(res, indent=4))
 
-    # TODO: add usage stats
-    # send_usage_stats_application("get_body_stats")
+    send_usage_stats_application("get_body_stats")
 
 
 if __name__ == "__main__":
