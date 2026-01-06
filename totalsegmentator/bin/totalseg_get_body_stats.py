@@ -38,22 +38,26 @@ def check_body_stats_models_exist():
         for target in ["weight", "size", "age", "sex"]:
             base_path = models_dir / f"{target}_{modality}_classifiers_2025_12_19.json"
             # Check if all 5 folds exist
-            for fold in range(5):
-                model_file = Path(f"{base_path}.{fold}")
+            for fold_idx in range(5):
+                model_file = Path(f"{base_path}.{fold_idx}")
                 if not model_file.exists():
                     return False
     return True
 
 
-def load_models(classifier_path, target):
+def load_models(classifier_path, target, fold=None):
     clfs = {}
-    for fold in range(5):  # assuming 5 folds
+    # Determine which folds to load
+    fold_indices = [fold] if fold is not None else range(5)
+    
+    # Load the specified fold(s)
+    for fold_idx in fold_indices:
         if target == "sex":
             clf = xgb.XGBClassifier(device="cpu")
         else:
             clf = xgb.XGBRegressor(device="cpu")
-        clf.load_model(f"{classifier_path}.{fold}")
-        clfs[fold] = clf
+        clf.load_model(f"{classifier_path}.{fold_idx}")
+        clfs[fold_idx] = clf
     return clfs
 
 
@@ -161,7 +165,8 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
 
 def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None, 
                    quiet: bool = False, device: str = "gpu", 
-                   existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None):
+                   existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None,
+                   fold: int = None):
     """
     Predict body weight, body size, age and sex based on a CT or MR scan.
     Also calculates BMI and body surface area based on the predicted values.
@@ -174,6 +179,7 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
         device: str, optional
         existing_stats: dict, optional
         existing_seg_img: nib.Nifti1Image, optional
+        fold: int, optional - if set, only this fold is used; if None, ensemble of all folds is used
     """
 
     organs = ['gluteus_maximus_left', 'hip_right', 
@@ -271,13 +277,13 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
             # manually set model file
             classifier_path = model_file
             
-        clfs = load_models(classifier_path, target)
+        clfs = load_models(classifier_path, target, fold)
 
         # ensemble across folds
         if target == "sex":
             # For classification: use predict_proba and ensemble the probabilities
             probs = []
-            for fold, clf in clfs.items():
+            for fold_idx, clf in clfs.items():
                 prob = clf.predict_proba([features])[0]  # returns [prob_class_0, prob_class_1]
                 probs.append(prob[1])  # probability of class 1 (male)
             probs = np.array(probs)
@@ -297,7 +303,7 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
         else:
             # For regression: use predict and ensemble predictions
             preds = []
-            for fold, clf in clfs.items():
+            for fold_idx, clf in clfs.items():
                 preds.append(clf.predict([features])[0])  # very fast
             preds = np.array(preds)
             pred = round(float(np.mean(preds)), 2)
@@ -363,6 +369,9 @@ def main():
     parser.add_argument("-d",'--device', type=str, default="gpu",
                         help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
     
+    parser.add_argument("-f", "--fold", type=int, default=None,
+                        help="Fold number (0-4) to use for prediction. If not set, ensemble of all folds is used.")
+    
     parser.add_argument("-q", dest="quiet", action="store_true",
                         help="Print no output to stdout", default=False)
 
@@ -370,7 +379,7 @@ def main():
 
     existing_stats = json.load(open(args.existing_stats)) if args.existing_stats is not None else None
 
-    res = get_body_stats(nib.load(args.input_file), args.modality, args.model_file, args.quiet, args.device, existing_stats)
+    res = get_body_stats(nib.load(args.input_file), args.modality, args.model_file, args.quiet, args.device, existing_stats, fold=args.fold)
 
     if res is None:
         # FOV check failed, processing was skipped
