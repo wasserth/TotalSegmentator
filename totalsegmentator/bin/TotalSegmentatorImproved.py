@@ -186,7 +186,7 @@ def export_to_blender_format(
     output_path: Optional[Path] = None,
     export_format: str = "stl",            # 'stl' | 'obj' | 'ply'
     mm_to_meters: bool = True,             # Blender uses meters
-    laplacian_iters: int = 0,              # optional surface smoothing on mesh
+    laplacian_iters: int = 10,              # optional surface smoothing on mesh
     is_binary: Optional[bool] = None,      # auto-detect if None
     level: float = 0.5,                    # iso-level for marching cubes
     pad_edges: bool = True,                # pad volume to avoid open caps at scan bounds
