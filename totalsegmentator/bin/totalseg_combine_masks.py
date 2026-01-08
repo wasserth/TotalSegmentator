@@ -38,9 +38,11 @@ def main():
     parser.add_argument("-t", "--nora_tag", type=str, help="tag in nora as mask. Pass nora project id as argument.",
                         default="None")
 
+    parser.add_argument("-ml", "--multilabel", action="store_true", help="Output is a multilabel nifti file", default=False)
+
     args = parser.parse_args()
 
-    combined_img = combine_masks(args.mask_dir, args.masks)
+    combined_img = combine_masks(args.mask_dir, args.masks, multilabel=args.multilabel)
     nib.save(combined_img, args.output)
 
     if args.nora_tag != "None":
