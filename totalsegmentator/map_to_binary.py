@@ -383,7 +383,7 @@ class_map = {
         25: "vertebrae_C1",
     },
     "pleural_pericard_effusion": {
-        # 1: "lung_pleural",
+        1: "lung_pleural",
         2: "pleural_effusion",
         3: "pericardial_effusion",
     },

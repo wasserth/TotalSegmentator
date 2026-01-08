@@ -139,7 +139,7 @@ totalseg_get_modality -i image.nii.gz -o modality.json
 
 If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e.g. entire lung) you can use the following command:
 ```bash
-totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lungcomm 
+totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
 If you want to calculate the [Evans index](https://radiopaedia.org/articles/evans-index-2) you can use the following command:
