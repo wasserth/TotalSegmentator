@@ -24,7 +24,7 @@ exclude = [
     "venv",
 ]
 
-line-length = 550
+line-length = 88
 indent-width = 4
 target-version = "py39"
 
