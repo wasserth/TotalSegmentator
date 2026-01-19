@@ -39,3 +39,4 @@ web-app/node_modules/
 web-app/.next/
 web-app/. env.local
 web-app/. env
+examples

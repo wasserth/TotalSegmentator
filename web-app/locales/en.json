@@ -1,0 +1,56 @@
+{
+  "app": {
+    "title": "TotalSegmentator Pipeline",
+    "subtitle": "Automated medical imaging segmentation with Blender 3D visualization"
+  },
+  "sections": {
+    "inputOutput": "Input & Output",
+    "configuration": "Configuration",
+    "runPipeline": "Run Pipeline",
+    "processLog": "Process Log"
+  },
+  "input": {
+    "dicomFolder": "DICOM Input Folder",
+    "dicomDescription": "Select the folder containing your DICOM files",
+    "filesSelected": "file(s) selected",
+    "outputDestination": "Output Destination",
+    "outputDescription": "Choose where the processed results will be saved",
+    "resultsPath": "Results will be saved to:",
+    "browseHint": "💡 Click above to browse and select your preferred output location",
+    "defaultLoading": "Loading default (Downloads folder)..."
+  },
+  "config": {
+    "folderName": "Input Folder Name",
+    "folderNameHint": "Used for organizing uploads",
+    "projectName": "Project Name",
+    "projectNameHint": "Name for Blender scene",
+    "scale": "Blender Scale",
+    "scaleHint": "Scale factor for 3D models"
+  },
+  "actions": {
+    "upload": "Upload Files",
+    "uploading": "Uploading...",
+    "reupload": "Re-upload Files",
+    "runFull": "Run Full Pipeline",
+    "processing": "Processing...",
+    "individualSteps": "Individual Steps:"
+  },
+  "steps": {
+    "step1": "1. DICOM→NIfTI",
+    "step2": "2. NIfTI→PNG",
+    "step3": "3. Segment",
+    "step4": "4. Import",
+    "step5": "5. Materials",
+    "step6": "6. Viewer"
+  },
+  "messages": {
+    "selectFiles": "Please select files to upload",
+    "uploadFirst": "Please upload files first",
+    "selectOutput": "Please select an output folder",
+    "uploadSuccess": "Successfully uploaded {count} files",
+    "pipelineSuccess": "Pipeline completed successfully!",
+    "uploadFailed": "Upload failed: {error}",
+    "pipelineFailed": "Pipeline failed: {error}",
+    "filesNotUploaded": "⚠️ Files selected but not uploaded. Click \"Upload Files\" first."
+  }
+}

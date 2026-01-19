@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Folder, Play, ChevronRight, ChevronDown, CheckCircle, XCircle, Loader2, Settings, AlertCircle } from 'lucide-react';
+import { useLocale } from '@/app/contexts/LocaleContext';
 
 interface Log {
   timestamp: string;
@@ -11,6 +12,7 @@ interface Log {
 type Status = 'ready' | 'processing' | 'success' | 'error';
 
 const TotalSegmentatorApp = () => {
+  const { locale, setLocale, t } = useLocale();
   const [dicomFolder, setDicomFolder] = useState('');
   const [outputFolder, setOutputFolder] = useState('');
   const [projectName, setProjectName] = useState('Project-01');
@@ -222,24 +224,35 @@ const TotalSegmentatorApp = () => {
   };
 
   const stepButtons = [
-    { label: '1.  DICOM→NIfTI', mode: 'step1' },
-    { label: '2. NIfTI→PNG', mode: 'step2' },
-    { label: '3.  Segment', mode: 'step3' },
-    { label: '4.  Import', mode: 'step4' },
-    { label: '5.  Materials', mode: 'step5' },
-    { label: '6. Slice Viewer', mode: 'step6' }
+    { label: t.buttons.step1, mode: 'step1' },
+    { label: t.buttons.step2, mode: 'step2' },
+    { label: t.buttons.step3, mode: 'step3' },
+    { label: t.buttons.step4, mode: 'step4' },
+    { label: t.buttons.step5, mode: 'step5' },
+    { label: t.buttons.step6, mode: 'step6' }
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      {/* Floating Language Toggle Button - Top Right */}
+      <div className="fixed top-8 right-8 z-50">
+        <button
+          onClick={() => setLocale(locale === 'en' ? 'jp' : 'en')}
+          className="w-16 h-16 rounded-full shadow-lg bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 flex items-center justify-center text-white font-bold text-lg border-2 border-white"
+          title={locale === 'en' ? 'Switch to Japanese' : 'Switch to English'}
+        >
+          {locale === 'en' ? 'JP' : 'EN'}
+        </button>
+      </div>
+
       <div className="w-full">
         {/* Header */}
         <div className="px-8 py-6 border-b border-blue-200/50">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            TotalSegmentator Pipeline
+            {t.header.title}
           </h1>
           <p className="text-lg text-gray-600">
-            Automated medical imaging segmentation with Blender 3D visualization
+            {t.header.subtitle}
           </p>
         </div>
 
@@ -249,12 +262,12 @@ const TotalSegmentatorApp = () => {
           <div className="p-6 bg-white/30 backdrop-blur-sm rounded-xl">
             <h2 className="text-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
               <Folder className="w-5 h-5" />
-              Input & Output
+              {t.sections.inputOutput}
             </h2>
             
             <div className="space-y-5">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">DICOM Folder</label>
+                <label className="block text-gray-700 font-medium mb-2">{t.labels.dicomFolder}</label>
                 <input
                   type="text"
                   value={dicomFolder}
@@ -268,12 +281,12 @@ const TotalSegmentatorApp = () => {
                   className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors border border-blue-700 flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Folder className="w-4 h-4" />
-                  Browse... 
+                  {t.labels.browse}
                 </button>
               </div>
 
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Output Folder</label>
+                <label className="block text-gray-700 font-medium mb-2">{t.labels.outputFolder}</label>
                 <input
                   type="text"
                   value={outputFolder}
@@ -287,7 +300,7 @@ const TotalSegmentatorApp = () => {
                   className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors border border-blue-700 flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Folder className="w-4 h-4" />
-                  Browse...
+                  {t.labels.browse}
                 </button>
               </div>
             </div>
@@ -299,13 +312,13 @@ const TotalSegmentatorApp = () => {
                 className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-3 transition-colors"
               >
                 {showTools ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-                <span className="font-medium">Tool Paths (Optional)</span>
+                <span className="font-medium">{t.sections.toolPaths}</span>
               </button>
 
               {showTools && (
                 <div className="space-y-4 pl-7">
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2 text-sm">Blender Executable</label>
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">{t.labels.blenderExe}</label>
                     <input
                       type="text"
                       value={blenderPath}
@@ -319,12 +332,12 @@ const TotalSegmentatorApp = () => {
                       className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 shadow-sm"
                     >
                       <Folder className="w-4 h-4" />
-                      Browse...
+                      {t.labels.browse}
                     </button>
                   </div>
 
                   <div>
-                    <label className="block text-gray-700 font-medium mb-2 text-sm">dcm2niix Executable</label>
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">{t.labels.dcm2niixExe}</label>
                     <input
                       type="text"
                       value={dcm2niixPath}
@@ -338,7 +351,7 @@ const TotalSegmentatorApp = () => {
                       className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm flex items-center justify-center gap-2 shadow-sm"
                     >
                       <Folder className="w-4 h-4" />
-                      Browse... 
+                      {t.labels.browse}
                     </button>
                   </div>
                 </div>
@@ -350,12 +363,12 @@ const TotalSegmentatorApp = () => {
           <div className="p-6 bg-white/30 backdrop-blur-sm rounded-xl">
             <h2 className="text-xl font-semibold text-indigo-900 mb-6 flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Configuration
+              {t.sections.configuration}
             </h2>
             
             <div className="space-y-6">
               <div>
-                <label className="block text-gray-700 font-medium mb-2">Project Name</label>
+                <label className="block text-gray-700 font-medium mb-2">{t.labels.projectName}</label>
                 <input
                   type="text"
                   value={projectName}
@@ -366,7 +379,7 @@ const TotalSegmentatorApp = () => {
               
               <div>
                 <label className="block text-gray-700 font-medium mb-2">
-                  Blender Scale: <span className="text-indigo-600 font-semibold">{blenderScale.toFixed(3)}</span>
+                  {t.labels.blenderScale} <span className="text-indigo-600 font-semibold">{blenderScale.toFixed(3)}</span>
                 </label>
                 <input
                   type="range"
@@ -388,11 +401,11 @@ const TotalSegmentatorApp = () => {
             <div className="mt-6 bg-blue-50/80 border border-blue-200 rounded-lg p-4 flex gap-3 shadow-sm">
               <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-900">
-                <p className="font-semibold mb-1">Important Notes</p>
+                <p className="font-semibold mb-1">{t.alerts.notesTitle}</p>
                 <ul className="list-disc list-inside space-y-1">
-                  <li>Use Chrome/Edge browser for folder picker</li>
-                  <li><strong>Folder names must not contain spaces</strong></li>
-                  <li>Use underscores (_) or hyphens (-) instead</li>
+                  <li>{t.alerts.note1}</li>
+                  <li><strong>{t.alerts.note2}</strong></li>
+                  <li>{t.alerts.note3}</li>
                 </ul>
               </div>
             </div>
@@ -402,7 +415,7 @@ const TotalSegmentatorApp = () => {
           <div className="p-6">
             <h2 className="text-xl font-semibold text-green-900 mb-6 flex items-center gap-2">
               <Play className="w-5 h-5" />
-              Run Pipeline
+              {t.sections.runPipeline}
             </h2>
             
             <button
@@ -413,18 +426,18 @@ const TotalSegmentatorApp = () => {
               {isProcessing ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing...
+                  {t.buttons.processing}
                 </>
               ) : (
                 <>
                   <Play className="w-5 h-5" />
-                  Run Full Pipeline
+                  {t.buttons.runFull}
                 </>
               )}
             </button>
 
             <div>
-              <p className="text-gray-700 mb-3 font-medium">Individual Steps:</p>
+              <p className="text-gray-700 mb-3 font-medium">{t.labels.individualSteps}</p>
               <div className="grid grid-cols-1 gap-2">
                 {stepButtons.map((btn) => (
                   <button
@@ -468,7 +481,7 @@ const TotalSegmentatorApp = () => {
             className="flex items-center gap-2 text-gray-700 hover:text-gray-900 mb-3 transition-colors"
           >
             {showLogs ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-            <span className="font-medium">Process Log</span>
+            <span className="font-medium">{t.sections.processLog}</span>
           </button>
           
           {showLogs && (
@@ -478,7 +491,7 @@ const TotalSegmentatorApp = () => {
                 className="bg-white/80 backdrop-blur-sm rounded-lg p-4 h-96 overflow-y-auto font-mono text-sm border border-gray-200 shadow-sm"
               >
                 {logs.length === 0 ? (
-                  <p className="text-gray-500">No logs yet.  Start a pipeline to see output... </p>
+                  <p className="text-gray-500">{t.logs.noLogs}</p>
                 ) : (
                   logs.map((log, idx) => (
                     <div key={idx} className="mb-1 text-gray-800">

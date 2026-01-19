@@ -1,0 +1,56 @@
+{
+  "app": {
+    "title": "TotalSegmentator パイプライン",
+    "subtitle": "Blender 3D可視化による自動医療画像セグメンテーション"
+  },
+  "sections": {
+    "inputOutput": "入力と出力",
+    "configuration": "設定",
+    "runPipeline": "パイプライン実行",
+    "processLog": "処理ログ"
+  },
+  "input": {
+    "dicomFolder": "DICOM入力フォルダ",
+    "dicomDescription": "DICOMファイルを含むフォルダを選択してください",
+    "filesSelected": "ファイルが選択されました",
+    "outputDestination": "出力先",
+    "outputDescription": "処理結果の保存先を選択してください",
+    "resultsPath": "結果の保存先：",
+    "browseHint": "💡 上をクリックして、希望の出力場所を選択してください",
+    "defaultLoading": "デフォルト読み込み中（ダウンロードフォルダ）..."
+  },
+  "config": {
+    "folderName": "入力フォルダ名",
+    "folderNameHint": "アップロード整理用",
+    "projectName": "プロジェクト名",
+    "projectNameHint": "Blenderシーンの名前",
+    "scale": "Blenderスケール",
+    "scaleHint": "3Dモデルのスケール係数"
+  },
+  "actions": {
+    "upload": "ファイルをアップロード",
+    "uploading": "アップロード中...",
+    "reupload": "再アップロード",
+    "runFull": "完全パイプライン実行",
+    "processing": "処理中...",
+    "individualSteps": "個別ステップ："
+  },
+  "steps": {
+    "step1": "1. DICOM→NIfTI",
+    "step2": "2. NIfTI→PNG",
+    "step3": "3. セグメント",
+    "step4": "4. インポート",
+    "step5": "5. マテリアル",
+    "step6": "6. ビューアー"
+  },
+  "messages": {
+    "selectFiles": "アップロードするファイルを選択してください",
+    "uploadFirst": "最初にファイルをアップロードしてください",
+    "selectOutput": "出力フォルダを選択してください",
+    "uploadSuccess": "{count}ファイルのアップロードに成功しました",
+    "pipelineSuccess": "パイプラインが正常に完了しました！",
+    "uploadFailed": "アップロード失敗：{error}",
+    "pipelineFailed": "パイプライン失敗：{error}",
+    "filesNotUploaded": "⚠️ ファイルが選択されていますがアップロードされていません。まず「ファイルをアップロード」をクリックしてください。"
+  }
+}
