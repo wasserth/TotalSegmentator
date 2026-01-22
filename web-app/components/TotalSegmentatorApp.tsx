@@ -3,6 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, Folder, Play, ChevronRight, ChevronDown, CheckCircle, XCircle, Loader2, Settings, AlertCircle } from 'lucide-react';
 import { useLocale } from '@/app/contexts/LocaleContext';
+import AlertModal from './AlertModal';
+import FolderBrowserModal from './FolderBrowserModal';
 
 interface Log {
   timestamp: string;
@@ -29,6 +31,17 @@ const TotalSegmentatorApp = () => {
   const [showTools, setShowTools] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   
+  // Modal states
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<'dicom' | 'output' | 'blender' | 'dcm2niix'>('dicom');
+  const [modalTitle, setModalTitle] = useState('');
+  
+  // Alert modal states
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+  
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,115 +54,71 @@ const TotalSegmentatorApp = () => {
     setLogs(prev => [...prev, { timestamp: new Date().toISOString(), message }]);
   };
 
-  /**
-   * Modern folder picker using File System Access API
-   * Falls back to manual input if not supported
-   */
-  const handleFolderPicker = async (type: 'dicom' | 'output' | 'blender' | 'dcm2niix') => {
-    // Check if File System Access API is supported
-    if ('showDirectoryPicker' in window) {
-      try {
-        // @ts-ignore - TypeScript doesn't have types for this yet
-        const dirHandle = await window.showDirectoryPicker({
-          mode: 'read',
-          startIn: 'documents'
-        });
-        
-        // Try to get the full path
-        let fullPath = dirHandle.name;
-        
-        // For file handles (blender/dcm2niix executables), we need different handling
-        if (type === 'blender' || type === 'dcm2niix') {
-          // These should be files, not directories
-          // Use the directory path selected
-          fullPath = dirHandle.name;
-        }
-        
-        switch (type) {
-          case 'dicom':
-            setDicomFolder(fullPath);
-            break;
-          case 'output':
-            setOutputFolder(fullPath);
-            break;
-          case 'blender':
-            setBlenderPath(fullPath);
-            break;
-          case 'dcm2niix':
-            setDcm2niixPath(fullPath);
-            break;
-        }
-        
-        addLog(`Selected: ${fullPath}`);
-      } catch (error: any) {
-        if (error.name !== 'AbortError') {
-          console.error('Error selecting folder:', error);
-          addLog(`Folder picker cancelled or not supported. Please enter path manually.`);
-          // Fallback to manual input
-          handleManualInput(type);
-        }
-      }
-    } else {
-      // Fallback for browsers that don't support File System Access API
-      addLog('File System Access API not supported. Please enter path manually.');
-      handleManualInput(type);
-    }
+  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertOpen(true);
   };
 
   /**
-   * Get full path from directory handle (requires permission)
+   * Open custom folder picker modal
    */
-  const getFullPath = async (dirHandle: any): Promise<string> => {
-    try {
-      // Try to resolve full path (this might not work in all browsers)
-      if ('resolve' in dirHandle) {
-        const paths = await dirHandle.resolve();
-        return paths.join('/');
-      }
-      // Fallback: just return the name
-      return dirHandle.name;
-    } catch (error) {
-      return dirHandle.name;
-    }
+  const handleFolderPicker = (type: 'dicom' | 'output' | 'blender' | 'dcm2niix') => {
+    setModalType(type);
+    
+    // Set modal title based on type
+    const titles = {
+      dicom: 'Select DICOM Folder',
+      output: 'Select Output Folder',
+      blender: 'Select Blender Executable Folder',
+      dcm2niix: 'Select dcm2niix Executable Folder'
+    };
+    
+    setModalTitle(titles[type]);
+    setModalOpen(true);
   };
 
   /**
-   * Fallback to manual input dialog
+   * Handle folder selection from custom modal
    */
-  const handleManualInput = (type: string) => {
-    const folder = prompt(`Enter full path for ${type}:\n\nExample: /Users/username/Documents/dicom`);
-    if (folder) {
-      switch (type) {
-        case 'dicom':
-          setDicomFolder(folder);
-          break;
-        case 'output':
-          setOutputFolder(folder);
-          break;
-        case 'blender':
-          setBlenderPath(folder);
-          break;
-        case 'dcm2niix':
-          setDcm2niixPath(folder);
-          break;
-      }
+  const handleFolderSelect = (path: string) => {
+    switch (modalType) {
+      case 'dicom':
+        setDicomFolder(path);
+        break;
+      case 'output':
+        setOutputFolder(path);
+        break;
+      case 'blender':
+        setBlenderPath(path);
+        break;
+      case 'dcm2niix':
+        setDcm2niixPath(path);
+        break;
     }
+    
+    addLog(`Selected ${modalType}: ${path}`);
   };
 
   const runPipeline = async (mode = 'all') => {
     if (!dicomFolder || !outputFolder) {
-      alert('Please select both DICOM folder and output folder');
+      showAlert('Missing Folders', 'Please select both DICOM folder and output folder', 'warning');
       return;
     }
 
     // Check for spaces in folder names
     if (dicomFolder.includes(' ') || outputFolder.includes(' ')) {
-      alert('⚠️ Folder names cannot contain spaces!\n\nPlease rename your folders to use underscores (_) or hyphens (-) instead of spaces.\n\nExample: "Testing_Output" instead of "Testing Output"');
+      showAlert(
+        'Invalid Folder Names', 
+        'Folder names cannot contain spaces!\n\nPlease rename your folders to use underscores (_) or hyphens (-) instead of spaces.\n\nExample: "Testing_Output" instead of "Testing Output"',
+        'warning'
+      );
       return;
     }
 
     if (isProcessing) {
-      alert('A pipeline is already in progress');
+      showAlert('Pipeline Running', 'A pipeline is already in progress', 'info');
       return;
     }
 
@@ -197,12 +166,12 @@ const TotalSegmentatorApp = () => {
 
       setStatus('success');
       addLog('Pipeline completed successfully!');
-      alert('Pipeline completed successfully!');
+      showAlert('Success!', 'Pipeline completed successfully!', 'success');
       
     } catch (error: any) {
       setStatus('error');
       addLog(`Error: ${error.message}`);
-      alert('Pipeline failed. Check the log for details.');
+      showAlert('Pipeline Failed', 'Check the log for details.', 'error');
       setProgress(0);
     } finally {
       setIsProcessing(false);
@@ -507,6 +476,23 @@ const TotalSegmentatorApp = () => {
           )}
         </div>
       </div>
+
+      {/* Custom Folder Browser Modal */}
+      <FolderBrowserModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSelect={handleFolderSelect}
+        title={modalTitle}
+      />
+
+      {/* Custom Alert Modal */}
+      <AlertModal
+        isOpen={alertOpen}
+        onClose={() => setAlertOpen(false)}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+      />
     </div>
   );
 };
