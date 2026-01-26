@@ -33,10 +33,6 @@ unittest_prediction_fast_force_split.nii.gz
 /test_out_dir
 /woking-checking-mac
 dicom_slices
-
-# Web App
-web-app/node_modules/
-web-app/.next/
-web-app/. env.local
-web-app/. env
-examples
+node_modules
+**/*.dcm
+data/

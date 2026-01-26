@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TotalSegmentator 3D Viewer - Enhanced</title>
+  <link rel="stylesheet" href="viewer_enhanced.css">
+</head>
+<body>
+  <!-- Left Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <h2>3D Viewer</h2>
+      <input type="text" id="searchBox" placeholder="🔍 Search organs...">
+    </div>
+
+    <!-- Global Controls -->
+    <div class="global-controls">
+      <h3>Global Settings</h3>
+      <div class="control-row">
+        <label>Transparency:</label>
+        <input type="range" id="globalOpacity" min="0" max="100" value="100">
+        <span id="opacityValue">100%</span>
+      </div>
+      <div class="control-row">
+        <button id="showAll" class="btn-primary">Show All</button>
+        <button id="hideAll" class="btn-secondary">Hide All</button>
+      </div>
+    </div>
+
+    <!-- Category Groups -->
+    <div id="categoryGroups"></div>
+  </div>
+
+  <!-- Main Viewer -->
+  <div id="viewer">
+    <div id="renderWindow"></div>
+
+    <!-- Top Controls -->
+    <div id="topControls">
+      <div class="control-group">
+        <label>Color Scheme:</label>
+        <select id="colorScheme">
+          <option value="anatomical">Anatomical (Standard)</option>
+          <option value="system">By System</option>
+          <option value="monochrome">Monochrome</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <button id="resetView" class="btn-icon" title="Reset View">Reset</button>
+        <button id="toggleSidebar" class="btn-icon" title="Toggle Sidebar">☰</button>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Loading models...</p>
+      <p id="loadingProgress">0 / 0</p>
+    </div>
+
+    <!-- Hover Tooltip -->
+    <div id="tooltip"></div>
+  </div>
+
+  <!-- Context Menu (Right Click) -->
+  <div id="contextMenu" class="context-menu" style="display:none;">
+    <div id="ctxIsolate" class="ctx-item">Isolate Mesh</div>
+    <div id="ctxRemoveIsolation" class="ctx-item">Remove Isolation</div>
+  </div>
+
+  <!-- VTK.js Library -->
+  <script src="lib/vtk.js"></script>
+
+  <!-- Organ Colors Configuration -->
+  <script type="module">
+    import {
+      MATERIALS,
+      ORGAN_TO_MATERIAL,
+      CATEGORIES,
+      getColorForOrgan,
+      getCategoryForOrgan
+    } from './organ_colors.js';
+
+    window.ORGAN_COLORS = {
+      MATERIALS,
+      ORGAN_TO_MATERIAL,
+      CATEGORIES,
+      getColorForOrgan,
+      getCategoryForOrgan
+    };
+
+    window.dispatchEvent(new Event('colorsLoaded'));
+  </script>
+
+  <!-- Main Application -->
+  <script>
+    window.addEventListener('colorsLoaded', initApp);
+
+    // Global variables
+    let renderer, renderWindow, renderWindowInteractor;
+    let actors = {};                        // organName -> { actor, visible, opacity, ... }
+    let picker = null;
+    let currentColorScheme = 'anatomical';
+    let categoryEnabled = {};               // category -> boolean
+
+    // Selection + isolation state
+    let actorToOrganName = new Map();       // vtkActor -> organName
+    let selectedOrgan = null;               // organName
+    let selectedActor = null;               // vtkActor
+    let selectedPrevColor = null;           // [r,g,b]
+    let selectedPrevOpacity = null;         // number
+
+    let isIsolated = false;
+    let isolationTarget = null;
+    let visibilitySnapshot = null;          // { organs:{}, categories:{}, opacities:{} }
+
+    // ------------------ UI sync helpers ------------------
+
+    function getOrganCheckbox(organName) {
+      return document.querySelector(
+        `.organ-item[data-organ-name="${organName}"] .organ-checkbox`
+      );
+    }
+
+    function getCategoryCheckbox(category) {
+      return document.querySelector(
+        `.category-checkbox[data-category="${category}"]`
+      );
+    }
+
+    function setOrganChecked(organName, checked) {
+      const cb = getOrganCheckbox(organName);
+      if (cb) cb.checked = checked;
+    }
+
+    function setCategoryChecked(category, checked) {
+      const cb = getCategoryCheckbox(category);
+      if (cb) cb.checked = checked;
+    }
+
+    // ------------------ App init ------------------
+
+    function initApp() {
+      console.log('🎨 Color configuration loaded');
+      console.log('📦 Available categories:', Object.keys(window.ORGAN_COLORS.CATEGORIES));
+
+      initRenderer();
+      loadModels();
+      setupUI();
+      setupInteractions();
+    }
+
+    function initRenderer() {
+      const fullScreenRenderer =
+        vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+          rootContainer: document.getElementById('renderWindow'),
+          containerStyle: {
+            width: '100%',
+            height: '100%',
+            position: 'absolute',
+            top: '0',
+            left: '0'
+          }
+        });
+
+      renderer = fullScreenRenderer.getRenderer();
+      renderWindow = fullScreenRenderer.getRenderWindow();
+      renderWindowInteractor = fullScreenRenderer.getInteractor();
+
+      renderer.setBackground(0.1, 0.1, 0.15);
+
+      // Picker is synchronous and expensive. Keep it isolated from camera interaction frames.
+      picker = vtk.Rendering.Core.vtkPropPicker
+        ? vtk.Rendering.Core.vtkPropPicker.newInstance()
+        : vtk.Rendering.Core.vtkPicker.newInstance();
+      picker.setPickFromList(true);
+
+      console.log('✅ Renderer initialized + Picker ready');
+    }
+
+    // ------------------ Camera fit ------------------
+
+    function fitCameraToVisibleActors(renderer) {
+      const bounds = renderer.computeVisiblePropBounds();
+
+      if (!bounds || bounds.length !== 6 || !isFinite(bounds[0])) {
+        console.warn("⚠️ computeVisiblePropBounds failed:", bounds);
+        return false;
+      }
+
+      const center = [
+        (bounds[0] + bounds[1]) / 2,
+        (bounds[2] + bounds[3]) / 2,
+        (bounds[4] + bounds[5]) / 2,
+      ];
+
+      const size = [
+        bounds[1] - bounds[0],
+        bounds[3] - bounds[2],
+        bounds[5] - bounds[4],
+      ];
+
+      const maxSize = Math.max(...size);
+      const camera = renderer.getActiveCamera();
+
+      camera.setFocalPoint(...center);
+
+      const distance = (maxSize > 0 ? maxSize : 1.0) * 3.0;
+      camera.setPosition(
+        center[0],
+        center[1] - distance,
+        center[2] + distance * 0.35
+      );
+
+      camera.setViewUp(0, 0, 1);
+      renderer.resetCameraClippingRange(bounds);
+
+      console.log("📷 Camera fitted:", { bounds, center, size, distance });
+      return true;
+    }
+
+    // ------------------ Loading models ------------------
+
+    async function loadModels() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const dirPath = urlParams.get('dir');
+
+      if (!dirPath) {
+        alert('Missing URL parameter: ?dir=/data/2/output/out_total_all/xxx');
+        return;
+      }
+
+      if (!dirPath.startsWith("/data/") && !dirPath.startsWith("data/")) {
+        alert("Invalid data path.\nExpected path like:\n/data/2/output/out_total_all/xxx");
+        return;
+      }
+
+      const stlListPath = `${dirPath}/stl_list.json`;
+      console.log('📂 Loading STL list from:', stlListPath);
+
+      try {
+        const response = await fetch(stlListPath);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        const stlFiles = data.files;
+
+        if (!Array.isArray(stlFiles)) {
+          throw new Error("Invalid stl_list.json format: missing 'files' array");
+        }
+
+        console.log(`📦 Found ${stlFiles.length} STL files`);
+
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const loadingProgress = document.getElementById('loadingProgress');
+        loadingOverlay.style.display = 'flex';
+
+        // Clear previous actors if reload
+        actors = {};
+        actorToOrganName = new Map();
+        if (picker) picker.initializePickList && picker.initializePickList();
+
+        let loaded = 0;
+        for (const filename of stlFiles) {
+          await loadSTL(`${dirPath}/${filename}`, filename);
+          loaded++;
+          loadingProgress.textContent = `${loaded} / ${stlFiles.length}`;
+        }
+
+        // Force initial opacity to 1.0
+        Object.values(actors).forEach(d => {
+          d.actor.getProperty().setOpacity(1.0);
+          d.opacity = 1.0;
+        });
+
+        // Fit camera after actors exist
+        const ok = fitCameraToVisibleActors(renderer);
+        if (!ok) {
+          console.warn("⚠️ Camera fit failed, fallback to resetCamera()");
+          renderer.resetCamera();
+          renderer.resetCameraClippingRange();
+        }
+
+        renderWindow.render();
+        loadingOverlay.style.display = 'none';
+
+        console.log('✅ All models loaded');
+
+        buildCategoryUI();
+        fitCameraToVisibleActors(renderer);
+        renderWindow.render();
+
+      } catch (error) {
+        console.error('❌ Error loading models:', error);
+        alert('Failed to load models. Check console for details.');
+      }
+    }
+
+    async function loadSTL(url, filename) {
+      return new Promise((resolve, reject) => {
+        const reader = vtk.IO.Geometry.vtkSTLReader.newInstance();
+
+        reader.setUrl(url, { binary: true }).then(() => {
+          const mapper = vtk.Rendering.Core.vtkMapper.newInstance();
+          mapper.setInputConnection(reader.getOutputPort());
+          mapper.setScalarVisibility(false);
+
+          const actor = vtk.Rendering.Core.vtkActor.newInstance();
+          actor.setMapper(mapper);
+
+          const organName = filename.replace('.stl', '');
+          const color = window.ORGAN_COLORS.getColorForOrgan(organName);
+
+          actor.getProperty().setColor(...color);
+          actor.getProperty().setOpacity(1.0);
+
+          actors[organName] = {
+            actor,
+            visible: true,
+            opacity: 1.0,
+            anatomicalColor: [...color],
+            currentColor: [...color],
+            filename
+          };
+
+          renderer.addActor(actor);
+
+          // Register for picking
+          picker.addPickList(actor);
+          actorToOrganName.set(actor, organName);
+
+          resolve();
+        }).catch(reject);
+      });
+    }
+
+    // ------------------ UI build ------------------
+
+    function buildCategoryUI() {
+      const container = document.getElementById('categoryGroups');
+      container.innerHTML = '';
+
+      const organsByCategory = {};
+      for (const organName in actors) {
+        const category = window.ORGAN_COLORS.getCategoryForOrgan(organName);
+        if (!organsByCategory[category]) organsByCategory[category] = [];
+        organsByCategory[category].push(organName);
+      }
+
+      for (const [category, organs] of Object.entries(organsByCategory).sort()) {
+        const section = createCategorySection(category, organs);
+        container.appendChild(section);
+      }
+
+      console.log('✅ UI built:', Object.keys(organsByCategory).length, 'categories');
+    }
+
+    function createCategorySection(category, organs) {
+      const section = document.createElement('div');
+      section.className = 'category-section';
+
+      if (categoryEnabled[category] === undefined) categoryEnabled[category] = true;
+
+      const header = document.createElement('div');
+      header.className = 'category-header';
+
+      header.innerHTML = `
+        <input
+          type="checkbox"
+          class="category-checkbox"
+          data-category="${category}"
+          ${categoryEnabled[category] ? 'checked' : ''}
+        />
+        <span class="category-icon">▼</span>
+        <span class="category-name">${getCategoryDisplayName(category)}</span>
+        <span class="category-count">(${organs.length})</span>
+      `;
+
+      header.onclick = () => toggleCategory(section);
+
+      const catCb = header.querySelector('.category-checkbox');
+      catCb.addEventListener('click', (ev) => ev.stopPropagation());
+      catCb.addEventListener('change', (ev) => {
+        window.toggleCategoryVisibility(category, ev.target.checked);
+      });
+
+      const content = document.createElement('div');
+      content.className = 'category-content';
+
+      organs.sort().forEach(organName => {
+        const organItem = createOrganItem(organName);
+        content.appendChild(organItem);
+      });
+
+      section.appendChild(header);
+      section.appendChild(content);
+      return section;
+    }
+
+    function createOrganItem(organName) {
+      const item = document.createElement('div');
+      item.className = 'organ-item';
+      item.dataset.organName = organName;
+
+      const actorData = actors[organName];
+      const color = actorData.currentColor;
+      const colorHex = rgbToHex(color);
+
+      item.innerHTML = `
+        <div class="organ-controls">
+          <input type="checkbox" class="organ-checkbox" checked
+                 onchange="toggleOrgan('${organName}', this.checked)">
+          <span class="organ-color" style="background: ${colorHex}"></span>
+          <span class="organ-name">${formatOrganName(organName)}</span>
+        </div>
+        <div class="organ-actions">
+          <input type="range" class="opacity-slider" min="0" max="100" value="100"
+                 oninput="setOrganOpacity('${organName}', this.value)">
+        </div>
+      `;
+
+      item.onmouseenter = () => highlightOrgan(organName, true);
+      item.onmouseleave = () => highlightOrgan(organName, false);
+
+      return item;
+    }
+
+    function getCategoryDisplayName(category) {
+      const info = window.ORGAN_COLORS.CATEGORIES[category];
+      return info ? info.name : category;
+    }
+
+    function formatOrganName(name) {
+      return name
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function rgbToHex(rgb) {
+      const r = Math.round(rgb[0] * 255);
+      const g = Math.round(rgb[1] * 255);
+      const b = Math.round(rgb[2] * 255);
+      return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+    }
+
+    function toggleCategory(section) {
+      const content = section.querySelector('.category-content');
+      const icon = section.querySelector('.category-icon');
+
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        icon.textContent = '▼';
+      } else {
+        content.style.display = 'none';
+        icon.textContent = '▶';
+      }
+    }
+
+    // ------------------ Global handlers (inline UI uses these) ------------------
+
+    window.toggleOrgan = function(organName, visible) {
+      const actorData = actors[organName];
+      if (!actorData) return;
+
+      actorData.visible = visible;
+      actorData.actor.setVisibility(visible);
+      renderWindow.render();
+    };
+
+    window.setOrganOpacity = function(organName, value) {
+      const actorData = actors[organName];
+      if (!actorData) return;
+
+      const opacity = value / 100;
+      actorData.opacity = opacity;
+      actorData.actor.getProperty().setOpacity(opacity);
+
+      // Keep selection opaque
+      if (selectedOrgan === organName && selectedActor) {
+        selectedActor.getProperty().setOpacity(1.0);
+      }
+
+      renderWindow.render();
+    };
+
+    window.toggleCategoryVisibility = function(category, enabled) {
+      categoryEnabled[category] = enabled;
+      setCategoryChecked(category, enabled);
+
+      for (const organName in actors) {
+        const organCategory = window.ORGAN_COLORS.getCategoryForOrgan(organName);
+        if (organCategory !== category) continue;
+
+        setOrganChecked(organName, enabled);
+
+        const actorData = actors[organName];
+        actorData.visible = enabled;
+        actorData.actor.setVisibility(enabled);
+      }
+
+      renderWindow.render();
+    };
+
+    function highlightOrgan(organName, highlight) {
+      const actorData = actors[organName];
+      if (!actorData) return;
+
+      if (highlight) {
+        actorData.actor.getProperty().setColor(1.0, 1.0, 0.5);
+      } else {
+        actorData.actor.getProperty().setColor(...actorData.currentColor);
+      }
+
+      // Keep selection highlight stable
+      if (selectedOrgan === organName && selectedActor) {
+        selectedActor.getProperty().setColor(1.0, 1.0, 0.5);
+      }
+
+      renderWindow.render();
+    }
+
+    // ------------------ Selection helpers ------------------
+
+    function focusOrganInSidebar(organName) {
+      document.querySelectorAll('.organ-item.selected')
+        .forEach(el => el.classList.remove('selected'));
+
+      const el = document.querySelector(`.organ-item[data-organ-name="${organName}"]`);
+      if (!el) return;
+
+      el.classList.add('selected');
+      el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+
+    function clearSelection() {
+      if (!selectedActor || !selectedOrgan) return;
+
+      const d = actors[selectedOrgan];
+      if (d) {
+        selectedActor.getProperty().setColor(...d.currentColor);
+        if (selectedPrevOpacity != null) selectedActor.getProperty().setOpacity(selectedPrevOpacity);
+      }
+
+      selectedOrgan = null;
+      selectedActor = null;
+      selectedPrevColor = null;
+      selectedPrevOpacity = null;
+
+      document.querySelectorAll('.organ-item.selected')
+        .forEach(el => el.classList.remove('selected'));
+
+      renderWindow.render();
+    }
+
+    function setSelectionByOrganName(organName) {
+      if (!actors[organName]) return;
+      if (selectedOrgan === organName) return;
+
+      clearSelection();
+
+      selectedOrgan = organName;
+      selectedActor = actors[organName].actor;
+
+      selectedPrevOpacity = actors[organName].opacity;
+      selectedPrevColor = [...actors[organName].currentColor];
+
+      selectedActor.getProperty().setColor(1.0, 1.0, 0.5);
+      selectedActor.getProperty().setOpacity(1.0);
+
+      focusOrganInSidebar(organName);
+      renderWindow.render();
+    }
+
+    // ------------------ Context menu ------------------
+
+    function hideContextMenu() {
+      const menu = document.getElementById('contextMenu');
+      if (menu) menu.style.display = 'none';
+    }
+
+    function showContextMenu(x, y) {
+      const menu = document.getElementById('contextMenu');
+      if (!menu) return;
+
+      const isolateItem = document.getElementById('ctxIsolate');
+      const removeItem = document.getElementById('ctxRemoveIsolation');
+
+      if (!selectedOrgan) {
+        isolateItem.classList.add('disabled');
+        removeItem.classList.add('disabled');
+      } else {
+        isolateItem.classList.toggle('disabled', isIsolated);
+        removeItem.classList.toggle('disabled', !isIsolated);
+      }
+
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+      menu.style.display = 'block';
+    }
+
+    // ------------------ Pick helpers ------------------
+
+    // Lower value = higher priority
+    function getPickPriority(organName) {
+    const cat = window.ORGAN_COLORS.getCategoryForOrgan(organName);
+    if (cat === 'Vessel') return 2;   // deprioritize vessels
+    return 1;                         // organs, bones, etc.
+    }
+
+    // Multi-sample pick around cursor to reduce edge-miss
+    function pickWithTolerance(x, y, renderer, picker) {
+    const PICK_RADIUS = 6;   // pixels
+    const STEP = 3;          // sampling step
+
+    let bestActor = null;
+    let bestScore = Infinity;
+
+    for (let dx = -PICK_RADIUS; dx <= PICK_RADIUS; dx += STEP) {
+        for (let dy = -PICK_RADIUS; dy <= PICK_RADIUS; dy += STEP) {
+        picker.pick([x + dx, y + dy, 0], renderer);
+
+        const picked = picker.getActors ? picker.getActors() : [];
+        if (!picked || !picked.length) continue;
+
+        const actor = picked[0];
+        const organName = actorToOrganName.get(actor);
+        if (!organName) continue;
+
+        const dist = Math.hypot(dx, dy);
+        const priority = getPickPriority(organName);
+
+        // Score: priority dominates, distance refines
+        const score = priority * 100 + dist;
+
+        if (score < bestScore) {
+            bestScore = score;
+            bestActor = actor;
+        }
+        }
+    }
+
+    return bestActor;
+    }
+
+
+    // ------------------ Isolation snapshot/restore ------------------
+
+    function takeVisibilitySnapshot() {
+      const snap = { organs: {}, categories: {}, opacities: {} };
+
+      for (const organName in actors) {
+        snap.organs[organName] = !!actors[organName].visible;
+        snap.opacities[organName] = actors[organName].opacity;
+      }
+
+      if (typeof categoryEnabled !== 'undefined') {
+        for (const cat of Object.keys(window.ORGAN_COLORS.CATEGORIES)) {
+          snap.categories[cat] = !!categoryEnabled[cat];
+        }
+      }
+
+      return snap;
+    }
+
+    function applyVisibilitySnapshot(snap) {
+      if (!snap) return;
+
+      for (const organName in actors) {
+        const v = !!snap.organs[organName];
+        actors[organName].visible = v;
+        actors[organName].actor.setVisibility(v);
+
+        setOrganChecked(organName, v);
+
+        const op = snap.opacities[organName];
+        if (typeof op === 'number') {
+          actors[organName].opacity = op;
+          actors[organName].actor.getProperty().setOpacity(op);
+        }
+      }
+
+      if (typeof categoryEnabled !== 'undefined' && snap.categories) {
+        for (const cat of Object.keys(window.ORGAN_COLORS.CATEGORIES)) {
+          const enabled = !!snap.categories[cat];
+          categoryEnabled[cat] = enabled;
+          setCategoryChecked(cat, enabled);
+        }
+      }
+
+      renderWindow.render();
+    }
+
+    function isolateSelected() {
+      if (!selectedOrgan) return;
+
+      if (!isIsolated) {
+        visibilitySnapshot = takeVisibilitySnapshot();
+      }
+
+      isIsolated = true;
+      isolationTarget = selectedOrgan;
+
+      for (const organName in actors) {
+        const v = (organName === selectedOrgan);
+        actors[organName].visible = v;
+        actors[organName].actor.setVisibility(v);
+        setOrganChecked(organName, v);
+      }
+
+      if (typeof categoryEnabled !== 'undefined') {
+        const targetCat = window.ORGAN_COLORS.getCategoryForOrgan(selectedOrgan);
+        for (const cat of Object.keys(window.ORGAN_COLORS.CATEGORIES)) {
+          const enabled = (cat === targetCat);
+          categoryEnabled[cat] = enabled;
+          setCategoryChecked(cat, enabled);
+        }
+      }
+
+      if (selectedActor) selectedActor.getProperty().setOpacity(1.0);
+
+      fitCameraToVisibleActors(renderer);
+      renderWindow.render();
+    }
+
+    function removeIsolation() {
+      if (!isIsolated) return;
+
+      isIsolated = false;
+      isolationTarget = null;
+
+      applyVisibilitySnapshot(visibilitySnapshot);
+      visibilitySnapshot = null;
+
+      if (selectedOrgan) setSelectionByOrganName(selectedOrgan);
+
+      fitCameraToVisibleActors(renderer);
+      renderWindow.render();
+    }
+
+    // ------------------ UI wiring ------------------
+
+    function setupUI() {
+      document.getElementById('globalOpacity').oninput = (e) => {
+        const opacity = e.target.value / 100;
+        document.getElementById('opacityValue').textContent = e.target.value + '%';
+
+        for (const organName in actors) {
+          actors[organName].actor.getProperty().setOpacity(opacity);
+          actors[organName].opacity = opacity;
+        }
+
+        // Keep selection opaque
+        if (selectedActor) selectedActor.getProperty().setOpacity(1.0);
+
+        renderWindow.render();
+      };
+
+      isIsolated = false;
+      visibilitySnapshot = null;
+      document.getElementById('showAll').onclick = () => {
+        Object.keys(window.ORGAN_COLORS.CATEGORIES).forEach(cat => {
+          categoryEnabled[cat] = true;
+          setCategoryChecked(cat, true);
+        });
+
+        document.querySelectorAll('.organ-checkbox').forEach(cb => {
+          cb.checked = true;
+          const organName = cb.closest('.organ-item').dataset.organName;
+          window.toggleOrgan(organName, true);
+        });
+
+        renderWindow.render();
+      };
+
+      isIsolated = false;
+      visibilitySnapshot = null;
+      document.getElementById('hideAll').onclick = () => {
+        Object.keys(window.ORGAN_COLORS.CATEGORIES).forEach(cat => {
+          categoryEnabled[cat] = false;
+          setCategoryChecked(cat, false);
+        });
+
+        document.querySelectorAll('.organ-checkbox').forEach(cb => {
+          cb.checked = false;
+          const organName = cb.closest('.organ-item').dataset.organName;
+          window.toggleOrgan(organName, false);
+        });
+
+        renderWindow.render();
+      };
+
+      document.getElementById('searchBox').oninput = (e) => {
+        const query = e.target.value.toLowerCase();
+        document.querySelectorAll('.organ-item').forEach(item => {
+          const name = item.dataset.organName.toLowerCase();
+          item.style.display = name.includes(query) ? 'block' : 'none';
+        });
+      };
+
+      document.getElementById('colorScheme').onchange = (e) => {
+        applyColorScheme(e.target.value);
+      };
+
+      document.getElementById('resetView').onclick = () => {
+        fitCameraToVisibleActors(renderer);
+        renderWindow.render();
+      };
+
+      document.getElementById('toggleSidebar').onclick = () => {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('collapsed');
+      };
+    }
+
+    function applyColorScheme(scheme) {
+      currentColorScheme = scheme;
+
+      for (const organName in actors) {
+        const actorData = actors[organName];
+        let color;
+
+        if (scheme === 'anatomical') {
+          color = actorData.anatomicalColor;
+        } else if (scheme === 'system') {
+          const category = window.ORGAN_COLORS.getCategoryForOrgan(organName);
+          color = getSystemColor(category);
+        } else if (scheme === 'monochrome') {
+          color = [0.8, 0.8, 0.8];
+        }
+
+        actorData.currentColor = [...color];
+        actorData.actor.getProperty().setColor(...color);
+
+        const item = document.querySelector(`[data-organ-name="${organName}"]`);
+        if (item) {
+          const colorSpan = item.querySelector('.organ-color');
+          colorSpan.style.background = rgbToHex(color);
+        }
+      }
+
+      // Keep selection highlight stable
+      if (selectedActor) selectedActor.getProperty().setColor(1.0, 1.0, 0.5);
+
+      renderWindow.render();
+    }
+
+    function getSystemColor(category) {
+      const systemColors = {
+        'Bone': [0.9, 0.9, 0.85],
+        'Muscle': [0.8, 0.3, 0.3],
+        'Vessel': [0.9, 0.2, 0.2],
+        'Thoracic': [0.7, 0.7, 0.8],
+        'Abdominal': [0.8, 0.6, 0.4],
+        'Other': [0.7, 0.7, 0.7]
+      };
+      return systemColors[category] || systemColors['Other'];
+    }
+
+    // ------------------ Interaction wiring ------------------
+
+    function setupInteractions() {
+    const interactor = renderWindowInteractor;
+
+    // IMPORTANT: Use the actual canvas element for correct DOM coords
+    const rw = document.getElementById('renderWindow');
+    const glCanvas = rw.querySelector('canvas') || rw;
+
+    // Disable browser default context menu
+    glCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    // Close menu ONLY on click outside menu (do NOT use mousedown)
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#contextMenu')) return;
+        hideContextMenu();
+    });
+
+    // Prevent clicks inside menu from bubbling to document (optional safety)
+    const menu = document.getElementById('contextMenu');
+    if (menu) {
+        menu.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    // Menu actions
+    document.getElementById('ctxIsolate').onclick = (e) => {
+        e.stopPropagation();
+        hideContextMenu();
+        isolateSelected();
+    };
+    document.getElementById('ctxRemoveIsolation').onclick = (e) => {
+        e.stopPropagation();
+        hideContextMenu();
+        removeIsolation();
+    };
+
+    // ------------------ Click vs Drag detection ------------------
+    const CLICK_MOVE_TOL = 4; // px
+    let pressPos = null;
+
+    interactor.onLeftButtonPress((callData) => {
+        if (!callData || !callData.position) return;
+        pressPos = { x: callData.position.x, y: callData.position.y };
+    });
+
+    interactor.onLeftButtonRelease((callData) => {
+        if (!callData || !callData.position) return;
+        if (!pressPos) return;
+
+        const dx = callData.position.x - pressPos.x;
+        const dy = callData.position.y - pressPos.y;
+        pressPos = null;
+
+        // If user dragged (rotate/pan), skip picking to avoid stutter
+        if (Math.hypot(dx, dy) > CLICK_MOVE_TOL) return;
+
+        const { x, y } = callData.position;
+
+        // Defer one frame to avoid blocking camera interaction updates
+        requestAnimationFrame(() => {
+        const actor = pickWithTolerance(x, y, renderer, picker);
+
+        if (!actor) {
+            clearSelection();
+            return;
+        }
+
+        const organName = actorToOrganName.get(actor);
+        if (!organName) return;
+
+        setSelectionByOrganName(organName);
+        });
+    });
+
+    // ------------------ Right click (DOM) ------------------
+    glCanvas.addEventListener('pointerdown', (e) => {
+        // Right click only
+        if (e.button !== 2) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        hideContextMenu();
+
+        const rect = glCanvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        // Convert DOM coords to VTK display coords (Y flipped + DPR)
+        const x = (e.clientX - rect.left) * dpr;
+        const y = (rect.height - (e.clientY - rect.top)) * dpr;
+
+        const actor = pickWithTolerance(x, y, renderer, picker);
+
+        if (actor) {
+        const organName = actorToOrganName.get(actor);
+        if (organName) setSelectionByOrganName(organName);
+        }
+
+
+        // Show menu using DOM client coords (stable)
+        showContextMenu(e.clientX, e.clientY);
+    });
+
+    console.log('✅ Interactions enabled: click-only pick + stable DOM right-click menu');
+    }
+
+  </script>
+</body>
+</html>

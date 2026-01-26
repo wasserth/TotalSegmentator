@@ -311,6 +311,7 @@ def convert_dicom_to_png(
         Z2, Y2, X2 = vol_iso.shape
         samp = vol_iso[::max(Z2 // 16, 1), ::max(Y2 // 16, 1), ::max(X2 // 16, 1)].ravel()
         vmin, vmax = np.percentile(samp, 0.5), np.percentile(samp, 99.5)
+        print(f"🔍 Window range: {vmin:.1f} to {vmax:.1f}") 
     else:
         vmin, vmax = wl - ww / 2.0, wl + ww / 2.0
     vol01 = np.clip((vol_iso - vmin) / max(1e-6, (vmax - vmin)), 0.0, 1.0)
@@ -340,7 +341,10 @@ def convert_dicom_to_png(
 
     if write_metadata:
         import csv
+        import json
         output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 保留原有的 metadata.csv（向后兼容）
         with open(output_dir / "metadata.csv", "w", newline="") as f:
             w = csv.writer(f)
             w.writerow(["SeriesInstanceUID", key[1]])
@@ -352,6 +356,91 @@ def convert_dicom_to_png(
             w.writerow(["Axial_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
             w.writerow(["Coronal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
             w.writerow(["Sagittal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
+        
+        # ========== 新增: affine_metadata.json for Blender alignment ==========
+        try:
+            # 从DICOM读取 affine 信息
+            ds_first = pydicom.dcmread(str(files[0]), force=True)
+            
+            # 获取方向矩阵 (ImageOrientationPatient: 6个值)
+            iop = getattr(ds_first, "ImageOrientationPatient", None)
+            if iop and len(iop) == 6:
+                # 行方向 (X轴)
+                row_x, row_y, row_z = float(iop[0]), float(iop[1]), float(iop[2])
+                # 列方向 (Y轴)
+                col_x, col_y, col_z = float(iop[3]), float(iop[4]), float(iop[5])
+                
+                # 计算切片方向 (Z轴) = row × col (叉积)
+                slice_x = row_y * col_z - row_z * col_y
+                slice_y = row_z * col_x - row_x * col_z
+                slice_z = row_x * col_y - row_y * col_x
+            else:
+                # 默认标准RAS方向
+                row_x, row_y, row_z = 1.0, 0.0, 0.0
+                col_x, col_y, col_z = 0.0, 1.0, 0.0
+                slice_x, slice_y, slice_z = 0.0, 0.0, 1.0
+            
+            # 获取原点位置 (ImagePositionPatient: x,y,z)
+            ipp = getattr(ds_first, "ImagePositionPatient", None)
+            if ipp and len(ipp) == 3:
+                origin_x, origin_y, origin_z = float(ipp[0]), float(ipp[1]), float(ipp[2])
+            else:
+                origin_x, origin_y, origin_z = 0.0, 0.0, 0.0
+            
+            # 构建4x4 affine矩阵（使用isotropic spacing）
+            # 注意: 这个矩阵将体素坐标(i,j,k)转换为世界坐标(x,y,z) mm
+            affine_matrix = [
+                [row_x * iso, col_x * iso, slice_x * iso, origin_x],
+                [row_y * iso, col_y * iso, slice_y * iso, origin_y],
+                [row_z * iso, col_z * iso, slice_z * iso, origin_z],
+                [0.0, 0.0, 0.0, 1.0]
+            ]
+            
+            # Blender对齐所需的完整元数据
+            Z2, Y2, X2 = vol01.shape
+            affine_meta = {
+                "affine_matrix": affine_matrix,
+                "volume_shape_xyz": [int(X2), int(Y2), int(Z2)],
+                "volume_shape_zyx": [int(Z2), int(Y2), int(X2)],
+                "spacing_mm": [float(iso), float(iso), float(iso)],
+                "original_spacing_mm": [float(px), float(py), float(pz)],
+                "units": "mm",
+                "coordinate_system": "RAS",
+                "source": "DICOM ImageOrientationPatient + ImagePositionPatient",
+                "description": "Affine transform from voxel (i,j,k) to world (x,y,z) coordinates in mm"
+            }
+            
+            with open(output_dir / "affine_metadata.json", "w") as f:
+                json.dump(affine_meta, f, indent=2)
+            
+            print(f"✅ Generated affine_metadata.json for precise Blender alignment")
+            
+        except Exception as e:
+            print(f"⚠️  Warning: Failed to generate affine metadata: {e}")
+            print("   Falling back to identity matrix (may affect alignment accuracy)")
+            
+            # 回退方案: 使用对角矩阵（仅spacing，无旋转）
+            Z2, Y2, X2 = vol01.shape
+            affine_matrix = [
+                [iso, 0.0, 0.0, 0.0],
+                [0.0, iso, 0.0, 0.0],
+                [0.0, 0.0, iso, 0.0],
+                [0.0, 0.0, 0.0, 1.0]
+            ]
+            
+            affine_meta = {
+                "affine_matrix": affine_matrix,
+                "volume_shape_xyz": [int(X2), int(Y2), int(Z2)],
+                "volume_shape_zyx": [int(Z2), int(Y2), int(X2)],
+                "spacing_mm": [float(iso), float(iso), float(iso)],
+                "units": "mm",
+                "coordinate_system": "identity (fallback)",
+                "source": "fallback - DICOM metadata unavailable"
+            }
+            
+            with open(output_dir / "affine_metadata.json", "w") as f:
+                json.dump(affine_meta, f, indent=2)
+        # ========== 结束新增部分 ==========
 
     total = 0
     if save_axial:

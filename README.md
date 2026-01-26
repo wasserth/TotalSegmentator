@@ -378,3 +378,12 @@ Issues & improvement suggestions welcome. For enhanced pipeline ideas (artery se
 The enhanced portal/hepatic splitting is heuristic and should be validated against expert-annotated data for clinical or regulatory applications.
 
 ---
+## Data
+
+Medical image data is not included in this repository.
+
+Please place your DICOM data at:
+TotalSegmentator/data/2/
+
+Example:
+- dicom_series.zip (unzipped before use)

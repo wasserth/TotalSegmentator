@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>TotalSegmentator – STL Viewer (MVP)</title>
+  <style>
+    body { 
+      margin: 0; 
+      display: flex; 
+      height: 100vh; 
+      background: #111; 
+      color: #eee; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #sidebar {
+      width: 260px;
+      background: #1e1e1e;
+      padding: 12px;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-right: 1px solid #333;
+    }
+    #viewer { flex: 1; position: relative; }
+    .item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .item:hover {
+      background: #2a2a2a;
+    }
+    .item input { margin-right: 8px; cursor: pointer; }
+    h3 { 
+      margin-top: 0; 
+      font-size: 16px; 
+      padding-bottom: 8px;
+      border-bottom: 1px solid #333;
+    }
+    #error {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2a2a2a;
+      padding: 24px;
+      border-radius: 8px;
+      border: 2px solid #ff6b6b;
+      max-width: 600px;
+      display: none;
+    }
+    #error.show { display: block; }
+    #error h2 { 
+      color: #ff6b6b; 
+      margin-top: 0;
+      font-size: 18px;
+    }
+    #error pre {
+      background: #1a1a1a;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 12px;
+      color: #ffd93d;
+    }
+    #error code {
+      color: #6bcf7f;
+    }
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 18px;
+      color: #888;
+    }
+    .spinner {
+      border: 3px solid #333;
+      border-top: 3px solid #6bcf7f;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #info {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(30, 30, 30, 0.9);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <h3>📦 Segments</h3>
+  <div id="list"></div>
+</div>
+
+<div id="viewer">
+  <div id="loading">
+    <div class="spinner"></div>
+    <div>Loading 3D models...</div>
+  </div>
+  <div id="error">
+    <h2>⚠️ Error</h2>
+    <div id="error-message"></div>
+  </div>
+  <div id="info"></div>
+</div>
+
+<!-- Local UMD vtk.js -->
+<script src="lib/vtk.js"></script>
+
+<script>
+/* -------------------- Error Handling -------------------- */
+function showError(title, message, details = null) {
+  const errorDiv = document.getElementById('error');
+  const errorMsg = document.getElementById('error-message');
+  
+  let html = `<p>${message}</p>`;
+  
+  if (details) {
+    html += `<pre>${details}</pre>`;
+  }
+  
+  errorMsg.innerHTML = html;
+  errorDiv.classList.add('show');
+  
+  document.getElementById('loading').style.display = 'none';
+}
+
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
+}
+
+function showInfo(text) {
+  document.getElementById('info').textContent = text;
+}
+
+/* -------------------- Parse Parameters -------------------- */
+const params = new URLSearchParams(window.location.search);
+const STL_DIR = params.get('dir');
+
+console.log('=== TotalSegmentator Web Viewer Debug ===');
+console.log('Current URL:', window.location.href);
+console.log('STL_DIR parameter:', STL_DIR);
+console.log('Viewer location:', window.location.pathname);
+
+if (!STL_DIR) {
+  showError(
+    'Missing Parameter',
+    'Missing URL parameter: <code>?dir=...</code>',
+    `Current URL: ${window.location.href}\n\nExpected format:\nfile:///path/to/viewer_mvp.html?dir=relative/path/to/stl_folder\n\nExample:\nfile:///Users/you/TotalSegmentator/bin/web_viewer/viewer_mvp.html?dir=../../../../data/2/output/out_total_all/total_all`
+  );
+  throw new Error('No STL dir');
+}
+
+/* -------------------- VTK Initialization -------------------- */
+let renderer = null;
+let renderWindow = null;
+
+try {
+  if (typeof vtk === 'undefined') {
+    showError(
+      'VTK.js Not Loaded',
+      'vtk.js library failed to load.',
+      'Please ensure lib/vtk.js exists in the same directory as this HTML file.\n\nExpected location:\nweb_viewer/lib/vtk.js\n\nTo fix:\ncp node_modules/@kitware/vtk.js/dist/vtk.js web_viewer/lib/vtk.js'
+    );
+    throw new Error('vtk.js not loaded');
+  }
+
+  const fullScreenRenderer = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance({
+    rootContainer: document.getElementById('viewer'),
+    background: [0.1, 0.1, 0.1],
+  });
+
+  renderer = fullScreenRenderer.getRenderer();
+  renderWindow = fullScreenRenderer.getRenderWindow();
+
+  console.log('✅ VTK initialized successfully');
+
+} catch (error) {
+  showError(
+    'VTK Initialization Failed',
+    'Failed to initialize VTK.js renderer.',
+    `Error: ${error.message}\n\nStack trace:\n${error.stack}`
+  );
+  throw error;
+}
+
+/* -------------------- Global State -------------------- */
+const actors = {};
+const listDiv = document.getElementById('list');
+
+/* -------------------- UI Functions -------------------- */
+function addItem(name) {
+  const div = document.createElement('div');
+  div.className = 'item';
+
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = true;
+  cb.id = `cb_${name}`;
+  cb.onchange = () => {
+    actors[name].setVisibility(cb.checked);
+    renderWindow.render();
+    console.log(`${name}: ${cb.checked ? 'visible' : 'hidden'}`);
+  };
+
+  const label = document.createElement('label');
+  label.textContent = name;
+  label.htmlFor = cb.id;
+  label.style.cursor = 'pointer';
+
+  div.appendChild(cb);
+  div.appendChild(label);
+  listDiv.appendChild(div);
+}
+
+/* -------------------- STL Loading -------------------- */
+async function loadSTL(url, name) {
+  console.log(`Loading STL: ${name} from ${url}`);
+  
+  try {
+    const reader = vtk.IO.Geometry.vtkSTLReader.newInstance();
+    await reader.setUrl(url, { binary: true });
+
+    const mapper = vtk.Rendering.Core.vtkMapper.newInstance();
+    mapper.setInputConnection(reader.getOutputPort());
+
+    const actor = vtk.Rendering.Core.vtkActor.newInstance();
+    actor.setMapper(mapper);
+
+    renderer.addActor(actor);
+    actors[name] = actor;
+    addItem(name);
+    
+    console.log(`✅ Loaded: ${name}`);
+  } catch (error) {
+    console.error(`❌ Failed to load ${name}:`, error);
+    throw error;
+  }
+}
+
+/* -------------------- Main Function -------------------- */
+async function main() {
+  try {
+    // Construct stl_list.json URL
+    const listUrl = `${STL_DIR}/stl_list.json`;
+    console.log('Fetching stl_list.json from:', listUrl);
+    
+    const res = await fetch(listUrl);
+    
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
+    const data = await res.json();
+    console.log('stl_list.json loaded:', data);
+    
+    if (!data.files || data.files.length === 0) {
+      throw new Error('No STL files found in stl_list.json');
+    }
+
+    showInfo(`Loading ${data.files.length} models...`);
+    
+    // Load all STL files
+    let loaded = 0;
+    for (const file of data.files) {
+      const name = file.replace('.stl', '');
+      await loadSTL(`${STL_DIR}/${file}`, name);
+      loaded++;
+      showInfo(`Loaded ${loaded}/${data.files.length} models`);
+    }
+
+    console.log(`✅ All ${data.files.length} models loaded`);
+    
+    // Reset camera and render
+    renderer.resetCamera();
+    renderWindow.render();
+    
+    hideLoading();
+    showInfo(`${data.files.length} models loaded`);
+    
+  } catch (error) {
+    console.error('❌ Main function failed:', error);
+    
+    let details = `Error: ${error.message}\n\n`;
+    details += `STL_DIR: ${STL_DIR}\n`;
+    details += `Viewer location: ${window.location.pathname}\n`;
+    details += `Expected stl_list.json: ${STL_DIR}/stl_list.json\n\n`;
+    details += `Stack trace:\n${error.stack}`;
+    
+    showError(
+      'Failed to Load Models',
+      'Could not load STL files. Please check the console for details.',
+      details
+    );
+  }
+}
+
+// Start loading
+console.log('Starting main function...');
+main();
+</script>
+</body>
+</html>
