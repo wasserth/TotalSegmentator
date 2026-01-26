@@ -9,8 +9,12 @@ Improved pipeline with precise spatial alignment and web viewer:
   4) Generate stl_list.json for web viewer
   5) Auto-open web viewer in browser
 
-Windows usage:
+Windows/Linux usage:
   python -m totalsegmentator.bin.totalseg_gui
+
+macOS CLI mode (if tkinter unavailable):
+  python -m totalsegmentator.bin.totalseg_gui --cli \
+    --dicom /path/to/dicom --output /path/to/output
 """
 
 from __future__ import annotations
@@ -50,15 +54,34 @@ if hasattr(sys, "stderr") and not sys.stderr.isatty():
 print("✅ stdout/stderr restored, logs will now appear in Terminal")
 
 
-# Use ttkbootstrap for a modern look
+# Try to import GUI dependencies, but allow fallback to CLI mode
+GUI_AVAILABLE = False
+TKINTER_ERROR = None
 try:
+    from tkinter import filedialog, END
     import ttkbootstrap as b
     from ttkbootstrap.constants import *
-    from ttkbootstrap.scrolled import ScrolledText
+    from ttkbootstrap.widgets.scrolled import ScrolledText
     from ttkbootstrap.dialogs import Messagebox
-except ImportError:
-    print("ttkbootstrap not found. Please install it with: pip install ttkbootstrap", file=sys.stderr)
-    sys.exit(1)
+    GUI_AVAILABLE = True
+except ImportError as e:
+    TKINTER_ERROR = str(e)
+    # Only exit if user didn't request CLI mode
+    if '--cli' not in sys.argv and '--help' not in sys.argv and '-h' not in sys.argv:
+        print("=" * 70, file=sys.stderr)
+        print("ERROR: GUI dependencies not available", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        print(f"\nMissing: {e}", file=sys.stderr)
+        print("\nTo use GUI mode, install dependencies:", file=sys.stderr)
+        print("  pip install ttkbootstrap", file=sys.stderr)
+        print("\nOn macOS, tkinter may also require:", file=sys.stderr)
+        print("  - Official Python from python.org (includes tkinter)")
+        print("  - Or: brew install python-tk@3.11", file=sys.stderr)
+        print("\nAlternatively, use CLI mode:", file=sys.stderr)
+        print("  python -m totalsegmentator.bin.totalseg_gui --cli \\", file=sys.stderr)
+        print("    --dicom /path/to/dicom --output /path/to/output", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        sys.exit(1)
 
 
 import vtk
@@ -574,7 +597,6 @@ class PipelineThread(threading.Thread):
             if not blender_exe:
                 self.log("Blender not found. Set path in GUI or add to PATH.\n")
                 return 127
-            colored = out_blend_dir / "scene-colored.blend"
             rc = run_cmd(
                 [
                     blender_exe,
@@ -1006,8 +1028,7 @@ class App(b.Window):
                 bootstyle="info-outline",
                 command=lambda m=mode: self._start(m)
             )
-            btn.grid(row=0, column=i, sticky='ew', padx=4, ipady=5)
-            steps_container.grid_columnconfigure(i, weight=1)
+            run_frame.pack(fill=X, expand=NO, pady=(0, 20))
 
         # PROGRESS
         progress_frame = b.Frame(main_frame)
@@ -1154,11 +1175,11 @@ class App(b.Window):
             Messagebox.show_warning("Already running", "A pipeline is already in progress.")
             return
             
-        dicom_dir = self.e_dicom.get().strip()
-        out_root = self.e_out.get().strip()
-        if not dicom_dir or not out_root:
-            Messagebox.show_error(
-                "Please select both DICOM folder and output folder.", "Missing Paths"
+            log_content = b.Labelframe(
+                self.log_frame,
+                text="  Process Log  ",
+                padding=20,
+                bootstyle="secondary"
             )
             return
         cfg = {
@@ -1229,9 +1250,31 @@ class App(b.Window):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="TotalSegmentator Pipeline GUI/CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--cli", action="store_true", help="Run in CLI mode (no GUI)")
+    parser.add_argument("--dicom", help="DICOM input folder")
+    parser.add_argument("--output", help="Output folder")
+    parser.add_argument("--case-name", default="Project-01", help="Project name")
+    parser.add_argument("--scale", type=float, default=0.01, help="Blender scale factor")
+    parser.add_argument("--blender", help="Path to Blender executable (optional)")
+    parser.add_argument("--dcm2niix", help="Path to dcm2niix executable (optional)")
+    
+    args = parser.parse_args()
+    
+    # Use CLI mode if requested or if GUI is unavailable
+    if args.cli or not GUI_AVAILABLE:
+        if not GUI_AVAILABLE and not args.cli:
+            print(f"Note: GUI unavailable ({TKINTER_ERROR}), using CLI mode\n", file=sys.stderr)
+        return run_cli_mode(args)
+    
+    # Launch GUI
     try:
         app = App()
         app.mainloop()
+        return 0
     except Exception as e:
         print(f"GUI failed to start: {e}", file=sys.stderr)
         raise

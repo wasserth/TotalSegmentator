@@ -1,140 +1,210 @@
 #!/usr/bin/env python3
 """
-totalseg_blender_slider
+totalseg_blender_slider.py
 
-Create a simple visibility slider or a timeline sequence to cycle through
-imported organ meshes in Blender.
+Installs the DICOM slider addon into a Blender file and configures it
+with the correct image paths and scaling parameters.
 
-Usage (timeline sequence, headless):
-  blender -b -P totalseg_blender_slider.py -- 
-    --collection Organs --make-timeline --start 1 --step 10 --save scene_slider.blend
-
-Usage (UI panel; run interactively without -b):
-  blender -P totalseg_blender_slider.py -- --collection Organs --panel
+Usage:
+    blender scene.blend -P totalseg_blender_slider.py -- \
+        --png-dir /path/to/slices --nifti-path /path/to/scan.nii.gz \
+        --scale 0.01 --save output.blend
 """
 
-from __future__ import annotations
-
-import argparse
+import bpy
 import sys
+import os
 from pathlib import Path
+import shutil
 
-try:
-    import bpy  # type: ignore
-except Exception:
-    bpy = None  # type: ignore
+def parse_args():
+    """Parse command line arguments after '--'"""
+    if "--" not in sys.argv:
+        return {}
+    
+    argv = sys.argv[sys.argv.index("--") + 1:]
+    args = {}
+    i = 0
+    while i < len(argv):
+        if argv[i].startswith("--"):
+            key = argv[i][2:]
+            if i + 1 < len(argv) and not argv[i + 1].startswith("--"):
+                args[key] = argv[i + 1]
+                i += 2
+            else:
+                args[key] = True
+                i += 1
+        else:
+            i += 1
+    return args
 
+def install_addon_to_blend():
+    """Copy the addon script into the Blender file's text blocks"""
+    addon_source = Path(__file__).parent.parent.parent / "dicom_slider_addon.py"
+    
+    if not addon_source.exists():
+        print(f"❌ ERROR: Addon source not found: {addon_source}")
+        return False
+    
+    print(f"📦 Installing addon from: {addon_source}")
+    
+    # Remove old version if exists
+    for txt in bpy.data.texts:
+        if txt.name == "dicom_slider_addon.py":
+            bpy.data.texts.remove(txt)
+    
+    # Load addon into text block
+    with open(addon_source, 'r') as f:
+        addon_code = f.read()
+    
+    txt = bpy.data.texts.new("dicom_slider_addon.py")
+    txt.from_string(addon_code)
+    txt.use_module = True  # Enable as Python module
+    
+    print("✅ Addon installed into .blend file")
+    return True
 
-def parse_args(argv=None):
-    p = argparse.ArgumentParser(description="Add visibility slider or timeline sequence for a collection")
-    p.add_argument("--collection", default="Organs", help="Collection name containing organ meshes")
-    p.add_argument("--make-timeline", action="store_true", help="Animate visibility across frames (headless friendly)")
-    p.add_argument("--start", type=int, default=1, help="Start frame for timeline sequence")
-    p.add_argument("--step", type=int, default=10, help="Frames per object visibility window")
-    p.add_argument("--panel", action="store_true", help="Add a simple UI panel with slider")
-    p.add_argument("--save", type=Path, default=None, help="Save scene to this .blend file")
-    return p.parse_args(argv)
+def setup_startup_script(png_dir, nifti_path, scale):
+    """Create a startup script that registers the addon on file open"""
+    # Ensure paths are absolute
+    png_dir = str(Path(png_dir).resolve())
+    nifti_path = str(Path(nifti_path).resolve()) if nifti_path else ""
+    
+    startup_code = f'''
+import bpy
+import os
 
+# Configuration from pipeline (ABSOLUTE PATHS)
+PNG_DIR = r"{png_dir}"
+NIFTI_PATH = r"{nifti_path}"
+SCALE = {scale}
 
-def get_collection(name: str):
-    return bpy.data.collections.get(name)
+print(f"📁 Configured paths:")
+print(f"   PNG_DIR: {{PNG_DIR}}")
+print(f"   NIFTI_PATH: {{NIFTI_PATH}}")
+print(f"   SCALE: {{SCALE}}")
 
+# Auto-register the DICOM slider addon when file is opened
+def register_dicom_slider():
+    try:
+        addon_text = bpy.data.texts.get("dicom_slider_addon.py")
+        if addon_text:
+            # Execute the addon code
+            exec(compile(addon_text.as_string(), "dicom_slider_addon.py", 'exec'))
+            
+            # Configure it with ABSOLUTE paths
+            if hasattr(bpy.context.scene, 'folder_path_dicom'):
+                bpy.context.scene.folder_path_dicom = PNG_DIR
+                print(f"✓ Set folder_path_dicom to: {{PNG_DIR}}")
+            
+            if hasattr(bpy.context.scene, 'base_size'):
+                bpy.context.scene.base_size = SCALE
+                print(f"✓ Set base_size to: {{SCALE}}")
+            
+            if hasattr(bpy.context.scene, 'use_auto_scale'):
+                bpy.context.scene.use_auto_scale = True
+                print(f"✓ Enabled auto-scale")
+            
+            print("✅ DICOM Slider addon loaded and configured")
+    except Exception as e:
+        print(f"❌ Error loading DICOM Slider addon: {{e}}")
+        import traceback
+        traceback.print_exc()
 
-def set_only_visible(obj, visible: bool):
-    obj.hide_viewport = not visible
-    obj.hide_render = not visible
+# Register handler
+@bpy.app.handlers.persistent
+def load_post_handler(dummy):
+    register_dicom_slider()
 
+if load_post_handler not in bpy.app.handlers.load_post:
+    bpy.app.handlers.load_post.append(load_post_handler)
 
-def make_timeline(collection_name: str, start: int, step: int):
-    coll = get_collection(collection_name)
-    if coll is None:
-        print(f"Collection '{collection_name}' not found")
-        return
-    objs = [o for o in coll.objects if o.type == 'MESH']
-    objs.sort(key=lambda o: o.name)
-    scene = bpy.context.scene
-    frame = start
-    for i, o in enumerate(objs):
-        for j, other in enumerate(objs):
-            vis = (i == j)
-            set_only_visible(other, vis)
-            other.keyframe_insert(data_path="hide_viewport", frame=frame)
-            other.keyframe_insert(data_path="hide_render", frame=frame)
-        frame += step
-    scene.frame_start = start
-    scene.frame_end = max(start + step * max(0, len(objs) - 1), start)
-    print(f"Timeline created for {len(objs)} objects, frames {scene.frame_start}-{scene.frame_end}")
+# Also register now
+register_dicom_slider()
+'''
+    
+    # Remove old startup script if exists
+    for txt in bpy.data.texts:
+        if txt.name == "startup_dicom.py":
+            bpy.data.texts.remove(txt)
+    
+    txt = bpy.data.texts.new("startup_dicom.py")
+    txt.from_string(startup_code)
+    txt.use_module = True
+    
+    print("✅ Startup script created")
+    return True
 
-
-def register_panel(collection_name: str):
-    # Define a simple property on the scene to select object index
-    class TS_OT_UpdateVisibility(bpy.types.Operator):
-        bl_idname = "ts.update_visibility"
-        bl_label = "Update Visibility"
-
-        def execute(self, context):
-            coll = get_collection(collection_name)
-            if coll is None:
-                return {'CANCELLED'}
-            objs = [o for o in coll.objects if o.type == 'MESH']
-            objs.sort(key=lambda o: o.name)
-            idx = int(context.scene.ts_vis_index)
-            for i, o in enumerate(objs):
-                set_only_visible(o, i == idx)
-            return {'FINISHED'}
-
-    class TS_PT_VisibilityPanel(bpy.types.Panel):
-        bl_label = "TotalSeg Visibility"
-        bl_idname = "TS_PT_visibility"
-        bl_space_type = 'VIEW_3D'
-        bl_region_type = 'UI'
-        bl_category = 'Totalseg'
-
-        def draw(self, context):
-            layout = self.layout
-            layout.prop(context.scene, "ts_vis_index", slider=True)
-            layout.operator("ts.update_visibility", text="Apply")
-
-    # Register types
-    if not hasattr(bpy.types.Scene, "ts_vis_index"):
-        bpy.types.Scene.ts_vis_index = bpy.props.IntProperty(name="Index", default=0, min=0, soft_max=100)
-
-    bpy.utils.register_class(TS_OT_UpdateVisibility)
-    bpy.utils.register_class(TS_PT_VisibilityPanel)
-    print("Panel registered under View3D > Totalseg")
-
-
-def run_inside_blender(args):
-    if args.make_timeline:
-        make_timeline(args.collection, args.start, args.step)
-    if args.panel:
-        register_panel(args.collection)
-    if args.save:
-        bpy.ops.wm.save_mainfile(filepath=str(args.save))
-        print(f"Saved scene to {args.save}")
-
-
-def run_outside_blender(args):
-    script = Path(__file__).resolve()
-    print("Blender is required to run this command.")
-    print("Example (timeline):")
-    print(f"  blender -b -P {script} -- --collection {args.collection} --make-timeline --start {args.start} --step {args.step} --save scene_slider.blend")
-    print("Example (interactive UI panel):")
-    print(f"  blender -P {script} -- --collection {args.collection} --panel")
-
+def setup_addon_parameters(png_dir, nifti_path, scale):
+    """Configure the addon with correct paths and scale"""
+    try:
+        # Execute the startup script which will register and configure the addon
+        startup_text = bpy.data.texts.get("startup_dicom.py")
+        if startup_text:
+            exec(compile(startup_text.as_string(), "startup_dicom.py", 'exec'))
+            print("✅ Addon configured successfully")
+            return True
+        else:
+            print("❌ ERROR: Startup script not found")
+            return False
+        
+    except Exception as e:
+        print(f"❌ ERROR configuring addon: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 def main():
-    argv = sys.argv
-    if "--" in argv:
-        idx = argv.index("--")
-        ns = parse_args(argv[idx + 1 :])
+    args = parse_args()
+    
+    print("=" * 70)
+    print("🎬 DICOM Slice Viewer Setup")
+    print("=" * 70)
+    
+    png_dir = args.get('png-dir', '')
+    nifti_path = args.get('nifti-path', '')
+    scale = float(args.get('scale', 0.01))
+    save_path = args.get('save', '')
+    
+    if not png_dir:
+        print("❌ ERROR: --png-dir is required")
+        sys.exit(1)
+    
+    png_dir = Path(png_dir).resolve()
+    if not png_dir.exists():
+        print(f"❌ ERROR: PNG directory not found: {png_dir}")
+        sys.exit(1)
+    
+    # Install addon
+    if not install_addon_to_blend():
+        sys.exit(1)
+    
+    # Setup startup script
+    if not setup_startup_script(str(png_dir), str(nifti_path), scale):
+        sys.exit(1)
+    
+    # Configure addon (this will also execute it)
+    if not setup_addon_parameters(png_dir, nifti_path, scale):
+        print("⚠️ Warning: Addon configuration had issues, but continuing...")
+    
+    # Save file
+    if save_path:
+        save_path = Path(save_path).resolve()
+        bpy.ops.wm.save_as_mainfile(filepath=str(save_path))
+        print(f"💾 Saved to: {save_path}")
     else:
-        ns = parse_args()
-    if bpy is None:
-        run_outside_blender(ns)
-    else:
-        run_inside_blender(ns)
-
+        bpy.ops.wm.save_mainfile()
+        print(f"💾 Saved current file")
+    
+    print("=" * 70)
+    print("✅ DICOM Slice Viewer installed successfully!")
+    print("=" * 70)
+    print("\nUsage:")
+    print("  1. Open the .blend file in Blender")
+    print("  2. Look for 'DICOM' tab in the right sidebar (press N)")
+    print("  3. Use the axis buttons and slider to navigate slices")
+    print("  4. Slices will auto-scale to match organ dimensions")
+    print("=" * 70)
 
 if __name__ == "__main__":
     main()
