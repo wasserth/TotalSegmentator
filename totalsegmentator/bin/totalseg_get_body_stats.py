@@ -203,6 +203,8 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     if model_file is None and not check_body_stats_models_exist():
         download_pretrained_weights("body_stats")
 
+    img = nib.as_closest_canonical(img)  # important to cut tissue slices along correct axis
+
     st = time.time()
     if existing_stats is None:
         if not quiet:
