@@ -106,9 +106,9 @@ def main():
                         help="Use higher order resampling for segmentations. Results in smoother segmentations on high resolution images but uses more runtime + memory.",
                         default=False)
 
-    parser.add_argument("-s", "--statistics", action="store_true",
-                        help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json",
-                        default=False)
+    parser.add_argument("-s", "--statistics", nargs='?', const=True, default=False,
+                        metavar="filepath",
+                        help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json in the output directory. Optionally specify a custom output path for statistics.json.")
 
     parser.add_argument("-r", "--radiomics", action="store_true",
                         help="Calc radiomics features. Requires pyradiomics. Results will be in statistics_radiomics.json",

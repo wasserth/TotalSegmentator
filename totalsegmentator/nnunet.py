@@ -657,7 +657,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if statistics:
             if not quiet: print("Calculating statistics fast...")
             st = time.time()
-            if file_out is not None:
+            # Check if statistics is a custom path (string or Path) rather than just True
+            if isinstance(statistics, (str, Path)):
+                stats_file = Path(statistics).absolute()
+            elif file_out is not None:
                 # For DICOM output types, file_out is always a file path, so use parent directory
                 if output_type in ["dicom_seg", "dicom_rtstruct"]:
                     stats_dir = file_out.parent

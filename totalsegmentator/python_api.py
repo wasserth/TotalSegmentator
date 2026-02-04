@@ -95,7 +95,7 @@ def show_license_info():
 
 def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path, None]=None, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
-                     statistics=False, radiomics=False, crop_path=None, body_seg=False,
+                     statistics: Union[bool, str, Path]=False, radiomics=False, crop_path=None, body_seg=False,
                      force_split=False, output_type="nifti", quiet=False, verbose=False, test=0,
                      skip_saving=False, device="gpu", license_number=None,
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
@@ -635,7 +635,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     # fast statistics are calculated on the downsampled image
     if statistics and fast:
-        statistics_fast = True
+        statistics_fast = statistics  # preserve path if provided
         statistics = False
     else:
         statistics_fast = False
@@ -778,7 +778,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     if statistics:
         if not quiet: print("Calculating statistics...")
         st = time.time()
-        if output is not None:
+        # Check if statistics is a custom path (string or Path) rather than just True
+        if isinstance(statistics, (str, Path)):
+            stats_file = Path(statistics).absolute()
+        elif output is not None:
             # For DICOM output types, output is always a file path, so use parent directory
             if output_type in ["dicom_seg", "dicom_rtstruct"]:
                 stats_dir = output.parent

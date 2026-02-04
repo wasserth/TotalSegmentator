@@ -154,10 +154,10 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
                 }
             else:
                 volume = (seg_mask.sum() * slice_vol).round(3)
-                intensity_mean = ct_slice[seg_mask].mean().round(5)
+                intensity_median = np.median(ct_slice[seg_mask]).round(5)
                 stats_tissue_slices[f"{seg_name}_{vert_name}"] = {
                     "volume": volume,
-                    "intensity": intensity_mean
+                    "intensity": intensity_median
                 }
     
     return stats_tissue_slices
@@ -211,7 +211,10 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
             print("Running TotalSegmentator...")
         seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, 
                                           roi_subset=None, statistics_exclude_masks_at_border=True,
-                                          quiet=True, stats_aggregation="median", device=device)
+                                          quiet=True, stats_aggregation="median", device=device,
+                                          nr_thr_resamp=1, nr_thr_saving=1)
+        # debug
+        # nib.save(seg_img, "/home/jakob/Downloads/nnunet_test/body_size/seg_img.nii.gz")
     else:
         if not quiet:
             print("Using existing statistics...")
@@ -245,7 +248,8 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     seg_img_tissue, stats_tissue = totalsegmentator(img, None, ml=True, fast=False, statistics=True, 
                                             task="tissue_types",
                                             roi_subset=None, statistics_exclude_masks_at_border=True,
-                                            quiet=True, stats_aggregation="median")
+                                            quiet=True, stats_aggregation="median",
+                                            nr_thr_resamp=1, nr_thr_saving=1)
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
     
@@ -265,10 +269,13 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     # features_names += [roi + "_volume" for roi in tissue_types_slices]
     # features_names += [roi + "_intensity" for roi in organs + vertebrae]
     # features_names += [roi + "_intensity" for roi in tissue_types_slices]
-    # pprint(features_names)
+    # print("DEBUG: Feature names and values:")
+    # for name, value in zip(features_names, features):
+    #     print(f"  {name}: {value}")
 
     result = {}
-    for target in ["weight", "size", "age", "sex"]:
+    # for target in ["weight", "size", "age", "sex"]:
+    for target in ["weight"]:
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
@@ -323,20 +330,20 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
                               "unit": "kg" if target == "weight" else "cm" if target == "size" else None
                               }
     
-    # Calculate BMI and Body Surface Area based on predicted values
-    weight_kg = result["weight"]["value"]
-    height_cm = result["size"]["value"]
-    height_m = height_cm / 100.0
+    # # Calculate BMI and Body Surface Area based on predicted values
+    # weight_kg = result["weight"]["value"]
+    # height_cm = result["size"]["value"]
+    # height_m = height_cm / 100.0
     
-    # BMI = weight(kg) / height(m)^2
-    bmi = weight_kg / (height_m ** 2)
-    result["bmi"] = {"value": round(bmi, 2), 
-                     "unit": "kg/m^2"}
+    # # BMI = weight(kg) / height(m)^2
+    # bmi = weight_kg / (height_m ** 2)
+    # result["bmi"] = {"value": round(bmi, 2), 
+    #                  "unit": "kg/m^2"}
     
-    # Body Surface Area (Mosteller formula): BSA = sqrt(height(cm) x weight(kg) / 3600)
-    bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
-    result["bsa"] = {"value": round(bsa, 2), 
-                     "unit": "m^2"}
+    # # Body Surface Area (Mosteller formula): BSA = sqrt(height(cm) x weight(kg) / 3600)
+    # bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
+    # result["bsa"] = {"value": round(bsa, 2), 
+    #                  "unit": "m^2"}
     
     return result
 
