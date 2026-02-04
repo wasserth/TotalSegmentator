@@ -1,92 +1,145 @@
 import { NextRequest } from 'next/server';
-import { PythonExecutor } from '@/lib/python-executor';
+import { spawn } from 'child_process';
+import fs from 'fs';
 import path from 'path';
 
-const TOTALSEGMENTATOR_PATH = process.env.TOTALSEGMENTATOR_PATH || 
-  path.join(process.cwd(), '..');
+function resolvePythonExecutable(cwd: string): string {
+  const envPython = process.env.PYTHON_PATH;
+  const candidates = [
+    envPython,
+    path.resolve(cwd, '.venv', 'bin', 'python'),
+    path.resolve(cwd, '..', '.venv', 'bin', 'python'),
+    path.resolve(cwd, '.venv', 'Scripts', 'python.exe'),
+    path.resolve(cwd, '..', '.venv', 'Scripts', 'python.exe'),
+    'python3',
+    'python',
+  ].filter(Boolean) as string[];
+
+  for (const candidate of candidates) {
+    if (!candidate.includes('/') && !candidate.includes('\\')) return candidate;
+    if (fs.existsSync(candidate)) return candidate;
+  }
+  return '';
+}
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const {
     dicomDir,
     outputDir,
-    projectName,
-    task = 'total',
-    fast = false,
-    ml = true,
-    statistics = false,
-    device = 'cpu'
+    projectName = 'Project-01',
+    scale = '0.01',
+    task = 'total_all',
+    mode = 'all',
   } = body;
 
   const encoder = new TextEncoder();
-  
-  const stream = new ReadableStream({
-    async start(controller) {
-      const executor = new PythonExecutor({
-        totalsegmentatorPath: TOTALSEGMENTATOR_PATH,
-        pythonPath: process.env.PYTHON_PATH || 'python3'
-      });
+  const cwd = process.cwd();
+  const projectRoot = path.resolve(cwd, '..');
+  const pythonPath = resolvePythonExecutable(cwd);
+  const scriptPath = path.resolve(projectRoot, 'run_pipeline.py');
 
+  const stream = new ReadableStream({
+    start(controller) {
       const sendMessage = (type: string, message: string, progress?: number) => {
-        const data = `data: ${JSON.stringify({ 
-          type, 
-          message, 
+        const data = `data: ${JSON.stringify({
+          type,
+          message,
           progress,
-          timestamp: new Date().toISOString() 
+          timestamp: new Date().toISOString(),
         })}\n\n`;
         controller.enqueue(encoder.encode(data));
       };
 
-      try {
-        sendMessage('info', `Starting TotalSegmentator pipeline...`, 0);
-        sendMessage('info', `Input: ${dicomDir}`, 0);
-        sendMessage('info', `Output: ${outputDir}`, 0);
+      if (!pythonPath) {
+        sendMessage('error', 'Python executable not found. Check PYTHON_PATH/.venv.');
+        controller.close();
+        return;
+      }
+      if (!fs.existsSync(scriptPath)) {
+        sendMessage('error', `run_pipeline.py not found: ${scriptPath}`);
+        controller.close();
+        return;
+      }
 
-        let currentProgress = 0;
+      const args = [
+        scriptPath,
+        '--dicom-dir', dicomDir,
+        '--output-dir', outputDir,
+        '--project-name', projectName,
+        '--scale', String(scale),
+        '--task', task,
+      ];
+      if (mode && mode !== 'all') args.push('--mode', mode);
 
-        const exitCode = await executor.runTotalSegmentatorStream(
-          {
-            input: dicomDir,
-            output: outputDir,
-            ml,
-            fast,
-            task,
-            statistics,
-            device,
-            verbose: true
-          },
-          (message) => {
-            // Parse progress from TotalSegmentator output
-            const progressMatch = message. match(/(\d+)%/);
-            if (progressMatch) {
-              currentProgress = parseInt(progressMatch[1]);
-            }
-            sendMessage('progress', message. trim(), currentProgress);
-          },
-          (error) => {
-            sendMessage('error', error. trim());
+      sendMessage('info', 'Pipeline started', 0);
+
+      const proc = spawn(pythonPath, args, {
+        cwd: projectRoot,
+        env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' },
+      });
+
+      const handleLine = (line: string) => {
+        const t = line.trim();
+        if (!t) return;
+
+        if (t.includes('__PROGRESS__:')) {
+          const m = t.match(/__PROGRESS__:(\d+):(.+)/);
+          if (m) {
+            sendMessage('progress', m[2].trim(), parseInt(m[1], 10));
+            return;
           }
-        );
-
-        if (exitCode === 0) {
-          sendMessage('complete', 'Pipeline completed successfully!', 100);
-        } else {
-          sendMessage('error', `Pipeline exited with code ${exitCode}`);
         }
 
-      } catch (error: any) {
-        sendMessage('error', error.message);
-      } finally {
+        if (t.includes('[ERROR]') || t.startsWith('❌') || t.startsWith('Traceback')) {
+          sendMessage('error', t);
+          return;
+        }
+
+        if (t.includes('Step ') || t.includes('Pipeline complete') || t.includes('✅')) {
+          sendMessage('info', t);
+        }
+      };
+
+      let stdoutBuffer = '';
+      proc.stdout.on('data', (data) => {
+        stdoutBuffer += data.toString('utf-8');
+        const parts = stdoutBuffer.split('\n');
+        stdoutBuffer = parts.pop() || '';
+        for (const line of parts) handleLine(line);
+      });
+
+      let stderrBuffer = '';
+      proc.stderr.on('data', (data) => {
+        stderrBuffer += data.toString('utf-8');
+        const parts = stderrBuffer.split('\n');
+        stderrBuffer = parts.pop() || '';
+        for (const line of parts) handleLine(line);
+      });
+
+      proc.on('close', (code) => {
+        if (stdoutBuffer.trim()) handleLine(stdoutBuffer);
+        if (stderrBuffer.trim()) handleLine(stderrBuffer);
+        if (code === 0) {
+          sendMessage('complete', 'Pipeline completed successfully', 100);
+        } else {
+          sendMessage('error', `Pipeline exited with code ${code}`);
+        }
         controller.close();
-      }
-    }
+      });
+
+      proc.on('error', (err) => {
+        sendMessage('error', err.message || 'Failed to spawn pipeline process');
+        controller.close();
+      });
+    },
   });
 
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
     },
   });
 }

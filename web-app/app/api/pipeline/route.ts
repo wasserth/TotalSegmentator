@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 
 export async function POST(request: NextRequest) {
+  let logs: string[] = [];
   try {
     const body = await request.json();
     const { 
@@ -11,25 +12,42 @@ export async function POST(request: NextRequest) {
       outputDir,
       projectName = 'Project-01', 
       scale = '0.01',
+      task = 'total_all',
       mode = 'all' // 'all', 'step1', 'step2', etc.
     } = body;
 
-    // Get paths from environment variables
-    const pythonPath = process.env.PYTHON_PATH || 'python';
-    const totalSegPath = process.env.TOTALSEGMENTATOR_PATH || '..';
+    // Resolve Python executable robustly (absolute path, relative path, or PATH executable).
+    const cwd = process.cwd();
+    const envPython = process.env.PYTHON_PATH;
+    const candidates = [
+      envPython,
+      path.resolve(cwd, '.venv', 'bin', 'python'),
+      path.resolve(cwd, '..', '.venv', 'bin', 'python'),
+      path.resolve(cwd, '.venv', 'Scripts', 'python.exe'),
+      path.resolve(cwd, '..', '.venv', 'Scripts', 'python.exe'),
+      'python3',
+      'python',
+    ].filter(Boolean) as string[];
 
-    // Resolve the actual Python path (support both relative and absolute)
-    const resolvedPythonPath = path.isAbsolute(pythonPath) 
-      ? pythonPath 
-      : path.resolve(process.cwd(), pythonPath);
+    let resolvedPythonPath = '';
+    for (const candidate of candidates) {
+      // Keep plain executable names for PATH lookup by spawn.
+      if (!candidate.includes('/') && !candidate.includes('\\')) {
+        resolvedPythonPath = candidate;
+        break;
+      }
+      if (fs.existsSync(candidate)) {
+        resolvedPythonPath = candidate;
+        break;
+      }
+    }
 
-    // Validate Python path exists
-    if (!fs.existsSync(resolvedPythonPath)) {
+    if (!resolvedPythonPath) {
       return NextResponse.json(
-        { 
-          error: 'Python virtual environment not found',
-          details: `Python path not found at: ${resolvedPythonPath}`,
-          hint: 'Please check your .env.local file and ensure PYTHON_PATH is correct. After updating, restart the dev server.'
+        {
+          error: 'Python executable not found',
+          details: `Tried: ${candidates.join(', ')}`,
+          hint: 'Set PYTHON_PATH in web-app/.env.local (or project .env.local loaded into web-app) and restart dev server.',
         },
         { status: 500 }
       );
@@ -57,7 +75,8 @@ export async function POST(request: NextRequest) {
       '--dicom-dir', dicomDir,
       '--output-dir', outputDir,
       '--project-name', projectName,
-      '--scale', scale
+      '--scale', scale,
+      '--task', task,
     ];
 
     if (mode && mode !== 'all') {
@@ -67,10 +86,10 @@ export async function POST(request: NextRequest) {
     console.log('Running pipeline:', resolvedPythonPath, args.join(' '));
 
     // Run the Python pipeline with streaming
-    const logs: string[] = [];
+    logs = [];
     let lastProgress = 0;
     
-    const result = await new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const env = { ...process.env };
       if (process.platform === 'win32') {
         env.PYTHONIOENCODING = 'utf-8';
@@ -116,7 +135,10 @@ export async function POST(request: NextRequest) {
         if (code === 0) {
           resolve({ success: true, logs });
         } else {
-          reject(new Error(`Pipeline exited with code ${code}`));
+          const err = new Error(`Pipeline exited with code ${code}`);
+          // @ts-expect-error attach collected logs for API response
+          err.logs = logs;
+          reject(err);
         }
       });
 
@@ -125,18 +147,37 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    return NextResponse.json({ 
+    const keyLogs = logs.filter((line) => {
+      const t = line.trim();
+      return (
+        t.includes('__PROGRESS__:') ||
+        t.includes('Step ') ||
+        t.includes('[ERROR]') ||
+        t.includes('❌') ||
+        t.includes('Pipeline complete')
+      );
+    });
+
+    return NextResponse.json({
       success: true, 
       logs,
+      keyLogs,
       message: 'Pipeline completed successfully'
     });
 
   } catch (error: any) {
     console.error('Pipeline error:', error);
+    const errorLogs = (error?.logs as string[] | undefined) || logs;
+    const keyLogs = (errorLogs || []).filter((line) => {
+      const t = line.trim();
+      return t.includes('__PROGRESS__:') || t.includes('[ERROR]') || t.includes('❌') || t.includes('Error');
+    }).slice(-30);
     return NextResponse.json(
       { 
         error: error.message || 'Pipeline failed',
-        detail: error.stack
+        detail: error.stack,
+        logs: errorLogs,
+        keyLogs,
       },
       { status: 500 }
     );

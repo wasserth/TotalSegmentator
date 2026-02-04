@@ -29,6 +29,8 @@ import shutil
 import webbrowser
 import json
 import platform
+import argparse
+import hashlib
 
 # -----------------------------
 # Vessel label definitions
@@ -45,6 +47,25 @@ VESSEL_KEYWORDS = (
 
 
 # -----------------------------
+
+def _load_local_env(env_file: Path) -> dict[str, str]:
+    """Read simple KEY=VALUE pairs from a local .env file."""
+    values: dict[str, str] = {}
+    if not env_file.exists():
+        return values
+    try:
+        for raw in env_file.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = v.strip().strip("'").strip('"')
+            if k:
+                values[k] = v
+    except Exception:
+        pass
+    return values
 
 from tkinter import filedialog
 if hasattr(sys, "stdout") and not sys.stdout.isatty():
@@ -548,6 +569,7 @@ class PipelineThread(threading.Thread):
        
         # STEP 5: Blender import (all meshes together)
         scene_setup = out_blend_dir / "scene-setup.blend"
+        colored = out_blend_dir / "scene-colored.blend"
         if self.mode in ("all", "step5"):
             self.log("\n" + "="*60 + "\n")
             self.log("🎨 Step 5: Importing meshes to Blender\n")
@@ -611,83 +633,82 @@ class PipelineThread(threading.Thread):
             )
             if rc != 0:
                 return rc
-            
-            # Configure CT data folder path
-            self.log("\n" + "="*60 + "\n")
-            self.log("🔧 Configuring CT data folder path in Blender scene...\n")
-            self.log("="*60 + "\n")
-            
-            import tempfile
-            
-            temp_script_fd, temp_script_path = tempfile.mkstemp(suffix='.py', text=True)
-            
-            try:
-                dicom_path = out_png.resolve()
-                
-                self.log(f"📂 Data folder path: {dicom_path}\n")
-                
-                script_content = f'''
-import bpy
-import sys
 
-print("="*60)
-print("🔧 Configuring Blender Scene")
-print("="*60)
+            # Install/configure DICOM slider addon into the resulting .blend.
+            self.log("\n" + "=" * 60 + "\n")
+            self.log("🧩 Step 6b: Installing CT Slider addon into Blender scene\n")
+            self.log("=" * 60 + "\n")
+            slider_script = Path(__file__).with_name("totalseg_blender_slider.py")
+            if slider_script.exists():
+                project_root = Path(__file__).resolve().parents[2]
+                local_env = _load_local_env(project_root / ".env.local")
 
-data_folder = r"{str(dicom_path)}"
-print(f"Setting ct_data_folder to: {{data_folder}}")
+                slider_addon_path = os.environ.get("TOTALSEG_DICOM_SLIDER_ADDON", "").strip() or local_env.get("TOTALSEG_DICOM_SLIDER_ADDON", "").strip()
+                vessel_addon_path = os.environ.get("TOTALSEG_VESSEL_TOOL_ADDON", "").strip() or local_env.get("TOTALSEG_VESSEL_TOOL_ADDON", "").strip()
 
-bpy.context.scene.ct_data_folder = data_folder
-bpy.context.scene.png_folder = data_folder
+                # Embedded defaults for terminal-less/deployed usage.
+                if not slider_addon_path:
+                    embedded_slider = project_root / "doctor_plugins" / "ct_slicer_doctor.py"
+                    if embedded_slider.exists():
+                        slider_addon_path = str(embedded_slider)
+                if not vessel_addon_path:
+                    embedded_vessel = project_root / "doctor_plugins" / "vessel_tool_doctor.py"
+                    if embedded_vessel.exists():
+                        vessel_addon_path = str(embedded_vessel)
 
-import os
-if os.path.exists(data_folder):
-    print("✅ Data folder exists")
-    meta_file = os.path.join(data_folder, "affine_metadata.json")
-    if os.path.exists(meta_file):
-        print("✅ affine_metadata.json found")
-    else:
-        print("⚠️  affine_metadata.json not found")
-else:
-    print("❌ Data folder does not exist!")
-
-bpy.ops.wm.save_mainfile()
-print("✅ Saved .blend file with configured paths")
-print("="*60)
-'''
-                
-                with os.fdopen(temp_script_fd, 'w', encoding='utf-8') as f:
-                    f.write(script_content)
-                
+                if slider_addon_path and not Path(slider_addon_path).exists():
+                    self.log(
+                        f"⚠️  TOTALSEG_DICOM_SLIDER_ADDON path not found, fallback to default addon: {slider_addon_path}\n"
+                    )
+                    slider_addon_path = ""
+                if vessel_addon_path and not Path(vessel_addon_path).exists():
+                    self.log(
+                        f"⚠️  TOTALSEG_VESSEL_TOOL_ADDON path not found, skipping extra addon: {vessel_addon_path}\n"
+                    )
+                    vessel_addon_path = ""
                 rc = run_cmd(
                     [
                         blender_exe,
-                        str(colored),
                         "-b",
+                        str(colored),
                         "-P",
-                        temp_script_path
+                        str(slider_script),
+                        "--",
+                        "--png-dir",
+                        str(out_png),
+                        "--nifti-path",
+                        str(nii_path),
+                        "--scale",
+                        str(scale),
+                        "--save",
+                        str(colored),
+                        *(["--addon-path", slider_addon_path] if slider_addon_path else []),
+                        *(["--extra-addon-path", vessel_addon_path] if vessel_addon_path else []),
                     ],
-                    self.log
+                    self.log,
                 )
-                
-                if rc == 0:
-                    self.log("✅ Successfully configured CT data folder path\n")
-                else:
-                    self.log("⚠️  Warning: Failed to configure data folder path\n")
-                    self.log("   You may need to set it manually in Blender\n")
-            
-            finally:
-                try:
-                    os.unlink(temp_script_path)
-                except Exception:
-                    pass
+                if rc != 0:
+                    return rc
+                self.log("✅ CT Slider addon installed and configured\n")
+            else:
+                self.log(f"⚠️  Slider installer not found: {slider_script}\n")
             
             _progress(100)
             self.log(f"\n" + "="*60 + "\n")
             self.log(f"✅ Pipeline complete!\n")
             self.log(f"📁 Output scene: {colored}\n")
-            self.log(f"📂 CT slices (with precise affine): {dicom_path}\n")
+            self.log(f"📂 CT slices (with precise affine): {out_png.resolve()}\n")
             self.log("="*60 + "\n")
+
+            # Auto-open Blender with the final scene in interactive mode.
+            if self.mode == "all":
+                self.log("🚀 Opening Blender...\n")
+                try:
+                    subprocess.Popen([blender_exe, str(colored)])
+                    self.log("✅ Blender launch command executed\n")
+                except Exception as e:
+                    self.log(f"⚠️ Failed to auto-open Blender: {e}\n")
+                    self.log(f"👉 Please open manually: {colored}\n")
 
         # -------------------------------------------------
         # POST: Launch Web Viewer via HTTP server (portable, robust)
@@ -746,16 +767,33 @@ print("="*60)
             # -------------------------------------------------
             # 4. Compute STL directory relative to project root
             # -------------------------------------------------
+            stl_dir_resolved = stl_dir.resolve()
+            rel_stl_dir = None
             try:
-                rel_stl_dir = stl_dir.resolve().relative_to(project_root)
+                rel_stl_dir = stl_dir_resolved.relative_to(project_root)
             except ValueError:
-                self.log("❌ STL directory is not inside project root\n")
-                self.log(f"   STL dir: {stl_dir.resolve()}\n")
-                self.log(f"   Project root: {project_root}\n")
-                return 1
+                # If output is outside repository, mirror it under data/external for viewer URL compatibility.
+                external_root = project_root / "data" / "external"
+                external_root.mkdir(parents=True, exist_ok=True)
+                alias_key = hashlib.sha1(str(stl_dir_resolved).encode("utf-8")).hexdigest()[:12]
+                alias_dir = external_root / f"run_{alias_key}"
 
-            # Safety check (prevent future regressions)
-            assert rel_stl_dir.as_posix().startswith("data/")
+                if not alias_dir.exists():
+                    try:
+                        alias_dir.symlink_to(stl_dir_resolved, target_is_directory=True)
+                        self.log(f"🔗 Created symlink for external STL dir: {alias_dir} -> {stl_dir_resolved}\n")
+                    except Exception as e:
+                        self.log(f"⚠️ Symlink failed ({e}), copying STL directory for viewer...\n")
+                        shutil.copytree(stl_dir_resolved, alias_dir, dirs_exist_ok=True)
+                else:
+                    self.log(f"ℹ️ Reusing viewer alias: {alias_dir}\n")
+
+                rel_stl_dir = alias_dir.relative_to(project_root)
+
+            if not rel_stl_dir.as_posix().startswith("data/"):
+                self.log("❌ Viewer path is invalid (must be under /data)\n")
+                self.log(f"   Computed path: {rel_stl_dir}\n")
+                return 1
 
             # -------------------------------------------------
             # 5. Construct viewer URL (absolute URL path!)
@@ -856,7 +894,7 @@ class App(b.Window):
         b.Separator(main_frame, bootstyle="secondary").pack(fill=X, pady=(0, 25))
 
         # INPUT/OUTPUT
-        io_frame = b.LabelFrame(
+        io_frame = b.Labelframe(
             main_frame,
             text="  Input & Output  ",
             padding=25,
@@ -892,7 +930,7 @@ class App(b.Window):
         ).grid(row=1, column=2)
 
         # CONFIGURATION
-        config_frame = b.LabelFrame(
+        config_frame = b.Labelframe(
             main_frame,
             text="  Configuration  ",
             padding=25,
@@ -949,7 +987,7 @@ class App(b.Window):
 
         self.tools_frame = b.Frame(main_frame)
         
-        tools_content = b.LabelFrame(
+        tools_content = b.Labelframe(
             self.tools_frame,
             text="  Tool Paths  ",
             padding=25,
@@ -985,7 +1023,7 @@ class App(b.Window):
         ).grid(row=1, column=2)
 
         # RUN PIPELINE
-        run_frame = b.LabelFrame(
+        run_frame = b.Labelframe(
             main_frame,
             text="  Run Pipeline  ",
             padding=25,
@@ -1065,7 +1103,7 @@ class App(b.Window):
 
         self.log_frame = b.Frame(main_frame)
         
-        log_content = b.LabelFrame(
+        log_content = b.Labelframe(
             self.log_frame,
             text="  Process Log  ",
             padding=20,
@@ -1174,14 +1212,20 @@ class App(b.Window):
         if self._is_processing:
             Messagebox.show_warning("Already running", "A pipeline is already in progress.")
             return
-            
-            log_content = b.Labelframe(
-                self.log_frame,
-                text="  Process Log  ",
-                padding=20,
-                bootstyle="secondary"
-            )
+
+        dicom_dir = self.e_dicom.get().strip()
+        out_root = self.e_out.get().strip()
+
+        if not dicom_dir:
+            Messagebox.show_warning("Missing input", "Please select a DICOM folder.")
             return
+        if not out_root:
+            Messagebox.show_warning("Missing output", "Please select an output folder.")
+            return
+        if not Path(dicom_dir).exists():
+            Messagebox.show_warning("Invalid input", f"DICOM folder does not exist:\n{dicom_dir}")
+            return
+
         cfg = {
             "dicom_dir": dicom_dir,
             "out_root": out_root,
@@ -1249,6 +1293,39 @@ class App(b.Window):
         self.after(100, self._drain)
 
 
+def run_cli_mode(args) -> int:
+    """Run pipeline without GUI and stream logs to stdout."""
+    if not args.dicom or not args.output:
+        print("CLI mode requires --dicom and --output", file=sys.stderr)
+        return 2
+
+    mode = getattr(args, "mode", "all") or "all"
+    cfg = {
+        "dicom_dir": args.dicom,
+        "out_root": args.output,
+        "case_name": args.case_name or "Project-01",
+        "scale": str(args.scale if args.scale is not None else 0.01),
+        "blender_path": args.blender or "",
+        "dcm2niix_path": args.dcm2niix or "",
+        "tasks": args.task or "total_all",
+        "vmtk_config": None,
+    }
+
+    q: queue.Queue[str] = queue.Queue()
+    worker = PipelineThread(q, cfg, mode=mode)
+    worker.start()
+
+    while True:
+        msg = q.get()
+        if msg == "__DONE__":
+            break
+        # In CLI mode print all logs for visibility/debugging.
+        if isinstance(msg, str):
+            print(msg, end="" if msg.endswith("\n") else "\n", flush=True)
+    worker.join()
+    return int(worker.rc)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="TotalSegmentator Pipeline GUI/CLI",
@@ -1261,6 +1338,8 @@ def main():
     parser.add_argument("--scale", type=float, default=0.01, help="Blender scale factor")
     parser.add_argument("--blender", help="Path to Blender executable (optional)")
     parser.add_argument("--dcm2niix", help="Path to dcm2niix executable (optional)")
+    parser.add_argument("--mode", default="all", help="Pipeline mode: all, step1-step6")
+    parser.add_argument("--task", default="total_all", choices=["total_all", "liver_segments", "liver_vessels", "total_vessels"], help="Segmentation task")
     
     args = parser.parse_args()
     
@@ -1281,4 +1360,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

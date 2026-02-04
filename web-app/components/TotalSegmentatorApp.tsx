@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Folder, Play, ChevronRight, ChevronDown, CheckCircle, XCircle, Loader2, Settings, AlertCircle } from 'lucide-react';
+import { Folder, Play, ChevronRight, ChevronDown, CheckCircle, XCircle, Loader2, Settings, AlertCircle } from 'lucide-react';
 import { useLocale } from '@/app/contexts/LocaleContext';
 import AlertModal from './AlertModal';
 import FolderBrowserModal from './FolderBrowserModal';
@@ -18,6 +18,7 @@ const TotalSegmentatorApp = () => {
   const [dicomFolder, setDicomFolder] = useState('');
   const [outputFolder, setOutputFolder] = useState('');
   const [projectName, setProjectName] = useState('Project-01');
+  const [task, setTask] = useState('total_all');
   const [blenderScale, setBlenderScale] = useState(20.0);
   const [blenderPath, setBlenderPath] = useState('');
   const [dcm2niixPath, setDcm2niixPath] = useState('');
@@ -126,19 +127,20 @@ const TotalSegmentatorApp = () => {
     setProgress(0);
     setStatus('processing');
     setLogs([]);
+    setCurrentStep('Initializing pipeline...');
     
     if (! showLogs) setShowLogs(true);
 
     try {
-      addLog(`Starting pipeline (mode: ${mode})...`);
-      
-      const response = await fetch('/api/pipeline', {
+      addLog(`Starting pipeline (mode: ${mode}, task: ${task})...`);
+      const response = await fetch('/api/pipeline/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           dicomDir: dicomFolder,
           outputDir: outputFolder,
           projectName,
+          task,
           scale: blenderScale,
           blenderPath,
           dcm2niixPath,
@@ -146,27 +148,73 @@ const TotalSegmentatorApp = () => {
         })
       });
 
-      if (!response.ok) throw new Error('Pipeline failed');
-
-      const steps = [
-        { progress: 15, step: 'Converting DICOM...  (1/6)' },
-        { progress: 30, step: 'Exporting slices... (2/6)' },
-        { progress: 60, step: 'Segmenting organs... (3/6)' },
-        { progress: 75, step: 'Importing to Blender... (4/6)' },
-        { progress: 90, step: 'Applying materials... (5/6)' },
-        { progress: 100, step: 'Adding slice viewer... (6/6)' }
-      ];
-
-      for (const { progress: p, step } of steps) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setProgress(p);
-        setCurrentStep(step);
-        addLog(step);
+      if (!response.ok) {
+        let detail = 'Pipeline failed';
+        try {
+          const errJson = await response.json();
+          detail = errJson?.details || errJson?.detail || errJson?.error || detail;
+        } catch {}
+        throw new Error(detail);
+      }
+      if (!response.body) {
+        throw new Error('No stream body from server');
       }
 
-      setStatus('success');
-      addLog('Pipeline completed successfully!');
-      showAlert('Success!', 'Pipeline completed successfully!', 'success');
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let completed = false;
+      let seenError = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const evt of events) {
+          const line = evt
+            .split('\n')
+            .find((l) => l.startsWith('data: '));
+          if (!line) continue;
+          try {
+            const payload = JSON.parse(line.slice(6)) as {
+              type: string;
+              message: string;
+              progress?: number;
+            };
+
+            if (payload.type === 'progress') {
+              if (typeof payload.progress === 'number') {
+                setProgress(payload.progress);
+              }
+              setCurrentStep(payload.message || 'Processing...');
+              addLog(`Progress ${payload.progress ?? ''}%: ${payload.message}`);
+            } else if (payload.type === 'info') {
+              addLog(payload.message);
+            } else if (payload.type === 'error') {
+              seenError = true;
+              addLog(`Error: ${payload.message}`);
+            } else if (payload.type === 'complete') {
+              completed = true;
+              setStatus('success');
+              setProgress(100);
+              setCurrentStep('Complete');
+              addLog(payload.message || 'Pipeline completed successfully!');
+            }
+          } catch {
+            // Ignore malformed SSE event payloads.
+          }
+        }
+      }
+
+      if (completed && !seenError) {
+        showAlert('Success!', 'Pipeline completed successfully!', 'success');
+      } else {
+        throw new Error('Pipeline failed. See log for details.');
+      }
       
     } catch (error: any) {
       setStatus('error');
@@ -344,6 +392,25 @@ const TotalSegmentatorApp = () => {
                   onChange={(e) => setProjectName(e.target.value)}
                   className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm"
                 />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">{t.labels.segmentationTask}</label>
+                <div className="relative">
+                  <select
+                    value={task}
+                    onChange={(e) => setTask(e.target.value)}
+                    className="w-full px-4 py-3 pr-10 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm appearance-none"
+                  >
+                    <option value="total_all">total_all</option>
+                    <option value="liver_segments">liver_segments</option>
+                    <option value="liver_vessels">liver_vessels</option>
+                    <option value="total_vessels">total_vessels</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
+                    <ChevronDown className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
               
               <div>

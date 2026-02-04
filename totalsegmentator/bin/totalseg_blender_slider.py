@@ -38,10 +38,8 @@ def parse_args():
             i += 1
     return args
 
-def install_addon_to_blend():
-    """Copy the addon script into the Blender file's text blocks"""
-    addon_source = Path(__file__).parent.parent.parent / "dicom_slider_addon.py"
-    
+def install_addon_to_blend(addon_source: Path, text_name: str = "dicom_slider_addon.py"):
+    """Copy an addon script into Blender text blocks"""
     if not addon_source.exists():
         print(f"❌ ERROR: Addon source not found: {addon_source}")
         return False
@@ -50,21 +48,21 @@ def install_addon_to_blend():
     
     # Remove old version if exists
     for txt in bpy.data.texts:
-        if txt.name == "dicom_slider_addon.py":
+        if txt.name == text_name:
             bpy.data.texts.remove(txt)
     
     # Load addon into text block
     with open(addon_source, 'r') as f:
         addon_code = f.read()
     
-    txt = bpy.data.texts.new("dicom_slider_addon.py")
+    txt = bpy.data.texts.new(text_name)
     txt.from_string(addon_code)
     txt.use_module = True  # Enable as Python module
     
-    print("✅ Addon installed into .blend file")
+    print(f"✅ Addon installed into .blend file as: {text_name}")
     return True
 
-def setup_startup_script(png_dir, nifti_path, scale):
+def setup_startup_script(png_dir, nifti_path, scale, addon_text_names):
     """Create a startup script that registers the addon on file open"""
     # Ensure paths are absolute
     png_dir = str(Path(png_dir).resolve())
@@ -84,43 +82,41 @@ print(f"   PNG_DIR: {{PNG_DIR}}")
 print(f"   NIFTI_PATH: {{NIFTI_PATH}}")
 print(f"   SCALE: {{SCALE}}")
 
-# Auto-register the DICOM slider addon when file is opened
-def register_dicom_slider():
+# Auto-register addons when file is opened
+def register_addons():
     try:
-        addon_text = bpy.data.texts.get("dicom_slider_addon.py")
-        if addon_text:
-            # Execute the addon code
-            exec(compile(addon_text.as_string(), "dicom_slider_addon.py", 'exec'))
+        addon_texts = {repr(addon_text_names)}
+        for addon_name in addon_texts:
+            addon_text = bpy.data.texts.get(addon_name)
+            if addon_text:
+                exec(compile(addon_text.as_string(), addon_name, 'exec'))
             
-            # Configure it with ABSOLUTE paths
-            if hasattr(bpy.context.scene, 'folder_path_dicom'):
-                bpy.context.scene.folder_path_dicom = PNG_DIR
-                print(f"✓ Set folder_path_dicom to: {{PNG_DIR}}")
-            
-            if hasattr(bpy.context.scene, 'base_size'):
-                bpy.context.scene.base_size = SCALE
-                print(f"✓ Set base_size to: {{SCALE}}")
-            
-            if hasattr(bpy.context.scene, 'use_auto_scale'):
-                bpy.context.scene.use_auto_scale = True
-                print(f"✓ Enabled auto-scale")
-            
-            print("✅ DICOM Slider addon loaded and configured")
+        # Configure DICOM slider fields if this addon exposes them
+        if hasattr(bpy.context.scene, 'folder_path_dicom'):
+            bpy.context.scene.folder_path_dicom = PNG_DIR
+            print(f"✓ Set folder_path_dicom to: {{PNG_DIR}}")
+        if hasattr(bpy.context.scene, 'base_size'):
+            bpy.context.scene.base_size = SCALE
+            print(f"✓ Set base_size to: {{SCALE}}")
+        if hasattr(bpy.context.scene, 'use_auto_scale'):
+            bpy.context.scene.use_auto_scale = True
+            print(f"✓ Enabled auto-scale")
+        print("✅ Addons loaded and configured")
     except Exception as e:
-        print(f"❌ Error loading DICOM Slider addon: {{e}}")
+        print(f"❌ Error loading addons: {{e}}")
         import traceback
         traceback.print_exc()
 
 # Register handler
 @bpy.app.handlers.persistent
 def load_post_handler(dummy):
-    register_dicom_slider()
+    register_addons()
 
 if load_post_handler not in bpy.app.handlers.load_post:
     bpy.app.handlers.load_post.append(load_post_handler)
 
 # Also register now
-register_dicom_slider()
+register_addons()
 '''
     
     # Remove old startup script if exists
@@ -165,6 +161,17 @@ def main():
     nifti_path = args.get('nifti-path', '')
     scale = float(args.get('scale', 0.01))
     save_path = args.get('save', '')
+    addon_path_arg = args.get('addon-path', '')
+    extra_addon_path_arg = args.get('extra-addon-path', '')
+
+    default_addon_source = Path(__file__).parent.parent.parent / "dicom_slider_addon.py"
+    if addon_path_arg:
+        addon_source = Path(addon_path_arg).resolve()
+        if not addon_source.exists():
+            print(f"⚠️ Provided addon path not found, fallback to default: {addon_source}")
+            addon_source = default_addon_source
+    else:
+        addon_source = default_addon_source
     
     if not png_dir:
         print("❌ ERROR: --png-dir is required")
@@ -175,12 +182,25 @@ def main():
         print(f"❌ ERROR: PNG directory not found: {png_dir}")
         sys.exit(1)
     
-    # Install addon
-    if not install_addon_to_blend():
+    addon_text_names = []
+
+    # Install primary addon
+    if not install_addon_to_blend(addon_source, "dicom_slider_addon.py"):
         sys.exit(1)
+    addon_text_names.append("dicom_slider_addon.py")
+
+    # Install optional extra addon (e.g., vessel tool)
+    if extra_addon_path_arg:
+        extra_source = Path(extra_addon_path_arg).resolve()
+        if not extra_source.exists():
+            print(f"⚠️ Extra addon path not found, skipping: {extra_source}")
+        else:
+            extra_text_name = extra_source.name if extra_source.suffix == ".py" else f"{extra_source.name}.py"
+            if install_addon_to_blend(extra_source, extra_text_name):
+                addon_text_names.append(extra_text_name)
     
     # Setup startup script
-    if not setup_startup_script(str(png_dir), str(nifti_path), scale):
+    if not setup_startup_script(str(png_dir), str(nifti_path), scale, addon_text_names):
         sys.exit(1)
     
     # Configure addon (this will also execute it)

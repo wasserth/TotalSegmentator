@@ -21,6 +21,7 @@ interface Translations {
     outputFolder: string;
     browse: string;
     projectName: string;
+    segmentationTask: string;
     blenderScale: string;
     blenderExe: string;
     dcm2niixExe: string;
@@ -70,6 +71,7 @@ const en: Translations = {
     outputFolder: "Output Folder",
     browse: "Browse...",
     projectName: "Project Name",
+    segmentationTask: "Segmentation Task",
     blenderScale: "Blender Scale:",
     blenderExe: "Blender Executable",
     dcm2niixExe: "dcm2niix Executable",
@@ -119,6 +121,7 @@ const jp: Translations = {
     outputFolder: "出力フォルダ",
     browse: "参照...",
     projectName: "プロジェクト名",
+    segmentationTask: "セグメンテーションタスク",
     blenderScale: "Blenderスケール：",
     blenderExe: "Blender実行ファイル",
     dcm2niixExe: "dcm2niix実行ファイル",

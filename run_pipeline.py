@@ -25,13 +25,22 @@ def main():
     parser.add_argument('--project-name', required=True, help='Blender project name')
     parser.add_argument('--scale', default='0.01', help='Blender scale factor')
     parser.add_argument('--mode', default='all', help='Pipeline mode: all, step1-step6')
+    parser.add_argument('--task', default='total_all', choices=['total_all', 'liver_segments', 'liver_vessels', 'total_vessels'], help='Segmentation task')
     
     args = parser.parse_args()
     
     # Define paths
     web_app_dir = Path(__file__).parent / 'web-app'
     uploads_dir = web_app_dir / 'uploads'
-    dicom_path = uploads_dir / args.dicom_dir
+    dicom_dir_arg = Path(args.dicom_dir)
+
+    # Accept both absolute/local paths and upload-folder names.
+    if dicom_dir_arg.is_absolute():
+        dicom_path = dicom_dir_arg
+    elif '/' in args.dicom_dir or '\\' in args.dicom_dir:
+        dicom_path = (web_app_dir / dicom_dir_arg).resolve()
+    else:
+        dicom_path = uploads_dir / dicom_dir_arg
     
     # Handle output path - check if it's absolute or relative
     output_dir_arg = Path(args.output_dir)
@@ -57,8 +66,13 @@ def main():
     log(f"Project Name: {args.project_name}")
     log(f"Scale: {args.scale}")
     log(f"Mode: {args.mode}")
+    log(f"Task: {args.task}")
     log(f"{'='*70}\n")
     
+    if not dicom_path.exists():
+        log(f"\n[ERROR] DICOM directory does not exist: {dicom_path}")
+        return 1
+
     # Create output directory
     output_path.mkdir(parents=True, exist_ok=True)
     
@@ -75,7 +89,8 @@ def main():
         '--dicom', str(dicom_path),
         '--output', str(output_path),
         '--case-name', args.project_name,
-        '--scale', args.scale
+        '--scale', args.scale,
+        '--task', args.task,
     ]
     
     log(f"Command: {' '.join(gui_cmd)}\n")
