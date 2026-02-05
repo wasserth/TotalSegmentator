@@ -118,6 +118,10 @@ def main():
                         help="Normally statistics are only calculated for ROIs which are not cut off by the beginning or end of image. Use this option to calc anyways.",
                         default=False)
 
+    parser.add_argument("-sa", "--stats_aggregation", type=str, choices=["mean", "median"],
+                        help="Aggregation method for intensity statistics (default: mean).",
+                        default="mean")
+
     parser.add_argument("-cp", "--crop_path", help="Custom path to masks used for cropping. If not set will use output directory.",
                         type=lambda p: Path(p).absolute(), default=None)
 
@@ -201,7 +205,7 @@ def main():
                      device=args.device, license_number=args.license_number,
                      statistics_exclude_masks_at_border=not args.stats_include_incomplete,
                      no_derived_masks=args.no_derived_masks, v1_order=args.v1_order, fastest=args.fastest,
-                     roi_subset_robust=args.roi_subset_robust, stats_aggregation="mean", 
+                     roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation, 
                      remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
                      robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
                      save_probabilities=args.save_probabilities)
