@@ -18,7 +18,7 @@ const TotalSegmentatorApp = () => {
   const [dicomFolder, setDicomFolder] = useState('');
   const [outputFolder, setOutputFolder] = useState('');
   const [projectName, setProjectName] = useState('Project-01');
-  const [task, setTask] = useState('total_all');
+  const [tasks, setTasks] = useState<string[]>(['total_all']);
   const [blenderScale, setBlenderScale] = useState(20.0);
   const [blenderPath, setBlenderPath] = useState('');
   const [dcm2niixPath, setDcm2niixPath] = useState('');
@@ -132,7 +132,8 @@ const TotalSegmentatorApp = () => {
     if (! showLogs) setShowLogs(true);
 
     try {
-      addLog(`Starting pipeline (mode: ${mode}, task: ${task})...`);
+      const selectedTasks = tasks.length ? tasks : ['total_all'];
+      addLog(`Starting pipeline (mode: ${mode}, tasks: ${selectedTasks.join(', ')})...`);
       const response = await fetch('/api/pipeline/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -140,7 +141,7 @@ const TotalSegmentatorApp = () => {
           dicomDir: dicomFolder,
           outputDir: outputFolder,
           projectName,
-          task,
+          task: selectedTasks.join(','),
           scale: blenderScale,
           blenderPath,
           dcm2niixPath,
@@ -397,18 +398,22 @@ const TotalSegmentatorApp = () => {
               <div>
                 <label className="block text-gray-700 font-medium mb-2">{t.labels.segmentationTask}</label>
                 <div className="relative">
-                  <select
-                    value={task}
-                    onChange={(e) => setTask(e.target.value)}
-                    className="w-full px-4 py-3 pr-10 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm appearance-none"
-                  >
-                    <option value="total_all">total_all</option>
-                    <option value="liver_segments">liver_segments</option>
-                    <option value="liver_vessels">liver_vessels</option>
-                    <option value="total_vessels">total_vessels</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-500">
-                    <ChevronDown className="w-4 h-4" />
+                  <div className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm">
+                    {['total_all', 'liver_segments', 'liver_vessels', 'total_vessels'].map((opt) => (
+                      <label key={opt} className="flex items-center gap-3 py-1 text-gray-800">
+                        <input
+                          type="checkbox"
+                          checked={tasks.includes(opt)}
+                          onChange={() =>
+                            setTasks((prev) =>
+                              prev.includes(opt) ? prev.filter((t) => t !== opt) : [...prev, opt]
+                            )
+                          }
+                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                        />
+                        <span className="text-sm">{opt}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>

@@ -292,6 +292,52 @@ def list_label_stems(task_dir: Path) -> list[str]:
     return sorted(stems)
 
 
+ALLOWED_TASKS = {
+    "total_all",
+    "liver_segments",
+    "liver_vessels",
+    "total_vessels",
+}
+
+
+def parse_tasks(value: str) -> list[str]:
+    if not value:
+        return ["total_all"]
+    raw = [v.strip() for v in value.replace(";", ",").split(",")]
+    tasks = [t for t in raw if t]
+    if not tasks:
+        return ["total_all"]
+    if "all" in tasks:
+        return sorted(ALLOWED_TASKS)
+    valid = [t for t in tasks if t in ALLOWED_TASKS]
+    return valid or ["total_all"]
+
+
+def build_combined_stl_dir(out_seg: Path, tasks: list[str], log) -> Path:
+    if len(tasks) == 1:
+        return out_seg / tasks[0]
+    combined = out_seg / "combined"
+    combined.mkdir(parents=True, exist_ok=True)
+    for old in combined.glob("*.stl"):
+        try:
+            old.unlink()
+        except Exception:
+            pass
+    for t in tasks:
+        task_dir = out_seg / t
+        if not task_dir.exists():
+            continue
+        for stl in task_dir.glob("*.stl"):
+            target = combined / stl.name
+            if target.exists():
+                target = combined / f"{t}__{stl.name}"
+            try:
+                shutil.copy2(stl, target)
+            except Exception as e:
+                log(f"⚠️ Failed to copy {stl.name} into combined: {e}\n")
+    return combined
+
+
 class PipelineThread(threading.Thread):
     def __init__(self, q: queue.Queue[str], cfg: dict, mode: str = "all"):
         super().__init__(daemon=True)
@@ -317,7 +363,8 @@ class PipelineThread(threading.Thread):
         out_root = Path(self.cfg["out_root"]).expanduser()
         case_name = self.cfg["case_name"].strip() or "case01"
         scale = float(self.cfg["scale"]) if self.cfg["scale"] else 0.01
-        selected_tasks = self.cfg.get("tasks", "total_all")
+        selected_tasks_raw = self.cfg.get("tasks", "total_all")
+        task_list = parse_tasks(selected_tasks_raw)
         blender_hint = (self.cfg.get("blender_path") or "").strip()
         dcm2niix_hint = (self.cfg.get("dcm2niix_path") or "").strip()
 
@@ -372,11 +419,8 @@ class PipelineThread(threading.Thread):
                 "-m", "totalsegmentator.bin.totalseg_dicom_to_png",
                 "-i", str(dicom_dir),
                 "-o", str(out_png),
-                "--multi-views",
-                "--metadata",
-                "--window", "custom", 
                 "--wl", "40",
-                "--ww", "1200", 
+                "--ww", "400",
             ], self.log)
             
             if rc != 0:
@@ -427,7 +471,7 @@ class PipelineThread(threading.Thread):
                     self.log(f"❌ No NIfTI found in {out_nii}\n")
                     return 1
                 
-        stl_task_dir = out_seg / selected_tasks
+        stl_task_dir = out_seg / (task_list[0] if task_list else "total_all")
 
         if stl_task_dir.exists():
             shutil.rmtree(stl_task_dir)
@@ -442,17 +486,20 @@ class PipelineThread(threading.Thread):
             self.log("🧠 Step 3: Segmentation + mesh export (task-independent rules)\n")
             self.log("=" * 60 + "\n")
 
-            selected_tasks = self.cfg.get("tasks", "total_all")
-            stl_task_dir = out_seg / selected_tasks
+            task_list = parse_tasks(self.cfg.get("tasks", "total_all"))
+            stl_task_dir = out_seg / (task_list[0] if task_list else "total_all")
             stl_task_dir.mkdir(parents=True, exist_ok=True)
 
             # ---- overwrite old STL only ----
-            self.log(f"🧹 Overwrite enabled: removing old STL in {stl_task_dir}\n")
-            for p in stl_task_dir.glob("*.stl"):
-                try:
-                    p.unlink()
-                except Exception:
-                    pass
+            for task_name in task_list:
+                task_dir = out_seg / task_name
+                task_dir.mkdir(parents=True, exist_ok=True)
+                self.log(f"🧹 Overwrite enabled: removing old STL in {task_dir}\n")
+                for p in task_dir.glob("*.stl"):
+                    try:
+                        p.unlink()
+                    except Exception:
+                        pass
 
             cmd = [
                 sys.executable,
@@ -460,14 +507,14 @@ class PipelineThread(threading.Thread):
                 "totalsegmentator.bin.TotalSegmentatorImproved",
                 "-i", str(nii_path),
                 "-o", str(out_seg),
-                "--tasks", selected_tasks,
+                "--tasks", *task_list,
                 "--export-mesh",
                 "--export-format", "stl",
                 "--units", "m",
                 "--device", "gpu",
             ]
 
-            if selected_tasks == "total_all":
+            if "total_all" in task_list:
                 cmd.append("--with-liver-vessels")
 
             rc = run_cmd(cmd, self.log)
@@ -489,13 +536,14 @@ class PipelineThread(threading.Thread):
             self.log("🩸 Step 4: Slicer-style mesh smoothing (topology-preserving)\n")
             self.log("=" * 60 + "\n")
 
-            selected_tasks = self.cfg.get("tasks", "total_all")
-            task_dir = out_seg / selected_tasks
-
-            stl_files = list(task_dir.glob("*.stl"))
-            if not stl_files:
-                self.log("⚠️  No STL files found, skipping Step 4.\n")
-            else:
+            task_list = parse_tasks(self.cfg.get("tasks", "total_all"))
+            any_found = False
+            for task_name in task_list:
+                task_dir = out_seg / task_name
+                stl_files = list(task_dir.glob("*.stl"))
+                if not stl_files:
+                    continue
+                any_found = True
                 for stl in stl_files:
                     label = stl.stem
                     vessel = is_vessel(label)
@@ -519,7 +567,7 @@ class PipelineThread(threading.Thread):
                         hole_size = 0.02
 
                     self.log(
-                        f"   🔧 {'VESSEL' if vessel else 'ORGAN'} | {stl.name} | "
+                        f"   🔧 {'VESSEL' if vessel else 'ORGAN'} | {task_name}/{stl.name} | "
                         f"subdiv={subdiv_iters} geom={geom_iters} sinc={sinc_iters} hole={hole_size}\n"
                     )
 
@@ -561,6 +609,9 @@ class PipelineThread(threading.Thread):
                         except Exception:
                             pass
 
+            if not any_found:
+                self.log("⚠️  No STL files found, skipping Step 4.\n")
+
             _progress(75)
 
             if self.mode == "step4":
@@ -580,7 +631,8 @@ class PipelineThread(threading.Thread):
                 self.log("Blender not found. Set path in GUI or add to PATH.\n")
                 return 127
 
-            stl_dir = out_seg / selected_tasks
+            task_list = parse_tasks(self.cfg.get("tasks", "total_all"))
+            stl_dir = build_combined_stl_dir(out_seg, task_list, self.log)
             blender_script = Path(__file__).with_name("totalseg_blender_import.py")
 
             cmd = [
@@ -639,33 +691,68 @@ class PipelineThread(threading.Thread):
             self.log("🧩 Step 6b: Installing CT Slider addon into Blender scene\n")
             self.log("=" * 60 + "\n")
             slider_script = Path(__file__).with_name("totalseg_blender_slider.py")
+            install_script = Path(__file__).with_name("totalseg_blender_install_addon.py")
+            self.log(f"[Step6b] Blender exe: {blender_exe}\n")
+            self.log(f"[Step6b] Slider script: {slider_script} (exists={slider_script.exists()})\n")
+            self.log(f"[Step6b] Install script: {install_script} (exists={install_script.exists()})\n")
+            log_dir = out_root / "logs"
+            log_dir.mkdir(parents=True, exist_ok=True)
+            install_log = log_dir / "blender_install_addon.log"
+            slider_log = log_dir / "blender_slider_setup.log"
+            self.log(f"[Step6b] Install log: {install_log}\n")
+            self.log(f"[Step6b] Slider log: {slider_log}\n")
             if slider_script.exists():
                 project_root = Path(__file__).resolve().parents[2]
                 local_env = _load_local_env(project_root / ".env.local")
 
-                slider_addon_path = os.environ.get("TOTALSEG_DICOM_SLIDER_ADDON", "").strip() or local_env.get("TOTALSEG_DICOM_SLIDER_ADDON", "").strip()
-                vessel_addon_path = os.environ.get("TOTALSEG_VESSEL_TOOL_ADDON", "").strip() or local_env.get("TOTALSEG_VESSEL_TOOL_ADDON", "").strip()
+                # Embedded defaults for terminal-less/deployed usage (take precedence).
+                embedded_slider = project_root / "doctor_plugins" / "ct_slicer_doctor.py"
 
-                # Embedded defaults for terminal-less/deployed usage.
+                slider_addon_path = str(embedded_slider) if embedded_slider.exists() else ""
+                self.log(f"[Step6b] Embedded addon candidate: {embedded_slider} (exists={embedded_slider.exists()})\n")
+
+                # Fallback to env/.env.local only if embedded not found.
                 if not slider_addon_path:
-                    embedded_slider = project_root / "doctor_plugins" / "ct_slicer_doctor.py"
-                    if embedded_slider.exists():
-                        slider_addon_path = str(embedded_slider)
-                if not vessel_addon_path:
-                    embedded_vessel = project_root / "doctor_plugins" / "vessel_tool_doctor.py"
-                    if embedded_vessel.exists():
-                        vessel_addon_path = str(embedded_vessel)
+                    slider_addon_path = os.environ.get("TOTALSEG_DICOM_SLIDER_ADDON", "").strip() or local_env.get("TOTALSEG_DICOM_SLIDER_ADDON", "").strip()
+                    self.log(f"[Step6b] Env addon path: {slider_addon_path or '(empty)'}\n")
 
                 if slider_addon_path and not Path(slider_addon_path).exists():
                     self.log(
                         f"⚠️  TOTALSEG_DICOM_SLIDER_ADDON path not found, fallback to default addon: {slider_addon_path}\n"
                     )
                     slider_addon_path = ""
-                if vessel_addon_path and not Path(vessel_addon_path).exists():
-                    self.log(
-                        f"⚠️  TOTALSEG_VESSEL_TOOL_ADDON path not found, skipping extra addon: {vessel_addon_path}\n"
+                if slider_addon_path:
+                    self.log(f"🧩 Using CT slider addon: {slider_addon_path}\n")
+                else:
+                    self.log("⚠️ No addon path resolved; Step 6b cannot install addon.\n")
+
+                # Install CT Vessel addon system-wide (force overwrite). This avoids Auto-Run reliance.
+                install_ok = False
+                if install_script.exists() and slider_addon_path:
+                    self.log("🧩 Installing CT Vessel addon (system-wide)...\n")
+                    rc = run_cmd(
+                        [
+                            blender_exe,
+                            "-b",
+                            "-P",
+                            str(install_script),
+                            "--",
+                            "--addon-path",
+                            slider_addon_path,
+                            "--log-file",
+                            str(install_log),
+                        ],
+                        self.log,
                     )
-                    vessel_addon_path = ""
+                    self.log(f"[Step6b] System-wide install return code: {rc}\n")
+                    install_ok = (rc == 0)
+                    if install_ok:
+                        self.log("✅ CT Vessel addon installed system-wide\n")
+                    else:
+                        self.log("⚠️ CT Vessel addon install failed\n")
+
+                self.log("[Step6b] Configuring CT slider...\n")
+                addon_module = Path(slider_addon_path).stem if slider_addon_path else "ct_slicer_doctor"
                 rc = run_cmd(
                     [
                         blender_exe,
@@ -682,14 +769,17 @@ class PipelineThread(threading.Thread):
                         str(scale),
                         "--save",
                         str(colored),
-                        *(["--addon-path", slider_addon_path] if slider_addon_path else []),
-                        *(["--extra-addon-path", vessel_addon_path] if vessel_addon_path else []),
+                        "--log-file",
+                        str(slider_log),
+                        "--addon-module",
+                        addon_module,
                     ],
                     self.log,
                 )
+                self.log(f"[Step6b] Slider installer return code: {rc}\n")
                 if rc != 0:
                     return rc
-                self.log("✅ CT Slider addon installed and configured\n")
+                self.log("✅ CT Slider configured\n")
             else:
                 self.log(f"⚠️  Slider installer not found: {slider_script}\n")
             
@@ -718,8 +808,8 @@ class PipelineThread(threading.Thread):
             self.log("🌐 Step 7: Launching Web Viewer (HTTP, portable)...\n")
             self.log("=" * 60 + "\n")
 
-            selected_tasks = self.cfg.get("tasks", "total_all")
-            stl_dir = out_seg / selected_tasks
+            task_list = parse_tasks(self.cfg.get("tasks", "total_all"))
+            stl_dir = build_combined_stl_dir(out_seg, task_list, self.log)
 
             # -------------------------------------------------
             # 1. Generate stl_list.json
@@ -1339,7 +1429,11 @@ def main():
     parser.add_argument("--blender", help="Path to Blender executable (optional)")
     parser.add_argument("--dcm2niix", help="Path to dcm2niix executable (optional)")
     parser.add_argument("--mode", default="all", help="Pipeline mode: all, step1-step6")
-    parser.add_argument("--task", default="total_all", choices=["total_all", "liver_segments", "liver_vessels", "total_vessels"], help="Segmentation task")
+    parser.add_argument(
+        "--task",
+        default="total_all",
+        help="Segmentation task(s), comma-separated (e.g., total_all,liver_vessels)",
+    )
     
     args = parser.parse_args()
     

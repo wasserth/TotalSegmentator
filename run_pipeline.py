@@ -25,7 +25,7 @@ def main():
     parser.add_argument('--project-name', required=True, help='Blender project name')
     parser.add_argument('--scale', default='0.01', help='Blender scale factor')
     parser.add_argument('--mode', default='all', help='Pipeline mode: all, step1-step6')
-    parser.add_argument('--task', default='total_all', choices=['total_all', 'liver_segments', 'liver_vessels', 'total_vessels'], help='Segmentation task')
+    parser.add_argument('--task', default='total_all', help='Segmentation task(s), comma-separated')
     
     args = parser.parse_args()
     
@@ -98,6 +98,9 @@ def main():
     
     try:
         # Run with real-time output
+        project_root = Path(__file__).resolve().parent
+        existing_py = os.environ.get("PYTHONPATH", "")
+        py_path = str(project_root) if not existing_py else f"{project_root}{os.pathsep}{existing_py}"
         process = subprocess.Popen(
             gui_cmd,
             stdout=subprocess.PIPE,
@@ -107,7 +110,12 @@ def main():
             errors='replace',
             bufsize=1,  # Line buffered
             universal_newlines=True,
-            env={**os.environ, 'PYTHONUNBUFFERED': '1', 'PYTHONIOENCODING': 'utf-8'}
+            env={
+                **os.environ,
+                'PYTHONUNBUFFERED': '1',
+                'PYTHONIOENCODING': 'utf-8',
+                'PYTHONPATH': py_path,
+            }
         )
         
         # Track progress based on log messages
@@ -119,18 +127,24 @@ def main():
             
             # Update progress based on log content
             line_lower = line.lower()
-            if 'dicom' in line_lower and 'nifti' in line_lower:
+            if 'step 1' in line_lower or ('dicom' in line_lower and 'nifti' in line_lower):
                 progress(15, "Converting DICOM to NIfTI")
+            elif 'step 2' in line_lower:
+                progress(20, "Preparing NIfTI")
+            elif 'step 3' in line_lower or 'segment' in line_lower or 'totalsegmentator' in line_lower:
+                progress(50, "Running segmentation")
+            elif 'step 4' in line_lower:
+                progress(60, "Smoothing meshes")
+            elif 'step 5' in line_lower or 'blender' in line_lower and 'import' in line_lower:
+                progress(75, "Importing to Blender")
+            elif 'step 6' in line_lower or 'material' in line_lower or 'color' in line_lower:
+                progress(90, "Applying materials")
+            elif 'step 7' in line_lower or 'web viewer' in line_lower:
+                progress(95, "Launching viewer")
             elif 'png' in line_lower or 'slice' in line_lower:
                 progress(30, "Exporting PNG slices")
-            elif 'segment' in line_lower or 'totalsegmentator' in line_lower:
-                progress(50, "Running segmentation")
             elif 'mesh' in line_lower or 'stl' in line_lower:
                 progress(65, "Generating 3D meshes")
-            elif 'blender' in line_lower and 'import' in line_lower:
-                progress(75, "Importing to Blender")
-            elif 'material' in line_lower or 'color' in line_lower:
-                progress(90, "Applying materials")
             elif 'complete' in line_lower or 'done' in line_lower:
                 progress(95, "Finalizing")
         

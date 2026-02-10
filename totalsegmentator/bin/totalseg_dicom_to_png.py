@@ -1,60 +1,47 @@
 #!/usr/bin/env python3
 """
-totalseg_dicom_to_png
+DICOM -> PNG/JPG (doctor-provided isotropic export)
 
-Cross-platform DICOM → PNG converter with sensible windowing.
-
-Highlights
-- Works on single-file or directory inputs (recursively with --recursive)
-- Uses VOI LUT when present; otherwise supports presets or auto percentile windowing
-- Outputs 8-bit PNGs compatible with Mac and Windows
-
-Examples
-  totalseg_dicom_to_png -i /path/to/dicom_study -o out/pngs
-  totalseg_dicom_to_png -i series/ -o out/pngs --window abdomen
-  totalseg_dicom_to_png -i image.dcm -o out/ --window custom --wl 40 --ww 400
+- Selects series with most slices
+- Sorts by ImagePositionPatient Z (fallback InstanceNumber)
+- Applies modality LUT (HU) and optional VOI LUT for auto mode
+- Resamples to isotropic spacing (default min spacing)
+- Exports axial/coronal/sagittal stacks as 001.png
+- Writes metadata.csv
 """
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Iterable, Tuple, Optional
-
+import csv
 import numpy as np
 
-try:
-    import pydicom
-    from pydicom.pixel_data_handlers.util import apply_voi_lut, apply_modality_lut
-except Exception as e:
-    pydicom = None  # type: ignore
-    _pydicom_err = e
-
-try:
-    from PIL import Image
-except Exception as e:
-    Image = None  # type: ignore
-    _pillow_err = e
+import pydicom
+from pydicom.pixel_data_handlers.util import apply_modality_lut, apply_voi_lut
+from PIL import Image
+from scipy.ndimage import zoom
 
 
-WINDOW_PRESETS = {
-    # name: (WL, WW)
-    "soft": (40.0, 400.0),        # generic soft tissue
-    "abdomen": (50.0, 350.0),     # typical abdomen window
-    "bone": (500.0, 2500.0),
-    "lung": (-600.0, 1500.0),
-    "brain": (40.0, 80.0),
-}
+DEFAULT_PIXEL = 512
+DEFAULT_AX_COUNT = 419
+DEFAULT_AX_SPACING = 2.0
+DEFAULT_PITCH = 0.683
+DEFAULT_SIZE = 0.02
+DEFAULT_FOLDER = ''
 
 
-def _check_deps():
-    if pydicom is None:
-        raise RuntimeError(f"pydicom not available: {_pydicom_err}")
-    if Image is None:
-        raise RuntimeError(f"Pillow not available: {_pillow_err}")
+def _is_dicom(p: Path) -> bool:
+    try:
+        with open(p, "rb") as f:
+            pre = f.read(132)
+            return pre[128:132] == b"DICM"
+    except Exception:
+        return False
 
 
-def _safe_spacing(ds) -> Tuple[float, float, float]:
+def _safe_spacing(ds):
+    # X=列方向, Y=行方向, Z=スライス方向
     px = py = 1.0
     ps = getattr(ds, "PixelSpacing", None)
     if ps is not None and len(ps) >= 2:
@@ -76,197 +63,46 @@ def _safe_spacing(ds) -> Tuple[float, float, float]:
     return float(px), float(py), float(pz)
 
 
-def _is_dicom_file(path: Path) -> bool:
-    try:
-        with open(path, "rb") as f:
-            pre = f.read(132)
-            return pre[128:132] == b"DICM"
-    except Exception:
-        return False
-
-
-def _iter_dicom_files(inp: Path, recursive: bool = False) -> Iterable[Path]:
-    if inp.is_file():
-        yield inp
-        return
-    if inp.is_dir():
-        if recursive:
-            for p in inp.rglob("*"):
-                if p.is_file():
-                    yield p
-        else:
-            for p in inp.iterdir():
-                if p.is_file():
-                    yield p
-
-
-def _read_num_frames(ds) -> int:
-    try:
-        return int(getattr(ds, "NumberOfFrames", 1))
-    except Exception:
-        return 1
-
-
-def _to_float32(arr: np.ndarray, ds) -> np.ndarray:
-    # Prefer Modality LUT if available; else slope/intercept
-    try:
-        return apply_modality_lut(arr, ds).astype(np.float32)
-    except Exception:
-        arr = arr.astype(np.float32)
-        slope = getattr(ds, "RescaleSlope", 1.0)
-        intercept = getattr(ds, "RescaleIntercept", 0.0)
-        try:
-            arr = arr * float(slope) + float(intercept)
-        except Exception:
-            pass
-        return arr
-
-
-def _window_image(
-    arr: np.ndarray,
-    window: str,
-    wl: Optional[float] = None,
-    ww: Optional[float] = None,
-    use_voi_lut: bool = True,
-) -> np.ndarray:
-    if use_voi_lut:
-        # apply_voi_lut falls back gracefully when VOI not present
-        try:
-            arr = apply_voi_lut(arr, None)
-        except Exception:
-            pass
-
-    if window == "auto":
-        lo, hi = np.percentile(arr, [0.5, 99.5])
-    elif window == "custom" and wl is not None and ww is not None:
-        lo, hi = wl - ww / 2.0, wl + ww / 2.0
-    else:
-        if window in WINDOW_PRESETS:
-            _wl, _ww = WINDOW_PRESETS[window]
-            lo, hi = _wl - _ww / 2.0, _wl + _ww / 2.0
-        else:
-            # fallback to auto
-            lo, hi = np.percentile(arr, [0.5, 99.5])
-
-    arr = np.clip(arr, lo, hi)
-    arr = (arr - lo) / max(hi - lo, 1e-6)
-    arr = (arr * 255.0).round().astype(np.uint8)
-    return arr
-
-
-def _save_image(array: np.ndarray, out_path: Path, fmt: str = "png", jpeg_quality: int = 95) -> None:
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    img = Image.fromarray(array, mode="L")
-    if fmt.lower() in ("jpg", "jpeg"):
-        img.save(str(out_path), quality=jpeg_quality)
-    else:
-        img.save(str(out_path))
-
-
-def _compose_name(ds, idx: int, series_fallback: int = 0) -> str:
-    # Try to make a stable, human-readable name
-    series_uid = getattr(ds, "SeriesInstanceUID", None)
-    series_no = getattr(ds, "SeriesNumber", None)
-    inst_no = getattr(ds, "InstanceNumber", None)
-    # Fallbacks
-    series_tag = f"s{series_no}" if series_no is not None else (f"S{series_fallback}" if series_uid is None else f"S")
-    instance_tag = f"i{inst_no:04d}" if isinstance(inst_no, (int, float)) else f"i{idx:04d}"
-    return f"{series_tag}_{instance_tag}"
-
-
 def convert_dicom_to_png(
-    input_path: Path,
-    output_dir: Path,
-    recursive: bool = False,
-    window: str = "auto",
-    wl: Optional[float] = None,
-    ww: Optional[float] = None,
-    prefix: Optional[str] = None,
+    src_dir: Path,
+    out_dir: Path,
     fmt: str = "png",
-    jpeg_quality: int = 95,
-    multi_views: bool = False,
-    iso_mm: Optional[float] = None,
-    interp: int = 1,
+    wl: float | None = 40,
+    ww: float | None = 400,
+    auto: bool = False,
+    iso_spacing_mm: float | None = None,
+    interp_order: int = 1,
     save_axial: bool = True,
     save_coronal: bool = True,
     save_sagittal: bool = True,
-    flip_ax_lr: bool = False,
-    flip_ax_ud: bool = False,
+    flip_axial_lr: bool = False,
+    flip_axial_ud: bool = False,
     flip_cor_lr: bool = False,
     flip_cor_ud: bool = False,
     flip_sag_lr: bool = False,
     flip_sag_ud: bool = False,
-    write_metadata: bool = False,
-) -> int:
-    _check_deps()
+) -> None:
+    src = Path(src_dir)
+    out_root = Path(out_dir)
+    out_root.mkdir(parents=True, exist_ok=True)
 
-    if not multi_views:
-        output_dir.mkdir(parents=True, exist_ok=True)
-        count = 0
-        series_count = 0
-        for f in _iter_dicom_files(input_path, recursive=recursive):
-            try:
-                ds = pydicom.dcmread(str(f), stop_before_pixels=False, force=True)
-            except Exception:
-                continue
-
-            frames = _read_num_frames(ds)
-            if frames <= 1:
-                arr = ds.pixel_array  # type: ignore[attr-defined]
-                arr = _to_float32(arr, ds)
-                png = _window_image(arr, window=window, wl=wl, ww=ww)
-                name = _compose_name(ds, idx=0, series_fallback=series_count)
-                if prefix:
-                    name = f"{prefix}_{name}"
-                ext = ".jpg" if fmt.lower() in ("jpg", "jpeg") else ".png"
-                _save_image(png, output_dir / f"{name}{ext}", fmt=fmt, jpeg_quality=jpeg_quality)
-                count += 1
-            else:
-                vol = ds.pixel_array
-                if vol.ndim == 3 and vol.shape[0] == frames:
-                    iterable = [vol[i] for i in range(frames)]
-                elif vol.ndim == 3 and vol.shape[-1] == frames:
-                    iterable = [vol[..., i] for i in range(frames)]
-                else:
-                    iterable = [vol]
-                for i, sl in enumerate(iterable):
-                    sl = _to_float32(sl, ds)
-                    png = _window_image(sl, window=window, wl=wl, ww=ww)
-                    name = _compose_name(ds, idx=i, series_fallback=series_count)
-                    if prefix:
-                        name = f"{prefix}_{name}"
-                    ext = ".jpg" if fmt.lower() in ("jpg", "jpeg") else ".png"
-                    _save_image(png, output_dir / f"{name}{ext}", fmt=fmt, jpeg_quality=jpeg_quality)
-                    count += 1
-            series_count += 1
-        return count
-
-    # 3-plane export path
-    if not input_path.is_dir():
-        raise ValueError("--multi-views requires --input to be a DICOM directory")
-    try:
-        from scipy.ndimage import zoom as ndi_zoom
-    except Exception as e:
-        raise RuntimeError(f"scipy is required for --multi-views: {e}")
-
-    # group by series and pick the largest
-    series_map = {}
-    iterator = input_path.rglob("*") if recursive else input_path.iterdir()
-    for p in iterator:
-        if p.is_file() and _is_dicom_file(p):
+    # 1) DICOM収集 & 最大スライスのシリーズを選択
+    series = {}
+    for p in src.rglob("*"):
+        if p.is_file() and _is_dicom(p):
             try:
                 ds = pydicom.dcmread(str(p), stop_before_pixels=True, force=True)
                 key = (getattr(ds, "StudyInstanceUID", None), getattr(ds, "SeriesInstanceUID", None))
                 if key[1]:
-                    series_map.setdefault(key, []).append(p)
+                    series.setdefault(key, []).append(p)
             except Exception:
                 pass
-    if not series_map:
-        raise RuntimeError(f"No DICOM series found under: {input_path}")
-    key = max(series_map, key=lambda k: len(series_map[k]))
-    files = series_map[key]
+    if not series:
+        raise RuntimeError(f"No DICOM series found under: {src}")
+    key = max(series, key=lambda k: len(series[k]))
+    files = series[key]
 
-    # sort slices by z or instance number
+    # 2) 並び順（ImagePositionPatientのZ優先、なければInstanceNumber）
     metas = []
     for p in files:
         ds = pydicom.dcmread(str(p), stop_before_pixels=True, force=True)
@@ -280,45 +116,53 @@ def convert_dicom_to_png(
         metas.sort(key=lambda x: x[2])
     files = [m[0] for m in metas]
 
-    # load volume (Z,Y,X)
+    # 3) 読み込み & HU変換
     ds0 = pydicom.dcmread(str(files[0]), force=True)
-    px, py, pz = _safe_spacing(ds0)
+    px, py, pz = _safe_spacing(ds0)   # mm
     Y, X = int(ds0.Rows), int(ds0.Columns)
     Z = len(files)
+
     vol = np.zeros((Z, Y, X), dtype=np.float32)
     for i, p in enumerate(files):
         ds = pydicom.dcmread(str(p), force=True)
         arr = ds.pixel_array
-        arr = _to_float32(arr, ds)
-        if window == "auto" and hasattr(ds, "VOILUTSequence"):
-            try:
-                arr = apply_voi_lut(arr, ds).astype(np.float32)
-            except Exception:
-                pass
+        try:
+            arr = apply_modality_lut(arr, ds)  # HU相当に
+        except Exception:
+            arr = arr.astype(np.float32)
+        else:
+            arr = arr.astype(np.float32)
+        if auto and hasattr(ds, "VOILUTSequence"):
+            arr = apply_voi_lut(arr, ds).astype(np.float32)
         vol[i] = arr
 
-    # isotropic resampling
-    iso = min(px, py, pz) if iso_mm is None else float(iso_mm)
-    fz, fy, fx = pz / iso, py / iso, px / iso
+    # 4) 等方化
+    if iso_spacing_mm is None:
+        iso = min(px, py, pz)
+    else:
+        iso = float(iso_spacing_mm)
+
+    fz = pz / iso
+    fy = py / iso
+    fx = px / iso
     newZ = max(1, int(round(Z * fz)))
     newY = max(1, int(round(Y * fy)))
     newX = max(1, int(round(X * fx)))
-    vol_iso = ndi_zoom(vol, zoom=(fz, fy, fx), order=interp, mode='nearest', grid_mode=True)
+
+    vol_iso = zoom(vol, zoom=(fz, fy, fx), order=interp_order, mode='nearest', grid_mode=True)
     vol_iso = vol_iso[:newZ, :newY, :newX]
 
-    # windowing
-    if window == "auto" or wl is None or ww is None:
+    # 5) ウィンドウ処理
+    if auto or wl is None or ww is None:
         Z2, Y2, X2 = vol_iso.shape
         samp = vol_iso[::max(Z2 // 16, 1), ::max(Y2 // 16, 1), ::max(X2 // 16, 1)].ravel()
         vmin, vmax = np.percentile(samp, 0.5), np.percentile(samp, 99.5)
-        print(f"🔍 Window range: {vmin:.1f} to {vmax:.1f}") 
     else:
         vmin, vmax = wl - ww / 2.0, wl + ww / 2.0
+
     vol01 = np.clip((vol_iso - vmin) / max(1e-6, (vmax - vmin)), 0.0, 1.0)
 
-    # save stacks
-    ext = ".jpg" if fmt.lower() in ("jpg", "jpeg") else ".png"
-    def _save_stack(stack3d: np.ndarray, out_dir: Path, flip_lr=False, flip_ud=False):
+    def _save_stack(stack3d, out_dir: Path, flip_lr=False, flip_ud=False):
         out_dir.mkdir(parents=True, exist_ok=True)
         num_width = max(3, len(str(stack3d.shape[0])))
         for i, slice2d in enumerate(stack3d, start=1):
@@ -327,192 +171,88 @@ def convert_dicom_to_png(
                 img = np.fliplr(img)
             if flip_ud:
                 img = np.flipud(img)
-            fname = f"{i:0{num_width}d}{ext}"
-            _save_image(img, out_dir / fname, fmt=fmt, jpeg_quality=jpeg_quality)
+            fname = f"{i:0{num_width}d}"
+            if fmt.lower() in ("jpg", "jpeg"):
+                Image.fromarray(img, mode="L").save(out_dir / f"{fname}.jpg", quality=95, subsampling=0)
+            else:
+                Image.fromarray(img, mode="L").save(out_dir / f"{fname}.png")
 
+    # 6) 3面出力
     if save_axial:
-        _save_stack(vol01, output_dir / "axial", flip_lr=flip_ax_lr, flip_ud=flip_ax_ud)
+        _save_stack(vol01, out_root / "axial", flip_lr=flip_axial_lr, flip_ud=flip_axial_ud)
+
     if save_coronal:
         cor = np.transpose(vol01, (1, 0, 2))
-        _save_stack(cor, output_dir / "coronal", flip_lr=flip_cor_lr, flip_ud=flip_cor_ud)
+        _save_stack(cor, out_root / "coronal", flip_lr=flip_cor_lr, flip_ud=flip_cor_ud)
+
     if save_sagittal:
         sag = np.transpose(vol01, (2, 0, 1))
-        _save_stack(sag, output_dir / "sagittal", flip_lr=flip_sag_lr, flip_ud=flip_sag_ud)
+        _save_stack(sag, out_root / "sagittal", flip_lr=flip_sag_lr, flip_ud=flip_sag_ud)
 
-    if write_metadata:
-        import csv
-        import json
-        output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # 保留原有的 metadata.csv（向后兼容）
-        with open(output_dir / "metadata.csv", "w", newline="") as f:
-            w = csv.writer(f)
-            w.writerow(["SeriesInstanceUID", key[1]])
-            w.writerow(["Original_Shape_ZYX", Z, Y, X])
-            w.writerow(["Original_Spacing_mm_XYZ", px, py, pz])
-            w.writerow(["Isotropic_Spacing_mm", iso])
-            Z2, Y2, X2 = vol01.shape
-            w.writerow(["Isotropic_Shape_ZYX", Z2, Y2, X2])
-            w.writerow(["Axial_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
-            w.writerow(["Coronal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
-            w.writerow(["Sagittal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
-        
-        # ========== 新增: affine_metadata.json for Blender alignment ==========
-        try:
-            # 从DICOM读取 affine 信息
-            ds_first = pydicom.dcmread(str(files[0]), force=True)
-            
-            # 获取方向矩阵 (ImageOrientationPatient: 6个值)
-            iop = getattr(ds_first, "ImageOrientationPatient", None)
-            if iop and len(iop) == 6:
-                # 行方向 (X轴)
-                row_x, row_y, row_z = float(iop[0]), float(iop[1]), float(iop[2])
-                # 列方向 (Y轴)
-                col_x, col_y, col_z = float(iop[3]), float(iop[4]), float(iop[5])
-                
-                # 计算切片方向 (Z轴) = row × col (叉积)
-                slice_x = row_y * col_z - row_z * col_y
-                slice_y = row_z * col_x - row_x * col_z
-                slice_z = row_x * col_y - row_y * col_x
-            else:
-                # 默认标准RAS方向
-                row_x, row_y, row_z = 1.0, 0.0, 0.0
-                col_x, col_y, col_z = 0.0, 1.0, 0.0
-                slice_x, slice_y, slice_z = 0.0, 0.0, 1.0
-            
-            # 获取原点位置 (ImagePositionPatient: x,y,z)
-            ipp = getattr(ds_first, "ImagePositionPatient", None)
-            if ipp and len(ipp) == 3:
-                origin_x, origin_y, origin_z = float(ipp[0]), float(ipp[1]), float(ipp[2])
-            else:
-                origin_x, origin_y, origin_z = 0.0, 0.0, 0.0
-            
-            # 构建4x4 affine矩阵（使用isotropic spacing）
-            # 注意: 这个矩阵将体素坐标(i,j,k)转换为世界坐标(x,y,z) mm
-            affine_matrix = [
-                [row_x * iso, col_x * iso, slice_x * iso, origin_x],
-                [row_y * iso, col_y * iso, slice_y * iso, origin_y],
-                [row_z * iso, col_z * iso, slice_z * iso, origin_z],
-                [0.0, 0.0, 0.0, 1.0]
-            ]
-            
-            # Blender对齐所需的完整元数据
-            Z2, Y2, X2 = vol01.shape
-            affine_meta = {
-                "affine_matrix": affine_matrix,
-                "volume_shape_xyz": [int(X2), int(Y2), int(Z2)],
-                "volume_shape_zyx": [int(Z2), int(Y2), int(X2)],
-                "spacing_mm": [float(iso), float(iso), float(iso)],
-                "original_spacing_mm": [float(px), float(py), float(pz)],
-                "units": "mm",
-                "coordinate_system": "RAS",
-                "source": "DICOM ImageOrientationPatient + ImagePositionPatient",
-                "description": "Affine transform from voxel (i,j,k) to world (x,y,z) coordinates in mm"
-            }
-            
-            with open(output_dir / "affine_metadata.json", "w") as f:
-                json.dump(affine_meta, f, indent=2)
-            
-            print(f"✅ Generated affine_metadata.json for precise Blender alignment")
-            
-        except Exception as e:
-            print(f"⚠️  Warning: Failed to generate affine metadata: {e}")
-            print("   Falling back to identity matrix (may affect alignment accuracy)")
-            
-            # 回退方案: 使用对角矩阵（仅spacing，无旋转）
-            Z2, Y2, X2 = vol01.shape
-            affine_matrix = [
-                [iso, 0.0, 0.0, 0.0],
-                [0.0, iso, 0.0, 0.0],
-                [0.0, 0.0, iso, 0.0],
-                [0.0, 0.0, 0.0, 1.0]
-            ]
-            
-            affine_meta = {
-                "affine_matrix": affine_matrix,
-                "volume_shape_xyz": [int(X2), int(Y2), int(Z2)],
-                "volume_shape_zyx": [int(Z2), int(Y2), int(X2)],
-                "spacing_mm": [float(iso), float(iso), float(iso)],
-                "units": "mm",
-                "coordinate_system": "identity (fallback)",
-                "source": "fallback - DICOM metadata unavailable"
-            }
-            
-            with open(output_dir / "affine_metadata.json", "w") as f:
-                json.dump(affine_meta, f, indent=2)
-        # ========== 结束新增部分 ==========
+    # 7) メタデータ
+    with open(out_root / "metadata.csv", "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["SeriesInstanceUID", key[1]])
+        w.writerow(["Original_Shape_ZYX", Z, Y, X])
+        w.writerow(["Original_Spacing_mm_XYZ", px, py, pz])
+        w.writerow(["Isotropic_Spacing_mm", iso])
+        Z2, Y2, X2 = vol01.shape
+        w.writerow(["Isotropic_Shape_ZYX", Z2, Y2, X2])
+        w.writerow(["Axial_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
+        w.writerow(["Coronal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
+        w.writerow(["Sagittal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
 
-    total = 0
-    if save_axial:
-        total += len(list((output_dir / "axial").glob(f"*{ext}")))
-    if save_coronal:
-        total += len(list((output_dir / "coronal").glob(f"*{ext}")))
-    if save_sagittal:
-        total += len(list((output_dir / "sagittal").glob(f"*{ext}")))
-    return int(total)
+    print("✅ Done.")
+    print("Series:", key[1])
+    print("Original  (Z,Y,X):", (Z, Y, X), "Spacing(mm XYZ):", (px, py, pz))
+    print("Isotropic (Z,Y,X):", vol01.shape, "Spacing(mm):", iso)
+    print("Saved to:", str(out_root))
 
 
 def build_argparser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Convert DICOM to PNG/JPEG with windowing (Mac/Windows compatible)")
-    p.add_argument("-i", "--input", required=True, type=Path, help="DICOM file or directory")
-    p.add_argument("-o", "--output", required=True, type=Path, help="Output directory for PNGs")
-    p.add_argument("--recursive", action="store_true", help="Recurse into subdirectories")
-    p.add_argument("--window", choices=["auto", "custom", "soft", "abdomen", "bone", "lung", "brain"], default="auto",
-                   help="Window preset or auto")
-    p.add_argument("--wl", type=float, default=None, help="Window level (used with --window custom)")
-    p.add_argument("--ww", type=float, default=None, help="Window width (used with --window custom)")
-    p.add_argument("--prefix", type=str, default=None, help="Optional filename prefix, e.g. case ID")
-    p.add_argument("--format", choices=["png", "jpeg", "jpg"], default="png", help="Output format")
-    p.add_argument("--jpeg-quality", type=int, default=95, help="JPEG quality (if --format jpeg)")
-    # 3-plane options
-    p.add_argument("--multi-views", action="store_true", help="Export axial/coronal/sagittal stacks (isotropic resampling)")
-    p.add_argument("--iso-mm", type=float, default=None, help="Target isotropic spacing (mm). Default=min(original spacings)")
-    p.add_argument("--interp", type=int, choices=[0, 1, 3], default=1, help="Interpolation order: 0=nearest, 1=linear, 3=cubic")
-    p.add_argument("--no-axial", dest="axial", action="store_false", help="Do not save axial view")
-    p.add_argument("--no-coronal", dest="coronal", action="store_false", help="Do not save coronal view")
-    p.add_argument("--no-sagittal", dest="sagittal", action="store_false", help="Do not save sagittal view")
+    p = argparse.ArgumentParser(description="DICOM -> PNG/JPG (doctor isotropic export)")
+    p.add_argument("-i", "--input", required=True, type=Path, help="DICOM folder")
+    p.add_argument("-o", "--output", required=True, type=Path, help="Output folder")
+    p.add_argument("--format", choices=["png", "jpg", "jpeg"], default="png")
+    p.add_argument("--wl", type=float, default=40)
+    p.add_argument("--ww", type=float, default=400)
+    p.add_argument("--auto", action="store_true", help="Auto WL/WW (0.5-99.5%%)")
+    p.add_argument("--iso-mm", type=float, default=None)
+    p.add_argument("--interp", type=int, choices=[0, 1, 3], default=1)
+    p.add_argument("--no-axial", dest="axial", action="store_false")
+    p.add_argument("--no-coronal", dest="coronal", action="store_false")
+    p.add_argument("--no-sagittal", dest="sagittal", action="store_false")
     p.set_defaults(axial=True, coronal=True, sagittal=True)
-    p.add_argument("--flip-axial-lr", action="store_true", help="Flip axial left-right")
-    p.add_argument("--flip-axial-ud", action="store_true", help="Flip axial up-down")
-    p.add_argument("--flip-coronal-lr", action="store_true", help="Flip coronal left-right")
-    p.add_argument("--flip-coronal-ud", action="store_true", help="Flip coronal up-down")
-    p.add_argument("--flip-sagittal-lr", action="store_true", help="Flip sagittal left-right")
-    p.add_argument("--flip-sagittal-ud", action="store_true", help="Flip sagittal up-down")
-    p.add_argument("--metadata", action="store_true", help="Write metadata.csv with shapes and spacings")
+    p.add_argument("--flip-axial-lr", action="store_true")
+    p.add_argument("--flip-axial-ud", action="store_true")
+    p.add_argument("--flip-cor-lr", action="store_true")
+    p.add_argument("--flip-cor-ud", action="store_true")
+    p.add_argument("--flip-sag-lr", action="store_true")
+    p.add_argument("--flip-sag-ud", action="store_true")
     return p
 
 
 def main():
     args = build_argparser().parse_args()
-    try:
-        n = convert_dicom_to_png(
-            input_path=args.input,
-            output_dir=args.output,
-            recursive=args.recursive,
-            window=args.window,
-            wl=args.wl,
-            ww=args.ww,
-            prefix=args.prefix,
-            fmt=args.format,
-            jpeg_quality=args.jpeg_quality,
-            multi_views=args.multi_views,
-            iso_mm=args.iso_mm,
-            interp=args.interp,
-            save_axial=args.axial,
-            save_coronal=args.coronal,
-            save_sagittal=args.sagittal,
-            flip_ax_lr=args.flip_axial_lr,
-            flip_ax_ud=args.flip_axial_ud,
-            flip_cor_lr=args.flip_coronal_lr,
-            flip_cor_ud=args.flip_coronal_ud,
-            flip_sag_lr=args.flip_sagittal_lr,
-            flip_sag_ud=args.flip_sagittal_ud,
-            write_metadata=args.metadata,
-        )
-        print(f"Wrote {n} file(s) to {args.output}")
-    except Exception as e:
-        print(f"Error: {e}")
-        raise
+    convert_dicom_to_png(
+        src_dir=args.input,
+        out_dir=args.output,
+        fmt=args.format,
+        wl=args.wl,
+        ww=args.ww,
+        auto=args.auto,
+        iso_spacing_mm=args.iso_mm,
+        interp_order=args.interp,
+        save_axial=args.axial,
+        save_coronal=args.coronal,
+        save_sagittal=args.sagittal,
+        flip_axial_lr=args.flip_axial_lr,
+        flip_axial_ud=args.flip_axial_ud,
+        flip_cor_lr=args.flip_cor_lr,
+        flip_cor_ud=args.flip_cor_ud,
+        flip_sag_lr=args.flip_sag_lr,
+        flip_sag_ud=args.flip_sag_ud,
+    )
 
 
 if __name__ == "__main__":

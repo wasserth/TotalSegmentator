@@ -122,6 +122,8 @@ For users who want organized outputs with clear task titles, smoothing for bette
 - **Smoothing Options**: Improves 3D visualization in Slicer and Blender
 - **STL Export**: Direct export to Blender-compatible format
 - **Comprehensive Reporting**: JSON summaries of all processing
+- **Blender CT Vessel Plugin (auto-install)**: On first pipeline run, the `CT Vessel` add-on is installed and enabled automatically (no manual add-on setup required).
+  Note: This writes to Blender user preferences so the add-on persists across sessions. If Blender cannot save preferences (permissions), the add-on may not appear.
 
 ### Supported Task Groups
 1. **"liver: segments"** → `liver_segment_1` through `liver_segment_8`

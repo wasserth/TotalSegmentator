@@ -41,24 +41,40 @@ export async function POST(request: NextRequest) {
 
   const stream = new ReadableStream({
     start(controller) {
+      let closed = false;
+      const safeClose = () => {
+        if (!closed) {
+          closed = true;
+          try {
+            controller.close();
+          } catch {
+            // ignore
+          }
+        }
+      };
       const sendMessage = (type: string, message: string, progress?: number) => {
+        if (closed) return;
         const data = `data: ${JSON.stringify({
           type,
           message,
           progress,
           timestamp: new Date().toISOString(),
         })}\n\n`;
-        controller.enqueue(encoder.encode(data));
+        try {
+          controller.enqueue(encoder.encode(data));
+        } catch {
+          closed = true;
+        }
       };
 
       if (!pythonPath) {
         sendMessage('error', 'Python executable not found. Check PYTHON_PATH/.venv.');
-        controller.close();
+        safeClose();
         return;
       }
       if (!fs.existsSync(scriptPath)) {
         sendMessage('error', `run_pipeline.py not found: ${scriptPath}`);
-        controller.close();
+        safeClose();
         return;
       }
 
@@ -78,6 +94,17 @@ export async function POST(request: NextRequest) {
         cwd: projectRoot,
         env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8' },
       });
+
+      const abortHandler = () => {
+        sendMessage('info', 'Client disconnected, stopping pipeline');
+        try {
+          proc.kill('SIGTERM');
+        } catch {
+          // ignore
+        }
+        safeClose();
+      };
+      request.signal?.addEventListener('abort', abortHandler, { once: true });
 
       const handleLine = (line: string) => {
         const t = line.trim();
@@ -125,13 +152,16 @@ export async function POST(request: NextRequest) {
         } else {
           sendMessage('error', `Pipeline exited with code ${code}`);
         }
-        controller.close();
+        safeClose();
       });
 
       proc.on('error', (err) => {
         sendMessage('error', err.message || 'Failed to spawn pipeline process');
-        controller.close();
+        safeClose();
       });
+    },
+    cancel() {
+      // client closed stream
     },
   });
 

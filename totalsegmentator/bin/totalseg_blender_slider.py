@@ -2,27 +2,28 @@
 """
 totalseg_blender_slider.py
 
-Installs the DICOM slider addon into a Blender file and configures it
-with the correct image paths and scaling parameters.
+Configures the CT slider addon in the current Blender scene:
+  - ensures addon is enabled
+  - applies CT metadata (pixel size / slice count)
+  - sets PNG folder path and CT offset
 
 Usage:
     blender scene.blend -P totalseg_blender_slider.py -- \
         --png-dir /path/to/slices --nifti-path /path/to/scan.nii.gz \
-        --scale 0.01 --save output.blend
+        --scale 0.01 --addon-module ct_slicer_doctor --save output.blend
 """
 
-import bpy
 import sys
-import os
+import csv
 from pathlib import Path
-import shutil
+import bpy
+import addon_utils
+
 
 def parse_args():
-    """Parse command line arguments after '--'"""
     if "--" not in sys.argv:
         return {}
-    
-    argv = sys.argv[sys.argv.index("--") + 1:]
+    argv = sys.argv[sys.argv.index("--") + 1 :]
     args = {}
     i = 0
     while i < len(argv):
@@ -38,193 +39,214 @@ def parse_args():
             i += 1
     return args
 
-def install_addon_to_blend(addon_source: Path, text_name: str = "dicom_slider_addon.py"):
-    """Copy an addon script into Blender text blocks"""
-    if not addon_source.exists():
-        print(f"❌ ERROR: Addon source not found: {addon_source}")
-        return False
-    
-    print(f"📦 Installing addon from: {addon_source}")
-    
-    # Remove old version if exists
-    for txt in bpy.data.texts:
-        if txt.name == text_name:
-            bpy.data.texts.remove(txt)
-    
-    # Load addon into text block
-    with open(addon_source, 'r') as f:
-        addon_code = f.read()
-    
-    txt = bpy.data.texts.new(text_name)
-    txt.from_string(addon_code)
-    txt.use_module = True  # Enable as Python module
-    
-    print(f"✅ Addon installed into .blend file as: {text_name}")
-    return True
 
-def setup_startup_script(png_dir, nifti_path, scale, addon_text_names):
-    """Create a startup script that registers the addon on file open"""
-    # Ensure paths are absolute
-    png_dir = str(Path(png_dir).resolve())
-    nifti_path = str(Path(nifti_path).resolve()) if nifti_path else ""
-    
-    startup_code = f'''
-import bpy
-import os
+def _make_logger(log_file: str | None):
+    log_path = Path(log_file).resolve() if log_file else None
 
-# Configuration from pipeline (ABSOLUTE PATHS)
-PNG_DIR = r"{png_dir}"
-NIFTI_PATH = r"{nifti_path}"
-SCALE = {scale}
+    def _log(msg: str):
+        print(msg)
+        if log_path:
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(log_path, "a", encoding="utf-8") as f:
+                    f.write(msg.rstrip() + "\n")
+            except Exception:
+                pass
 
-print(f"📁 Configured paths:")
-print(f"   PNG_DIR: {{PNG_DIR}}")
-print(f"   NIFTI_PATH: {{NIFTI_PATH}}")
-print(f"   SCALE: {{SCALE}}")
+    return _log
 
-# Auto-register addons when file is opened
-def register_addons():
+
+def _addons_dir():
     try:
-        addon_texts = {repr(addon_text_names)}
-        for addon_name in addon_texts:
-            addon_text = bpy.data.texts.get(addon_name)
-            if addon_text:
-                exec(compile(addon_text.as_string(), addon_name, 'exec'))
-            
-        # Configure DICOM slider fields if this addon exposes them
-        if hasattr(bpy.context.scene, 'folder_path_dicom'):
-            bpy.context.scene.folder_path_dicom = PNG_DIR
-            print(f"✓ Set folder_path_dicom to: {{PNG_DIR}}")
-        if hasattr(bpy.context.scene, 'base_size'):
-            bpy.context.scene.base_size = SCALE
-            print(f"✓ Set base_size to: {{SCALE}}")
-        if hasattr(bpy.context.scene, 'use_auto_scale'):
-            bpy.context.scene.use_auto_scale = True
-            print(f"✓ Enabled auto-scale")
-        print("✅ Addons loaded and configured")
+        scripts_dir = Path(bpy.utils.user_resource("SCRIPTS")).resolve()
+        return (scripts_dir / "addons").resolve()
+    except Exception:
+        return None
+
+
+def _read_metadata(png_dir_val: str):
+    meta_path = Path(png_dir_val) / "metadata.csv"
+    if not meta_path.exists():
+        return {}
+    data = {}
+    try:
+        with open(meta_path, newline="") as f:
+            for row in csv.reader(f):
+                if not row:
+                    continue
+                data[row[0]] = row[1:]
+    except Exception:
+        return {}
+    return data
+
+
+def _apply_ct_metadata(scene, meta, log):
+    shape = meta.get("Isotropic_Shape_ZYX", [])
+    iso = meta.get("Isotropic_Spacing_mm", [])
+    try:
+        if len(shape) >= 3 and len(iso) >= 1:
+            z = int(float(shape[0]))
+            y = int(float(shape[1]))
+            x = int(float(shape[2]))
+            iso_mm = float(iso[0])
+            if hasattr(scene, "ax_slice_count"):
+                scene.ax_slice_count = max(1, z)
+                log(f"✓ ax_slice_count = {scene.ax_slice_count}")
+            if hasattr(scene, "slice_spacing_ax"):
+                scene.slice_spacing_ax = iso_mm
+                log(f"✓ slice_spacing_ax = {scene.slice_spacing_ax}")
+            if hasattr(scene, "pixel_pitch"):
+                scene.pixel_pitch = iso_mm
+                log(f"✓ pixel_pitch = {scene.pixel_pitch}")
+            if hasattr(scene, "pixel"):
+                scene.pixel = max(1, int(max(x, y)))
+                log(f"✓ pixel = {scene.pixel}")
     except Exception as e:
-        print(f"❌ Error loading addons: {{e}}")
-        import traceback
-        traceback.print_exc()
+        log(f"⚠️ Failed to apply CT metadata: {e}")
 
-# Register handler
-@bpy.app.handlers.persistent
-def load_post_handler(dummy):
-    register_addons()
 
-if load_post_handler not in bpy.app.handlers.load_post:
-    bpy.app.handlers.load_post.append(load_post_handler)
-
-# Also register now
-register_addons()
-'''
-    
-    # Remove old startup script if exists
-    for txt in bpy.data.texts:
-        if txt.name == "startup_dicom.py":
-            bpy.data.texts.remove(txt)
-    
-    txt = bpy.data.texts.new("startup_dicom.py")
-    txt.from_string(startup_code)
-    txt.use_module = True
-    
-    print("✅ Startup script created")
-    return True
-
-def setup_addon_parameters(png_dir, nifti_path, scale):
-    """Configure the addon with correct paths and scale"""
+def _calc_mesh_center(collection_name="Organs"):
     try:
-        # Execute the startup script which will register and configure the addon
-        startup_text = bpy.data.texts.get("startup_dicom.py")
-        if startup_text:
-            exec(compile(startup_text.as_string(), "startup_dicom.py", 'exec'))
-            print("✅ Addon configured successfully")
+        coll = bpy.data.collections.get(collection_name)
+        if not coll:
+            return None
+        points = []
+        for obj in coll.all_objects:
+            if obj.type != "MESH":
+                continue
+            for v in obj.bound_box:
+                p = obj.matrix_world @ bpy.mathutils.Vector(v)
+                points.append(p)
+        if not points:
+            return None
+        min_x = min(p.x for p in points)
+        min_y = min(p.y for p in points)
+        min_z = min(p.z for p in points)
+        max_x = max(p.x for p in points)
+        max_y = max(p.y for p in points)
+        max_z = max(p.z for p in points)
+        return ((min_x + max_x) / 2.0, (min_y + max_y) / 2.0, (min_z + max_z) / 2.0)
+    except Exception:
+        return None
+
+
+def _ensure_addon_enabled(module_name: str, log):
+    try:
+        loaded, enabled = addon_utils.check(module_name)
+        if enabled and loaded:
+            log(f"ℹ️ Addon already enabled: {module_name}")
             return True
-        else:
-            print("❌ ERROR: Startup script not found")
-            return False
-        
+        addon_utils.enable(module_name, default_set=False)
+        log(f"✅ Addon enabled: {module_name}")
+        return True
     except Exception as e:
-        print(f"❌ ERROR configuring addon: {e}")
-        import traceback
-        traceback.print_exc()
+        log(f"❌ Failed to enable addon {module_name}: {e}")
         return False
+
+
+def _get_addon_module(module_name: str):
+    try:
+        for mod in addon_utils.modules():
+            if getattr(mod, "__name__", "") == module_name:
+                return mod
+    except Exception:
+        pass
+    return None
+
 
 def main():
     args = parse_args()
-    
-    print("=" * 70)
-    print("🎬 DICOM Slice Viewer Setup")
-    print("=" * 70)
-    
-    png_dir = args.get('png-dir', '')
-    nifti_path = args.get('nifti-path', '')
-    scale = float(args.get('scale', 0.01))
-    save_path = args.get('save', '')
-    addon_path_arg = args.get('addon-path', '')
-    extra_addon_path_arg = args.get('extra-addon-path', '')
 
-    default_addon_source = Path(__file__).parent.parent.parent / "dicom_slider_addon.py"
-    if addon_path_arg:
-        addon_source = Path(addon_path_arg).resolve()
-        if not addon_source.exists():
-            print(f"⚠️ Provided addon path not found, fallback to default: {addon_source}")
-            addon_source = default_addon_source
-    else:
-        addon_source = default_addon_source
-    
+    png_dir = args.get("png-dir", "")
+    nifti_path = args.get("nifti-path", "")
+    scale = float(args.get("scale", 0.01))
+    save_path = args.get("save", "")
+    log_file = args.get("log-file", "")
+    addon_module = args.get("addon-module", "ct_slicer_doctor")
+    log = _make_logger(log_file if log_file else None)
+
+    log("=" * 70)
+    log("🎬 CT Slider Setup")
+    log("=" * 70)
+
     if not png_dir:
-        print("❌ ERROR: --png-dir is required")
+        log("❌ ERROR: --png-dir is required")
         sys.exit(1)
-    
-    png_dir = Path(png_dir).resolve()
-    if not png_dir.exists():
-        print(f"❌ ERROR: PNG directory not found: {png_dir}")
-        sys.exit(1)
-    
-    addon_text_names = []
 
-    # Install primary addon
-    if not install_addon_to_blend(addon_source, "dicom_slider_addon.py"):
+    png_dir = str(Path(png_dir).resolve())
+    if not Path(png_dir).exists():
+        log(f"❌ ERROR: PNG directory not found: {png_dir}")
         sys.exit(1)
-    addon_text_names.append("dicom_slider_addon.py")
 
-    # Install optional extra addon (e.g., vessel tool)
-    if extra_addon_path_arg:
-        extra_source = Path(extra_addon_path_arg).resolve()
-        if not extra_source.exists():
-            print(f"⚠️ Extra addon path not found, skipping: {extra_source}")
-        else:
-            extra_text_name = extra_source.name if extra_source.suffix == ".py" else f"{extra_source.name}.py"
-            if install_addon_to_blend(extra_source, extra_text_name):
-                addon_text_names.append(extra_text_name)
-    
-    # Setup startup script
-    if not setup_startup_script(str(png_dir), str(nifti_path), scale, addon_text_names):
+    log(f"📁 PNG_DIR: {png_dir}")
+    log(f"🧩 Addon module: {addon_module}")
+    log(f"📏 Scale: {scale}")
+
+    adir = _addons_dir()
+    if adir:
+        log(f"📂 User addons dir: {adir}")
+        cand = adir / f"{addon_module}.py"
+        log(f"📄 Addon file exists: {cand.exists()} ({cand})")
+    if not _ensure_addon_enabled(addon_module, log):
         sys.exit(1)
-    
-    # Configure addon (this will also execute it)
-    if not setup_addon_parameters(png_dir, nifti_path, scale):
-        print("⚠️ Warning: Addon configuration had issues, but continuing...")
-    
-    # Save file
+
+    try:
+        addon_keys = list(bpy.context.preferences.addons.keys())
+        log(f"ℹ️ Enabled addons: {', '.join(addon_keys) if addon_keys else '(none)'}")
+    except Exception:
+        pass
+
+    # Align CT units (units per mm) with mesh scale: mm -> m (0.001) * SCALE
+    try:
+        mod = _get_addon_module(addon_module)
+        if mod and hasattr(mod, "DEFAULT_SIZE"):
+            mod.DEFAULT_SIZE = float(scale) * 0.001
+            log(f"✓ DEFAULT_SIZE set to {mod.DEFAULT_SIZE} (scale-aligned)")
+        elif not mod:
+            log("⚠️ Addon module not found in addon_utils.modules(); skip DEFAULT_SIZE")
+    except Exception as e:
+        log(f"⚠️ Failed to set DEFAULT_SIZE: {e}")
+
+    scene = bpy.context.scene
+    if hasattr(scene, "folder_path_png"):
+        scene.folder_path_png = png_dir
+        log(f"✓ folder_path_png = {png_dir}")
+    if hasattr(scene, "folder_path_dicom"):
+        scene.folder_path_dicom = png_dir
+        log(f"✓ folder_path_dicom = {png_dir}")
+
+    if png_dir:
+        meta = _read_metadata(png_dir)
+        if meta:
+            _apply_ct_metadata(scene, meta, log)
+
+    mesh_center = _calc_mesh_center("Organs")
+    if mesh_center and hasattr(scene, "ct_offset"):
+        scene.ct_offset = mesh_center
+        log(f"✓ CT offset set to mesh center: {mesh_center}")
+
+    try:
+        mod = _get_addon_module(addon_module)
+        if mod and callable(getattr(mod, "update_axis", None)):
+            mod.update_axis(None, bpy.context)
+            log("✓ update_axis executed")
+        elif not mod:
+            log("⚠️ Addon module not found for update_axis; skip")
+    except Exception as e:
+        log(f"⚠️ update_axis failed: {e}")
+
     if save_path:
         save_path = Path(save_path).resolve()
         bpy.ops.wm.save_as_mainfile(filepath=str(save_path))
-        print(f"💾 Saved to: {save_path}")
+        log(f"💾 Saved to: {save_path}")
     else:
         bpy.ops.wm.save_mainfile()
-        print(f"💾 Saved current file")
-    
-    print("=" * 70)
-    print("✅ DICOM Slice Viewer installed successfully!")
-    print("=" * 70)
-    print("\nUsage:")
-    print("  1. Open the .blend file in Blender")
-    print("  2. Look for 'DICOM' tab in the right sidebar (press N)")
-    print("  3. Use the axis buttons and slider to navigate slices")
-    print("  4. Slices will auto-scale to match organ dimensions")
-    print("=" * 70)
+        log("💾 Saved current file")
+
+    log("=" * 70)
+    log("✅ CT Slider configured successfully!")
+    log("=" * 70)
+
 
 if __name__ == "__main__":
     main()
