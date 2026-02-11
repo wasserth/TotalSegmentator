@@ -32,11 +32,11 @@ Training script is in: predict_body_size/body_size_training.py (not public)
 
 def check_body_stats_models_exist():
     """Check if all body stats models exist."""
-    models_dir = get_weights_dir() / "body_stats_models_2025_12_19"
+    models_dir = get_weights_dir() / "body_stats_models_2026_02_11"
     
     for modality in ["ct", "mr"]:
         for target in ["weight", "size", "age", "sex"]:
-            base_path = models_dir / f"{target}_{modality}_classifiers_2025_12_19.json"
+            base_path = models_dir / f"{target}_{modality}_classifiers_2026_02_11.json"
             # Check if all 5 folds exist
             for fold_idx in range(5):
                 model_file = Path(f"{base_path}.{fold_idx}")
@@ -274,14 +274,12 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     #     print(f"  {name}: {value}")
 
     result = {}
-    # for target in ["weight", "size", "age", "sex"]:
-    for target in ["weight"]:
+    for target in ["weight", "size", "age", "sex"]:
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
-            # classifier_path = str(importlib.resources.files('totalsegmentator') / f'resources/{target}_{modality}_classifiers_2025_12_19.json')
             # classifier_path = get_totalseg_dir() / f'models/{target}_{modality}_classifiers_2025_12_19.json'
-            classifier_path = get_weights_dir() / f'body_stats_models_2025_12_19/{target}_{modality}_classifiers_2025_12_19.json'
+            classifier_path = get_weights_dir() / f'body_stats_models_2026_02_11/{target}_{modality}_classifiers_2026_02_11.json'
         else: 
             # manually set model file
             classifier_path = model_file
@@ -330,20 +328,20 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
                               "unit": "kg" if target == "weight" else "cm" if target == "size" else None
                               }
     
-    # # Calculate BMI and Body Surface Area based on predicted values
-    # weight_kg = result["weight"]["value"]
-    # height_cm = result["size"]["value"]
-    # height_m = height_cm / 100.0
+    # Calculate BMI and Body Surface Area based on predicted values
+    weight_kg = result["weight"]["value"]
+    height_cm = result["size"]["value"]
+    height_m = height_cm / 100.0
     
-    # # BMI = weight(kg) / height(m)^2
-    # bmi = weight_kg / (height_m ** 2)
-    # result["bmi"] = {"value": round(bmi, 2), 
-    #                  "unit": "kg/m^2"}
+    # BMI = weight(kg) / height(m)^2
+    bmi = weight_kg / (height_m ** 2)
+    result["bmi"] = {"value": round(bmi, 2), 
+                     "unit": "kg/m^2"}
     
-    # # Body Surface Area (Mosteller formula): BSA = sqrt(height(cm) x weight(kg) / 3600)
-    # bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
-    # result["bsa"] = {"value": round(bsa, 2), 
-    #                  "unit": "m^2"}
+    # Body Surface Area (Mosteller formula): BSA = sqrt(height(cm) x weight(kg) / 3600)
+    bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
+    result["bsa"] = {"value": round(bsa, 2), 
+                     "unit": "m^2"}
     
     return result
 

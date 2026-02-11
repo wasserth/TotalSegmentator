@@ -387,8 +387,8 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset920_aortic_sinuses_cm_nativ_400subj"
 
     elif task_id == "body_stats":
-        weights_path = config_dir / "body_stats_models_2025_12_19"
-        WEIGHTS_URL = url + "/v2.5.0-weights/body_stats_models_2025_12_19.zip"
+        weights_path = config_dir / "body_stats_models_2026_02_11"
+        WEIGHTS_URL = url + "/v2.5.0-weights/body_stats_models_2026_02_11.zip"
 
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")
