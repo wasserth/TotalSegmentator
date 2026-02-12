@@ -38,6 +38,41 @@ except ImportError:
     API_AVAILABLE = False
     warnings.warn("totalsegmentator API not available - segmentation will not work")
 
+try:
+    from totalsegmentator.map_to_binary import class_map
+    CLASS_MAP_AVAILABLE = True
+except Exception:
+    CLASS_MAP_AVAILABLE = False
+    class_map = {}
+
+
+def _build_neck_abdomen_roi_subset() -> list[str]:
+    """
+    Build a trunk-focused ROI subset (neck to abdomen), excluding head and extremities.
+    Uses class_map['total'] if available; otherwise returns empty list.
+    """
+    if not CLASS_MAP_AVAILABLE or "total" not in class_map:
+        return []
+    names = list(class_map["total"].values())
+    exclude_keywords = [
+        # head / face / brain
+        "brain", "skull", "face", "eye", "ear", "tooth", "teeth", "mandible", "maxilla",
+        "optic", "pituitary", "cerebellum", "pons", "midbrain", "medulla", "scalp",
+        # upper extremity
+        "humerus", "radius", "ulna", "hand", "wrist", "elbow", "forearm", "upper_arm",
+        "shoulder", "scapula", "clavicle", "finger", "thumb", "carpal", "metacarpal",
+        # lower extremity
+        "femur", "tibia", "fibula", "patella", "knee", "lower_leg", "upper_leg",
+        "foot", "ankle", "toe", "calcaneus", "talus", "metatarsal", "phalange",
+    ]
+    out = []
+    for n in names:
+        low = n.lower()
+        if any(k in low for k in exclude_keywords):
+            continue
+        out.append(n)
+    return out
+
 
 # -----------------------------
 # Task definitions
@@ -87,6 +122,61 @@ SEGMENTATION_TASKS = {
         "task_name": "total",
         # Full CT task produces 100+ classes; keep display concise.
         "results": ["(many classes)"],
+        "output_mapping": {},
+    },
+    # Trunk-focused tasks (keep original task names)
+    "body": {
+        "title": "body",
+        "task_name": "body",
+        "results": ["(multiple classes)"],
+        "output_mapping": {},
+    },
+    "vertebrae_body": {
+        "title": "vertebrae body",
+        "task_name": "vertebrae_body",
+        "results": ["(vertebrae)"],
+        "output_mapping": {},
+    },
+    "abdominal_muscles": {
+        "title": "abdominal muscles",
+        "task_name": "abdominal_muscles",
+        "results": ["(abdominal muscles)"],
+        "output_mapping": {},
+    },
+    "heartchambers_highres": {
+        "title": "heart chambers (highres)",
+        "task_name": "heartchambers_highres",
+        "results": ["(heart chambers)"],
+        "output_mapping": {},
+    },
+    "lung_vessels": {
+        "title": "lung vessels",
+        "task_name": "lung_vessels",
+        "results": ["(lung vessels)"],
+        "output_mapping": {},
+    },
+    "pleural_pericard_effusion": {
+        "title": "pleural/pericard effusion",
+        "task_name": "pleural_pericard_effusion",
+        "results": ["(effusions)"],
+        "output_mapping": {},
+    },
+    "coronary_arteries": {
+        "title": "coronary arteries",
+        "task_name": "coronary_arteries",
+        "results": ["(coronary arteries)"],
+        "output_mapping": {},
+    },
+    "aortic_sinuses": {
+        "title": "aortic sinuses",
+        "task_name": "aortic_sinuses",
+        "results": ["(aortic sinuses)"],
+        "output_mapping": {},
+    },
+    "ventricle_parts": {
+        "title": "ventricle parts",
+        "task_name": "ventricle_parts",
+        "results": ["(ventricle parts)"],
         "output_mapping": {},
     },
 }

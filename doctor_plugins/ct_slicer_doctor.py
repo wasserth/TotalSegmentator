@@ -10,7 +10,8 @@ bl_info = {
 
 import bpy
 import os
-from mathutils import Vector
+import csv
+from mathutils import Vector, Matrix
 from bpy_extras import view3d_utils
 
 # =========================================================
@@ -91,6 +92,123 @@ def load_reference_image(image_path):
     except Exception as e:
         print(f"[CT] Failed to load image: {image_path}, Error: {e}")
         return None
+
+
+def _load_ct_metadata(scene) -> bool:
+    """Load metadata.csv into scene affine props if available."""
+    folder = getattr(scene, "folder_path_png", "") or getattr(scene, "folder_path_dicom", "")
+    if not folder:
+        scene["ct_meta_debug"] = "No folder_path_png/folder_path_dicom set."
+        return False
+
+    meta_path = os.path.join(folder, "metadata.csv")
+    if not os.path.exists(meta_path):
+        # If user picked axial/coronal/sagittal folder, metadata is in parent
+        parent = os.path.abspath(os.path.join(folder, os.pardir))
+        parent_meta = os.path.join(parent, "metadata.csv")
+        if os.path.exists(parent_meta):
+            meta_path = parent_meta
+        else:
+            scene["ct_meta_debug"] = f"metadata.csv not found in {folder} or {parent}"
+            return False
+
+    meta = {}
+    try:
+        with open(meta_path, newline="") as f:
+            for row in csv.reader(f):
+                if not row:
+                    continue
+                meta[row[0]] = row[1:]
+    except Exception:
+        scene["ct_meta_debug"] = f"Failed to read metadata.csv at {meta_path}"
+        return False
+
+    def _parse_vec(key):
+        val = meta.get(key, [])
+        if not val:
+            return None
+        try:
+            # Case A: multiple columns like ['1.0','0.0','0.0']
+            if len(val) > 1:
+                cleaned = []
+                for v in val:
+                    s = str(v).strip().strip("[]()")
+                    if not s:
+                        continue
+                    cleaned.append(float(s))
+                return cleaned if cleaned else None
+            # Case B: single string like "[1.0, 0.0, 0.0]"
+            s = str(val[0]).strip().strip("[]()")
+            parts = [p.strip() for p in s.split(",") if p.strip()]
+            if len(parts) >= 3:
+                return [float(parts[0]), float(parts[1]), float(parts[2])]
+            return None
+        except Exception:
+            return None
+
+    # Sizes
+    shape = meta.get("Isotropic_Shape_ZYX", [])
+    try:
+        if len(shape) >= 3:
+            z = int(float(shape[0]))
+            y = int(float(shape[1]))
+            x = int(float(shape[2]))
+            if hasattr(scene, "ct_slices"):
+                scene.ct_slices = max(1, z)
+            if hasattr(scene, "ct_rows"):
+                scene.ct_rows = max(1, y)
+            if hasattr(scene, "ct_cols"):
+                scene.ct_cols = max(1, x)
+    except Exception:
+        pass
+
+    # Affine vectors
+    r = _parse_vec("DICOM_IOP_R")
+    c = _parse_vec("DICOM_IOP_C")
+    n = _parse_vec("DICOM_IOP_N")
+    o = _parse_vec("DICOM_IPP0")
+    scene["ct_meta_debug"] = f"meta_path={meta_path}, keys={list(meta.keys())}"
+    def _set_scene_vec(attr, vec):
+        try:
+            if hasattr(scene, attr):
+                setattr(scene, attr, vec[:3])
+            else:
+                scene[attr] = vec[:3]
+        except Exception:
+            pass
+
+    if r:
+        _set_scene_vec("ct_affine_r", r)
+    if c:
+        _set_scene_vec("ct_affine_c", c)
+    if n:
+        _set_scene_vec("ct_affine_n", n)
+    if o:
+        _set_scene_vec("ct_affine_origin", o)
+
+    # Spacing
+    try:
+        if hasattr(scene, "ct_affine_row_spacing"):
+            scene.ct_affine_row_spacing = float(meta.get("DICOM_RowSpacing_mm", [scene.pixel_pitch])[0])
+        if hasattr(scene, "ct_affine_col_spacing"):
+            scene.ct_affine_col_spacing = float(meta.get("DICOM_ColSpacing_mm", [scene.pixel_pitch])[0])
+        if hasattr(scene, "ct_affine_slice_spacing"):
+            scene.ct_affine_slice_spacing = float(meta.get("DICOM_SliceSpacing_mm", [scene.slice_spacing_ax])[0])
+    except Exception:
+        pass
+
+    return True
+
+
+def _get_scene_vec(scene, attr: str):
+    try:
+        if hasattr(scene, attr):
+            return list(getattr(scene, attr))
+        if attr in scene:
+            return list(scene.get(attr))
+    except Exception:
+        pass
+    return None
 
 
 def get_or_create_ct_empty(context, axis_type: str) -> bpy.types.Object:
@@ -585,6 +703,123 @@ class VIEW3D_OT_stop_place(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class VIEW3D_OT_align_meshes_to_ct_center(bpy.types.Operator):
+    """Align mesh bounding box to CT bounding box (affine-based)."""
+    bl_idname = "view3d.align_meshes_to_ct_center"
+    bl_label = "Align Meshes to CT Center"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        sc = context.scene
+        try:
+            ensure_props()
+        except Exception:
+            pass
+        use_affine = getattr(sc, "ct_use_affine", False)
+        if use_affine:
+            _load_ct_metadata(sc)
+        r = _get_scene_vec(sc, "ct_affine_r")
+        c = _get_scene_vec(sc, "ct_affine_c")
+        n = _get_scene_vec(sc, "ct_affine_n")
+        o = _get_scene_vec(sc, "ct_affine_origin")
+        if not (use_affine and r and c and n and o):
+            dbg = sc.get("ct_meta_debug", "")
+            msg = "CT affine not available. Load CT metadata first."
+            if dbg:
+                msg = f"{msg} ({dbg})"
+            self.report({'WARNING'}, msg)
+            return {'CANCELLED'}
+
+        R = Vector(r)
+        C = Vector(c)
+        N = Vector(n)
+        O = Vector(o)
+
+        sx = -1.0 if getattr(sc, "ct_lps_flip_x", True) else 1.0
+        sy = -1.0 if getattr(sc, "ct_lps_flip_y", True) else 1.0
+        sz = -1.0 if getattr(sc, "ct_lps_flip_z", False) else 1.0
+
+        def _map(v):
+            return Vector((v.x * sx, v.y * sy, v.z * sz))
+
+        Rb = _map(R).normalized()
+        Cb = _map(C).normalized()
+        Nb = _map(N).normalized()
+        Ob = _map(O)
+
+        unit_scale = float(getattr(sc, "ct_unit_scale", 0.001))
+        row_spacing = float(getattr(sc, "ct_affine_row_spacing", sc.pixel_pitch)) * unit_scale
+        col_spacing = float(getattr(sc, "ct_affine_col_spacing", sc.pixel_pitch)) * unit_scale
+        slice_spacing = float(getattr(sc, "ct_affine_slice_spacing", sc.slice_spacing_ax)) * unit_scale
+
+        rows = int(getattr(sc, "ct_rows", sc.pixel))
+        cols = int(getattr(sc, "ct_cols", sc.pixel))
+        slices = int(getattr(sc, "ct_slices", sc.ax_slice_count))
+
+        # CT bounding box (8 corners) in Blender space
+        v0 = Ob
+        v1 = Ob + Rb * row_spacing * (rows - 1)
+        v2 = Ob + Cb * col_spacing * (cols - 1)
+        v3 = Ob + Nb * slice_spacing * (slices - 1)
+        corners = [
+            v0,
+            v1,
+            v2,
+            v3,
+            v1 + v2,
+            v1 + v3,
+            v2 + v3,
+            v1 + v2 + v3,
+        ]
+        ct_min = Vector((
+            min(v.x for v in corners),
+            min(v.y for v in corners),
+            min(v.z for v in corners),
+        ))
+        ct_max = Vector((
+            max(v.x for v in corners),
+            max(v.y for v in corners),
+            max(v.z for v in corners),
+        ))
+
+        coll = bpy.data.collections.get("Organs")
+        if not coll:
+            self.report({'WARNING'}, "Collection 'Organs' not found.")
+            return {'CANCELLED'}
+
+        points = []
+        for obj in coll.all_objects:
+            if obj.type != 'MESH':
+                continue
+            for v in obj.bound_box:
+                p = obj.matrix_world @ Vector(v)
+                points.append(p)
+        if not points:
+            self.report({'WARNING'}, "No mesh objects found in 'Organs'.")
+            return {'CANCELLED'}
+
+        min_x = min(p.x for p in points)
+        min_y = min(p.y for p in points)
+        min_z = min(p.z for p in points)
+        max_x = max(p.x for p in points)
+        max_y = max(p.y for p in points)
+        max_z = max(p.z for p in points)
+        mesh_min = Vector((min_x, min_y, min_z))
+        mesh_max = Vector((max_x, max_y, max_z))
+
+        # Align mesh bbox min corner to CT bbox min corner
+        delta = ct_min - mesh_min
+        for obj in coll.all_objects:
+            if obj.type == 'MESH':
+                obj.location += delta
+
+        self.report(
+            {'INFO'},
+            f"Aligned mesh bbox to CT bbox. Δ=({delta.x:.4f}, {delta.y:.4f}, {delta.z:.4f})"
+        )
+        return {'FINISHED'}
+
+
 # =========================================================
 # Panel
 # =========================================================
@@ -775,6 +1010,7 @@ classes = (
     VIEW3D_OT_apply_path_appearance,
     VIEW3D_OT_click_add_path_points,
     VIEW3D_OT_stop_place,
+    VIEW3D_OT_align_meshes_to_ct_center,
     VIEW3D_PT_ct_vessel_unified,
 )
 

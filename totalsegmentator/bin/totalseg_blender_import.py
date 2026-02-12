@@ -202,11 +202,15 @@ def parse_args(argv=None):
     p.add_argument("--recenter", action="store_true", help="Recenter imported meshes to origin")
     p.add_argument("--group-categories", action="store_true", help="Create category subcollections and place objects accordingly")
     p.add_argument("--mirror-x", type=str, choices=["true", "false"], default="false", help="Mirror objects across X-axis and flip X location")
-    p.add_argument("--rotate-x-deg", type=float, default=90.0, help="Rotate imported meshes around X in degrees (e.g., -90)")
+    p.add_argument("--rotate-x-deg", type=float, default=0.0, help="Rotate imported meshes around X in degrees (e.g., -90)")
     p.add_argument("--remesh", choices=["none", "voxel", "quad", "smooth", "sharp"], default="none", help="Apply a remesh modifier to imported meshes")
     p.add_argument("--voxel-size", type=float, default=0.003, help="Voxel size for voxel remesh (in scene units; 0.003 ≈ 3 mm if scene is meters)")
     p.add_argument("--palette", choices=["exact", "auto"], default="exact", help="Color palette: exact (fixed organ colors) or auto (semantic + distinct)")
     p.add_argument("--save", type=Path, default=None, help="Save scene to this .blend file")
+    p.add_argument("--origin-offset", default="", help="Absolute origin offset to apply to meshes (x,y,z) in Blender units")
+    p.add_argument("--align-center", default="", help="Target center for meshes (x,y,z) in Blender units")
+    p.add_argument("--ct-metadata", default="", help="Path to metadata.csv for CT alignment")
+    p.add_argument("--auto-align-ct", action="store_true", help="Auto align meshes to CT slicer center (uses metadata)")
     return p.parse_args(argv)
 
 
@@ -295,6 +299,94 @@ def _apply_rotate_and_mirror(obj, rotate_x_deg: float = 0.0, mirror_x: bool = Fa
         obj.location.x = -obj.location.x
 
 
+
+def _parse_meta_value(meta: dict[str, str], key: str) -> str:
+    val = meta.get(key, "")
+    return str(val).strip()
+
+
+def _parse_shape_zyx(meta: dict[str, str]) -> tuple[int, int, int] | None:
+    raw = _parse_meta_value(meta, "Isotropic_Shape_ZYX") or _parse_meta_value(meta, "Original_Shape_ZYX")
+    if not raw:
+        return None
+    raw = raw.strip().strip("[]")
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    if len(parts) < 3:
+        return None
+    try:
+        z = int(float(parts[0]))
+        y = int(float(parts[1]))
+        x = int(float(parts[2]))
+        return (z, y, x)
+    except Exception:
+        return None
+
+
+def _parse_spacing_mm(meta: dict[str, str]) -> float | None:
+    raw = _parse_meta_value(meta, "Isotropic_Spacing_mm")
+    if not raw:
+        raw = _parse_meta_value(meta, "DICOM_RowSpacing_mm")
+    if not raw:
+        raw = _parse_meta_value(meta, "Original_Spacing_mm_XYZ")
+    if not raw:
+        return None
+    raw = raw.strip().strip("[]")
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    try:
+        return float(parts[0])
+    except Exception:
+        return None
+
+
+def _load_metadata_csv(path: str) -> dict[str, str]:
+    meta: dict[str, str] = {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or "," not in line:
+                    continue
+                k, v = line.split(",", 1)
+                meta[k.strip()] = v.strip()
+    except Exception as e:
+        print(f"Failed to read metadata.csv: {e}")
+    return meta
+
+
+def _apply_auto_ct_alignment(collection, meta_path: str, unit_scale: float, mirror_x: bool = False):
+    if not meta_path:
+        print("Auto-align CT skipped: missing metadata path")
+        return
+    meta = _load_metadata_csv(meta_path)
+    shape = _parse_shape_zyx(meta)
+    spacing = _parse_spacing_mm(meta)
+    if not shape or spacing is None:
+        print("Auto-align CT skipped: missing shape/spacing in metadata")
+        return
+
+    z, y, x = shape
+    size_x = x * spacing * unit_scale
+    size_y = y * spacing * unit_scale
+    size_z = z * spacing * unit_scale
+
+    # After rotate_x_deg=90:
+    # i -> +X, k -> +Y, j -> -Z
+    # Center shift: (+sx/2, -sz/2, -sy/2)
+    ox = size_x * 0.5
+    oy = -size_z * 0.5
+    oz = -size_y * 0.5
+    if mirror_x:
+        ox = -ox
+
+    all_objects = [o for o in collection.all_objects if o.type == "MESH"]
+    for obj in all_objects:
+        obj.location.x += ox
+        obj.location.y += oy
+        obj.location.z += oz
+
+    print(f"Auto CT alignment applied: offset=({ox:.6f}, {oy:.6f}, {oz:.6f})")
+
+
 def import_mesh(filepath: Path, units: str = "m", extra_scale: float = 1.0, recenter: bool = False, collection=None, remesh_mode: str = "none", voxel_size: float = 0.003, palette: str = "exact", rotate_x_deg: float = 0.0, mirror_x: bool = False):
     ext = filepath.suffix.lower()
     before = set(bpy.data.objects)
@@ -358,7 +450,11 @@ def import_mesh(filepath: Path, units: str = "m", extra_scale: float = 1.0, rece
         if recenter:
             obj.location = (0.0, 0.0, 0.0)
         # Optional rotation / mirror (axis fix or mirrored exports)
-        _apply_rotate_and_mirror(obj, rotate_x_deg=rotate_x_deg if 'rotate_x_deg' in locals() else 0.0, mirror_x=mirror_x if 'mirror_x' in locals() else False)
+        _apply_rotate_and_mirror(
+            obj,
+            rotate_x_deg=rotate_x_deg if 'rotate_x_deg' in locals() else 0.0,
+            mirror_x=mirror_x if 'mirror_x' in locals() else False,
+        )
         # Optional remesh
         if remesh_mode and remesh_mode != 'none':
             _apply_remesh(obj, remesh_mode, voxel_size)
@@ -554,7 +650,7 @@ def run_inside_blender(args):
             obj = bpy.data.objects[obj_name]
             bpy.data.objects.remove(obj)
     
-    # Convert mirror-x string to boolean
+    # Convert mirror flag to boolean
     mirror_x = args.mirror_x.lower() == "true"
     
     # Prepare exact materials if requested
@@ -601,9 +697,59 @@ def run_inside_blender(args):
                 )
             )
     print(f"Imported {len(imported)} objects into collection '{args.collection}'")
-    
-    # Center the entire collection after all objects are imported
-    center_collection(parent_coll)
+
+    # Apply absolute origin offset if requested (moves meshes into DICOM space)
+    if getattr(args, "origin_offset", ""):
+        try:
+            ox, oy, oz = [float(v) for v in str(args.origin_offset).split(",")]
+            for obj in parent_coll.all_objects:
+                if obj.type == "MESH":
+                    obj.location.x += ox
+                    obj.location.y += oy
+                    obj.location.z += oz
+            print(f"Applied origin offset to meshes: ({ox}, {oy}, {oz})")
+        except Exception as e:
+            print(f"Failed to apply origin offset: {e}")
+
+    # Align mesh bounding box center to target center if requested
+    if not args.auto_align_ct and getattr(args, "align_center", ""):
+        try:
+            tx, ty, tz = [float(v) for v in str(args.align_center).split(",")]
+            points = []
+            for obj in parent_coll.all_objects:
+                if obj.type != "MESH":
+                    continue
+                for v in obj.bound_box:
+                    p = obj.matrix_world @ bpy.mathutils.Vector(v)
+                    points.append(p)
+            if points:
+                min_x = min(p.x for p in points)
+                min_y = min(p.y for p in points)
+                min_z = min(p.z for p in points)
+                max_x = max(p.x for p in points)
+                max_y = max(p.y for p in points)
+                max_z = max(p.z for p in points)
+                cx = (min_x + max_x) * 0.5
+                cy = (min_y + max_y) * 0.5
+                cz = (min_z + max_z) * 0.5
+                dx, dy, dz = (tx - cx), (ty - cy), (tz - cz)
+                for obj in parent_coll.all_objects:
+                    if obj.type == "MESH":
+                        obj.location.x += dx
+                        obj.location.y += dy
+                        obj.location.z += dz
+                print(f"Aligned mesh center by delta: ({dx}, {dy}, {dz})")
+        except Exception as e:
+            print(f"Failed to align mesh center: {e}")
+
+    # Auto-align meshes to CT slicer center using metadata (preferred)
+    if args.auto_align_ct:
+        unit_scale = args.scale * (0.001 if args.units == "m" else 1.0)
+        _apply_auto_ct_alignment(parent_coll, args.ct_metadata, unit_scale, mirror_x=mirror_x)
+
+    # Center the entire collection only if requested
+    if args.recenter:
+        center_collection(parent_coll)
     
     if args.save:
         bpy.ops.wm.save_mainfile(filepath=str(args.save))
@@ -645,4 +791,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

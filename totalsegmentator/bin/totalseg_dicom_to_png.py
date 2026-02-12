@@ -31,6 +31,21 @@ DEFAULT_SIZE = 0.02
 DEFAULT_FOLDER = ''
 
 
+def _safe_iop(ds):
+    iop = getattr(ds, "ImageOrientationPatient", None)
+    if iop is None or len(iop) < 6:
+        return None, None, None
+    try:
+        r = np.array([float(iop[0]), float(iop[1]), float(iop[2])], dtype=np.float64)
+        c = np.array([float(iop[3]), float(iop[4]), float(iop[5])], dtype=np.float64)
+        n = np.cross(r, c)
+        if np.linalg.norm(n) > 0:
+            n = n / np.linalg.norm(n)
+        return r, c, n
+    except Exception:
+        return None, None, None
+
+
 def _is_dicom(p: Path) -> bool:
     try:
         with open(p, "rb") as f:
@@ -190,6 +205,8 @@ def convert_dicom_to_png(
         _save_stack(sag, out_root / "sagittal", flip_lr=flip_sag_lr, flip_ud=flip_sag_ud)
 
     # 7) メタデータ
+    r0, c0, n0 = _safe_iop(ds0)
+    ipp0 = getattr(ds0, "ImagePositionPatient", None)
     with open(out_root / "metadata.csv", "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["SeriesInstanceUID", key[1]])
@@ -201,6 +218,26 @@ def convert_dicom_to_png(
         w.writerow(["Axial_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
         w.writerow(["Coronal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
         w.writerow(["Sagittal_pixel_mm_(H,W)_&slice_step_mm", (iso, iso), iso])
+        # Always emit affine-related keys so downstream code can verify presence.
+        if r0 is not None:
+            w.writerow(["DICOM_IOP_R", r0.tolist()])
+        else:
+            w.writerow(["DICOM_IOP_R", []])
+        if c0 is not None:
+            w.writerow(["DICOM_IOP_C", c0.tolist()])
+        else:
+            w.writerow(["DICOM_IOP_C", []])
+        if n0 is not None:
+            w.writerow(["DICOM_IOP_N", n0.tolist()])
+        else:
+            w.writerow(["DICOM_IOP_N", []])
+        if ipp0 is not None and len(ipp0) >= 3:
+            try:
+                w.writerow(["DICOM_IPP0", [float(ipp0[0]), float(ipp0[1]), float(ipp0[2])]])
+            except Exception:
+                w.writerow(["DICOM_IPP0", []])
+        else:
+            w.writerow(["DICOM_IPP0", []])
 
     print("✅ Done.")
     print("Series:", key[1])

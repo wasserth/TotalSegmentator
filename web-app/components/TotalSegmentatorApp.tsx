@@ -31,6 +31,7 @@ const TotalSegmentatorApp = () => {
   
   const [showTools, setShowTools] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
+  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
@@ -395,27 +396,57 @@ const TotalSegmentatorApp = () => {
                 />
               </div>
 
-              <div>
+              <div className="relative">
                 <label className="block text-gray-700 font-medium mb-2">{t.labels.segmentationTask}</label>
-                <div className="relative">
-                  <div className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm">
-                    {['total_all', 'liver_segments', 'liver_vessels', 'total_vessels'].map((opt) => (
-                      <label key={opt} className="flex items-center gap-3 py-1 text-gray-800">
-                        <input
-                          type="checkbox"
-                          checked={tasks.includes(opt)}
-                          onChange={() =>
-                            setTasks((prev) =>
-                              prev.includes(opt) ? prev.filter((t) => t !== opt) : [...prev, opt]
-                            )
-                          }
-                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                        />
-                        <span className="text-sm">{opt}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                {(() => {
+                  const preferred = ['total_all', 'liver_segments', 'liver_vessels'];
+                  const allOptions = [
+                    'total_all',
+                    'liver_segments',
+                    'liver_vessels',
+                    'total_vessels',
+                    'body',
+                    'abdominal_muscles',
+                    'lung_vessels',
+                    'pleural_pericard_effusion',
+                    'ventricle_parts',
+                  ];
+                  const rest = allOptions.filter((t) => !preferred.includes(t));
+                  const options = [...preferred, ...rest];
+                  const summary = tasks.length ? tasks.join(', ') : 'Select tasks';
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setShowTaskDropdown((v) => !v)}
+                        className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm text-left text-gray-800 flex items-center justify-between"
+                      >
+                        <span className="text-sm truncate">{summary}</span>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${showTaskDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+                      {showTaskDropdown && (
+                        <div className="absolute z-10 mt-2 w-full max-h-64 overflow-auto bg-white border border-gray-300 rounded-lg shadow-lg p-2">
+                          {options.map((opt) => (
+                            <label key={opt} className="flex items-center gap-3 py-1 text-gray-800">
+                              <input
+                                type="checkbox"
+                                checked={tasks.includes(opt)}
+                                onChange={() =>
+                                  setTasks((prev) =>
+                                    prev.includes(opt) ? prev.filter((t) => t !== opt) : [...prev, opt]
+                                  )
+                                }
+                                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                              />
+                              <span className="text-sm">{opt}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+                <p className="text-xs text-gray-500 mt-2">Click to open and select multiple tasks.</p>
               </div>
               
               <div>

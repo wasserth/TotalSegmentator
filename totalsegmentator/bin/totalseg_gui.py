@@ -297,6 +297,11 @@ ALLOWED_TASKS = {
     "liver_segments",
     "liver_vessels",
     "total_vessels",
+    "body",
+    "abdominal_muscles",
+    "lung_vessels",
+    "pleural_pericard_effusion",
+    "ventricle_parts",
 }
 
 
@@ -635,6 +640,10 @@ class PipelineThread(threading.Thread):
             stl_dir = build_combined_stl_dir(out_seg, task_list, self.log)
             blender_script = Path(__file__).with_name("totalseg_blender_import.py")
 
+            # If metadata exists, auto-align meshes to CT slicer center
+            meta = out_png / "metadata.csv"
+            auto_align_ct = meta.exists()
+
             cmd = [
                 blender_exe,
                 "-b",
@@ -646,9 +655,10 @@ class PipelineThread(threading.Thread):
                 "--group-categories",
                 "--palette", "exact",
                 "--scale", str(scale),
-                "--mirror-x", "true",
                 "--save", str(scene_setup),
             ]
+            if auto_align_ct:
+                cmd += ["--auto-align-ct", "--ct-metadata", str(meta), "--rotate-x-deg", "90", "--mirror-x", "true"]
 
             rc = run_cmd(cmd, self.log)
             if rc != 0:
