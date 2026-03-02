@@ -96,8 +96,8 @@ const en: Translations = {
   alerts: {
     notesTitle: "Important Notes",
     note1: "Use Chrome/Edge browser for folder picker",
-    note2: "Folder names must not contain spaces",
-    note3: "Use underscores (_) or hyphens (-) instead"
+    note2: "Folder paths can include spaces",
+    note3: "Keep paths stable while a pipeline is running"
   },
   logs: {
     noLogs: "No logs yet. Start a pipeline to see output..."
@@ -146,8 +146,8 @@ const jp: Translations = {
   alerts: {
     notesTitle: "重要な注意事項",
     note1: "フォルダピッカーにはChrome/Edgeブラウザを使用してください",
-    note2: "フォルダ名にスペースを含めることはできません",
-    note3: "代わりにアンダースコア（_）またはハイフン（-）を使用してください"
+    note2: "フォルダパスにスペースを含めても実行できます",
+    note3: "実行中はパスを変更しないでください"
   },
   logs: {
     noLogs: "ログはまだありません。パイプラインを開始すると出力が表示されます..."

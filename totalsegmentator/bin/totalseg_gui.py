@@ -640,7 +640,7 @@ class PipelineThread(threading.Thread):
             stl_dir = build_combined_stl_dir(out_seg, task_list, self.log)
             blender_script = Path(__file__).with_name("totalseg_blender_import.py")
 
-            # If metadata exists, auto-align meshes to CT slicer center
+            # If metadata exists, keep rotation fix and enable quick legacy CT-slider compensation.
             meta = out_png / "metadata.csv"
             auto_align_ct = meta.exists()
 
@@ -658,7 +658,7 @@ class PipelineThread(threading.Thread):
                 "--save", str(scene_setup),
             ]
             if auto_align_ct:
-                cmd += ["--auto-align-ct", "--ct-metadata", str(meta), "--rotate-x-deg", "90", "--mirror-x", "true"]
+                cmd += ["--rotate-x-deg", "90", "--ct-metadata", str(meta), "--legacy-quick-align"]
 
             rc = run_cmd(cmd, self.log)
             if rc != 0:
