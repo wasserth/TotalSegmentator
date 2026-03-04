@@ -166,7 +166,7 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
 def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None, 
                    quiet: bool = False, device: str = "gpu", 
                    existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None,
-                   fold: int = None):
+                   fold: int = None, license_number: str = None):
     """
     Predict body weight, body size, age and sex based on a CT or MR scan.
     Also calculates BMI and body surface area based on the predicted values.
@@ -252,7 +252,8 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
                                             task="tissue_types",
                                             roi_subset=None, statistics_exclude_masks_at_border=True,
                                             quiet=True, stats_aggregation="median",
-                                            nr_thr_resamp=1, nr_thr_saving=1)
+                                            nr_thr_resamp=1, nr_thr_saving=1,
+                                            license_number=license_number)
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
     
@@ -389,11 +390,14 @@ def main():
     parser.add_argument("-q", dest="quiet", action="store_true",
                         help="Print no output to stdout", default=False)
 
+    parser.add_argument("-l", "--license_number", type=str, default=None,
+                        help="License number for tasks that require a license (e.g. tissue_types).")
+
     args = parser.parse_args()
 
     existing_stats = None
 
-    res = get_body_stats(nib.load(args.input_file), args.modality, args.model_file, args.quiet, args.device, existing_stats, fold=args.fold)
+    res = get_body_stats(nib.load(args.input_file), args.modality, args.model_file, args.quiet, args.device, existing_stats, fold=args.fold, license_number=args.license_number)
 
     if res is None:
         # FOV check failed, processing was skipped
