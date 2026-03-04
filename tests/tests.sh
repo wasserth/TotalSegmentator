@@ -46,6 +46,10 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_
 totalseg_get_phase -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_phase_prediction.json
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_phase_prediction
 
+# Test body stats prediction
+totalseg_get_body_stats -i tests/reference_files/example_ct_sm.nii.gz -m ct -o tests/unittest_body_stats_prediction.json -d cpu
+pytest -v tests/test_end_to_end.py::test_end_to_end::test_body_stats_prediction
+
 # Cleanup generated files and directories
 rm -rf tests/unittest_prediction_roi_subset
 rm -rf tests/unittest_prediction_fast
@@ -54,4 +58,5 @@ rm tests/unittest_prediction_fast.nii.gz
 rm tests/unittest_prediction_fast_force_split.nii.gz
 rm tests/unittest_prediction_fast_body_seg.nii.gz
 rm tests/unittest_phase_prediction.json
+rm tests/unittest_body_stats_prediction.json
 # rm tests/statistics.json

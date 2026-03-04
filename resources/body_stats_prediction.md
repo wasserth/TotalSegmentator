@@ -33,7 +33,7 @@ Then the volume and median intensity (HU value) of each structure is used as fea
 Training images: 46972 (images with abdomen OR thorax at least partially visible)  
 Validation set: 16181 images (abdomen AND thorax at least partially visible)  
 Test set: 501 CT images (hold-out)
-
+    
 | Target | Nr. training images | Nr. validation images | MAE on validation set | MAE on test set |
 |--------|--------------------:|---------------------:|----------:|----------------:|
 | Weight | 46972 | 16181 | 3.4 kg | 3.66 kg (stddev 4.91 kg) |
@@ -45,6 +45,7 @@ Test set: 501 CT images (hold-out)
 
 Training images: 31901 (images with abdomen OR thorax at least partially visible)  
 Validation set: 1145 images (abdomen AND thorax at least partially visible)
+Test set: not available
 
 | Target | Nr. training images | Nr. validation images | MAE on validation set | MAE on test set |
 |--------|--------------------:|---------------------:|----------:|----------------:|

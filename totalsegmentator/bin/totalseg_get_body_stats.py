@@ -217,30 +217,33 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
         # nib.save(seg_img, "/home/jakob/Downloads/nnunet_test/body_size/seg_img.nii.gz")
     else:
         if not quiet:
-            print("Using existing statistics...")
+            print("Using existing statistics...")   
         stats = existing_stats
         seg_img = existing_seg_img
 
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
-    
+
     if modality == "ct":
         stats = combine_lung_lobes(stats)
 
     # Check FOV requirement: at least one of the key organs must be present
-    fov_check_passed = (
-        ("liver" in stats and stats["liver"]["volume"] > 10) or
-        ("colon" in stats and stats["colon"]["volume"] > 10) or
-        ("lung_left" in stats and stats["lung_left"]["volume"] > 10) or
-        ("lung_right" in stats and stats["lung_right"]["volume"] > 10) or
-        ("hip_left" in stats and stats["hip_left"]["volume"] > 10) or
-        ("hip_right" in stats and stats["hip_right"]["volume"] > 10)
-    )
-    
-    if not fov_check_passed:
-        print("ERROR: Field of view too small for proper prediction. Stopping.")
-        print("       At least one of these must be present: liver, colon, lung, hip")
-        return None
+    # NOTE: Since stats are set to 0 if ROI touches border, all of these can be 0 even
+    # if major part of the abdomen is visible.
+    # -> skip this check, because even if all of these are 0, model will still work
+    #    well with tissue slices
+    # fov_check_passed = (
+    #     ("liver" in stats and stats["liver"]["volume"] > 10) or
+    #     ("colon" in stats and stats["colon"]["volume"] > 10) or
+    #     ("lung_left" in stats and stats["lung_left"]["volume"] > 10) or
+    #     ("lung_right" in stats and stats["lung_right"]["volume"] > 10) or
+    #     ("hip_left" in stats and stats["hip_left"]["volume"] > 10) or
+    #     ("hip_right" in stats and stats["hip_right"]["volume"] > 10)
+    # )
+    # if not fov_check_passed:
+    #     print("ERROR: Field of view too small for proper prediction. Stopping.")
+    #     print("       At least one of these must be present: liver, colon, lung, hip")
+    #     return None
 
     if not quiet:
         print("Running tissue types model...")
@@ -369,9 +372,13 @@ def main():
     parser.add_argument("-m", metavar="modality", dest="modality", type=str, choices=["ct", "mr"], required=True,
                         help="Imaging modality: 'ct' or 'mr'")
 
-    parser.add_argument("-s", metavar="filepath", dest="existing_stats",
-                        help="path to existing statistics json file. The script will not run TotalSegmentator but use the existing statistics.",
-                        type=lambda p: Path(p).absolute(), required=False, default=None)
+    # This does not work, because fast total model anyways has to run to get the vertebrae segmentation
+    # needed to get the tissue slices. Only works if also providing existing seg image (can be passed
+    # as arg to get_body_stats function). But also important to run TotalSegmentator with identical settings,
+    # otherwise significant change in model performance.
+    # parser.add_argument("-s", metavar="filepath", dest="existing_stats",
+    #                     help="path to existing statistics json file. The script will not run TotalSegmentator but use the existing statistics.",
+    #                     type=lambda p: Path(p).absolute(), required=False, default=None)
 
     parser.add_argument("-d",'--device', type=str, default="gpu",
                         help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
@@ -384,7 +391,7 @@ def main():
 
     args = parser.parse_args()
 
-    existing_stats = json.load(open(args.existing_stats)) if args.existing_stats is not None else None
+    existing_stats = None
 
     res = get_body_stats(nib.load(args.input_file), args.modality, args.model_file, args.quiet, args.device, existing_stats, fold=args.fold)
 
