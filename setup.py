@@ -36,7 +36,8 @@ setup(name='TotalSegmentator',
             'nnunetv2>=2.3.1',
             'requests',
             'dicom2nifti',
-            'pyarrow'
+            'pyarrow',
+            'xmltodict'
         ],
         zip_safe=False,
         classifiers=[
