@@ -89,7 +89,16 @@ def combine_lung_lobes(stats):
     return stats
 
 
-def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, tissue_types):
+def touches_border_2d(mask_2d):
+    """Check if a 2D mask touches the image border (first/last 3 pixels along x or y)."""
+    if np.any(mask_2d[:3, :]) or np.any(mask_2d[-3:, :]):
+        return True
+    if np.any(mask_2d[:, :3]) or np.any(mask_2d[:, -3:]):
+        return True
+    return False
+
+
+def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, tissue_types, use_border=False):
     """
     At each vertebrae get the centroid and at this z-level cut one slice through all classes
     of the segmentation file. Calc stats (volume, intensity) for each class.
@@ -102,6 +111,7 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
         tissue_types_img: nib.Nifti1Image - Tissue types segmentation image
         vertebrae: list - List of vertebra names (e.g., ["vertebrae_C1", "vertebrae_C2", ...])
         tissue_types: list - List of tissue type names (e.g., ["subcutaneous_fat", "torso_fat", "skeletal_muscle"])
+        use_border: bool - If False, set stats to 0 for slices where the mask touches the image border.
     
     Returns:
         dict - Dictionary with ROI names as keys and stats as values
@@ -147,7 +157,9 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
             seg_id = tissue_types_map_inv[seg_name]
             seg_mask = seg_slice == seg_id
             
-            if seg_mask.sum() == 0:
+            if seg_mask.sum() == 0 or (not use_border and touches_border_2d(seg_mask)):
+                if not use_border and seg_mask.sum() > 0 and touches_border_2d(seg_mask):
+                    print(f"Skipping {seg_name}_{vert_name} because it touches the image border.")
                 stats_tissue_slices[f"{seg_name}_{vert_name}"] = {
                     "volume": 0.0,
                     "intensity": 0.0
@@ -166,7 +178,7 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
 def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None, 
                    quiet: bool = False, device: str = "gpu", 
                    existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None,
-                   fold: int = None, license_number: str = None):
+                   fold: int = None, license_number: str = None, use_border: bool = False):
     """
     Predict body weight, body size, age and sex based on a CT or MR scan.
     Also calculates BMI and body surface area based on the predicted values.
@@ -257,7 +269,7 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
     
-    stats_tissue_slices = get_tissue_types_slices(img, seg_img, seg_img_tissue, vertebrae, tissue_types)
+    stats_tissue_slices = get_tissue_types_slices(img, seg_img, seg_img_tissue, vertebrae, tissue_types, use_border=use_border)
 
     if not quiet:
         print("Preparing features...")
