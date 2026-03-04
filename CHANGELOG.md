@@ -3,9 +3,10 @@
 * Remove version pinning of `requests` package for python < 3.10. Connected openssl issue seems to be resolved in python >= 3.9
 * `--statistics` now accepts an optional output path (e.g. `--statistics /path/to/stats.json`). If no path is given, behavior is unchanged.
 * add `--stats_aggregation` argument to choose between `mean` or `median` for intensity statistics
+* add `totalseg_get_body_stats` script to predict body weight, size, age and sex based on a CT or MR scan. More details can be found in `resources/body_stats_prediction.md`.
 
 
-## Release 2.12.0
+## Release 2.12.0 (12.12.2025)
 * update `heartchambers_highres` task: add postprocessing to remove segmentations outside of heart (+10mm). This fixes the issue of sometimes wrong heart segmentations in the liver or spleen. Also use the `robust_crop` option per default now for the heart chambers task.
 * add support for dicom_seg output type
 * The option `--output_type dicom` is now `--output_type dicom_rtstruct` (backward compatibility: `dicom` is now the same as `dicom_rtstruct`)
