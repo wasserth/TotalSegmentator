@@ -26,52 +26,32 @@ For CT, the 5 lung lobes are combined into `lung_left` and `lung_right`. Additio
 
 Then the volume and median intensity (HU value) of each structure is used as feature for a xgboost classifier.
 
-## Weight prediction
+## Results
 
 ### CT
-Number of training images: 46972    (images with abdomen OR thorax at least partially visible)  
-MAE (mean absolute error) on CV (cross-validation) : 3.4 kg   (evaluated on 16181 images with abdomen AND thorax at least partially visible)  
-MAE on test set: 3.66 kg (stddev 4.91 kg)   (hold-out test set of 501 CT images)
+
+Training images: 46972 (images with abdomen OR thorax at least partially visible)  
+Validation set: 16181 images (abdomen AND thorax at least partially visible)  
+Test set: 501 CT images (hold-out)
+
+| Target | Nr. training images | Nr. validation images | MAE on validation set | MAE on test set |
+|--------|--------------------:|---------------------:|----------:|----------------:|
+| Weight | 46972 | 16181 | 3.4 kg | 3.66 kg (stddev 4.91 kg) |
+| Size   | 46972 | 16181 | 3.8 cm | 3.79 cm (stddev 3.34 cm) |
+| Age    | 46972 | 16181 | 4.9 years | 5.56 years (stddev 5.36 years) |
+| Sex    | 46972 | 16181 | F1: 0.995 | Accuracy: 0.972 |
 
 ### MR
-Number of training images: 31901    (images with abdomen OR thorax at least partially visible)  
-MAE on CV: 5.5 kg   (evaluated on 1145 images with abdomen AND thorax at least partially visible)  
 
+Training images: 31901 (images with abdomen OR thorax at least partially visible)  
+Validation set: 1145 images (abdomen AND thorax at least partially visible)
 
-## Size prediction
-
-### CT
-Number of training images: 46972    (images with abdomen OR thorax at least partially visible)  
-MAE on CV: 3.8 cm   (evaluated on 16181 images with abdomen AND thorax at least partially visible)  
-MAE on test set: 3.79 cm (stddev 3.34 cm)   (hold-out test set of 501 CT images)
-
-### MR
-Number of training images: 31901    (images with abdomen OR thorax at least partially visible)  
-Mean absolute error (MAE): 4.0 cm   (evaluated on 1145 images with abdomen AND thorax at least partially visible)  
-
-
-## Age prediction
-
-### CT
-Number of training images: 46972    (images with abdomen OR thorax at least partially visible)  
-MAE on CV: 4.9 years   (evaluated on 16181 images with abdomen AND thorax at least partially visible)  
-MAE on test set: 5.56 years (stddev 5.36 years)   (hold-out test set of 501 CT images)
-
-### MR
-Number of training images: 31901    (images with abdomen OR thorax at least partially visible)  
-Mean absolute error (MAE): 5.3 years   (evaluated on 1145 images with abdomen AND thorax at least partially visible)  
-
-
-## Sex prediction
-
-### CT
-Number of training images: 46972    (images with abdomen OR thorax at least partially visible)  
-F1 score on CV: 0.995   (evaluated on 16181 images with abdomen AND thorax at least partially visible)  
-Accuracy on test set: 0.972   (hold-out test set of 501 CT images)
-
-### MR
-Number of training images: 31901    (images with abdomen OR thorax at least partially visible)  
-F1 score: 0.901   (evaluated on 1145 images with abdomen AND thorax at least partially visible)  
+| Target | Nr. training images | Nr. validation images | MAE on validation set | MAE on test set |
+|--------|--------------------:|---------------------:|----------:|----------------:|
+| Weight | 31901 | 1145 | 5.5 kg | — |
+| Size   | 31901 | 1145 | 4.0 cm | — |
+| Age    | 31901 | 1145 | 5.3 years | — |
+| Sex    | 31901 | 1145 | F1: 0.901 | — |
 
 
 ## Info
@@ -86,13 +66,13 @@ give similar predictions which is a good sign.
 
 The following plots show the distribution of the training data. If you try to predict cases out of this distribution, the model will likely not perform well.
 
-![Alt text](resources/imgs/body_stats_train_distr_PatientWeight.png)
+![Alt text](imgs/body_stats_train_distr_PatientWeight.png)
 
-![Alt text](resources/imgs/body_stats_train_distr_PatientSize.png)
+![Alt text](imgs/body_stats_train_distr_PatientSize.png)
 
-![Alt text](resources/imgs/body_stats_train_distr_PatientAge.png)
+![Alt text](imgs/body_stats_train_distr_PatientAge.png)
 
-![Alt text](resources/imgs/body_stats_train_distr_PatientSex.png)
+![Alt text](imgs/body_stats_train_distr_PatientSex.png)
 
 
 ## Limitations
