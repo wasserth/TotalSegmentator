@@ -57,6 +57,19 @@ Test set: not available
 | Sex    | 31901 | 1145 | F1: 0.901 | — |
 
 
+## Derived metrics
+
+BMI and Body Surface Area (BSA) are calculated from the predicted weight and height values.
+
+**BMI** uses the standard formula:
+
+$$\text{BMI} = \frac{\text{weight (kg)}}{\text{height (m)}^2}$$
+
+**BSA** uses the Mosteller formula:
+
+$$\text{BSA (m}^2\text{)} = \sqrt{\frac{\text{height (cm)} \times \text{weight (kg)}}{3600}}$$
+
+
 ## Info
 
 **Do not use for age < 16 years, since the model was not trained on children.**
