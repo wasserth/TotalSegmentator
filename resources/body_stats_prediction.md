@@ -1,5 +1,7 @@
 # Details on how the prediction of body size, weight, age and sex is done
 
+![Overview of the body stats prediction](imgs/body_stats_overview.png)
+
 TotalSegmentator is used to predict the following structures:
 ```python
 organs = [
@@ -67,14 +69,7 @@ give similar predictions which is a good sign.
 
 The following plots show the distribution of the training data. If you try to predict cases out of this distribution, the model will likely not perform well.
 
-![Alt text](imgs/body_stats_train_distr_PatientWeight.png)
-
-![Alt text](imgs/body_stats_train_distr_PatientSize.png)
-
-![Alt text](imgs/body_stats_train_distr_PatientAge.png)
-
-![Alt text](imgs/body_stats_train_distr_PatientSex.png)
-
+![Distribution of the training data](imgs/body_stats_data_distribution.png)
 
 ## Limitations
 
