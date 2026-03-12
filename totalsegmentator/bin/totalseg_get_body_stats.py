@@ -218,23 +218,38 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     img = nib.as_closest_canonical(img)  # important to cut tissue slices along correct axis
 
     st = time.time()
+    vertebrae_seg_img = None
     if existing_stats is None:
         if not quiet:
             print("Running TotalSegmentator...")
+        task = "total" if modality == "ct" else "total_mr"
         seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, 
+                                          task=task,
                                           roi_subset=None, statistics_exclude_masks_at_border=True,
                                           quiet=True, stats_aggregation="median", device=device,
                                           nr_thr_resamp=1, nr_thr_saving=1)
-        # debug
-        # nib.save(seg_img, "/home/jakob/Downloads/nnunet_test/body_size/seg_img.nii.gz")
     else:
         if not quiet:
             print("Using existing statistics...")   
         stats = existing_stats
         seg_img = existing_seg_img
-
+    
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
+
+    if modality == "mr":
+        if not quiet:
+            print("Running vertebrae_mr model...")
+        st = time.time()
+        vertebrae_seg_img, vertebrae_stats = totalsegmentator(
+                                                img, None, ml=True, fast=False, statistics=True,
+                                                task="vertebrae_mr",
+                                                roi_subset=None, statistics_exclude_masks_at_border=True,
+                                                quiet=True, stats_aggregation="median", device=device,
+                                                nr_thr_resamp=1, nr_thr_saving=1)
+        stats.update(vertebrae_stats)
+        if not quiet:
+            print(f"  took: {time.time()-st:.2f}s")
 
     if modality == "ct":
         stats = combine_lung_lobes(stats)
@@ -269,7 +284,8 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     if not quiet:
         print(f"  took: {time.time()-st:.2f}s")
     
-    stats_tissue_slices = get_tissue_types_slices(img, seg_img, seg_img_tissue, vertebrae, tissue_types, use_border=use_border)
+    vertebrae_img_for_slices = vertebrae_seg_img if vertebrae_seg_img is not None else seg_img
+    stats_tissue_slices = get_tissue_types_slices(img, vertebrae_img_for_slices, seg_img_tissue, vertebrae, tissue_types, use_border=use_border)
 
     if not quiet:
         print("Preparing features...")
