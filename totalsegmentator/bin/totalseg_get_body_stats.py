@@ -275,8 +275,9 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     if not quiet:
         print("Running tissue types model...")
     st = time.time()
+    task_tissue = "tissue_types" if modality == "ct" else "tissue_types_mr"
     seg_img_tissue, stats_tissue = totalsegmentator(img, None, ml=True, fast=False, statistics=True, 
-                                            task="tissue_types",
+                                            task=task_tissue,
                                             roi_subset=None, statistics_exclude_masks_at_border=True,
                                             quiet=True, stats_aggregation="median",
                                             nr_thr_resamp=1, nr_thr_saving=1,
@@ -307,6 +308,7 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
 
     result = {}
     for target in ["weight", "size", "age", "sex"]:
+    # for target in ["weight"]:
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
