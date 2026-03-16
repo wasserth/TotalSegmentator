@@ -441,6 +441,24 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task liver_segments_mr does not work with option --fast")
+    elif task == "liver_lesions":
+        task_id = 591
+        resample = [0.75, 0.75, 1.0]
+        trainer = "nnUNetTrainer"
+        crop = ["liver"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres_high"
+        folds = [0]
+        if fast: raise ValueError("task liver_lesions does not work with option --fast")
+    elif task == "liver_lesions_mr":
+        task_id = 589
+        resample = [0.8603515625, 0.857421875, 1.0]
+        trainer = "nnUNetTrainer"
+        crop = ["liver"]
+        crop_addon = [10, 10, 10]
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task liver_lesions_mr does not work with option --fast")
     elif task == "craniofacial_structures":
         task_id = 115
         resample = [0.5, 0.5, 0.5]

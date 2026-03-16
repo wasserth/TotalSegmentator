@@ -82,7 +82,7 @@ def main():
                         "appendicular_bones", "appendicular_bones_mr", "tissue_types", "heartchambers_highres",
                         "face", "vertebrae_body", "total_mr", "tissue_types_mr", "tissue_4_types", "face_mr",
                         "head_glands_cavities", "head_muscles", "headneck_bones_vessels", "headneck_muscles",
-                        "brain_structures", "liver_vessels", "oculomotor_muscles",
+                        "brain_structures", "liver_vessels", "liver_lesions", "liver_lesions_mr", "oculomotor_muscles",
                         "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules", "kidney_cysts", 
                         "breasts", "ventricle_parts", "aortic_sinuses", "liver_segments", "liver_segments_mr",
                         "total_highres_test", "craniofacial_structures", "abdominal_muscles", "teeth",

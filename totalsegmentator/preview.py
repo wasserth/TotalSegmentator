@@ -238,6 +238,12 @@ roi_groups = {
     "liver_segments_mr": [
         ["liver_segment_1", "liver_segment_2", "liver_segment_3", "liver_segment_4", "liver_segment_5", "liver_segment_6", "liver_segment_7", "liver_segment_8"]
     ],
+    "liver_lesions": [
+        ["liver_lesions"]
+    ],
+    "liver_lesions_mr": [
+        ["liver_lesions"]
+    ],
     "craniofacial_structures": [
         ["head"],
         ["skull"],

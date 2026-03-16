@@ -345,6 +345,12 @@ def download_pretrained_weights(task_id):
     elif task_id == 576:
         weights_path = config_dir / "Dataset576_mri_liver_segments_120subj"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset576_mri_liver_segments_120subj.zip"
+    elif task_id == 591:
+        weights_path = config_dir / "Dataset591_ct_liver_lesions_842subj"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset591_ct_liver_lesions_842subj.zip"
+    elif task_id == 589:
+        weights_path = config_dir / "Dataset589_ct_mri_liver_lesions_750subj"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset589_ct_mri_liver_lesions_750subj.zip"
     elif task_id == 115:
         weights_path = config_dir / "Dataset115_mandible"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset115_mandible.zip"

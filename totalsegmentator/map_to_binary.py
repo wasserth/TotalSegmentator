@@ -658,6 +658,12 @@ class_map = {
         7: "liver_segment_7",
         8: "liver_segment_8"
     },
+    "liver_lesions": {
+        1: "liver_lesions"
+    },
+    "liver_lesions_mr": {
+        1: "liver_lesions"
+    },
     "craniofacial_structures": {
         1: "mandible",
         2: "teeth_lower",
