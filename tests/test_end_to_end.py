@@ -100,7 +100,7 @@ class test_end_to_end(unittest.TestCase):
         self.assertTrue(images_equal, f"body_seg prediction fast not correct (dice: {dice:.6f})")
 
     def test_lung_vessels(self):
-        for roi in ["lung_trachea_bronchia", "lung_vessels"]:
+        for roi in ["lung_airways", "lung_airways_wall", "lung_arteries", "lung_veins"]:
             img_ref = nib.load(f"tests/reference_files/example_seg_lung_vessels/{roi}.nii.gz").get_fdata()
             img_new = nib.load(f"tests/unittest_prediction/{roi}.nii.gz").get_fdata()
             dice = dice_score(img_ref, img_new)
