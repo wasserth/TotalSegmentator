@@ -243,7 +243,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         # todo: adapt code to support removing outside of body (so far only "total" task classes supported)
         # remove_outside = ["body_trunc"]
         # remove_outside_dilation = 0  # mm
-        model = "3d_fullres_high"
+        model = "3d_fullres"
         folds = [0]
     elif task == "lung_vessels_LEGACY":
         task_id = 258
