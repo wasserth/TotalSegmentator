@@ -1,5 +1,5 @@
 import warnings
-from typing import Callable, Tuple, Union, List
+from typing import Callable, Union
 
 import numpy as np
 import torch
@@ -343,15 +343,15 @@ class nnUNetTrainerSkeletonRecall(nnUNetTrainer):
 
     @staticmethod
     def get_training_transforms(
-            patch_size: Union[np.ndarray, Tuple[int]],
+            patch_size: Union[np.ndarray, tuple[int]],
             rotation_for_DA: RandomScalar,
-            deep_supervision_scales: Union[List, Tuple, None],
-            mirror_axes: Tuple[int, ...],
+            deep_supervision_scales: Union[list, tuple, None],
+            mirror_axes: tuple[int, ...],
             do_dummy_2d_data_aug: bool,
-            use_mask_for_norm: List[bool] = None,
+            use_mask_for_norm: list[bool] = None,
             is_cascaded: bool = False,
-            foreground_labels: Union[Tuple[int, ...], List[int]] = None,
-            regions: List[Union[List[int], Tuple[int, ...], int]] = None,
+            foreground_labels: Union[tuple[int, ...], list[int]] = None,
+            regions: list[Union[list[int], tuple[int, ...], int]] = None,
             ignore_label: int = None,
     ) -> BasicTransform:
         transforms = []
@@ -455,10 +455,10 @@ class nnUNetTrainerSkeletonRecall(nnUNetTrainer):
 
     @staticmethod
     def get_validation_transforms(
-            deep_supervision_scales: Union[List, Tuple, None],
+            deep_supervision_scales: Union[list, tuple, None],
             is_cascaded: bool = False,
-            foreground_labels: Union[Tuple[int, ...], List[int]] = None,
-            regions: List[Union[List[int], Tuple[int, ...], int]] = None,
+            foreground_labels: Union[tuple[int, ...], list[int]] = None,
+            regions: list[Union[list[int], tuple[int, ...], int]] = None,
             ignore_label: int = None,
     ) -> BasicTransform:
         transforms = []
