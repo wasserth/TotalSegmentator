@@ -58,7 +58,7 @@ Next to the default task (`total`) there are more subtasks with more classes. If
 Openly available for any usage (Apache-2.0 license):
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **total_mr**: default task containing 50 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
-* **lung_vessels**: lung_vessels (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097)), lung_trachea_bronchia
+* **lung_vessels**: lung_vessels, lung_trachea_bronchia (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097))
 * **body**: body, body_trunc, body_extremities, skin
 * **body_mr**: body_trunc, body_extremities (for MR images)
 * **vertebrae_mr**: sacrum, vertebrae_L5, vertebrae_L4, vertebrae_L3, vertebrae_L2, vertebrae_L1, vertebrae_T12, vertebrae_T11, vertebrae_T10, vertebrae_T9, vertebrae_T8, vertebrae_T7, vertebrae_T6, vertebrae_T5, vertebrae_T4, vertebrae_T3, vertebrae_T2, vertebrae_T1, vertebrae_C7, vertebrae_C6, vertebrae_C5, vertebrae_C4, vertebrae_C3, vertebrae_C2, vertebrae_C1 (for CT this is part of the `total` task)

@@ -74,6 +74,12 @@ roi_groups = {
         "brain", "prostate", "spinal_cord"],
     ],
     "lung_vessels": [
+        ["lung_airways"],
+        ["lung_airways_wall"],
+        ["lung_arteries"],
+        ["lung_veins"]
+    ],
+    "lung_vessels_LEGACY": [
         ["lung_trachea_bronchia"],
         ["lung_vessels"]
     ],

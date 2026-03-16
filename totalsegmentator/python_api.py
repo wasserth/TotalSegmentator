@@ -234,13 +234,24 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
     elif task == "lung_vessels":
+        task_id = 117
+        resample = [0.703125, 0.703125, 1.0]
+        trainer = "nnUNetTrainerSkeletonRecall"
+        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
+                "lung_middle_lobe_right", "lung_lower_lobe_right"]
+        robust_crop = True
+        # todo: adapt code to support removing outside of body (so far only "total" task classes supported)
+        # remove_outside = ["body_trunc"]
+        # remove_outside_dilation = 0  # mm
+        model = "3d_fullres_high"
+        folds = [0]
+    elif task == "lung_vessels_LEGACY":
         task_id = 258
         resample = None
         trainer = "nnUNetTrainer"
         crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                 "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        # if ml: raise ValueError("task lung_vessels does not work with option --ml, because of postprocessing.")
-        if fast: raise ValueError("task lung_vessels does not work with option --fast")
+        if fast: raise ValueError("task lung_vessels_LEGACY does not work with option --fast")
         model = "3d_fullres"
         folds = [0]
     # elif task == "covid":

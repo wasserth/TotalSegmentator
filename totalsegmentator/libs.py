@@ -301,6 +301,9 @@ def download_pretrained_weights(task_id):
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset756_mri_vertebrae_1076subj.zip"
 
     # Models from other projects
+    elif task_id == 117:
+        weights_path = config_dir / "Dataset117_lung_airways_arteries_veins_282subj"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset117_lung_airways_arteries_veins_282subj.zip"
     elif task_id == 258:
         weights_path = config_dir / "Dataset258_lung_vessels_248subj"
         # WEIGHTS_URL = "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1"

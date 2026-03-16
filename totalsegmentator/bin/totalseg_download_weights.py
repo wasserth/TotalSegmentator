@@ -18,7 +18,7 @@ def main():
                                      epilog="Written by Jakob Wasserthal.")
 
     parser.add_argument("-t", "--task", choices=["total", "total_fast", "total_mr", "total_fast_mr",
-                                                 "lung_vessels", "cerebral_bleed",
+                                                 "lung_vessels", "lung_vessels_LEGACY", "cerebral_bleed",
                                                  "hip_implant", "coronary_arteries", "pleural_pericard_effusion",
                                                  "body", "body_fast", "body_mr", "body_mr_fast", "vertebrae_mr",
                                                  "vertebrae_body",
@@ -40,7 +40,8 @@ def main():
         "total_fast": [297, 298],
         "total_mr": [850, 851],
         "total_fast_mr": [852, 853],
-        "lung_vessels": [258],
+        "lung_vessels": [117],
+        "lung_vessels_LEGACY": [258],
         "cerebral_bleed": [150],
         "hip_implant": [260],
         "pleural_pericard_effusion": [315],

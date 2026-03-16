@@ -311,6 +311,12 @@ class_map = {
     
     # total_fast not extra class map, because easier to use just "total" for fast model
     "lung_vessels": {
+        1: "lung_airways",
+        2: "lung_airways_wall",
+        3: "lung_arteries",
+        4: "lung_veins"
+    },
+    "lung_vessels_LEGACY": {
         1: "lung_vessels",
         2: "lung_trachea_bronchia"
     },

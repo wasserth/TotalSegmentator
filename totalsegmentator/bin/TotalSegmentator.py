@@ -77,7 +77,7 @@ def main():
     # cerebral_bleed: Intracerebral hemorrhage
     # liver_vessels: hepatic vessels
     parser.add_argument("-ta", "--task", choices=["total", "body", "body_mr", "vertebrae_mr",
-                        "lung_vessels", "cerebral_bleed", "hip_implant", "coronary_arteries",
+                        "lung_vessels", "lung_vessels_LEGACY", "cerebral_bleed", "hip_implant", "coronary_arteries",
                         "pleural_pericard_effusion", "test",
                         "appendicular_bones", "appendicular_bones_mr", "tissue_types", "heartchambers_highres",
                         "face", "vertebrae_body", "total_mr", "tissue_types_mr", "tissue_4_types", "face_mr",
