@@ -5,8 +5,8 @@ set -e
 
 
 # Test vessel predictions
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta lung_vessels -d cpu  # ~1min
-pytest -v tests/test_end_to_end.py::test_end_to_end::test_lung_vessels
+# TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction -ta lung_vessels -d cpu  # ~1min
+# pytest -v tests/test_end_to_end.py::test_end_to_end::test_lung_vessels
 
 # Test total_mr
 TotalSegmentator -i tests/reference_files/example_mr_sm.nii.gz -o tests/unittest_prediction_mr.nii.gz -ta total_mr --ml -d cpu

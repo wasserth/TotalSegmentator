@@ -4,7 +4,7 @@
 * `--statistics` now accepts an optional output path (e.g. `--statistics /path/to/stats.json`). If no path is given, behavior is unchanged.
 * add `--stats_aggregation` argument to choose between `mean` or `median` for intensity statistics
 * add `totalseg_get_body_stats` script to predict body weight, size, age and sex based on a CT or MR scan. More details can be found in `resources/body_stats_prediction.md`.
-* update `lung_vessels` task: now can segement arteries, veins, airways and airways wall as separate classes. The previous version of lung_vessels tasks is now available as `lung_vessels_LEGACY`.
+* update `lung_vessels` task: now can segment arteries, veins, airways and airways wall as separate classes. The previous version of lung_vessels tasks is now available as `lung_vessels_LEGACY`.
 * add `liver_lesions` and `liver_lesions_mr` tasks
 
 
