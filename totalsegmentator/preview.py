@@ -95,6 +95,9 @@ roi_groups = {
     "coronary_arteries": [
         ["coronary_arteries"]
     ],
+    "coronary_arteries_LEGACY": [
+        ["coronary_arteries"]
+    ],
     "body": [
         ["body_trunc", "body_extremities"]
     ],

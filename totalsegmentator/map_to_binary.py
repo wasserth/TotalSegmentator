@@ -353,6 +353,9 @@ class_map = {
     "coronary_arteries": {
         1: "coronary_arteries",
     },
+    "coronary_arteries_LEGACY": {
+        1: "coronary_arteries",
+    },
     "body": {
         1: "body_trunc",
         2: "body_extremities",
@@ -804,7 +807,8 @@ commercial_models = {
     "brain_structures": 409,
     "thigh_shoulder_muscles": 857,
     "thigh_shoulder_muscles_mr": 857,
-    "coronary_arteries": 507,
+    "coronary_arteries": 509,
+    "coronary_arteries_LEGACY": 507,
     "aortic_sinuses": 920
 }
 

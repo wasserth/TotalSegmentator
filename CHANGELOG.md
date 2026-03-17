@@ -5,6 +5,7 @@
 * add `--stats_aggregation` argument to choose between `mean` or `median` for intensity statistics
 * add `totalseg_get_body_stats` script to predict body weight, size, age and sex based on a CT or MR scan. More details can be found in `resources/body_stats_prediction.md`.
 * update `lung_vessels` task: now can segment arteries, veins, airways and airways wall as separate classes. The previous version of lung_vessels tasks is now available as `lung_vessels_LEGACY`.
+* update `coronary_arteries` task: new skeleton-recall model with slightly increased accuracy. The previous version is now available as `coronary_arteries_LEGACY`.
 * add `liver_lesions` and `liver_lesions_mr` tasks
 
 

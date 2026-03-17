@@ -19,7 +19,7 @@ def main():
 
     parser.add_argument("-t", "--task", choices=["total", "total_fast", "total_mr", "total_fast_mr",
                                                  "lung_vessels", "lung_vessels_LEGACY", "cerebral_bleed",
-                                                 "hip_implant", "coronary_arteries", "pleural_pericard_effusion",
+                                                 "hip_implant", "coronary_arteries", "coronary_arteries_LEGACY", "pleural_pericard_effusion",
                                                  "body", "body_fast", "body_mr", "body_mr_fast", "vertebrae_mr",
                                                  "vertebrae_body",
                                                  "heartchambers_highres", "appendicular_bones", 
@@ -82,7 +82,8 @@ def main():
         "brain_structures": [409],
         "thigh_shoulder_muscles": [857],
         "thigh_shoulder_muscles_mr": [857],
-        "coronary_arteries": [507],
+        "coronary_arteries": [509],
+        "coronary_arteries_LEGACY": [507],
         # "aortic_sinuses": [920]
     }
 

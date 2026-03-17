@@ -626,6 +626,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if fast: raise ValueError("task thigh_shoulder_muscles_mr does not work with option --fast")
         show_license_info()
     elif task == "coronary_arteries":
+        task_id = 509
+        resample = [0.7, 0.7, 0.7]
+        trainer = "nnUNetTrainerSkeletonRecall"
+        crop = ["heart"]
+        crop_addon = [20, 20, 20]
+        model = "3d_fullres_high"
+        folds = [0]
+        if fast: raise ValueError("task coronary_arteries does not work with option --fast")
+        show_license_info()
+    elif task == "coronary_arteries_LEGACY":
         task_id = 507
         resample = [0.7, 0.7, 0.7]
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
@@ -633,7 +643,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop_addon = [20, 20, 20]
         model = "3d_fullres_high"
         folds = [0]
-        if fast: raise ValueError("task coronary_arteries does not work with option --fast")
+        if fast: raise ValueError("task coronary_arteries_LEGACY does not work with option --fast")
         show_license_info()
     elif task == "aortic_sinuses":
         task_id = 920

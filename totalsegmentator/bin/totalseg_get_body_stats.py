@@ -90,10 +90,10 @@ def combine_lung_lobes(stats):
 
 
 def touches_border_2d(mask_2d):
-    """Check if a 2D mask touches the image border (first/last 3 pixels along x or y)."""
-    if np.any(mask_2d[:3, :]) or np.any(mask_2d[-3:, :]):
+    """Check if a 2D mask touches the image border (first/last 2 pixels along x or y)."""
+    if np.any(mask_2d[:2, :]) or np.any(mask_2d[-2:, :]):
         return True
-    if np.any(mask_2d[:, :3]) or np.any(mask_2d[:, -3:]):
+    if np.any(mask_2d[:, :2]) or np.any(mask_2d[:, -2:]):
         return True
     return False
 
