@@ -355,6 +355,23 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     # Derive orientation metadata directly from loaded datasets
     orientation_metadata = _extract_orientation_from_datasets(source_images)
 
+    # Ensure required DICOM attributes exist (some anonymized files strip these)
+    required_str_attrs = {
+        'PatientID': 'UNKNOWN',
+        'PatientName': 'UNKNOWN',
+        'PatientBirthDate': '',
+        'PatientSex': '',
+        'AccessionNumber': '',
+        'ReferringPhysicianName': '',
+        'StudyID': '',
+        'StudyDate': '',
+        'StudyTime': '',
+    }
+    for img in source_images:
+        for attr, default in required_str_attrs.items():
+            if not hasattr(img, attr) or img.data_element(attr) is None:
+                setattr(img, attr, default)
+
     # Validate and fix SOPClassUID if missing or empty
     for img in source_images:
         if not hasattr(img, 'SOPClassUID') or img.SOPClassUID == '':
