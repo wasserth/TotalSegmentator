@@ -87,9 +87,3 @@ The following plots show the distribution of the training data. If you try to pr
 ## Limitations
 
 The model was trained on clinical data. This makes the model more robust and more generalizable to other clinical settings (e.g. in contrast to a model trained on some population study like UK Biobank). However, sometimes the body weight and size are not exactly measured but only estimated when being added to the DICOM header by clinicians. This reduces the accuracy of the model.
-
-
-## License of the body stats model
-
-CC-BY-NC 4.0
-
