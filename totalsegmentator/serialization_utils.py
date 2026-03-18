@@ -9,8 +9,6 @@ from io import BytesIO
 import nibabel as nib
 from nibabel import FileHolder, Nifti1Image
 import numpy as np
-import blosc
-
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti, add_label_map_to_nifti
 
 
@@ -80,11 +78,13 @@ Infos on how to speedup return of large data (which is slow per default):
   => both methods similar in speed
 """
 def serialize_and_compress(data):
+    import blosc
     serialized_data = pickle.dumps(data)
     return blosc.compress(serialized_data)
 
 
 def decompress_and_deserialize(compressed_data):
+    import blosc
     serialized_data = blosc.decompress(compressed_data)
     return pickle.loads(serialized_data)
 
