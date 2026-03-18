@@ -5,6 +5,8 @@ import time
 import argparse
 import json
 import pickle
+import tempfile
+import subprocess
 from pprint import pprint
 import importlib.resources
 import importlib.metadata
@@ -17,6 +19,8 @@ from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.config import get_totalseg_dir, get_weights_dir, send_usage_stats_application
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 from totalsegmentator.libs import download_pretrained_weights
+from totalsegmentator.serialization_utils import filestream_to_nifti, nib_load_eager
+from totalsegmentator.dicom_io import dcm_to_nifti
 
 """
 Additional requirements for this script:
@@ -87,6 +91,55 @@ def combine_lung_lobes(stats):
     stats["lung_left"]["intensity"] = left_weighted_sum / left_vol_for_intensity if left_vol_for_intensity > 0 else 0.0
     
     return stats
+
+
+def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=None):
+    """Run TotalSegmentator models via subprocess instead of python_api.
+    Required if calling from e.g. streamlit where python_api does not work properly.
+    """
+    quiet_flag = "--quiet" if quiet else ""
+    task = "total" if modality == "ct" else "total_mr"
+    task_tissue = "tissue_types" if modality == "ct" else "tissue_types_mr"
+
+    with tempfile.TemporaryDirectory(prefix="totalseg_body_stats_") as tmp_folder:
+        tmp_dir = Path(tmp_folder)
+        ct_img_path = tmp_dir / "ct.nii.gz"
+        nib.save(ct_img, ct_img_path)
+        stats_total_path = tmp_dir / "stats_total.json"
+        seg_total_path = tmp_dir / "seg_total.nii.gz"
+
+        subprocess.call(
+            f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast"
+            f" -s {stats_total_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
+            shell=True)
+        seg_img = nib_load_eager(seg_total_path)
+        with open(stats_total_path) as f:
+            stats = json.load(f)
+        yield "total", seg_img, stats
+
+        vertebrae_seg_img = None
+        if modality == "mr":
+            stats_vert_path = tmp_dir / "stats_vertebrae.json"
+            seg_vert_path = tmp_dir / "seg_vertebrae.nii.gz"
+            subprocess.call(
+                f"TotalSegmentator -i {ct_img_path} -o {seg_vert_path} --ml"
+                f" -t vertebrae_mr -s {stats_vert_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
+                shell=True)
+            vertebrae_seg_img = nib_load_eager(seg_vert_path)
+            with open(stats_vert_path) as f:
+                vertebrae_stats = json.load(f)
+            yield "vertebrae_mr", vertebrae_seg_img, vertebrae_stats
+
+        stats_tissue_path = tmp_dir / "stats_tissue.json"
+        seg_tissue_path = tmp_dir / "seg_tissue.nii.gz"
+        license_flag = f"-l {license_number}" if license_number else ""
+        subprocess.call(
+            f"TotalSegmentator -i {ct_img_path} -o {seg_tissue_path} --ml"
+            f" -t {task_tissue} -s {stats_tissue_path} --sa median -nr 1 -ns 1 -d {device}"
+            f" {quiet_flag} {license_flag}",
+            shell=True)
+        seg_img_tissue = nib_load_eager(seg_tissue_path)
+        yield "tissue_types", seg_img_tissue, None
 
 
 def touches_border_2d(mask_2d):
@@ -175,24 +228,48 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
     return stats_tissue_slices
 
 
-def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None, 
+def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path = None,
                    quiet: bool = False, device: str = "gpu", 
                    existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None,
-                   fold: int = None, license_number: str = None, use_border: bool = False):
+                   fold: int = None, license_number: str = None, use_border: bool = False,
+                   call_via_subprocess: bool = False):
     """
     Predict body weight, body size, age and sex based on a CT or MR scan.
     Also calculates BMI and body surface area based on the predicted values.
 
+    This is a generator that yields progress dicts (like evans_index).
+
     Args:
-        img: nib.Nifti1Image
+        img: file path (Path) to nifti/dicom | nib.Nifti1Image | filestream
         modality: str, "ct" or "mr"
+        f_type: "niigz" or "nii" or "dicom"
         model_file: Path, optional
         quiet: bool, optional
         device: str, optional
         existing_stats: dict, optional
         existing_seg_img: nib.Nifti1Image, optional
         fold: int, optional - if set, only this fold is used; if None, ensemble of all folds is used
+        license_number: str, optional
+        use_border: bool, optional
+        call_via_subprocess: bool, optional - if True, run TotalSegmentator via subprocess
     """
+    yield {"id": 1, "progress": 2, "status": "Loading data"}
+
+    if isinstance(img, Path) and f_type != "dicom":
+        img = nib.load(img)
+    elif isinstance(img, nib.Nifti1Image):
+        pass
+    elif f_type == "dicom":
+        print("Converting dicom to nifti...")
+        with tempfile.TemporaryDirectory(prefix="totalseg_tmp_") as tmp_folder:
+            ct_tmp_path = Path(tmp_folder) / "ct.nii.gz"
+            dcm_to_nifti(img, ct_tmp_path, tmp_dir=Path(tmp_folder), verbose=True)
+            img = nib.load(ct_tmp_path)
+            img = nib.Nifti1Image(np.asanyarray(img.dataobj), img.affine, img.header)
+    elif f_type == "niigz":
+        img = filestream_to_nifti(img, gzipped=True)
+    else:
+        img = filestream_to_nifti(img, gzipped=False)
 
     organs = ['gluteus_maximus_left', 'hip_right', 
               'spinal_cord', 'heart', 'spleen', 'hip_left', 'clavicula_left', 'scapula_left', 
@@ -219,77 +296,74 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
 
     st = time.time()
     vertebrae_seg_img = None
-    if existing_stats is None:
-        if not quiet:
-            print("Running TotalSegmentator...")
-        task = "total" if modality == "ct" else "total_mr"
-        seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, 
-                                          task=task,
-                                          roi_subset=None, statistics_exclude_masks_at_border=True,
-                                          quiet=True, stats_aggregation="median", device=device,
-                                          nr_thr_resamp=1, nr_thr_saving=1)
-    else:
-        if not quiet:
-            print("Using existing statistics...")   
-        stats = existing_stats
-        seg_img = existing_seg_img
-    
-    if not quiet:
-        print(f"  took: {time.time()-st:.2f}s")
 
-    if modality == "mr":
+    if call_via_subprocess:
+        model_gen = run_models_shell(img, modality, device=device, quiet=quiet,
+                                     license_number=license_number)
+
+        if existing_stats is None:
+            yield {"id": 2, "progress": 5, "status": "Running TotalSegmentator model"}
+            _, seg_img, stats = next(model_gen)
+        else:
+            stats = existing_stats
+            seg_img = existing_seg_img
+
+        if modality == "mr":
+            yield {"id": 3, "progress": 30, "status": "Running vertebrae_mr model"}
+            _, vertebrae_seg_img, vertebrae_stats = next(model_gen)
+            stats.update(vertebrae_stats)
+
+        yield {"id": 4, "progress": 55, "status": "Running tissue types model"}
+        _, seg_img_tissue, _ = next(model_gen)
+    else:
+        if existing_stats is None:
+            yield {"id": 2, "progress": 5, "status": "Running TotalSegmentator model"}
+            task = "total" if modality == "ct" else "total_mr"
+            seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, 
+                                              task=task,
+                                              roi_subset=None, statistics_exclude_masks_at_border=True,
+                                              quiet=True, stats_aggregation="median", device=device,
+                                              nr_thr_resamp=1, nr_thr_saving=1)
+        else:
+            stats = existing_stats
+            seg_img = existing_seg_img
+        
         if not quiet:
-            print("Running vertebrae_mr model...")
+            print(f"  took: {time.time()-st:.2f}s")
+
+        if modality == "mr":
+            yield {"id": 3, "progress": 30, "status": "Running vertebrae_mr model"}
+            st = time.time()
+            vertebrae_seg_img, vertebrae_stats = totalsegmentator(
+                                                    img, None, ml=True, fast=False, statistics=True,
+                                                    task="vertebrae_mr",
+                                                    roi_subset=None, statistics_exclude_masks_at_border=True,
+                                                    quiet=True, stats_aggregation="median", device=device,
+                                                    nr_thr_resamp=1, nr_thr_saving=1)
+            stats.update(vertebrae_stats)
+            if not quiet:
+                print(f"  took: {time.time()-st:.2f}s")
+
+        yield {"id": 4, "progress": 55, "status": "Running tissue types model"}
         st = time.time()
-        vertebrae_seg_img, vertebrae_stats = totalsegmentator(
-                                                img, None, ml=True, fast=False, statistics=True,
-                                                task="vertebrae_mr",
+        task_tissue = "tissue_types" if modality == "ct" else "tissue_types_mr"
+        seg_img_tissue, stats_tissue = totalsegmentator(img, None, ml=True, fast=False, statistics=True, 
+                                                task=task_tissue,
                                                 roi_subset=None, statistics_exclude_masks_at_border=True,
-                                                quiet=True, stats_aggregation="median", device=device,
-                                                nr_thr_resamp=1, nr_thr_saving=1)
-        stats.update(vertebrae_stats)
+                                                quiet=True, stats_aggregation="median",
+                                                nr_thr_resamp=1, nr_thr_saving=1,
+                                                license_number=license_number)
         if not quiet:
             print(f"  took: {time.time()-st:.2f}s")
 
     if modality == "ct":
         stats = combine_lung_lobes(stats)
 
-    # Check FOV requirement: at least one of the key organs must be present
-    # NOTE: Since stats are set to 0 if ROI touches border, all of these can be 0 even
-    # if major part of the abdomen is visible.
-    # -> skip this check, because even if all of these are 0, model will still work
-    #    well with tissue slices
-    # fov_check_passed = (
-    #     ("liver" in stats and stats["liver"]["volume"] > 10) or
-    #     ("colon" in stats and stats["colon"]["volume"] > 10) or
-    #     ("lung_left" in stats and stats["lung_left"]["volume"] > 10) or
-    #     ("lung_right" in stats and stats["lung_right"]["volume"] > 10) or
-    #     ("hip_left" in stats and stats["hip_left"]["volume"] > 10) or
-    #     ("hip_right" in stats and stats["hip_right"]["volume"] > 10)
-    # )
-    # if not fov_check_passed:
-    #     print("ERROR: Field of view too small for proper prediction. Stopping.")
-    #     print("       At least one of these must be present: liver, colon, lung, hip")
-    #     return None
-
-    if not quiet:
-        print("Running tissue types model...")
-    st = time.time()
-    task_tissue = "tissue_types" if modality == "ct" else "tissue_types_mr"
-    seg_img_tissue, stats_tissue = totalsegmentator(img, None, ml=True, fast=False, statistics=True, 
-                                            task=task_tissue,
-                                            roi_subset=None, statistics_exclude_masks_at_border=True,
-                                            quiet=True, stats_aggregation="median",
-                                            nr_thr_resamp=1, nr_thr_saving=1,
-                                            license_number=license_number)
-    if not quiet:
-        print(f"  took: {time.time()-st:.2f}s")
-    
+    yield {"id": 5, "progress": 75, "status": "Computing tissue slices"}
     vertebrae_img_for_slices = vertebrae_seg_img if vertebrae_seg_img is not None else seg_img
     stats_tissue_slices = get_tissue_types_slices(img, vertebrae_img_for_slices, seg_img_tissue, vertebrae, tissue_types, use_border=use_border)
 
-    if not quiet:
-        print("Preparing features...")
+    yield {"id": 6, "progress": 85, "status": "Preparing features and predicting"}
     features = []
     features += [stats[roi]["volume"] for roi in organs + vertebrae]
     features += [stats_tissue_slices[roi]["volume"] for roi in tissue_types_slices]
@@ -312,10 +386,8 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
-            # classifier_path = get_totalseg_dir() / f'models/{target}_{modality}_classifiers_2025_12_19.json'
             classifier_path = get_weights_dir() / f'body_stats_models_2026_02_11/{target}_{modality}_classifiers_2026_02_11.json'
         else: 
-            # manually set model file
             classifier_path = model_file
             
         clfs = load_models(classifier_path, target, fold)
@@ -350,16 +422,11 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
             pred = round(float(np.mean(preds)), 2)
             pred_std = round(float(np.std(preds)), 4)
 
-            # print("Ensemble res:")
-            # print(preds)
-            # print(f"mean: {pred} +/- {pred_std}")
-            # print(f"mean: {pred} [{preds.min():.1f}-{preds.max():.1f}]")
-
             result[target] = {"value": pred, 
                               "min": round(float(preds.min()), 2), 
                               "max": round(float(preds.max()), 2),
                               "stddev": pred_std,  # measure of uncertainty
-                              "unit": "kg" if target == "weight" else "cm" if target == "size" else None
+                              "unit": "kg" if target == "weight" else "cm" if target == "size" else "years" if target == "age" else None
                               }
     
     # Calculate BMI and Body Surface Area based on predicted values
@@ -377,7 +444,7 @@ def get_body_stats(img: nib.Nifti1Image, modality: str, model_file: Path = None,
     result["bsa"] = {"value": round(bsa, 2), 
                      "unit": "m^2"}
     
-    return result
+    yield {"id": 7, "progress": 100, "status": "Done", "result": result}
 
 
 def main():
@@ -389,7 +456,7 @@ def main():
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
 
     parser.add_argument("-i", metavar="filepath", dest="input_file",
-                        help="path to CT/MR file",
+                        help="path to CT/MR file (.nii.gz, .nii, or .zip for DICOM)",
                         type=lambda p: Path(p).absolute(), required=True)
 
     parser.add_argument("-o", metavar="filepath", dest="output_file",
@@ -423,15 +490,34 @@ def main():
     parser.add_argument("-l", "--license_number", type=str, default=None,
                         help="License number for tasks that require a license (e.g. tissue_types).")
 
+    parser.add_argument("--call_via_subprocess", action="store_true", default=False,
+                        help="Run TotalSegmentator models via subprocess instead of python_api. "
+                             "Slightly slower but required in some environments (e.g. streamlit).")
+
     args = parser.parse_args()
+
+    if str(args.input_file).endswith(".nii.gz"):
+        f_type = "niigz"
+    elif str(args.input_file).endswith(".zip"):
+        f_type = "dicom"
+    else:
+        f_type = "nii"
 
     existing_stats = None
 
-    res = get_body_stats(nib.load(args.input_file), args.modality, args.model_file, args.quiet, args.device, existing_stats, fold=args.fold, license_number=args.license_number)
+    res_gen = get_body_stats(args.input_file, args.modality, f_type=f_type,
+                             model_file=args.model_file, quiet=args.quiet, device=args.device,
+                             existing_stats=existing_stats, fold=args.fold,
+                             license_number=args.license_number,
+                             call_via_subprocess=args.call_via_subprocess)
 
-    if res is None:
-        # FOV check failed, processing was skipped
-        return
+    for r in res_gen:
+        if not args.quiet:
+            print(r['status'])
+        if r["progress"] == 100:
+            final_result = r
+
+    res = final_result["result"]
 
     if not args.quiet:
         print("Result:")
