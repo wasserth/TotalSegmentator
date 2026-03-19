@@ -18,7 +18,7 @@
         "min": 71.72,
         "max": 74.44,
         "stddev": 0.9187,
-        "unit": null
+        "unit": "years"
     },
     "sex": {
         "value": "M",
