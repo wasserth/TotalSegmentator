@@ -28,8 +28,9 @@ def main():
                                                  "headneck_muscles", "liver_vessels", "brain_structures",
                                                  "lung_nodules", "kidney_cysts", "breasts", "ventricle_parts",
                                                  "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", 
-                                                 "liver_segments", "liver_segments_mr", "liver_lesions", "liver_lesions_mr",
-                                                #  "aortic_sinuses", 
+                                                "liver_segments", "liver_segments_mr", "liver_lesions", "liver_lesions_mr",
+                                                 "body_stats",
+                                               #  "aortic_sinuses", 
                                                  "all"],
                         help="Task for which to download the weights", default="total")
 
@@ -84,6 +85,7 @@ def main():
         "thigh_shoulder_muscles_mr": [857],
         "coronary_arteries": [509],
         "coronary_arteries_LEGACY": [507],
+        "body_stats": ["body_stats"],
         # "aortic_sinuses": [920]
     }
 
@@ -99,7 +101,7 @@ def main():
             else:
                 all_task_ids.add(task_ids)
         
-        for task_id in sorted(all_task_ids):
+        for task_id in sorted(all_task_ids, key=str):
             print(f"Processing {task_id}...")
             download_pretrained_weights(task_id)
     else:
