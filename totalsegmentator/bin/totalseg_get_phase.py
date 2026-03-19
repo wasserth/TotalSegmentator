@@ -87,7 +87,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True):
         seg_hn_path = tmp_dir / "seg_hn.nii.gz"
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_hn_path} --ml"
-            f" -t headneck_bones_vessels -s {stats_hn_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag}",
+            f" -ta headneck_bones_vessels -s {stats_hn_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag}",
             shell=True)
         seg_img_hn = nib_load_eager(seg_hn_path)
         with open(stats_hn_path) as f:

@@ -110,7 +110,7 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
 
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast"
-            f" -s {stats_total_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
+            f" -ta {task} -s {stats_total_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
             shell=True)
         seg_img = nib_load_eager(seg_total_path)
         with open(stats_total_path) as f:
@@ -123,7 +123,7 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
             seg_vert_path = tmp_dir / "seg_vertebrae.nii.gz"
             subprocess.call(
                 f"TotalSegmentator -i {ct_img_path} -o {seg_vert_path} --ml"
-                f" -t vertebrae_mr -s {stats_vert_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
+                f" -ta vertebrae_mr -s {stats_vert_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
                 shell=True)
             vertebrae_seg_img = nib_load_eager(seg_vert_path)
             with open(stats_vert_path) as f:
@@ -135,7 +135,7 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
         license_flag = f"-l {license_number}" if license_number else ""
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_tissue_path} --ml"
-            f" -t {task_tissue} -s {stats_tissue_path} --sa median -nr 1 -ns 1 -d {device}"
+            f" -ta {task_tissue} -s {stats_tissue_path} --sa median -nr 1 -ns 1 -d {device}"
             f" {quiet_flag} {license_flag}",
             shell=True)
         seg_img_tissue = nib_load_eager(seg_tissue_path)
