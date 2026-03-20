@@ -10,5 +10,5 @@
 8. Done
 
 > Note: This will not give you the same results as TotalSegmentator for two reasons:
-1. TotalSegmentator v2 uses a [bigger dataset](resources/improvements_in_v2.md) which is not completely public
+1. TotalSegmentator v2 uses a [bigger dataset](improvements_in_v2.md) which is not completely public
 2. TotalSegmentator is trained on images without blurred faces. Your dataset contains blurred faces.
