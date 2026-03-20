@@ -4,7 +4,7 @@ Tool for segmentation of most major anatomical structures in any CT or MR image.
 
 **ANNOUNCEMENT: We created a platform where anyone can help annotate more data to further improve TotalSegmentator: [TotalSegmentator Annotation Platform](https://annotate.totalsegmentator.com).**  
   
-**ANNOUNCEMENT: We created web applications for [abdominal organ volume](https://compute.totalsegmentator.com/volume-report/), [Evans index](https://compute.totalsegmentator.com/evans-index/), and [aorta diameter](https://compute.totalsegmentator.com/aorta-report/).**
+**ANNOUNCEMENT: We created web applications for [abdominal organ volume](https://compute.totalsegmentator.com/volume-report/), [aorta diameter](https://compute.totalsegmentator.com/aorta-report/), [pulmonary artery diameter](https://compute.totalsegmentator.com/pulmonary-report/), [contrast phase detection](https://compute.totalsegmentator.com/contrast-phase/) and [Evans index](https://compute.totalsegmentator.com/evans-index/).**
 
 Main classes for CT and MR:
 ![Alt text](resources/imgs/overview_classes_v2.png)
