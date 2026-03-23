@@ -163,6 +163,9 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Show more intermediate output",
                         default=False)
 
+    parser.add_argument("--debug", action="store_true", help="Show additional debug information on errors (e.g. input path and task)",
+                        default=False)
+
     parser.add_argument("-l", "--license_number", help="Set license number. Needed for some tasks. Only needed once, then stored in config file.",
                         type=str, default=None)
 
@@ -208,7 +211,7 @@ def main():
                      roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation, 
                      remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
                      robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
-                     save_probabilities=args.save_probabilities)
+                     save_probabilities=args.save_probabilities, debug=args.debug)
 
 
 if __name__ == '__main__':

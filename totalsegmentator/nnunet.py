@@ -335,7 +335,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, nnunet_resampling=False,
-                         save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None):
+                         save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
+                         debug=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -560,13 +561,18 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 # Run several tasks and combine results into one segmentation
                 for idx, tid in enumerate(task_id):
                     if not quiet: print(f"Predicting part {idx+1} of {len(task_id)} ...")
-                    with nostdout(verbose):
-                        # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                        #                nr_threads_resampling, nr_threads_saving)
-                        nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                                         nr_threads_resampling, nr_threads_saving,
-                                         device=device, quiet=quiet, step_size=step_size,
-                                         save_probabilities_path=save_probabilities)
+                    try:
+                        with nostdout(verbose):
+                            # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
+                            #                nr_threads_resampling, nr_threads_saving)
+                            nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
+                                             nr_threads_resampling, nr_threads_saving,
+                                             device=device, quiet=quiet, step_size=step_size,
+                                             save_probabilities_path=save_probabilities)
+                    except Exception as e:
+                        if debug:
+                            print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {tid}, part: {idx+1}/{len(task_id)}")
+                        raise
                     # iterate over models (different sets of classes)
                     for img_part in img_parts:
                         (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
@@ -582,13 +588,18 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         else:
             if not quiet: print("Predicting...")
             if test == 0:
-                with nostdout(verbose):
-                    # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                    #                nr_threads_resampling, nr_threads_saving)
-                    nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                                     nr_threads_resampling, nr_threads_saving,
-                                     device=device, quiet=quiet, step_size=step_size,
-                                     save_probabilities_path=save_probabilities)
+                try:
+                    with nostdout(verbose):
+                        # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
+                        #                nr_threads_resampling, nr_threads_saving)
+                        nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
+                                         nr_threads_resampling, nr_threads_saving,
+                                         device=device, quiet=quiet, step_size=step_size,
+                                         save_probabilities_path=save_probabilities)
+                except Exception as e:
+                    if debug:
+                        print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {task_id}")
+                    raise
             # elif test == 2:
             #     print("WARNING: Using reference seg instead of prediction for testing.")
             #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
