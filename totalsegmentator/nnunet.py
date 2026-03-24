@@ -528,6 +528,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             affine_s03 = np.copy(base_affine)
             affine_s03[:3, 3] = base_affine[:3, 3] + s03_start * base_affine[:3, 2]
 
+            part_affines = {"s01": base_affine, "s02": affine_s02, "s03": affine_s03}
+
             nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, :third+margin], base_affine),
                     tmp_dir / "s01_0000.nii.gz")
             nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, s02_start:third*2+margin], affine_s02),
@@ -592,7 +594,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             seg_combined[img_part][seg == jdx] = class_map_inv[class_name]
                 # iterate over subparts of image
                 for img_part in img_parts:
-                    nib.save(nib.Nifti1Image(seg_combined[img_part], img_in_rsp.affine), tmp_dir / f"{img_part}.nii.gz")
+                    part_aff = part_affines[img_part] if do_triple_split else img_in_rsp.affine
+                    nib.save(nib.Nifti1Image(seg_combined[img_part], part_aff), tmp_dir / f"{img_part}.nii.gz")
             elif test == 1:
                 print("WARNING: Using reference seg instead of prediction for testing.")
                 shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
