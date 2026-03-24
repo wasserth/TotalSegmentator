@@ -47,7 +47,7 @@ def undo_canonical(img_can, img_orig):
 
 
 def undo_canonical_nifti(path_in_can, path_in_orig, path_out):
-    e = nib.load(path_in_can)
+    img_can = nib.load(path_in_can)
     img_orig = nib.load(path_in_orig)
     img_out = undo_canonical(img_can, img_orig)
     nib.save(img_out, path_out)
