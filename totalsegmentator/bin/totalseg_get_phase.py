@@ -59,13 +59,14 @@ def pi_time_to_phase(pi_time: float) -> str:
         # return "delayed", 0.7  # not enough good training data for this
 
 
-def run_models_shell(ct_img, device="gpu", quiet=True):
+def run_models_shell(ct_img, device="gpu", quiet=True, debug=False):
     """Run TotalSegmentator models via subprocess instead of python_api.
     Required if calling from e.g. streamlit where python_api does not work properly.
     Yields (seg_img, stats) for each model. The headneck model is only run if the
     caller advances the generator past the first yield.
     """
     quiet_flag = "--quiet" if quiet else ""
+    debug_flag = "--debug" if debug else ""
 
     with tempfile.TemporaryDirectory(prefix="totalseg_phase_") as tmp_folder:
         tmp_dir = Path(tmp_folder)
@@ -76,7 +77,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True):
         seg_total_path = tmp_dir / "seg_total.nii.gz"
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast"
-            f" -s {stats_total_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag}",
+            f" -s {stats_total_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
             shell=True)
         seg_img = nib_load_eager(seg_total_path)
         with open(stats_total_path) as f:
@@ -87,7 +88,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True):
         seg_hn_path = tmp_dir / "seg_hn.nii.gz"
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_hn_path} --ml"
-            f" -ta headneck_bones_vessels -s {stats_hn_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag}",
+            f" -ta headneck_bones_vessels -s {stats_hn_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
             shell=True)
         seg_img_hn = nib_load_eager(seg_hn_path)
         with open(stats_hn_path) as f:
@@ -97,7 +98,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True):
 
 def get_ct_contrast_phase(ct_img, f_type: str = "niigz", model_file: Path = None,
                           quiet: bool = False, device: str = "gpu", existing_stats: dict = None,
-                          call_via_subprocess: bool = False):
+                          call_via_subprocess: bool = False, debug: bool = False):
     """
     Predict the contrast phase of a CT scan.
 
@@ -139,7 +140,7 @@ def get_ct_contrast_phase(ct_img, f_type: str = "niigz", model_file: Path = None
                  "internal_jugular_vein_right", "internal_jugular_vein_left"]
 
     if call_via_subprocess:
-        model_gen = run_models_shell(ct_img, device=device, quiet=quiet)
+        model_gen = run_models_shell(ct_img, device=device, quiet=quiet, debug=debug)
 
         if existing_stats is None:
             yield {"id": 2, "progress": 10, "status": "Running TotalSegmentator model"}
@@ -158,7 +159,8 @@ def get_ct_contrast_phase(ct_img, f_type: str = "niigz", model_file: Path = None
             yield {"id": 2, "progress": 10, "status": "Running TotalSegmentator model"}
             seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
                                             roi_subset=None, statistics_exclude_masks_at_border=False,
-                                            quiet=True, stats_aggregation="median", device=device)
+                                            quiet=True, stats_aggregation="median", device=device,
+                                            debug=debug)
         else:
             stats = existing_stats
         if not quiet:
@@ -170,7 +172,8 @@ def get_ct_contrast_phase(ct_img, f_type: str = "niigz", model_file: Path = None
             seg_img_hn, stats_hn = totalsegmentator(ct_img, None, ml=True, fast=False, statistics=True, 
                                                     task="headneck_bones_vessels",
                                                     roi_subset=None, statistics_exclude_masks_at_border=False,
-                                                    quiet=True, stats_aggregation="median")
+                                                    quiet=True, stats_aggregation="median",
+                                                    debug=debug)
             if not quiet:
                 print(f"  took: {time.time()-st:.2f}s")
         else:
@@ -244,6 +247,10 @@ def main():
                         help="Run TotalSegmentator models via subprocess instead of python_api. "
                              "Slightly slower but required in some environments (e.g. streamlit).")
 
+    parser.add_argument("--debug", action="store_true",
+                        help="Show additional debug information on errors (e.g. input path and task)",
+                        default=False)
+
     args = parser.parse_args()
 
     if str(args.input_file).endswith(".nii.gz"):
@@ -258,7 +265,8 @@ def main():
     res_gen = get_ct_contrast_phase(args.input_file, f_type=f_type, model_file=args.model_file,
                                     quiet=args.quiet, device=args.device,
                                     existing_stats=existing_stats,
-                                    call_via_subprocess=args.call_via_subprocess)
+                                    call_via_subprocess=args.call_via_subprocess,
+                                    debug=args.debug)
 
     for r in res_gen:
         if not args.quiet:
