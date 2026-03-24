@@ -137,5 +137,5 @@ def get_basic_statistics(seg: np.array,
         # For other people csv might be better -> not really because here only for one subject each -> use json
         with open(file_out, "w") as f:
             json.dump(stats, f, indent=4)
-    else:
-        return stats
+
+    return stats
