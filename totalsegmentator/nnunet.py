@@ -517,11 +517,22 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             third = img_in_rsp.shape[2] // 3
             margin = 20  # set margin with fixed values to avoid rounding problem if using percentage of third
             img_in_rsp_data = img_in_rsp.get_fdata()
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, :third+margin], img_in_rsp.affine),
+            base_affine = img_in_rsp.affine
+
+            s02_start = third + 1 - margin
+            s03_start = third * 2 + 1 - margin
+
+            affine_s02 = np.copy(base_affine)
+            affine_s02[:3, 3] = base_affine[:3, 3] + s02_start * base_affine[:3, 2]
+
+            affine_s03 = np.copy(base_affine)
+            affine_s03[:3, 3] = base_affine[:3, 3] + s03_start * base_affine[:3, 2]
+
+            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, :third+margin], base_affine),
                     tmp_dir / "s01_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third+1-margin:third*2+margin], img_in_rsp.affine),
+            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, s02_start:third*2+margin], affine_s02),
                     tmp_dir / "s02_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third*2+1-margin:], img_in_rsp.affine),
+            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, s03_start:], affine_s03),
                     tmp_dir / "s03_0000.nii.gz")
 
         if task_name == "total" and resample is not None and resample[0] < 3.0:
