@@ -187,7 +187,8 @@ def download_pretrained_weights(task_id):
         # "Dataset297_TotalSegmentator_total_3mm_1559subj",  # for >= v2.0.4
         "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",  # for >= v2.0.5
         # "Dataset298_TotalSegmentator_total_6mm_1559subj",  # for >= v2.0.5
-        "Dataset302_vertebrae_body_1559subj"
+        "Dataset302_vertebrae_body_1559subj",
+        "body_stats_models_2026_02_11"
     ]
 
     # url = "http://backend.totalsegmentator.com"
@@ -398,8 +399,8 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset920_aortic_sinuses_cm_nativ_400subj"
 
     elif task_id == "body_stats":
-        weights_path = config_dir / "body_stats_models_2026_02_11"
-        WEIGHTS_URL = url + "/v2.5.0-weights/body_stats_models_2026_02_11.zip"
+        weights_path = config_dir / "body_stats_models_2026_03_24"
+        WEIGHTS_URL = url + "/v2.5.0-weights/body_stats_models_2026_03_24.zip"
 
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")

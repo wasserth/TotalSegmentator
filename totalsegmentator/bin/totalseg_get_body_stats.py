@@ -36,11 +36,11 @@ Training script is in: predict_body_size/body_size_training.py (not public)
 
 def check_body_stats_models_exist():
     """Check if all body stats models exist."""
-    models_dir = get_weights_dir() / "body_stats_models_2026_02_11"
+    models_dir = get_weights_dir() / "body_stats_models_2026_03_24"
     
     for modality in ["ct", "mr"]:
         for target in ["weight", "size", "age", "sex"]:
-            base_path = models_dir / f"{target}_{modality}_classifiers_2026_02_11.json"
+            base_path = models_dir / f"{target}_{modality}_classifiers_2026_03_24.json"
             # Check if all 5 folds exist
             for fold_idx in range(5):
                 model_file = Path(f"{base_path}.{fold_idx}")
@@ -141,6 +141,15 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
         seg_img_tissue = nib_load_eager(seg_tissue_path)
         yield "tissue_types", seg_img_tissue, None
 
+        task_body = "body" if modality == "ct" else "body_mr"
+        seg_body_path = tmp_dir / "seg_body.nii.gz"
+        subprocess.call(
+            f"TotalSegmentator -i {ct_img_path} -o {seg_body_path} --ml"
+            f" -ta {task_body} -nr 1 -ns 1 -d {device} {quiet_flag}",
+            shell=True)
+        seg_img_body = nib_load_eager(seg_body_path)
+        yield "body", seg_img_body, None
+
 
 def touches_border_2d(mask_2d):
     """Check if a 2D mask touches the image border (first/last 2 pixels along x or y)."""
@@ -151,7 +160,7 @@ def touches_border_2d(mask_2d):
     return False
 
 
-def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, tissue_types, use_border=False):
+def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, body_img, vertebrae, tissue_types, use_border=False):
     """
     At each vertebrae get the centroid and at this z-level cut one slice through all classes
     of the segmentation file. Calc stats (volume, intensity) for each class.
@@ -162,6 +171,7 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
         ct_img: nib.Nifti1Image - CT image
         vertebrae_img: nib.Nifti1Image - Vertebrae segmentation image
         tissue_types_img: nib.Nifti1Image - Tissue types segmentation image
+        body_img: nib.Nifti1Image - Body segmentation image
         vertebrae: list - List of vertebra names (e.g., ["vertebrae_C1", "vertebrae_C2", ...])
         tissue_types: list - List of tissue type names (e.g., ["subcutaneous_fat", "torso_fat", "skeletal_muscle"])
         use_border: bool - If False, set stats to 0 for slices where the mask touches the image border.
@@ -174,13 +184,17 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
     # Load label maps from segmentation images
     _, vertebrae_map = load_multilabel_nifti(vertebrae_img)
     _, tissue_types_map = load_multilabel_nifti(tissue_types_img)
+    _, body_map = load_multilabel_nifti(body_img)
     
     # Reverse maps: name -> id
     vertebrae_map_inv = {v: k for k, v in vertebrae_map.items()}
     tissue_types_map_inv = {v: k for k, v in tissue_types_map.items()}
+    body_map_inv = {v: k for k, v in body_map.items()}
     
     vertebrae_data = vertebrae_img.get_fdata()
     tissue_types_data = tissue_types_img.get_fdata()
+    body_data = body_img.get_fdata()
+    body_trunc = body_data == body_map_inv["body_trunc"]
     
     spacing = ct_img.header.get_zooms()
     slice_vol = spacing[0] * spacing[1] * 1.0  # assume 1mm thickness
@@ -204,7 +218,9 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, vertebrae, 
         
         # extract slice at z_centroid
         ct_slice = ct_data[:, :, z_centroid]
-        seg_slice = tissue_types_data[:, :, z_centroid]
+        seg_slice = tissue_types_data[:, :, z_centroid].copy()
+        body_trunc_slice = body_trunc[:, :, z_centroid]
+        seg_slice[~body_trunc_slice] = 0
         
         for seg_name in tissue_types:
             seg_id = tissue_types_map_inv[seg_name]
@@ -315,6 +331,8 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
 
         yield {"id": 4, "progress": 55, "status": "Running tissue types model"}
         _, seg_img_tissue, _ = next(model_gen)
+        yield {"id": 5, "progress": 65, "status": "Running body model"}
+        _, seg_img_body, _ = next(model_gen)
     else:
         if existing_stats is None:
             yield {"id": 2, "progress": 5, "status": "Running TotalSegmentator model"}
@@ -356,14 +374,28 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
         if not quiet:
             print(f"  took: {time.time()-st:.2f}s")
 
+        yield {"id": 5, "progress": 65, "status": "Running body model"}
+        st = time.time()
+        task_body = "body" if modality == "ct" else "body_mr"
+        seg_img_body = totalsegmentator(img, None, ml=True, fast=False, statistics=False,
+                                        task=task_body,
+                                        roi_subset=None,
+                                        quiet=True,
+                                        nr_thr_resamp=1, nr_thr_saving=1,
+                                        device=device)
+        if not quiet:
+            print(f"  took: {time.time()-st:.2f}s")
+
     if modality == "ct":
         stats = combine_lung_lobes(stats)
 
-    yield {"id": 5, "progress": 75, "status": "Computing tissue slices"}
+    yield {"id": 6, "progress": 75, "status": "Computing tissue slices"}
     vertebrae_img_for_slices = vertebrae_seg_img if vertebrae_seg_img is not None else seg_img
-    stats_tissue_slices = get_tissue_types_slices(img, vertebrae_img_for_slices, seg_img_tissue, vertebrae, tissue_types, use_border=use_border)
+    stats_tissue_slices = get_tissue_types_slices(
+        img, vertebrae_img_for_slices, seg_img_tissue, seg_img_body, vertebrae, tissue_types, use_border=use_border
+    )
 
-    yield {"id": 6, "progress": 85, "status": "Preparing features and predicting"}
+    yield {"id": 7, "progress": 85, "status": "Preparing features and predicting"}
     features = []
     features += [stats[roi]["volume"] for roi in organs + vertebrae]
     features += [stats_tissue_slices[roi]["volume"] for roi in tissue_types_slices]
@@ -386,7 +418,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
         if not quiet:
             print(f"Predicting {target}...")
         if model_file is None:
-            classifier_path = get_weights_dir() / f'body_stats_models_2026_02_11/{target}_{modality}_classifiers_2026_02_11.json'
+            classifier_path = get_weights_dir() / f'body_stats_models_2026_03_24/{target}_{modality}_classifiers_2026_03_24.json'
         else: 
             classifier_path = model_file
             
@@ -444,7 +476,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
     result["bsa"] = {"value": round(bsa, 2), 
                      "unit": "m^2"}
     
-    yield {"id": 7, "progress": 100, "status": "Done", "result": result}
+    yield {"id": 8, "progress": 100, "status": "Done", "result": result}
 
 
 def main():
