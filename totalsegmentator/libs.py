@@ -33,8 +33,10 @@ def nostdout(verbose=False):
     if not verbose:
         save_stdout = sys.stdout
         sys.stdout = DummyFile()
-        yield
-        sys.stdout = save_stdout
+        try:
+            yield
+        finally:
+            sys.stdout = save_stdout
     else:
         yield
 
