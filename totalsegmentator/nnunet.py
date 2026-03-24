@@ -312,6 +312,55 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     # nib.save(nib.Nifti1Image(seg.astype(np.uint8), affine), Path(dir_out) / "s01.nii.gz")
 
 
+def split_image_into_parts(img, tmp_dir, margin=20):
+    """Split a nifti image into 3 overlapping parts along the z-axis.
+
+    Returns (img_parts, part_affines, third, margin) where img_parts is
+    ["s01", "s02", "s03"] and part_affines maps each name to its affine.
+    Saves the parts as {name}_0000.nii.gz in tmp_dir.
+    """
+    img_parts = ["s01", "s02", "s03"]
+    third = img.shape[2] // 3
+    data = img.get_fdata()
+    base_affine = img.affine
+
+    s02_start = third + 1 - margin
+    s03_start = third * 2 + 1 - margin
+
+    affine_s02 = np.copy(base_affine)
+    affine_s02[:3, 3] = base_affine[:3, 3] + s02_start * base_affine[:3, 2]
+
+    affine_s03 = np.copy(base_affine)
+    affine_s03[:3, 3] = base_affine[:3, 3] + s03_start * base_affine[:3, 2]
+
+    part_affines = {"s01": base_affine, "s02": affine_s02, "s03": affine_s03}
+
+    nib.save(nib.Nifti1Image(data[:, :, :third + margin], base_affine),
+             tmp_dir / "s01_0000.nii.gz")
+    nib.save(nib.Nifti1Image(data[:, :, s02_start:third * 2 + margin], affine_s02),
+             tmp_dir / "s02_0000.nii.gz")
+    nib.save(nib.Nifti1Image(data[:, :, s03_start:], affine_s03),
+             tmp_dir / "s03_0000.nii.gz")
+
+    return img_parts, part_affines, third, margin
+
+
+def save_merged_predictions(seg_combined, img_parts, part_affines, do_triple_split, base_affine, tmp_dir):
+    """Save merged per-part predictions with correct affines."""
+    for img_part in img_parts:
+        part_aff = part_affines[img_part] if do_triple_split else base_affine
+        nib.save(nib.Nifti1Image(seg_combined[img_part], part_aff), tmp_dir / f"{img_part}.nii.gz")
+
+
+def reassemble_image(tmp_dir, original_shape, original_affine, third, margin):
+    """Reassemble triple-split sub-volumes back into a single image."""
+    combined_img = np.zeros(original_shape, dtype=np.uint8)
+    combined_img[:, :, :third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:, :, :-margin]
+    combined_img[:, :, third:third * 2] = nib.load(tmp_dir / "s02.nii.gz").get_fdata()[:, :, margin - 1:-margin]
+    combined_img[:, :, third * 2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:, :, margin - 1:]
+    return nib.Nifti1Image(combined_img, original_affine)
+
+
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
     k, v = class_map_item
     # Have to load img inside of each thread. If passing it as argument a lot slower.
@@ -513,29 +562,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             do_triple_split = False
         if do_triple_split:
             if not quiet: print("Splitting into subparts...")
-            img_parts = ["s01", "s02", "s03"]
-            third = img_in_rsp.shape[2] // 3
-            margin = 20  # set margin with fixed values to avoid rounding problem if using percentage of third
-            img_in_rsp_data = img_in_rsp.get_fdata()
-            base_affine = img_in_rsp.affine
-
-            s02_start = third + 1 - margin
-            s03_start = third * 2 + 1 - margin
-
-            affine_s02 = np.copy(base_affine)
-            affine_s02[:3, 3] = base_affine[:3, 3] + s02_start * base_affine[:3, 2]
-
-            affine_s03 = np.copy(base_affine)
-            affine_s03[:3, 3] = base_affine[:3, 3] + s03_start * base_affine[:3, 2]
-
-            part_affines = {"s01": base_affine, "s02": affine_s02, "s03": affine_s03}
-
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, :third+margin], base_affine),
-                    tmp_dir / "s01_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, s02_start:third*2+margin], affine_s02),
-                    tmp_dir / "s02_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, s03_start:], affine_s03),
-                    tmp_dir / "s03_0000.nii.gz")
+            img_parts, part_affines, third, margin = split_image_into_parts(img_in_rsp, tmp_dir)
 
         if task_name == "total" and resample is not None and resample[0] < 3.0:
             # overall speedup for 15mm model roughly 11% (GPU) and 100% (CPU)
@@ -593,9 +620,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                         for jdx, class_name in class_map_parts[map_taskid_to_partname[tid]].items():
                             seg_combined[img_part][seg == jdx] = class_map_inv[class_name]
                 # iterate over subparts of image
-                for img_part in img_parts:
-                    part_aff = part_affines[img_part] if do_triple_split else img_in_rsp.affine
-                    nib.save(nib.Nifti1Image(seg_combined[img_part], part_aff), tmp_dir / f"{img_part}.nii.gz")
+                save_merged_predictions(seg_combined, img_parts,
+                                        part_affines if do_triple_split else None,
+                                        do_triple_split, img_in_rsp.affine, tmp_dir)
             elif test == 1:
                 print("WARNING: Using reference seg instead of prediction for testing.")
                 shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
@@ -624,11 +651,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
         # Combine image subparts back to one image
         if do_triple_split:
-            combined_img = np.zeros(img_in_rsp.shape, dtype=np.uint8)
-            combined_img[:,:,:third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:,:,:-margin]
-            combined_img[:,:,third:third*2] = nib.load(tmp_dir / "s02.nii.gz").get_fdata()[:,:,margin-1:-margin]
-            combined_img[:,:,third*2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:,:,margin-1:]
-            nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
+            reassembled = reassemble_image(tmp_dir, img_in_rsp.shape, img_in_rsp.affine, third, margin)
+            nib.save(reassembled, tmp_dir / "s01.nii.gz")
 
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
 
