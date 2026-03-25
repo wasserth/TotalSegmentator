@@ -853,7 +853,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         stats_dir = output.parent if ml else output
         with tempfile.TemporaryDirectory(prefix="radiomics_tmp_") as tmp_folder:
             if isinstance(input, Nifti1Image):
-                input_path = tmp_folder / "ct.nii.gz"
+                input_path = Path(tmp_folder) / "ct.nii.gz"
                 nib.save(input, input_path)
             else:
                 input_path = input
