@@ -55,7 +55,7 @@ def get_radiomics_features(seg_file, img_file="ct.nii.gz"):
 
 def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:Path):
     masks = sorted(list(mask_dir.glob("*.nii.gz")))
-    stats = [get_radiomics_features(ct_file, mask) for mask in masks]
+    stats = [get_radiomics_features(mask, ct_file) for mask in masks]
     stats = {mask_name: stats for mask_name, stats in stats}
     with open(file_out, "w") as f:
         json.dump(stats, f, indent=4)
