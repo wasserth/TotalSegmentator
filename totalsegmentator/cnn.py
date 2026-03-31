@@ -5,6 +5,8 @@ import warnings
 import nibabel as nib
 import numpy as np
 
+from totalsegmentator.resampling import change_spacing
+
 
 DEFAULT_BODY_STATS_CNN_DIR = (
     Path("~/.totalsegmentator/nnunet/results/lightning_models/2mm_splitXGB_2d_ns5")
@@ -13,18 +15,19 @@ DEFAULT_BODY_STATS_CNN_DIR = (
 
 CNN_CROP_SIZE = (210, 210)
 CNN_NR_SLICES = 5
+CNN_TARGET_SPACING_MM = 2.0
 
 
 def _get_slice_indices(mid_idx: int, nr_slices: int, offset: int, size: int) -> list[int]:
-    if nr_slices != 5:
-        raise ValueError(f"Only nr_slices=5 is supported, got {nr_slices}.")
-    slice_indices = [
-        mid_idx - offset,
-        mid_idx - int(offset / 2),
-        mid_idx,
-        mid_idx + int(offset / 2),
-        mid_idx + offset,
-    ]
+    if nr_slices < 1:
+        raise ValueError(f"nr_slices must be >= 1, got {nr_slices}")
+
+    if nr_slices == 1:
+        slice_indices = [mid_idx]
+    else:
+        slice_indices = np.round(
+            np.linspace(mid_idx - offset, mid_idx + offset, nr_slices)
+        ).astype(int).tolist()
     return np.clip(slice_indices, 0, size - 1).astype(int).tolist()
 
 
@@ -74,6 +77,7 @@ def _normalize_per_channel(img_stack: np.ndarray) -> np.ndarray:
 
 def _prepare_image_tensor(img: nib.Nifti1Image):
     img = nib.as_closest_canonical(img)
+    img = change_spacing(img, CNN_TARGET_SPACING_MM, dtype=np.float32, order=1)
     img_data = np.asarray(img.dataobj, dtype=np.float32)
     slices = _extract_axial_slices(img_data)
     slices = np.stack(
