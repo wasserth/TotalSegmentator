@@ -1,6 +1,6 @@
-from pathlib import Path
 import pickle
 import warnings
+from pathlib import Path
 
 import nibabel as nib
 import numpy as np
@@ -8,14 +8,27 @@ import numpy as np
 from totalsegmentator.resampling import change_spacing
 
 
-DEFAULT_BODY_STATS_CNN_DIR = (
-    Path("~/.totalsegmentator/nnunet/results/lightning_models/2mm_splitXGB_2d_ns5")
-    .expanduser()
+DEFAULT_BODY_STATS_CNN_ROOT_DIR = (
+    Path("~/.totalsegmentator/nnunet/results/lightning_models").expanduser()
 )
+DEFAULT_BODY_STATS_CNN_DIRS = {
+    "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "weight_2mm_splitXGB_2d_ns5",
+    "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "size_2mm_splitXGB_2d_ns5",
+    "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "age_2mm_splitXGB_2d_ns5",
+    "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "sex_2mm_splitXGB_2d_ns5",
+}
+# Keep the old name as an alias for backward compatibility with older call sites.
+DEFAULT_BODY_STATS_CNN_DIR = DEFAULT_BODY_STATS_CNN_DIRS["weight"]
 
 CNN_CROP_SIZE = (210, 210)
 CNN_NR_SLICES = 5
 CNN_TARGET_SPACING_MM = 2.0
+CNN_TARGET_SPECS = {
+    "weight": {"loss": "mse", "num_classes": 1, "unit": "kg"},
+    "size": {"loss": "mse", "num_classes": 1, "unit": "cm"},
+    "age": {"loss": "mse", "num_classes": 1, "unit": "years"},
+    "sex": {"loss": "ce", "num_classes": 2, "unit": None},
+}
 
 
 def _get_slice_indices(mid_idx: int, nr_slices: int, offset: int, size: int) -> list[int]:
@@ -114,7 +127,7 @@ def _resolve_device(device):
     return torch.device("cpu")
 
 
-def _load_fold_model(model_dir: Path, fold_idx: int, device):
+def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
     try:
         import torch
     except ImportError as exc:
@@ -124,6 +137,9 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device):
         import timm
     except ImportError as exc:
         raise ImportError("CNN body-stats inference requires timm to be installed.") from exc
+
+    if target not in CNN_TARGET_SPECS:
+        raise ValueError(f"Unsupported CNN target: {target}")
 
     ckpt_dir = model_dir / f"version_{fold_idx}" / "checkpoints"
     ckpt_files = sorted(ckpt_dir.glob("epoch*.ckpt"))
@@ -166,7 +182,7 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device):
     model = timm.create_model(
         "tf_efficientnet_b0_ns",
         pretrained=False,
-        num_classes=1,
+        num_classes=CNN_TARGET_SPECS[target]["num_classes"],
         in_chans=CNN_NR_SLICES,
     )
     state_dict = {
@@ -188,13 +204,40 @@ def _get_fold_indices(fold: int | None) -> list[int]:
     return [fold]
 
 
-def predict_body_weight_with_cnn(
+def _resolve_target_model_dir(target: str, model_dir: Path | str | None = None) -> Path:
+    if target not in CNN_TARGET_SPECS:
+        raise ValueError(f"Unsupported CNN target: {target}")
+
+    if model_dir is None:
+        resolved_dir = DEFAULT_BODY_STATS_CNN_DIRS[target]
+    else:
+        candidate = Path(model_dir).expanduser()
+        if (candidate / "version_0").exists():
+            resolved_dir = candidate
+        else:
+            target_dir_name = DEFAULT_BODY_STATS_CNN_DIRS[target].name
+            target_candidate = candidate / target_dir_name
+            if target_candidate.exists():
+                resolved_dir = target_candidate
+            else:
+                resolved_dir = candidate
+
+    if not resolved_dir.exists():
+        raise FileNotFoundError(f"CNN model directory does not exist: {resolved_dir}")
+    return resolved_dir
+
+
+def predict_body_stats_with_cnn(
     img: nib.Nifti1Image,
+    target: str,
     model_dir: Path | str | None = None,
     fold: int | None = None,
     device="gpu",
 ) -> dict:
-    model_dir = Path(model_dir or DEFAULT_BODY_STATS_CNN_DIR).expanduser()
+    if target not in CNN_TARGET_SPECS:
+        raise ValueError(f"Unsupported CNN target: {target}")
+
+    model_dir = _resolve_target_model_dir(target, model_dir=model_dir)
     if not model_dir.exists():
         raise FileNotFoundError(f"CNN model directory does not exist: {model_dir}")
 
@@ -209,15 +252,47 @@ def predict_body_weight_with_cnn(
     preds = []
     with torch.inference_mode():
         for fold_idx in _get_fold_indices(fold):
-            model = _load_fold_model(model_dir, fold_idx, resolved_device)
-            pred = model(img_tensor).detach().float().cpu().numpy().reshape(-1)[0]
-            preds.append(float(pred))
+            model = _load_fold_model(model_dir, fold_idx, resolved_device, target)
+            pred = model(img_tensor).detach().float().cpu().numpy()[0]
+            preds.append(pred)
 
-    preds = np.array(preds, dtype=np.float32)
-    return {
-        "value": round(float(np.mean(preds)), 2),
-        "min": round(float(np.min(preds)), 2),
-        "max": round(float(np.max(preds)), 2),
-        "stddev": round(float(np.std(preds)), 4),
-        "unit": "kg",
-    }
+    preds = np.array(preds)
+    target_spec = CNN_TARGET_SPECS[target]
+
+    if target_spec["loss"] == "mse":
+        preds = preds.reshape(-1)
+        return {
+            "value": round(float(np.mean(preds)), 2),
+            "min": round(float(np.min(preds)), 2),
+            "max": round(float(np.max(preds)), 2),
+            "stddev": round(float(np.std(preds)), 4),
+            "unit": target_spec["unit"],
+        }
+
+    if target_spec["loss"] == "ce":
+        probs = preds - preds.max(axis=1, keepdims=True)
+        probs = np.exp(probs) / np.exp(probs).sum(axis=1, keepdims=True)
+        mean_probs = probs.mean(axis=0)
+        pred_binary = int(np.argmax(mean_probs))
+        pred = "M" if pred_binary == 1 else "F"
+        reported_prob = float(mean_probs[pred_binary])
+        pred_std = round(float(np.std(probs[:, pred_binary])), 4)
+        return {
+            "value": pred,
+            "probability": round(reported_prob, 4),
+            "stddev": pred_std,
+            "unit": None,
+        }
+
+    raise ValueError(f"Unsupported CNN loss type: {target_spec['loss']}")
+
+
+def predict_body_weight_with_cnn(
+    img: nib.Nifti1Image,
+    model_dir: Path | str | None = None,
+    fold: int | None = None,
+    device="gpu",
+) -> dict:
+    return predict_body_stats_with_cnn(
+        img, target="weight", model_dir=model_dir, fold=fold, device=device
+    )

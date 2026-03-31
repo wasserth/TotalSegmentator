@@ -16,8 +16,7 @@ import numpy as np
 import xgboost as xgb
 
 from totalsegmentator.cnn import (
-    DEFAULT_BODY_STATS_CNN_DIR,
-    predict_body_weight_with_cnn,
+    predict_body_stats_with_cnn,
 )
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.config import get_totalseg_dir, get_weights_dir, send_usage_stats_application
@@ -319,9 +318,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
     tissue_types_slices = [f"{tissue}_{vertebra}" for tissue in tissue_types for vertebra in vertebrae]
 
     if model_type == "cnn" and modality != "ct":
-        raise ValueError("The CNN body weight model currently only supports CT images.")
-    if model_type == "cnn" and not only_weight:
-        raise ValueError("The CNN model currently only supports weight prediction. Use --only_weight.")
+        raise ValueError("The CNN body-stats models currently only support CT images.")
 
     needs_default_xgboost_models = model_type == "xgboost" and model_file is None
     if needs_default_xgboost_models and not check_body_stats_models_exist():
@@ -330,13 +327,33 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
     img = nib.as_closest_canonical(img)  # important to cut tissue slices along correct axis
 
     if model_type == "cnn":
-        yield {"id": 2, "progress": 85, "status": "Predicting weight with CNN ensemble"}
-        cnn_model_dir = model_file if model_file is not None else DEFAULT_BODY_STATS_CNN_DIR
-        result = {
-            "weight": predict_body_weight_with_cnn(
-                img, model_dir=cnn_model_dir, fold=fold, device=device
-            )
+        result = {}
+        targets = ["weight"] if only_weight else ["weight", "size", "age", "sex"]
+        target_progress = {
+            "weight": 35,
+            "size": 55,
+            "age": 75,
+            "sex": 90,
         }
+        for target in targets:
+            yield {
+                "id": 2,
+                "progress": target_progress[target],
+                "status": f"Predicting {target} with CNN ensemble",
+            }
+            result[target] = predict_body_stats_with_cnn(
+                img, target=target, model_dir=model_file, fold=fold, device=device
+            )
+
+        if not only_weight:
+            weight_kg = result["weight"]["value"]
+            height_cm = result["size"]["value"]
+            height_m = height_cm / 100.0
+            bmi = weight_kg / (height_m ** 2)
+            result["bmi"] = {"value": round(bmi, 2), "unit": "kg/m^2"}
+            bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
+            result["bsa"] = {"value": round(bsa, 2), "unit": "m^2"}
+
         yield {"id": 3, "progress": 100, "status": "Done", "result": result}
         return
 
@@ -535,7 +552,7 @@ def main():
                         help="Imaging modality: 'ct' or 'mr'")
 
     parser.add_argument("-mt", "--model_type", type=str, choices=["xgboost", "cnn"], default="xgboost",
-                        help="Prediction backend. 'cnn' currently supports weight prediction only.")
+                        help="Prediction backend: 'xgboost' or 'cnn'.")
 
     parser.add_argument("--only_weight", action="store_true", default=False,
                         help="Predict only body weight and skip size, age, sex, BMI, and BSA.")
