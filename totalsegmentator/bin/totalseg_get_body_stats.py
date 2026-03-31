@@ -317,8 +317,8 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
 
     tissue_types_slices = [f"{tissue}_{vertebra}" for tissue in tissue_types for vertebra in vertebrae]
 
-    if model_type == "cnn" and modality != "ct":
-        raise ValueError("The CNN body-stats models currently only support CT images.")
+    if model_type == "cnn" and modality != "mr":
+        raise ValueError("The CNN body-stats models currently only support MR images.")
 
     needs_default_xgboost_models = model_type == "xgboost" and model_file is None
     if needs_default_xgboost_models and not check_body_stats_models_exist():
