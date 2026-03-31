@@ -5,20 +5,24 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 
+from totalsegmentator.config import get_weights_dir
+from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.resampling import change_spacing
 
 
-DEFAULT_BODY_STATS_CNN_ROOT_DIR = (
-    Path("~/.totalsegmentator/nnunet/results/lightning_models").expanduser()
-)
+DEFAULT_BODY_STATS_CNN_ROOT_DIR = get_weights_dir() / "lightning_models"
 DEFAULT_BODY_STATS_CNN_DIRS = {
     "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "weight_2mm_splitXGB_2d_ns5",
     "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "size_2mm_splitXGB_2d_ns5",
     "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "age_2mm_splitXGB_2d_ns5",
     "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "sex_2mm_splitXGB_2d_ns5",
 }
-# Keep the old name as an alias for backward compatibility with older call sites.
-DEFAULT_BODY_STATS_CNN_DIR = DEFAULT_BODY_STATS_CNN_DIRS["weight"]
+BODY_STATS_CNN_DOWNLOAD_TASKS = {
+    "weight": "body_stats_cnn_weight",
+    "size": "body_stats_cnn_size",
+    "age": "body_stats_cnn_age",
+    "sex": "body_stats_cnn_sex",
+}
 
 CNN_CROP_SIZE = (210, 210)
 CNN_NR_SLICES = 5
@@ -210,6 +214,8 @@ def _resolve_target_model_dir(target: str, model_dir: Path | str | None = None) 
 
     if model_dir is None:
         resolved_dir = DEFAULT_BODY_STATS_CNN_DIRS[target]
+        if not resolved_dir.exists():
+            download_pretrained_weights(BODY_STATS_CNN_DOWNLOAD_TASKS[target])
     else:
         candidate = Path(model_dir).expanduser()
         if (candidate / "version_0").exists():

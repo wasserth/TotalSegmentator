@@ -403,7 +403,18 @@ def download_pretrained_weights(task_id):
     elif task_id == "body_stats":
         weights_path = config_dir / "body_stats_models_2026_03_24"
         WEIGHTS_URL = url + "/v2.5.0-weights/body_stats_models_2026_03_24.zip"
-
+    elif task_id == "body_stats_cnn_weight":
+        weights_path = config_dir / "lightning_models" / "weight_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/weight_2mm_splitXGB_2d_ns5.zip"
+    elif task_id == "body_stats_cnn_size":
+        weights_path = config_dir / "lightning_models" / "size_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/size_2mm_splitXGB_2d_ns5.zip"
+    elif task_id == "body_stats_cnn_age":
+        weights_path = config_dir / "lightning_models" / "age_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/age_2mm_splitXGB_2d_ns5.zip"
+    elif task_id == "body_stats_cnn_sex":
+        weights_path = config_dir / "lightning_models" / "sex_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/sex_2mm_splitXGB_2d_ns5.zip"
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")
 

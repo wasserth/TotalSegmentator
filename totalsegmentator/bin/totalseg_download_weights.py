@@ -29,7 +29,7 @@ def main():
                                                  "lung_nodules", "kidney_cysts", "breasts", "ventricle_parts",
                                                  "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", 
                                                 "liver_segments", "liver_segments_mr", "liver_lesions", "liver_lesions_mr",
-                                                 "body_stats",
+                                                 "body_stats", "body_stats_cnn",
                                                #  "aortic_sinuses", 
                                                  "all"],
                         help="Task for which to download the weights", default="total")
@@ -86,6 +86,12 @@ def main():
         "coronary_arteries": [509],
         "coronary_arteries_LEGACY": [507],
         "body_stats": ["body_stats"],
+        "body_stats_cnn": [
+            "body_stats_cnn_weight",
+            "body_stats_cnn_size",
+            "body_stats_cnn_age",
+            "body_stats_cnn_sex",
+        ],
         # "aortic_sinuses": [920]
     }
 
