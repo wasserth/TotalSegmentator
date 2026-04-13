@@ -123,9 +123,9 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        if (t.includes('Step ') || t.includes('Pipeline complete') || t.includes('✅')) {
-          sendMessage('info', t);
-        }
+        // Forward all non-error, non-progress lines so frontend can parse
+        // viewer URLs, output scene paths, and detailed logs.
+        sendMessage('info', t);
       };
 
       let stdoutBuffer = '';

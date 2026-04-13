@@ -12,6 +12,22 @@ interface Log {
 }
 
 type Status = 'ready' | 'processing' | 'success' | 'error';
+type CaseStatus = 'Queued' | 'Running' | 'Done' | 'Failed' | 'Skipped';
+
+interface BatchRecord {
+  caseId: string;
+  status: CaseStatus;
+  step: string;
+  progress: string;
+  duration: string;
+  output: string;
+  message: string;
+  mode: string;
+  blendPath?: string;
+  viewerUrl?: string;
+  startedAt?: number;
+  logs: Log[];
+}
 
 const TotalSegmentatorApp = () => {
   const { locale, setLocale, t } = useLocale();
@@ -32,6 +48,8 @@ const TotalSegmentatorApp = () => {
   const [showTools, setShowTools] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
+  const [batchRecords, setBatchRecords] = useState<BatchRecord[]>([]);
+  const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
   
   // Modal states
   const [modalOpen, setModalOpen] = useState(false);
@@ -54,6 +72,142 @@ const TotalSegmentatorApp = () => {
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, { timestamp: new Date().toISOString(), message }]);
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const total = Math.max(0, Math.round(seconds));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${m}m ${s}s`;
+  };
+
+  const stepLabelForProgress = (p: number): string => {
+    if (p < 20) return 'Preparing';
+    if (p < 40) return 'Step1 DICOM->PNG';
+    if (p < 70) return 'Step2 DICOM->NIfTI';
+    if (p < 75) return 'Step3 Segmentation';
+    if (p < 85) return 'Step4 Refinement';
+    if (p < 100) return 'Step5/6 Blender';
+    return 'Completed';
+  };
+
+  const upsertBatchRecord = (caseId: string, patch: Partial<BatchRecord>) => {
+    setBatchRecords(prev => {
+      const idx = prev.findIndex(r => r.caseId === caseId);
+      if (idx === -1) {
+        const rec: BatchRecord = {
+          caseId,
+          status: 'Queued',
+          step: '-',
+          progress: '0%',
+          duration: '-',
+          output: outputFolder,
+          message: '',
+          mode: 'all',
+          logs: [],
+          ...patch,
+        };
+        return [...prev, rec];
+      }
+      const next = [...prev];
+      next[idx] = { ...next[idx], ...patch };
+      return next;
+    });
+  };
+
+  const appendCaseLog = (caseId: string, message: string) => {
+    const item: Log = { timestamp: new Date().toISOString(), message };
+    setBatchRecords(prev => prev.map(r => r.caseId === caseId ? { ...r, logs: [...r.logs, item] } : r));
+  };
+
+  const parseCaseArtifacts = (caseId: string, line: string) => {
+    const t = line.trim();
+    const urlMatch = t.match(/https?:\/\/[^\s]+/);
+    if (urlMatch?.[0]) {
+      upsertBatchRecord(caseId, { viewerUrl: urlMatch[0] });
+    }
+    if (t.includes('📁 Output scene:')) {
+      const p = t.split('📁 Output scene:')[1]?.trim();
+      if (p) upsertBatchRecord(caseId, { blendPath: p });
+    } else {
+      const blendMatch = t.match(/(.+\.blend)\s*$/i);
+      if (blendMatch?.[1]) upsertBatchRecord(caseId, { blendPath: blendMatch[1].trim() });
+    }
+    if (t.includes('❌') || t.toLowerCase().includes('failed')) {
+      upsertBatchRecord(caseId, { message: t.slice(0, 240) });
+    }
+  };
+
+  const selectedRecord = batchRecords.find(r => r.caseId === selectedCaseId) || null;
+
+  const openLocalTarget = async (target: string, type: 'path' | 'url') => {
+    const response = await fetch('/api/open', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, type }),
+    });
+    if (!response.ok) {
+      let detail = 'Open failed';
+      try {
+        const data = await response.json();
+        detail = data?.error || detail;
+      } catch {
+        // ignore parse errors
+      }
+      throw new Error(detail);
+    }
+  };
+
+  const handleOpenWebForSelected = async () => {
+    if (!selectedRecord?.viewerUrl) {
+      showAlert('Missing URL', 'Viewer URL not available for this case.', 'warning');
+      return;
+    }
+    try {
+      await openLocalTarget(selectedRecord.viewerUrl, 'url');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Open failed';
+      showAlert('Open Web Failed', message, 'error');
+    }
+  };
+
+  const handleOpenBlenderForSelected = async () => {
+    if (!selectedRecord?.blendPath) {
+      showAlert('Missing .blend', 'Blend path not available for this case.', 'warning');
+      return;
+    }
+    try {
+      await openLocalTarget(selectedRecord.blendPath, 'path');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Open failed';
+      showAlert('Open Blender Failed', message, 'error');
+    }
+  };
+
+  const handleOpenOutputForSelected = async () => {
+    if (!selectedRecord?.output) {
+      showAlert('Missing output', 'Output path not available for this case.', 'warning');
+      return;
+    }
+    try {
+      await openLocalTarget(selectedRecord.output, 'path');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Open failed';
+      showAlert('Open Output Failed', message, 'error');
+    }
+  };
+
+  const handleViewLogForSelected = () => {
+    if (!selectedRecord) return;
+    setLogs(selectedRecord.logs);
+    if (!showLogs) setShowLogs(true);
+    showAlert('Logs Loaded', `Loaded logs for ${selectedRecord.caseId}`, 'info');
+  };
+
+  const handleRetrySelected = () => {
+    if (!selectedRecord || isProcessing) return;
+    setProjectName(selectedRecord.caseId);
+    runPipeline(selectedRecord.mode || 'all');
   };
 
   const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info') => {
@@ -109,32 +263,36 @@ const TotalSegmentatorApp = () => {
       return;
     }
 
-    // Check for spaces in folder names
-    if (dicomFolder.includes(' ') || outputFolder.includes(' ')) {
-      showAlert(
-        'Invalid Folder Names', 
-        'Folder names cannot contain spaces!\n\nPlease rename your folders to use underscores (_) or hyphens (-) instead of spaces.\n\nExample: "Testing_Output" instead of "Testing Output"',
-        'warning'
-      );
-      return;
-    }
-
     if (isProcessing) {
       showAlert('Pipeline Running', 'A pipeline is already in progress', 'info');
       return;
     }
 
+    const caseId = projectName || 'Project-01';
+    setSelectedCaseId(caseId);
     setIsProcessing(true);
     setProgress(0);
     setStatus('processing');
     setLogs([]);
     setCurrentStep('Initializing pipeline...');
+    upsertBatchRecord(caseId, {
+      status: 'Running',
+      step: 'Starting',
+      progress: '0%',
+      duration: '-',
+      message: 'Pipeline started',
+      mode,
+      output: outputFolder,
+      startedAt: Date.now(),
+      logs: [],
+    });
     
     if (! showLogs) setShowLogs(true);
 
     try {
       const selectedTasks = tasks.length ? tasks : ['total_all'];
       addLog(`Starting pipeline (mode: ${mode}, tasks: ${selectedTasks.join(', ')})...`);
+      appendCaseLog(caseId, `Starting pipeline (mode: ${mode}, tasks: ${selectedTasks.join(', ')})...`);
       const response = await fetch('/api/pipeline/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -166,7 +324,6 @@ const TotalSegmentatorApp = () => {
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
       let completed = false;
-      let seenError = false;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -191,20 +348,38 @@ const TotalSegmentatorApp = () => {
             if (payload.type === 'progress') {
               if (typeof payload.progress === 'number') {
                 setProgress(payload.progress);
+                upsertBatchRecord(caseId, {
+                  status: 'Running',
+                  progress: `${payload.progress}%`,
+                  step: stepLabelForProgress(payload.progress),
+                });
               }
               setCurrentStep(payload.message || 'Processing...');
               addLog(`Progress ${payload.progress ?? ''}%: ${payload.message}`);
+              appendCaseLog(caseId, `Progress ${payload.progress ?? ''}%: ${payload.message}`);
             } else if (payload.type === 'info') {
               addLog(payload.message);
+              appendCaseLog(caseId, payload.message);
+              parseCaseArtifacts(caseId, payload.message);
             } else if (payload.type === 'error') {
-              seenError = true;
               addLog(`Error: ${payload.message}`);
+              appendCaseLog(caseId, `Error: ${payload.message}`);
+              upsertBatchRecord(caseId, { status: 'Failed', message: `Error: ${payload.message}` });
             } else if (payload.type === 'complete') {
               completed = true;
               setStatus('success');
               setProgress(100);
               setCurrentStep('Complete');
               addLog(payload.message || 'Pipeline completed successfully!');
+              appendCaseLog(caseId, payload.message || 'Pipeline completed successfully!');
+              const start = batchRecords.find(r => r.caseId === caseId)?.startedAt ?? Date.now();
+              upsertBatchRecord(caseId, {
+                status: 'Done',
+                progress: '100%',
+                step: 'Completed',
+                duration: formatDuration((Date.now() - start) / 1000),
+                message: 'Completed successfully',
+              });
             }
           } catch {
             // Ignore malformed SSE event payloads.
@@ -212,15 +387,24 @@ const TotalSegmentatorApp = () => {
         }
       }
 
-      if (completed && !seenError) {
+      if (completed) {
         showAlert('Success!', 'Pipeline completed successfully!', 'success');
       } else {
         throw new Error('Pipeline failed. See log for details.');
       }
       
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       setStatus('error');
-      addLog(`Error: ${error.message}`);
+      addLog(`Error: ${message}`);
+      appendCaseLog(caseId, `Error: ${message}`);
+      const start = batchRecords.find(r => r.caseId === caseId)?.startedAt ?? Date.now();
+      upsertBatchRecord(caseId, {
+        status: 'Failed',
+        step: 'Failed',
+        duration: formatDuration((Date.now() - start) / 1000),
+        message: `Error: ${message}`.slice(0, 240),
+      });
       showAlert('Pipeline Failed', 'Check the log for details.', 'error');
       setProgress(0);
     } finally {
@@ -547,6 +731,89 @@ const TotalSegmentatorApp = () => {
         </div>
 
         {/* Log Section - Full Width Below */}
+        <div className="mx-6 mb-6">
+          <div className="p-6 bg-white/60 backdrop-blur-sm rounded-xl border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Batch Results</h3>
+            <div className="overflow-x-auto">
+              <div className="max-h-[260px] overflow-y-auto border border-gray-200 rounded-lg">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr className="text-left text-gray-700">
+                      <th className="px-3 py-2">Case</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Step</th>
+                      <th className="px-3 py-2">Progress</th>
+                      <th className="px-3 py-2">Duration</th>
+                      <th className="px-3 py-2">Output</th>
+                      <th className="px-3 py-2">Message</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {batchRecords.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-3 py-6 text-center text-gray-500">No cases yet</td>
+                      </tr>
+                    ) : (
+                      batchRecords.map((r) => (
+                        <tr
+                          key={r.caseId}
+                          onClick={() => setSelectedCaseId(r.caseId)}
+                          className={`cursor-pointer border-t border-gray-100 ${selectedCaseId === r.caseId ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                        >
+                          <td className="px-3 py-2 font-medium">{r.caseId}</td>
+                          <td className="px-3 py-2">{r.status}</td>
+                          <td className="px-3 py-2">{r.step}</td>
+                          <td className="px-3 py-2">{r.progress}</td>
+                          <td className="px-3 py-2">{r.duration}</td>
+                          <td className="px-3 py-2 truncate max-w-[260px]" title={r.output}>{r.output}</td>
+                          <td className="px-3 py-2 truncate max-w-[320px]" title={r.message}>{r.message}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={handleOpenBlenderForSelected}
+                disabled={!selectedRecord}
+                className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Open Blender
+              </button>
+              <button
+                onClick={handleOpenWebForSelected}
+                disabled={!selectedRecord}
+                className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Open Web
+              </button>
+              <button
+                onClick={handleOpenOutputForSelected}
+                disabled={!selectedRecord}
+                className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Open Output
+              </button>
+              <button
+                onClick={handleViewLogForSelected}
+                disabled={!selectedRecord}
+                className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                View Log
+              </button>
+              <button
+                onClick={handleRetrySelected}
+                disabled={!selectedRecord || isProcessing}
+                className="px-3 py-2 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="mx-6 mb-6">
           <button
             onClick={() => setShowLogs(!showLogs)}

@@ -5,7 +5,7 @@ Improved TotalSegmentator CLI with organized outputs and enhanced functionality.
 Features:
 1) Organized outputs with clear task titles and result mappings
 2) Mask smoothing (NIfTI) for cleaner meshes in Slicer/Blender
-3) Robust, unit-correct mesh export (STL/OBJ/PLY) using voxel spacing from NIfTI affine
+3) Robust mesh export (STL/OBJ/PLY) using full NIfTI affine, with LPS output
 4) Clean filenames (no ".nii.stl"), per-label export for multi-label masks
 5) Optional Laplacian mesh smoothing for nicer surfaces in Blender
 """
@@ -276,6 +276,7 @@ def export_to_blender_format(
     output_path: Optional[Path] = None,
     export_format: str = "stl",            # 'stl' | 'obj' | 'ply'
     mm_to_meters: bool = True,             # Blender uses meters
+    export_lps: bool = True,               # export meshes in LPS (medical standard)
     laplacian_iters: int = 10,              # optional surface smoothing on mesh
     is_binary: Optional[bool] = None,      # auto-detect if None
     level: float = 0.5,                    # iso-level for marching cubes
@@ -287,7 +288,8 @@ def export_to_blender_format(
 ) -> Optional[Path]:
     """
     Convert a NIfTI segmentation (binary or multi-label) into a mesh in a Blender-friendly format.
-    - Uses voxel spacing from NIfTI affine (geometry to real size in mm)
+    - Uses full NIfTI affine (voxel index -> world mm)
+    - Exports in LPS by default (RAS -> LPS)
     - Optionally scales mm -> meters for Blender
     - Clean output filenames (no '.nii.stl')
     - Exports one mesh per label for multi-label masks
@@ -336,13 +338,26 @@ def export_to_blender_format(
         if pad_edges:
             # Pad by 1 voxel so surfaces are closed at array borders
             m = np.pad(m, 1, mode='constant', constant_values=0)
-            offset = np.array([sx, sy, sz], dtype=float)
-        # Marching cubes with correct physical spacing
-        verts, faces, _, _ = measure.marching_cubes(m, level=level, spacing=(sx, sy, sz))
+            offset = np.array([1.0, 1.0, 1.0], dtype=float)
+        # Marching cubes in voxel index space; world transform is applied via full affine below.
+        verts, faces, _, _ = measure.marching_cubes(m, level=level)
         # Shift back if padded
         if pad_edges:
             verts = verts - offset
-        mesh = trimesh.Trimesh(vertices=verts, faces=faces, process=True)
+
+        # Full voxel->world transform from NIfTI affine (RAS mm).
+        verts_h = np.concatenate([verts, np.ones((verts.shape[0], 1), dtype=float)], axis=1)
+        verts_world = (verts_h @ affine.T)[:, :3]
+
+        # Convert world coordinates from RAS to LPS if requested.
+        if export_lps:
+            verts_world[:, 0] *= -1.0
+            verts_world[:, 1] *= -1.0
+
+        if mm_to_meters:
+            verts_world *= 0.001  # mm -> m
+
+        mesh = trimesh.Trimesh(vertices=verts_world, faces=faces, process=True)
         # Optional repairs to make watertight
         if fill_holes:
             try:
@@ -354,8 +369,6 @@ def export_to_blender_format(
                 mesh.update_faces(mesh.nondegenerate_faces())
             except Exception:
                 pass
-        if mm_to_meters:
-            mesh.apply_scale(0.001)  # mm -> m
         mesh = _laplacian_smooth_trimesh(mesh, iterations=laplacian_iters)
         return mesh if (mesh.vertices.size and mesh.faces.size) else None
 

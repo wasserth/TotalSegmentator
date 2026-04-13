@@ -211,6 +211,7 @@ def parse_args(argv=None):
     p.add_argument("--align-center", default="", help="Target center for meshes (x,y,z) in Blender units")
     p.add_argument("--ct-metadata", default="", help="Path to metadata.csv for CT alignment")
     p.add_argument("--auto-align-ct", action="store_true", help="Auto align meshes to CT slicer center (uses metadata)")
+    p.add_argument("--legacy-quick-align", action="store_true", help="Quick compatibility align for legacy CT slider: apply Ry+180 and +Y offset (Z*iso/100)")
     return p.parse_args(argv)
 
 
@@ -385,6 +386,34 @@ def _apply_auto_ct_alignment(collection, meta_path: str, unit_scale: float, mirr
         obj.location.z += oz
 
     print(f"Auto CT alignment applied: offset=({ox:.6f}, {oy:.6f}, {oz:.6f})")
+
+
+def _apply_legacy_quick_align(collection, meta_path: str):
+    """
+    Fast compatibility alignment against legacy CT slider formulas.
+    Applies:
+      - Rotate all mesh objects by +180 deg around Y
+      - Translate all mesh objects by +Y = Z * iso_mm / 100
+    """
+    if not meta_path:
+        print("Legacy quick align skipped: missing metadata path")
+        return
+    meta = _load_metadata_csv(meta_path)
+    shape = _parse_shape_zyx(meta)
+    spacing = _parse_spacing_mm(meta)
+    if not shape or spacing is None:
+        print("Legacy quick align skipped: missing shape/spacing in metadata")
+        return
+
+    z, _, _ = shape
+    delta_y = float(z) * float(spacing) / 100.0
+
+    all_objects = [o for o in collection.all_objects if o.type == "MESH"]
+    for obj in all_objects:
+        obj.rotation_euler[1] += math.pi
+        obj.location.y += delta_y
+
+    print(f"Legacy quick align applied: rotate_y=180deg, delta_y={delta_y:.6f}")
 
 
 def import_mesh(filepath: Path, units: str = "m", extra_scale: float = 1.0, recenter: bool = False, collection=None, remesh_mode: str = "none", voxel_size: float = 0.003, palette: str = "exact", rotate_x_deg: float = 0.0, mirror_x: bool = False):
@@ -742,10 +771,18 @@ def run_inside_blender(args):
         except Exception as e:
             print(f"Failed to align mesh center: {e}")
 
-    # Auto-align meshes to CT slicer center using metadata (preferred)
-    if args.auto_align_ct:
+    # Legacy quick align and auto-align are different alignment models; avoid stacking both.
+    if args.auto_align_ct and args.legacy_quick_align:
+        print("Both --auto-align-ct and --legacy-quick-align were provided; using --legacy-quick-align only.")
+
+    # Auto-align meshes to CT slicer center using metadata (preferred for affine-based workflow)
+    if args.auto_align_ct and not args.legacy_quick_align:
         unit_scale = args.scale * (0.001 if args.units == "m" else 1.0)
         _apply_auto_ct_alignment(parent_coll, args.ct_metadata, unit_scale, mirror_x=mirror_x)
+
+    # Quick compatibility align for legacy CT slider formulas.
+    if args.legacy_quick_align:
+        _apply_legacy_quick_align(parent_coll, args.ct_metadata)
 
     # Center the entire collection only if requested
     if args.recenter:
