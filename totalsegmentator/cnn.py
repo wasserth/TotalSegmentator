@@ -13,15 +13,15 @@ from totalsegmentator.resampling import change_spacing
 DEFAULT_BODY_STATS_CNN_ROOT_DIR = get_weights_dir() / "lightning_models"
 DEFAULT_BODY_STATS_CNN_DIRS = {
     "mr": {
-        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_2mm_splitXGB_2d_ns5",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_2mm_splitXGB_2d_ns5",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_2mm_splitXGB_2d_ns5",
     },
     "ct": {
-        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2",
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_2mm_splitXGB_2d_ns5",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_2mm_splitXGB_2d_ns5",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_2mm_splitXGB_2d_ns5",
@@ -178,18 +178,11 @@ def _resolve_device(device):
 
 
 def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
-    try:
-        import torch
-    except ImportError as exc:
-        raise ImportError("CNN body-stats inference requires PyTorch to be installed.") from exc
-
+    import torch 
     try:
         import timm
     except ImportError as exc:
         raise ImportError("CNN body-stats inference requires timm to be installed.") from exc
-
-    if target not in CNN_TARGET_SPECS:
-        raise ValueError(f"Unsupported CNN target: {target}")
 
     ckpt_dir = model_dir / f"version_{fold_idx}" / "checkpoints"
     ckpt_files = sorted(ckpt_dir.glob("epoch*.ckpt"))
