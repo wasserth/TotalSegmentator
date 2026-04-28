@@ -12,20 +12,43 @@ from totalsegmentator.resampling import change_spacing
 
 DEFAULT_BODY_STATS_CNN_ROOT_DIR = get_weights_dir() / "lightning_models"
 DEFAULT_BODY_STATS_CNN_DIRS = {
-    "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "weight_2mm_splitXGB_2d_ns5",
-    "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "size_2mm_splitXGB_2d_ns5",
-    "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "age_2mm_splitXGB_2d_ns5",
-    "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "sex_2mm_splitXGB_2d_ns5",
+    "mr": {
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_2mm_splitXGB_2d_ns5",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_2mm_splitXGB_2d_ns5",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_2mm_splitXGB_2d_ns5",
+    },
+    "ct": {
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_2mm_splitXGB_2d_ns5",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_2mm_splitXGB_2d_ns5",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_2mm_splitXGB_2d_ns5",
+    },
 }
 BODY_STATS_CNN_DOWNLOAD_TASKS = {
-    "weight": "body_stats_cnn_weight",
-    "size": "body_stats_cnn_size",
-    "age": "body_stats_cnn_age",
-    "sex": "body_stats_cnn_sex",
+    "mr": {
+        "weight": "body_stats_cnn_mr_weight",
+        "size": "body_stats_cnn_mr_size",
+        "age": "body_stats_cnn_mr_age",
+        "sex": "body_stats_cnn_mr_sex",
+    },
+    "ct": {
+        "weight": "body_stats_cnn_ct_weight",
+        "size": "body_stats_cnn_ct_size",
+        "age": "body_stats_cnn_ct_age",
+        "sex": "body_stats_cnn_ct_sex",
+    },
 }
 
-CNN_CROP_SIZE = (210, 210)
+CNN_CROP_SIZE = {
+    "ct": (240, 240),
+    "mr": (210, 210),
+}
 CNN_NR_SLICES = 5
+CNN_MULTI_ORIENTATION = True
+CNN_NR_CHANNELS = CNN_NR_SLICES * 3 if CNN_MULTI_ORIENTATION else CNN_NR_SLICES
 CNN_TARGET_SPACING_MM = 2.0
 CNN_TARGET_SPECS = {
     "weight": {"loss": "mse", "num_classes": 1, "unit": "kg"},
@@ -54,6 +77,29 @@ def _extract_axial_slices(img_data: np.ndarray) -> np.ndarray:
     offset = int(img_data.shape[2] / 8)
     slice_indices = _get_slice_indices(mid_idx, CNN_NR_SLICES, offset, img_data.shape[2])
     return img_data[:, :, slice_indices].transpose(2, 0, 1)
+
+
+def _extract_multi_orientation_slices(img_data: np.ndarray) -> list[np.ndarray]:
+    """Mirror multi_orientation=True from the deterministic validation dataset."""
+    z_offset = int(img_data.shape[2] / 8)
+    axis_offsets = np.array(
+        [0 if axis_size <= 1 else max(1, axis_size // 8) for axis_size in img_data.shape],
+        dtype=int,
+    )
+    axis_offsets = np.minimum(axis_offsets, z_offset)
+    mid = (np.array(img_data.shape) / 2).astype(int)
+
+    x_slices = img_data[
+        _get_slice_indices(mid[0], CNN_NR_SLICES, axis_offsets[0], img_data.shape[0]), :, :
+    ]
+    y_slices = img_data[
+        :, _get_slice_indices(mid[1], CNN_NR_SLICES, axis_offsets[1], img_data.shape[1]), :
+    ].transpose(1, 0, 2)
+    z_slices = img_data[
+        :, :, _get_slice_indices(mid[2], CNN_NR_SLICES, axis_offsets[2], img_data.shape[2])
+    ].transpose(2, 0, 1)
+
+    return [*x_slices, *y_slices, *z_slices]
 
 
 def _center_pad_or_crop_2d(img_2d: np.ndarray, target_shape: tuple[int, int]) -> np.ndarray:
@@ -92,13 +138,13 @@ def _normalize_per_channel(img_stack: np.ndarray) -> np.ndarray:
     return normalized
 
 
-def _prepare_image_tensor(img: nib.Nifti1Image):
+def _prepare_image_tensor(img: nib.Nifti1Image, crop_size: tuple[int, int]):
     img = nib.as_closest_canonical(img)
     img = change_spacing(img, CNN_TARGET_SPACING_MM, dtype=np.float32, order=1)
     img_data = np.asarray(img.dataobj, dtype=np.float32)
-    slices = _extract_axial_slices(img_data)
+    slices = _extract_multi_orientation_slices(img_data)
     slices = np.stack(
-        [_center_pad_or_crop_2d(slice_2d, CNN_CROP_SIZE) for slice_2d in slices],
+        [_center_pad_or_crop_2d(slice_2d, crop_size) for slice_2d in slices],
         axis=0,
     )
     slices = _normalize_per_channel(slices)
@@ -183,11 +229,15 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
     if "state_dict" not in checkpoint:
         raise KeyError(f"Checkpoint {ckpt_files[0]} does not contain a 'state_dict' entry.")
 
+    model_name = checkpoint.get("hyper_parameters", {}).get("model", "tf_efficientnet_b0_ns")
+    if model_name == "tf_efficientnet_b0_ns":
+        model_name = "tf_efficientnet_b0.ns_jft_in1k"
+
     model = timm.create_model(
-        "tf_efficientnet_b0_ns",
+        model_name,
         pretrained=False,
         num_classes=CNN_TARGET_SPECS[target]["num_classes"],
-        in_chans=CNN_NR_SLICES,
+        in_chans=CNN_NR_CHANNELS,
     )
     state_dict = {
         key.removeprefix("backbone."): value
@@ -208,21 +258,35 @@ def _get_fold_indices(fold: int | None) -> list[int]:
     return [fold]
 
 
-def _resolve_target_model_dir(target: str, model_dir: Path | str | None = None) -> Path:
+def _validate_modality_and_target(modality: str, target: str) -> None:
+    if modality not in DEFAULT_BODY_STATS_CNN_DIRS:
+        supported_modalities = ", ".join(sorted(DEFAULT_BODY_STATS_CNN_DIRS))
+        raise ValueError(f"Unsupported CNN modality: {modality}. Supported: {supported_modalities}")
     if target not in CNN_TARGET_SPECS:
         raise ValueError(f"Unsupported CNN target: {target}")
+    if target not in DEFAULT_BODY_STATS_CNN_DIRS[modality]:
+        supported_targets = ", ".join(sorted(DEFAULT_BODY_STATS_CNN_DIRS[modality]))
+        raise ValueError(
+            f"Unsupported CNN target for {modality.upper()}: {target}. "
+            f"Supported: {supported_targets}"
+        )
+
+
+def _resolve_target_model_dir(
+    target: str, modality: str = "mr", model_dir: Path | str | None = None
+) -> Path:
+    _validate_modality_and_target(modality, target)
 
     if model_dir is None:
-        resolved_dir = DEFAULT_BODY_STATS_CNN_DIRS[target]
+        resolved_dir = DEFAULT_BODY_STATS_CNN_DIRS[modality][target]
         if not resolved_dir.exists():
-            download_pretrained_weights(BODY_STATS_CNN_DOWNLOAD_TASKS[target])
+            download_pretrained_weights(BODY_STATS_CNN_DOWNLOAD_TASKS[modality][target])
     else:
         candidate = Path(model_dir).expanduser()
         if (candidate / "version_0").exists():
             resolved_dir = candidate
         else:
-            target_dir_name = DEFAULT_BODY_STATS_CNN_DIRS[target].name
-            target_candidate = candidate / target_dir_name
+            target_candidate = candidate / DEFAULT_BODY_STATS_CNN_DIRS[modality][target].name
             if target_candidate.exists():
                 resolved_dir = target_candidate
             else:
@@ -236,19 +300,19 @@ def _resolve_target_model_dir(target: str, model_dir: Path | str | None = None) 
 def predict_body_stats_with_cnn(
     img: nib.Nifti1Image,
     target: str,
+    modality: str = "mr",
     model_dir: Path | str | None = None,
     fold: int | None = None,
     device="gpu",
 ) -> dict:
-    if target not in CNN_TARGET_SPECS:
-        raise ValueError(f"Unsupported CNN target: {target}")
+    _validate_modality_and_target(modality, target)
 
-    model_dir = _resolve_target_model_dir(target, model_dir=model_dir)
+    model_dir = _resolve_target_model_dir(target, modality=modality, model_dir=model_dir)
     if not model_dir.exists():
         raise FileNotFoundError(f"CNN model directory does not exist: {model_dir}")
 
     resolved_device = _resolve_device(device)
-    img_tensor = _prepare_image_tensor(img).to(resolved_device)
+    img_tensor = _prepare_image_tensor(img, crop_size=CNN_CROP_SIZE[modality]).to(resolved_device)
 
     try:
         import torch
@@ -295,10 +359,11 @@ def predict_body_stats_with_cnn(
 
 def predict_body_weight_with_cnn(
     img: nib.Nifti1Image,
+    modality: str = "mr",
     model_dir: Path | str | None = None,
     fold: int | None = None,
     device="gpu",
 ) -> dict:
     return predict_body_stats_with_cnn(
-        img, target="weight", model_dir=model_dir, fold=fold, device=device
+        img, target="weight", modality=modality, model_dir=model_dir, fold=fold, device=device
     )

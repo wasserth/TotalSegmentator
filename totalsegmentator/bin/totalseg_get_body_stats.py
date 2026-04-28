@@ -277,7 +277,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
         use_border: bool, optional
         call_via_subprocess: bool, optional - if True, run TotalSegmentator via subprocess
         model_type: str, optional - "xgboost" for the existing feature-based model,
-            "cnn" to use the 5-fold CNN ensemble for weight prediction
+            "cnn" to use the 5-fold CNN ensemble
         only_weight: bool, optional - if True, predict only body weight and skip all
             other targets and derived measures
     """
@@ -317,9 +317,6 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
 
     tissue_types_slices = [f"{tissue}_{vertebra}" for tissue in tissue_types for vertebra in vertebrae]
 
-    if model_type == "cnn" and modality != "mr":
-        raise ValueError("The CNN body-stats models currently only support MR images.")
-
     needs_default_xgboost_models = model_type == "xgboost" and model_file is None
     if needs_default_xgboost_models and not check_body_stats_models_exist():
         download_pretrained_weights("body_stats")
@@ -342,7 +339,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
                 "status": f"Predicting {target} with CNN ensemble",
             }
             result[target] = predict_body_stats_with_cnn(
-                img, target=target, model_dir=model_file, fold=fold, device=device
+                img, target=target, modality=modality, model_dir=model_file, fold=fold, device=device
             )
 
         if not only_weight:

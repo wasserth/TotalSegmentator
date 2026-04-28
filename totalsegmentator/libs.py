@@ -400,21 +400,44 @@ def download_pretrained_weights(task_id):
     elif task_id == 920:
         weights_path = config_dir / "Dataset920_aortic_sinuses_cm_nativ_400subj"
 
+    # XGBoost
     elif task_id == "body_stats":
         weights_path = config_dir / "body_stats_models_2026_03_24"
         WEIGHTS_URL = url + "/v2.5.0-weights/body_stats_models_2026_03_24.zip"
-    elif task_id == "body_stats_cnn_weight":
-        weights_path = config_dir / "lightning_models" / "weight_2mm_splitXGB_2d_ns5"
-        WEIGHTS_URL = url + "/v2.5.0-weights/weight_2mm_splitXGB_2d_ns5.zip"
-    elif task_id == "body_stats_cnn_size":
-        weights_path = config_dir / "lightning_models" / "size_2mm_splitXGB_2d_ns5"
-        WEIGHTS_URL = url + "/v2.5.0-weights/size_2mm_splitXGB_2d_ns5.zip"
-    elif task_id == "body_stats_cnn_age":
-        weights_path = config_dir / "lightning_models" / "age_2mm_splitXGB_2d_ns5"
-        WEIGHTS_URL = url + "/v2.5.0-weights/age_2mm_splitXGB_2d_ns5.zip"
-    elif task_id == "body_stats_cnn_sex":
-        weights_path = config_dir / "lightning_models" / "sex_2mm_splitXGB_2d_ns5"
-        WEIGHTS_URL = url + "/v2.5.0-weights/sex_2mm_splitXGB_2d_ns5.zip"
+
+    # CNN - MR
+    elif task_id == "body_stats_cnn_mr_weight":
+        weights_path = config_dir / "lightning_models" / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_weight_splitXGB_2d_ns5_mo1_effnetv2.zip"
+        # weights_url = url + "/v2.5.0-weights/mr_weight_splitOrig_2d_ns5_mo1_effnetv2.zip"
+        # WEIGHTS_URL = "TODO"
+    elif task_id == "body_stats_cnn_mr_size":
+        weights_path = config_dir / "lightning_models" / "mr_size_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_size_2mm_splitXGB_2d_ns5.zip"
+    elif task_id == "body_stats_cnn_mr_age":
+        weights_path = config_dir / "lightning_models" / "mr_age_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_age_2mm_splitXGB_2d_ns5.zip"
+    elif task_id == "body_stats_cnn_mr_sex":
+        weights_path = config_dir / "lightning_models" / "mr_sex_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_sex_2mm_splitXGB_2d_ns5.zip"
+
+    # CNN - CT
+    elif task_id == "body_stats_cnn_ct_weight":
+        weights_path = config_dir / "lightning_models" / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_weight_splitXGB_2d_ns5_mo1_effnetv2.zip"
+        # weights_url = url + "/v2.5.0-weights/ct_weight_splitOrig_2d_ns5_mo1_effnetv2.zip"
+        # WEIGHTS_URL = "TODO"
+    elif task_id == "body_stats_cnn_ct_size":
+        weights_path = config_dir / "lightning_models" / "ct_size_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_size_2mm_splitXGB_2d_ns5.zip"
+    elif task_id == "body_stats_cnn_ct_age":
+        weights_path = config_dir / "lightning_models" / "ct_age_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_age_2mm_splitXGB_2d_ns5.zip"
+    elif task_id == "body_stats_cnn_ct_sex":
+        weights_path = config_dir / "lightning_models" / "ct_sex_2mm_splitXGB_2d_ns5"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_sex_2mm_splitXGB_2d_ns5.zip"
+
+
     else:
         raise ValueError(f"For task_id {task_id} no download path was found.")
 
