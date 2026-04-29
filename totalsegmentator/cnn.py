@@ -13,15 +13,15 @@ from totalsegmentator.resampling import change_spacing
 DEFAULT_BODY_STATS_CNN_ROOT_DIR = get_weights_dir() / "lightning_models"
 DEFAULT_BODY_STATS_CNN_DIRS = {
     "mr": {
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",
-        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_2mm_splitXGB_2d_ns5",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_2mm_splitXGB_2d_ns5",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_2mm_splitXGB_2d_ns5",
     },
     "ct": {
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2",
-        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_mo1_effnetv2_ep40",
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_2mm_splitXGB_2d_ns5",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_2mm_splitXGB_2d_ns5",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_2mm_splitXGB_2d_ns5",
@@ -79,27 +79,70 @@ def _extract_axial_slices(img_data: np.ndarray) -> np.ndarray:
     return img_data[:, :, slice_indices].transpose(2, 0, 1)
 
 
-def _extract_multi_orientation_slices(img_data: np.ndarray) -> list[np.ndarray]:
+def _extract_multi_orientation_slices(
+    img_data: np.ndarray, nr_slices: int, offset: int
+) -> list[np.ndarray]:
     """Mirror multi_orientation=True from the deterministic validation dataset."""
-    z_offset = int(img_data.shape[2] / 8)
     axis_offsets = np.array(
         [0 if axis_size <= 1 else max(1, axis_size // 8) for axis_size in img_data.shape],
         dtype=int,
     )
-    axis_offsets = np.minimum(axis_offsets, z_offset)
+    axis_offsets = np.minimum(axis_offsets, offset)
     mid = (np.array(img_data.shape) / 2).astype(int)
 
     x_slices = img_data[
-        _get_slice_indices(mid[0], CNN_NR_SLICES, axis_offsets[0], img_data.shape[0]), :, :
+        _get_slice_indices(mid[0], nr_slices, axis_offsets[0], img_data.shape[0]), :, :
     ]
     y_slices = img_data[
-        :, _get_slice_indices(mid[1], CNN_NR_SLICES, axis_offsets[1], img_data.shape[1]), :
+        :, _get_slice_indices(mid[1], nr_slices, axis_offsets[1], img_data.shape[1]), :
     ].transpose(1, 0, 2)
     z_slices = img_data[
-        :, :, _get_slice_indices(mid[2], CNN_NR_SLICES, axis_offsets[2], img_data.shape[2])
+        :, :, _get_slice_indices(mid[2], nr_slices, axis_offsets[2], img_data.shape[2])
     ].transpose(2, 0, 1)
 
     return [*x_slices, *y_slices, *z_slices]
+
+
+def _extract_single_orientation_slices(
+    img_data: np.ndarray, nr_slices: int, offset: int, orientation: str
+) -> list[np.ndarray]:
+    mid = (np.array(img_data.shape) / 2).astype(int)
+
+    if orientation == "x":
+        return list(
+            img_data[_get_slice_indices(mid[0], nr_slices, offset, img_data.shape[0]), :, :]
+        )
+    if orientation == "y":
+        return list(
+            img_data[
+                :, _get_slice_indices(mid[1], nr_slices, offset, img_data.shape[1]), :
+            ].transpose(1, 0, 2)
+        )
+    if orientation == "z":
+        return list(
+            img_data[
+                :, :, _get_slice_indices(mid[2], nr_slices, offset, img_data.shape[2])
+            ].transpose(2, 0, 1)
+        )
+    raise ValueError(f"Unsupported slice orientation: {orientation}")
+
+
+def _extract_slices(img_data: np.ndarray, hparams: dict | None) -> list[np.ndarray]:
+    nr_slices = int(hparams.get("nr_slices", CNN_NR_SLICES)) if hparams else CNN_NR_SLICES
+    multi_orientation = (
+        bool(hparams.get("multi_orientation", CNN_MULTI_ORIENTATION))
+        if hparams
+        else CNN_MULTI_ORIENTATION
+    )
+    orientation = hparams.get("slice_orientation", "z") if hparams else "z"
+    orientation_to_axis = {"x": 0, "y": 1, "z": 2}
+    if orientation not in orientation_to_axis:
+        raise ValueError(f"Unsupported slice orientation: {orientation}")
+
+    offset = int(img_data.shape[orientation_to_axis[orientation]] / 8)
+    if multi_orientation:
+        return _extract_multi_orientation_slices(img_data, nr_slices, offset)
+    return _extract_single_orientation_slices(img_data, nr_slices, offset, orientation)
 
 
 def _center_pad_or_crop_2d(img_2d: np.ndarray, target_shape: tuple[int, int]) -> np.ndarray:
@@ -169,7 +212,7 @@ def _prepare_image_tensor(
         img_data = np.clip(img_data, hparams["clip_low"], hparams["clip_high"])
 
     crop_size = tuple(hparams.get("crop_size", crop_size)) if hparams else crop_size
-    slices = _extract_multi_orientation_slices(img_data)
+    slices = _extract_slices(img_data, hparams)
     slices = np.stack(
         [_center_pad_or_crop_2d(slice_2d, crop_size) for slice_2d in slices],
         axis=0,
@@ -253,11 +296,18 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
     if model_name == "tf_efficientnet_b0_ns":
         model_name = "tf_efficientnet_b0.ns_jft_in1k"
 
+    hparams = checkpoint.get("hyper_parameters", {})
+    nr_channels = hparams.get("nr_channels")
+    if nr_channels is None:
+        nr_slices = int(hparams.get("nr_slices", CNN_NR_SLICES))
+        multi_orientation = bool(hparams.get("multi_orientation", CNN_MULTI_ORIENTATION))
+        nr_channels = nr_slices * (3 if multi_orientation else 1)
+
     model = timm.create_model(
         model_name,
         pretrained=False,
         num_classes=CNN_TARGET_SPECS[target]["num_classes"],
-        in_chans=CNN_NR_CHANNELS,
+        in_chans=int(nr_channels),
     )
     state_dict = {
         key.removeprefix("backbone."): value
