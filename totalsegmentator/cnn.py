@@ -48,9 +48,6 @@ CNN_CROP_SIZE = {
     "ct": (240, 240),
     "mr": (210, 210),
 }
-CNN_NR_SLICES = 5
-CNN_MULTI_ORIENTATION = True
-CNN_NR_CHANNELS = CNN_NR_SLICES * 3 if CNN_MULTI_ORIENTATION else CNN_NR_SLICES
 CNN_TARGET_SPACING_MM = 2.0
 CNN_TARGET_SPECS = {
     "weight": {"loss": "mse", "num_classes": 1, "unit": "kg"},
@@ -71,14 +68,6 @@ def _get_slice_indices(mid_idx: int, nr_slices: int, offset: int, size: int) -> 
             np.linspace(mid_idx - offset, mid_idx + offset, nr_slices)
         ).astype(int).tolist()
     return np.clip(slice_indices, 0, size - 1).astype(int).tolist()
-
-
-def _extract_axial_slices(img_data: np.ndarray) -> np.ndarray:
-    """Mirror the deterministic validation-time slice extraction for this model."""
-    mid_idx = int(img_data.shape[2] / 2)
-    offset = int(img_data.shape[2] / 8)
-    slice_indices = _get_slice_indices(mid_idx, CNN_NR_SLICES, offset, img_data.shape[2])
-    return img_data[:, :, slice_indices].transpose(2, 0, 1)
 
 
 def _extract_multi_orientation_slices(
@@ -129,13 +118,15 @@ def _extract_single_orientation_slices(
     raise ValueError(f"Unsupported slice orientation: {orientation}")
 
 
+def _require_hparam(hparams: dict | None, key: str):
+    if not hparams or key not in hparams:
+        raise KeyError(f"Checkpoint is missing required hyperparameter: {key}")
+    return hparams[key]
+
+
 def _extract_slices(img_data: np.ndarray, hparams: dict | None) -> list[np.ndarray]:
-    nr_slices = int(hparams.get("nr_slices", CNN_NR_SLICES)) if hparams else CNN_NR_SLICES
-    multi_orientation = (
-        bool(hparams.get("multi_orientation", CNN_MULTI_ORIENTATION))
-        if hparams
-        else CNN_MULTI_ORIENTATION
-    )
+    nr_slices = int(_require_hparam(hparams, "nr_slices"))
+    multi_orientation = bool(_require_hparam(hparams, "multi_orientation"))
     orientation = hparams.get("slice_orientation", "z") if hparams else "z"
     orientation_to_axis = {"x": 0, "y": 1, "z": 2}
     if orientation not in orientation_to_axis:
@@ -301,8 +292,8 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
     hparams = checkpoint.get("hyper_parameters", {})
     nr_channels = hparams.get("nr_channels")
     if nr_channels is None:
-        nr_slices = int(hparams.get("nr_slices", CNN_NR_SLICES))
-        multi_orientation = bool(hparams.get("multi_orientation", CNN_MULTI_ORIENTATION))
+        nr_slices = int(_require_hparam(hparams, "nr_slices"))
+        multi_orientation = bool(_require_hparam(hparams, "multi_orientation"))
         nr_channels = nr_slices * (3 if multi_orientation else 1)
 
     model = timm.create_model(
