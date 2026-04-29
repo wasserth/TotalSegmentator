@@ -138,16 +138,43 @@ def _normalize_per_channel(img_stack: np.ndarray) -> np.ndarray:
     return normalized
 
 
-def _prepare_image_tensor(img: nib.Nifti1Image, crop_size: tuple[int, int]):
+def _normalize_with_training_hparams(img_stack: np.ndarray, hparams: dict | None) -> np.ndarray:
+    img_stack = img_stack.astype(np.float32, copy=False)
+    if not hparams or not hparams.get("normalize", True):
+        return img_stack
+
+    if hparams.get("norm_global", False):
+        global_mean = np.asarray(hparams["global_mean"], dtype=np.float32)
+        global_std = np.asarray(hparams["global_std"], dtype=np.float32)
+        return (img_stack - global_mean[:, None, None]) / global_std[:, None, None]
+
+    if hparams.get("norm_channel_wise", True):
+        return _normalize_per_channel(img_stack)
+
+    mean = float(img_stack.mean())
+    std = float(img_stack.std())
+    if std < 1e-8:
+        return img_stack - mean
+    return (img_stack - mean) / std
+
+
+def _prepare_image_tensor(
+    img: nib.Nifti1Image, crop_size: tuple[int, int], hparams: dict | None = None
+):
     img = nib.as_closest_canonical(img)
     img = change_spacing(img, CNN_TARGET_SPACING_MM, dtype=np.float32, order=1)
     img_data = np.asarray(img.dataobj, dtype=np.float32)
+
+    if hparams and hparams.get("clip", False):
+        img_data = np.clip(img_data, hparams["clip_low"], hparams["clip_high"])
+
+    crop_size = tuple(hparams.get("crop_size", crop_size)) if hparams else crop_size
     slices = _extract_multi_orientation_slices(img_data)
     slices = np.stack(
         [_center_pad_or_crop_2d(slice_2d, crop_size) for slice_2d in slices],
         axis=0,
     )
-    slices = _normalize_per_channel(slices)
+    slices = _normalize_with_training_hparams(slices, hparams)
 
     try:
         import torch
@@ -243,6 +270,23 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
     return model
 
 
+def _load_fold_hparams(model_dir: Path, fold_idx: int) -> dict:
+    import torch
+
+    ckpt_dir = model_dir / f"version_{fold_idx}" / "checkpoints"
+    ckpt_files = sorted(ckpt_dir.glob("epoch*.ckpt"))
+    if len(ckpt_files) != 1:
+        raise FileNotFoundError(
+            f"Expected exactly one checkpoint in {ckpt_dir}, found {len(ckpt_files)}."
+        )
+
+    try:
+        checkpoint = torch.load(ckpt_files[0], map_location="cpu", weights_only=False)
+    except TypeError:
+        checkpoint = torch.load(ckpt_files[0], map_location="cpu")
+    return dict(checkpoint.get("hyper_parameters", {}))
+
+
 def _get_fold_indices(fold: int | None) -> list[int]:
     if fold is None:
         return list(range(5))
@@ -305,7 +349,11 @@ def predict_body_stats_with_cnn(
         raise FileNotFoundError(f"CNN model directory does not exist: {model_dir}")
 
     resolved_device = _resolve_device(device)
-    img_tensor = _prepare_image_tensor(img, crop_size=CNN_CROP_SIZE[modality]).to(resolved_device)
+    fold_indices = _get_fold_indices(fold)
+    hparams = _load_fold_hparams(model_dir, fold_indices[0])
+    img_tensor = _prepare_image_tensor(
+        img, crop_size=CNN_CROP_SIZE[modality], hparams=hparams
+    ).to(resolved_device)
 
     try:
         import torch
@@ -314,7 +362,7 @@ def predict_body_stats_with_cnn(
 
     preds = []
     with torch.inference_mode():
-        for fold_idx in _get_fold_indices(fold):
+        for fold_idx in fold_indices:
             model = _load_fold_model(model_dir, fold_idx, resolved_device, target)
             pred = model(img_tensor).detach().float().cpu().numpy()[0]
             preds.append(pred)
