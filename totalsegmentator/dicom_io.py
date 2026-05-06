@@ -185,7 +185,8 @@ def _extract_orientation_from_datasets(datasets):
             "image_orientation_patient": iop if len(iop) == 6 else None,
             "image_position_patient_first": ipp_list[0] if ipp_list else None,
             "pixel_spacing": pixel_spacing,
-            "slice_thickness": float(getattr(first, 'SliceThickness', 0)) or None,
+            "slice_thickness": (lambda v: float(v) if v not in (None, "") else None)(
+                getattr(first, 'SliceThickness', None)),
             "slice_spacing": slice_spacing,
             "plane": plane
         }
@@ -354,6 +355,11 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
 
     # Derive orientation metadata directly from loaded datasets
     orientation_metadata = _extract_orientation_from_datasets(source_images)
+
+    # Defence: the helper above has a broad `except` that returns None on
+    # any failure. Downstream code dereferences this with .get(), so guard.
+    if orientation_metadata is None:
+        orientation_metadata = {}
 
     # Ensure required DICOM attributes exist (some anonymized files strip these)
     required_str_attrs = {
