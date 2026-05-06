@@ -15,7 +15,8 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
     "mr": {
 
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_effnetv2",
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",  # mo1
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_2mm_splitXGB_2d_ns5",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_2mm_splitXGB_2d_ns5",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_2mm_splitXGB_2d_ns5",
@@ -23,7 +24,8 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
     "ct": {
         # can not use older mo1 models, because they are based on sparse z-sampling which is not done during inference
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_effnetv2_ep40",
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2_npy0",  # mo1
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_2mm_splitXGB_2d_ns5",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_2mm_splitXGB_2d_ns5",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_2mm_splitXGB_2d_ns5",
@@ -384,6 +386,7 @@ def predict_body_stats_with_cnn(
     model_dir: Path | str | None = None,
     fold: int | None = None,
     device="gpu",
+    debug: bool = False,
 ) -> dict:
     _validate_modality_and_target(modality, target)
 
@@ -397,6 +400,8 @@ def predict_body_stats_with_cnn(
     img_tensor = _prepare_image_tensor(
         img, crop_size=CNN_CROP_SIZE[modality], hparams=hparams
     ).to(resolved_device)
+    if debug:
+        print(f"DEBUG: CNN input tensor shape for {target}: {tuple(img_tensor.shape)}")
 
     try:
         import torch
@@ -447,7 +452,9 @@ def predict_body_weight_with_cnn(
     model_dir: Path | str | None = None,
     fold: int | None = None,
     device="gpu",
+    debug: bool = False,
 ) -> dict:
     return predict_body_stats_with_cnn(
-        img, target="weight", modality=modality, model_dir=model_dir, fold=fold, device=device
+        img, target="weight", modality=modality, model_dir=model_dir, fold=fold,
+        device=device, debug=debug
     )

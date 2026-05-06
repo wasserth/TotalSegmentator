@@ -256,7 +256,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
                    existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None,
                    fold: int = None, license_number: str = None, use_border: bool = False,
                    call_via_subprocess: bool = False, model_type: str = "xgboost",
-                   only_weight: bool = False):
+                   only_weight: bool = False, debug: bool = False):
     """
     Predict body weight, body size, age and sex based on a CT or MR scan.
     Also calculates BMI and body surface area based on the predicted values.
@@ -280,6 +280,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
             "cnn" to use the 5-fold CNN ensemble
         only_weight: bool, optional - if True, predict only body weight and skip all
             other targets and derived measures
+        debug: bool, optional - if True, print additional debugging information
     """
     yield {"id": 1, "progress": 2, "status": "Loading data"}
 
@@ -339,7 +340,8 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
                 "status": f"Predicting {target} with CNN ensemble",
             }
             result[target] = predict_body_stats_with_cnn(
-                img, target=target, modality=modality, model_dir=model_file, fold=fold, device=device
+                img, target=target, modality=modality, model_dir=model_file, fold=fold,
+                device=device, debug=debug
             )
 
         if not only_weight:
@@ -554,6 +556,9 @@ def main():
     parser.add_argument("--only_weight", action="store_true", default=False,
                         help="Predict only body weight and skip size, age, sex, BMI, and BSA.")
 
+    parser.add_argument("--debug", action="store_true", default=False,
+                        help="Print debugging information, including CNN input tensor shape.")
+
     # This does not work, because fast total model anyways has to run to get the vertebrae segmentation
     # needed to get the tissue slices. Only works if also providing existing seg image (can be passed
     # as arg to get_body_stats function). But also important to run TotalSegmentator with identical settings,
@@ -595,7 +600,8 @@ def main():
                              license_number=args.license_number,
                              call_via_subprocess=args.call_via_subprocess,
                              model_type=args.model_type,
-                             only_weight=args.only_weight)
+                             only_weight=args.only_weight,
+                             debug=args.debug)
 
     for r in res_gen:
         if not args.quiet:
