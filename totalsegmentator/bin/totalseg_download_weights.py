@@ -22,15 +22,15 @@ def main():
                                                  "hip_implant", "coronary_arteries", "coronary_arteries_LEGACY", "pleural_pericard_effusion",
                                                  "body", "body_fast", "body_mr", "body_mr_fast", "vertebrae_mr",
                                                  "vertebrae_body",
-                                                 "heartchambers_highres", "appendicular_bones", 
+                                                 "heartchambers_highres", "appendicular_bones", "appendicular_bones_mr",
                                                  "tissue_types", "tissue_types_mr", "tissue_4_types", "face", "face_mr",
                                                  "head_glands_cavities", "head_muscles", "headneck_bones_vessels",
                                                  "headneck_muscles", "liver_vessels", "brain_structures",
                                                  "lung_nodules", "kidney_cysts", "breasts", "ventricle_parts",
                                                  "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", 
-                                                "liver_segments", "liver_segments_mr", "liver_lesions", "liver_lesions_mr",
+                                                 "liver_segments", "liver_segments_mr", "liver_lesions", "liver_lesions_mr",
                                                  "body_stats", "body_stats_cnn_mr", "body_stats_cnn_ct",
-                                               #  "aortic_sinuses", 
+                                                 "aortic_sinuses", 
                                                  "all"],
                         help="Task for which to download the weights", default="total")
 
@@ -86,19 +86,19 @@ def main():
         "coronary_arteries": [509],
         "coronary_arteries_LEGACY": [507],
         "body_stats": ["body_stats"],
-        "body_stats_cnn_mr": [
-            "body_stats_cnn_mr_weight",
-            "body_stats_cnn_mr_size",
-            "body_stats_cnn_mr_age",
-            "body_stats_cnn_mr_sex",
-        ],
-        "body_stats_cnn_ct": [
-            "body_stats_cnn_ct_weight",
-            "body_stats_cnn_ct_size",
-            "body_stats_cnn_ct_age",
-            "body_stats_cnn_ct_sex",
-        ],
-        # "aortic_sinuses": [920]
+        # "body_stats_cnn_mr": [
+        #     "body_stats_cnn_mr_weight",
+        #     "body_stats_cnn_mr_size",
+        #     "body_stats_cnn_mr_age",
+        #     "body_stats_cnn_mr_sex",
+        # ],
+        # "body_stats_cnn_ct": [
+        #     "body_stats_cnn_ct_weight",
+        #     "body_stats_cnn_ct_size",
+        #     "body_stats_cnn_ct_age",
+        #     "body_stats_cnn_ct_sex",
+        # ],
+        "aortic_sinuses": [920]
     }
 
     setup_totalseg()
