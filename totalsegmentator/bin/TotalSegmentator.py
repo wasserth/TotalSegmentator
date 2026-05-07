@@ -14,6 +14,16 @@ def validate_device_type(value):
             f"Invalid device type: '{value}'. Must be 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
 
 
+def positive_float(value):
+    try:
+        value = float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Invalid number: '{value}'.")
+    if value <= 0:
+        raise argparse.ArgumentTypeError("Value must be greater than 0.")
+    return value
+
+
 def normalize_output_types(values):
 
     VALID_OUTPUT_TYPES = {"nifti", "dicom_rtstruct", "dicom_seg"}
@@ -145,8 +155,10 @@ def main():
                         help="In multilabel file order classes as in v1. New v2 classes will be removed.",
                         default=False)
 
-    parser.add_argument("-rmb", "--remove_small_blobs", action="store_true", help="Remove small connected components (<0.2ml) from the final segmentations.",
-                        default=False)  # ~30s runtime because of the large number of classes
+    parser.add_argument("-rmb", "--remove_small_blobs", nargs="?", const=200.0, default=False,
+                        type=positive_float, metavar="mm3",
+                        help="Remove small connected components from the final segmentations. "
+                             "Optionally pass the minimum component size in mm3 (default: 200).")  # ~30s runtime because of the large number of classes
         
     # "mps" is for apple silicon; the latest pytorch nightly version supports 3D Conv but not ConvTranspose3D which is
     # also needed by nnU-Net. So "mps" not working for now.

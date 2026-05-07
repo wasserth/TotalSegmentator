@@ -640,7 +640,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if not quiet: print("Removing small blobs...")
             st = time.time()
             vox_vol = np.prod(img_pred.header.get_zooms())
-            size_thr_mm3 = 200
+            size_thr_mm3 = 200 if remove_small_blobs is True else remove_small_blobs
             img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
                                                         class_map[task_name], list(class_map[task_name].values()),
                                                         interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)  # ~24s
