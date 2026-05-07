@@ -88,7 +88,7 @@ Openly available for any usage (Apache-2.0 license):
 *: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
 Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch):
-* **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution)
+* **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution; [details](resources/heartchambers_highres_details.md))
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **appendicular_bones_mr**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius (for MR images)
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
