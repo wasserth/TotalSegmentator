@@ -16,19 +16,19 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
 
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_effnetv2",
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2",
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",  # mo1
-        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_2mm_splitXGB_2d_ns5",
-        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_2mm_splitXGB_2d_ns5",
-        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_2mm_splitXGB_2d_ns5",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitXGB_2d_ns5_mo1_effnetv2",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_splitXGB_2d_ns5_mo1_effnetv2",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitXGB_2d_ns5_mo1_effnetv2",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitXGB_2d_ns5_mo1_effnetv2",
     },
     "ct": {
         # can not use older mo1 models, because they are based on sparse z-sampling which is not done during inference
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_effnetv2_ep40",
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2",
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2_npy0",  # mo1
-        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_2mm_splitXGB_2d_ns5",
-        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_2mm_splitXGB_2d_ns5",
-        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_2mm_splitXGB_2d_ns5",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2_npy0",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitXGB_2d_ns5_mo1_effnetv2_npy0",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitXGB_2d_ns5_mo1_effnetv2_npy0",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitXGB_2d_ns5_mo1_effnetv2_npy0",
     },
 }
 BODY_STATS_CNN_DOWNLOAD_TASKS = {
@@ -242,6 +242,25 @@ def _resolve_device(device):
     return torch.device("cpu")
 
 
+def _find_fold_checkpoint(model_dir: Path, fold_idx: int) -> Path:
+    ckpt_dir = model_dir / f"version_{fold_idx}" / "checkpoints"
+    ckpt_files = sorted(ckpt_dir.glob("epoch*.ckpt"))
+    if len(ckpt_files) == 1:
+        return ckpt_files[0]
+    if len(ckpt_files) > 1:
+        raise FileNotFoundError(
+            f"Expected exactly one checkpoint in {ckpt_dir}, found {len(ckpt_files)}."
+        )
+
+    last_ckpt = ckpt_dir / "last.ckpt"
+    if last_ckpt.exists():
+        return last_ckpt
+
+    raise FileNotFoundError(
+        f"Expected exactly one checkpoint in {ckpt_dir}, found 0."
+    )
+
+
 def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
     import torch 
     try:
@@ -249,15 +268,10 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
     except ImportError as exc:
         raise ImportError("CNN body-stats inference requires timm to be installed.") from exc
 
-    ckpt_dir = model_dir / f"version_{fold_idx}" / "checkpoints"
-    ckpt_files = sorted(ckpt_dir.glob("epoch*.ckpt"))
-    if len(ckpt_files) != 1:
-        raise FileNotFoundError(
-            f"Expected exactly one checkpoint in {ckpt_dir}, found {len(ckpt_files)}."
-        )
+    ckpt_file = _find_fold_checkpoint(model_dir, fold_idx)
 
     try:
-        checkpoint = torch.load(ckpt_files[0], map_location="cpu", weights_only=True)
+        checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=True)
     except pickle.UnpicklingError:
         # Some Lightning checkpoints include MONAI objects such as MetaTensor in metadata.
         # Allowlist them so we can keep using the safer weights_only=True path when possible.
@@ -265,7 +279,7 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
             from monai.data.meta_tensor import MetaTensor
 
             with torch.serialization.safe_globals([MetaTensor]):
-                checkpoint = torch.load(ckpt_files[0], map_location="cpu", weights_only=True)
+                checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=True)
         except Exception:
             # Fall back to the legacy loading mode for trusted local checkpoints.
             with warnings.catch_warnings():
@@ -274,7 +288,7 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
                     message="You are using `torch.load` with `weights_only=False`",
                     category=FutureWarning,
                 )
-                checkpoint = torch.load(ckpt_files[0], map_location="cpu", weights_only=False)
+                checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=False)
     except TypeError:
         # Support older PyTorch versions which do not expose weights_only yet.
         with warnings.catch_warnings():
@@ -283,9 +297,9 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
                 message="You are using `torch.load` with `weights_only=False`",
                 category=FutureWarning,
             )
-            checkpoint = torch.load(ckpt_files[0], map_location="cpu")
+            checkpoint = torch.load(ckpt_file, map_location="cpu")
     if "state_dict" not in checkpoint:
-        raise KeyError(f"Checkpoint {ckpt_files[0]} does not contain a 'state_dict' entry.")
+        raise KeyError(f"Checkpoint {ckpt_file} does not contain a 'state_dict' entry.")
 
     model_name = checkpoint.get("hyper_parameters", {}).get("model", "tf_efficientnet_b0_ns")
     if model_name == "tf_efficientnet_b0_ns":
@@ -318,17 +332,12 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
 def _load_fold_hparams(model_dir: Path, fold_idx: int) -> dict:
     import torch
 
-    ckpt_dir = model_dir / f"version_{fold_idx}" / "checkpoints"
-    ckpt_files = sorted(ckpt_dir.glob("epoch*.ckpt"))
-    if len(ckpt_files) != 1:
-        raise FileNotFoundError(
-            f"Expected exactly one checkpoint in {ckpt_dir}, found {len(ckpt_files)}."
-        )
+    ckpt_file = _find_fold_checkpoint(model_dir, fold_idx)
 
     try:
-        checkpoint = torch.load(ckpt_files[0], map_location="cpu", weights_only=False)
+        checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=False)
     except TypeError:
-        checkpoint = torch.load(ckpt_files[0], map_location="cpu")
+        checkpoint = torch.load(ckpt_file, map_location="cpu")
     return dict(checkpoint.get("hyper_parameters", {}))
 
 
