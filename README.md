@@ -56,7 +56,7 @@ TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
 Next to the default task (`total`) there are more subtasks with more classes. If the taskname ends with `_mr` it works for MR images, otherwise for CT images.
 
 Openly available for any usage (Apache-2.0 license):
-* **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
+* **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes; see [here](resources/class_details.md) for more details)
 * **total_mr**: default task containing 50 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_arteries, lung_veins, lung_airways, lung_airways_wall (partly based on [paper](https://www.nature.com/articles/s41597-025-06074-6), also cite [paper](https://arxiv.org/abs/2404.03010))
 * **lung_vessels_LEGACY**: lung_vessels, lung_trachea_bronchia (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097))
