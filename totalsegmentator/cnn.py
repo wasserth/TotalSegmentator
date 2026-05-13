@@ -140,6 +140,37 @@ def _extract_slices(img_data: np.ndarray, hparams: dict | None) -> list[np.ndarr
     return _extract_single_orientation_slices(img_data, nr_slices, offset, orientation)
 
 
+def _apply_training_unpack_slice_stride(
+    img_data: np.ndarray, hparams: dict | None
+) -> np.ndarray:
+    """
+    Mirror training-time .npy unpacking when it saved only every nth slice.
+
+    Some 2D models were trained with unpack_to_npy=1 and unpack_slice_stride>1,
+    which means the dataset loader saw a volume with fewer slices along the
+    configured orientation. During inference we start from the full NIfTI volume,
+    so we need to apply the same stride before choosing center slices. Models
+    trained with unpack_to_npy=0 are left unchanged.
+    """
+    if not hparams or not hparams.get("unpack_to_npy", False):
+        return img_data
+    if int(hparams.get("dim", 2)) != 2 or hparams.get("slice_subset", False):
+        return img_data
+
+    slice_stride = int(hparams.get("unpack_slice_stride", 1))
+    if slice_stride <= 1:
+        return img_data
+
+    orientation = "z" if hparams.get("tiles", False) else hparams.get("slice_orientation", "z")
+    if orientation == "x":
+        return img_data[::slice_stride, :, :]
+    if orientation == "y":
+        return img_data[:, ::slice_stride, :]
+    if orientation == "z":
+        return img_data[:, :, ::slice_stride]
+    raise ValueError(f"Unsupported slice orientation: {orientation}")
+
+
 def _center_pad_or_crop_2d(img_2d: np.ndarray, target_shape: tuple[int, int]) -> np.ndarray:
     target_h, target_w = target_shape
     src_h, src_w = img_2d.shape
@@ -206,6 +237,7 @@ def _prepare_image_tensor(
     if hparams and hparams.get("clip", False):
         img_data = np.clip(img_data, hparams["clip_low"], hparams["clip_high"])
 
+    img_data = _apply_training_unpack_slice_stride(img_data, hparams)
     crop_size = tuple(hparams.get("crop_size", crop_size)) if hparams else crop_size
     slices = _extract_slices(img_data, hparams)
     slices = np.stack(
