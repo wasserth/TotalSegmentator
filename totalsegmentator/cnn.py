@@ -24,8 +24,8 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
     "ct": {
         # can not use older mo1 models, because they are based on sparse z-sampling which is not done during inference
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_effnetv2_ep40",
-        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2",
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2_npy0",
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "old_2/ct_weight_splitOrig_2d_ns5_effnetv2",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitXGB_2d_ns5_mo1_effnetv2_npy0",
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitXGB_2d_ns5_mo1_effnetv2_npy0",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitXGB_2d_ns5_mo1_effnetv2_npy0",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitXGB_2d_ns5_mo1_effnetv2_npy0",
