@@ -86,18 +86,18 @@ def main():
         "coronary_arteries": [509],
         "coronary_arteries_LEGACY": [507],
         "body_stats": ["body_stats"],
-        # "body_stats_cnn_mr": [
-        #     "body_stats_cnn_mr_weight",
-        #     "body_stats_cnn_mr_size",
-        #     "body_stats_cnn_mr_age",
-        #     "body_stats_cnn_mr_sex",
-        # ],
-        # "body_stats_cnn_ct": [
-        #     "body_stats_cnn_ct_weight",
-        #     "body_stats_cnn_ct_size",
-        #     "body_stats_cnn_ct_age",
-        #     "body_stats_cnn_ct_sex",
-        # ],
+        "body_stats_cnn_mr": [
+            "body_stats_cnn_mr_weight",
+            "body_stats_cnn_mr_size",
+            "body_stats_cnn_mr_age",
+            "body_stats_cnn_mr_sex",
+        ],
+        "body_stats_cnn_ct": [
+            "body_stats_cnn_ct_weight",
+            "body_stats_cnn_ct_size",
+            "body_stats_cnn_ct_age",
+            "body_stats_cnn_ct_sex",
+        ],
         "aortic_sinuses": [920]
     }
 
