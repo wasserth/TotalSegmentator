@@ -9,7 +9,7 @@ import nibabel as nib
 import pandas as pd
 from tqdm import tqdm
 
-from totalsegmentator.map_to_binary import class_map_5_parts
+from totalsegmentator.map_to_binary import class_map_5_parts, class_map
 
 
 def generate_json_from_dir_v2(foldername, subjects_train, subjects_val, labels):
@@ -79,10 +79,14 @@ if __name__ == "__main__":
     #   class_map_part_cardiac
     #   class_map_part_muscles
     #   class_map_part_ribs
-    class_map_name = sys.argv[3]
+    class_map_name = sys.argv[3]'
+    task_id = sys.argv[4]
 
-    class_map = class_map_5_parts[class_map_name]
-
+    if task_id in [291,292,293,294,295]:
+        cmap = class_map_5_parts[class_map_name]
+    else:
+        cmap = class_map[class_map_name]
+    
     (nnunet_path / "imagesTr").mkdir(parents=True, exist_ok=True)
     (nnunet_path / "labelsTr").mkdir(parents=True, exist_ok=True)
     (nnunet_path / "imagesTs").mkdir(parents=True, exist_ok=True)
@@ -99,7 +103,7 @@ if __name__ == "__main__":
         shutil.copy(subject_path / "ct.nii.gz", nnunet_path / "imagesTr" / f"{subject}_0000.nii.gz")
         combine_labels(subject_path / "ct.nii.gz",
                        nnunet_path / "labelsTr" / f"{subject}.nii.gz",
-                       [subject_path / "segmentations" / f"{roi}.nii.gz" for roi in class_map.values()])
+                       [subject_path / "segmentations" / f"{roi}.nii.gz" for roi in cmap.values()])
 
     print("Copying test data...")
     for subject in tqdm(subjects_test):
@@ -107,7 +111,7 @@ if __name__ == "__main__":
         shutil.copy(subject_path / "ct.nii.gz", nnunet_path / "imagesTs" / f"{subject}_0000.nii.gz")
         combine_labels(subject_path / "ct.nii.gz",
                        nnunet_path / "labelsTs" / f"{subject}.nii.gz",
-                       [subject_path / "segmentations" / f"{roi}.nii.gz" for roi in class_map.values()])
+                       [subject_path / "segmentations" / f"{roi}.nii.gz" for roi in cmap.values()])
 
-    generate_json_from_dir_v2(nnunet_path.name, subjects_train, subjects_val, class_map.values())
+    generate_json_from_dir_v2(nnunet_path.name, subjects_train, subjects_val, cmap.values())
 
