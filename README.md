@@ -44,7 +44,7 @@ TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
 ```
 > Note: A Nifti file or a folder (or zip file) with all DICOM slices of one patient is allowed as input.
 
-> Note: If you run on CPU use the option `--fast` or `--roi_subset` to greatly improve runtime.
+> Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--roi_subset` to greatly improve runtime. If you run on a M-series Mac use `--device mps` for great speedup.
 
 > Note: This is not a medical device and is not intended for clinical usage. However, it is part of several FDA-approved products, where it has been certified as a component of the overall system.
 

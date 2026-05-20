@@ -462,7 +462,8 @@ def download_pretrained_weights(task_id):
             # delete tmp file
             # (config_dir / "tmp_download_file.zip").unlink()
 
-            download_url_and_unpack(WEIGHTS_URL, config_dir)
+            weights_path.parent.mkdir(exist_ok=True, parents=True)
+            download_url_and_unpack(WEIGHTS_URL, weights_path.parent)
 
 
 def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
