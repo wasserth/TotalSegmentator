@@ -80,9 +80,8 @@ if __name__ == "__main__":
     #   class_map_part_muscles
     #   class_map_part_ribs
     class_map_name = sys.argv[3]'
-    task_id = sys.argv[4]
-
-    if task_id in [291,292,293,294,295]:
+    
+    if class_map_name in {k for k in class_map_5_parts.keys() if k != 'test'}:
         cmap = class_map_5_parts[class_map_name]
     else:
         cmap = class_map[class_map_name]
