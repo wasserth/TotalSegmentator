@@ -28,33 +28,58 @@ For CT, the 5 lung lobes are combined into `lung_left` and `lung_right`. Additio
 
 Then the volume and median intensity (HU value) of each structure is used as feature for a xgboost classifier.
 
+In addition we provide a second model which is based on a CNN instead of using TotalSegmentator features + XGBoost. This is a lot faster, but comes at the cost of reduced accuracy (see results below).
+
+Number of training images:  
+
+| Model    | CT     | MR     |
+|----------|--------|--------|
+| XGBoost  | 46972  | 31901  |
+| CNN      | 57292  | 45544  |
+
+Details CNN model:
+
+- Separate CNNs are trained for CT and MR, and for each target (weight, size, age, sex).
+- The models are 2D EfficientNetV2-S (`tf_efficientnetv2_s.in21k`) networks.
+- Input is 5 axial center slices from the image, used as 5 input channels.
+- Images are resampled to 2 mm spacing, then center cropped/padded to 240 × 240 pixels for CT and 210 × 210 pixels for MR.
+- Inference uses an ensemble of 5 folds; weight, size and age are regression tasks, while sex is a binary classification task.
+
 ## Results
+
+For Weight, Size and Age the MAE is reported.
+For Sex the Accuracy is reported.
+Each shows the metric ± standard deviation.
 
 ### CT
 
-Training images: 46972 (images with abdomen OR thorax at least partially visible)  
-Validation set: 16181 images (abdomen AND thorax at least partially visible)  
 Test set: 501 CT images (hold-out)
-    
-| Target | Nr. training images | Nr. validation images | MAE on validation set | MAE on test set |
-|--------|--------------------:|---------------------:|----------:|----------------:|
-| Weight | 46972 | 16181 | 3.4 kg | 3.66 kg (stddev 4.91 kg) |
-| Size   | 46972 | 16181 | 3.8 cm | 3.79 cm (stddev 3.34 cm) |
-| Age    | 46972 | 16181 | 4.9 years | 5.56 years (stddev 5.36 years) |
-| Sex    | 46972 | 16181 | F1: 0.995 | Accuracy: 0.972 |
+
+| Model | Weight | Size | Age | Sex |
+|-------|--------|------|-----|-----|
+| XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
+| CNN | 4.57 ± 4.93 kg | 4.49 ± 4.31 cm | 8.37 ± 6.70 years | 0.40 ± 0.49 |
 
 ### MR
 
-Training images: 31901 (images with abdomen OR thorax at least partially visible)  
-Validation set: 1145 images (abdomen AND thorax at least partially visible)
-Test set: not available
+Test set: 636 MR images (hold-out)
 
-| Target | Nr. training images | Nr. validation images | MAE on validation set | MAE on test set |
-|--------|--------------------:|---------------------:|----------:|----------------:|
-| Weight | 31901 | 1145 | 5.5 kg | — |
-| Size   | 31901 | 1145 | 4.0 cm | — |
-| Age    | 31901 | 1145 | 5.3 years | — |
-| Sex    | 31901 | 1145 | F1: 0.901 | — |
+| Model | Weight | Size | Age | Sex |
+|-------|--------|------|-----|-----|
+| XGBoost | 4.82 ± 7.60 kg | 4.05 ± 4.42 cm | 9.35 ± 8.71 years | 0.92 ± 0.28 |
+| CNN | 4.92 ± 5.08 kg | 4.97 ± 4.95 cm | 9.72 ± 8.78 years | 0.83 ± 0.38 |
+
+
+### Runtime 
+
+Runtime for 512x512x807 CT image on a Nvidia RTX 3090:
+
+| Model | Time |
+|-------|------|
+| XGBoost (GPU) | 219 s |
+| XGBoost (CPU) | TODO s |
+| CNN (GPU) | 51 s |
+| CNN (CPU) | 48 s |
 
 
 ## Derived metrics
