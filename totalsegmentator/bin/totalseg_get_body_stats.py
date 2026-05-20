@@ -46,12 +46,21 @@ def check_body_stats_models_exist():
             base_path = models_dir / f"{target}_{modality}_classifiers_2026_03_24.json"
             # Check if all 5 folds exist
             for fold_idx in range(5):
-                model_file = Path(f"{base_path}.{fold_idx}")
-                # For future models do
-                # model_file = Path(f"{base_path}_fold{fold_idx}.json")
+                model_file = get_fold_model_path(base_path, fold_idx)
                 if not model_file.exists():
                     return False
     return True
+
+
+def get_fold_model_path(classifier_path, fold_idx):
+    classifier_path = Path(classifier_path)
+    return classifier_path.with_name(f"{classifier_path.stem}_fold{fold_idx}{classifier_path.suffix}")
+
+
+def load_xgboost_model(clf, model_path):
+    # The current body-stats models are binary XGBoost payloads. Loading from
+    # bytes avoids XGBoost selecting a parser from the renamed .json suffix.
+    clf.load_model(bytearray(Path(model_path).read_bytes()))
 
 
 def load_models(classifier_path, target, fold=None):
@@ -65,9 +74,7 @@ def load_models(classifier_path, target, fold=None):
             clf = xgb.XGBClassifier(device="cpu")
         else:
             clf = xgb.XGBRegressor(device="cpu")
-        clf.load_model(f"{classifier_path}.{fold_idx}")
-        # For future models do
-        # clf.load_model(f"{classifier_path}_fold{fold_idx}.json")
+        load_xgboost_model(clf, get_fold_model_path(classifier_path, fold_idx))
         clfs[fold_idx] = clf
     return clfs
 
