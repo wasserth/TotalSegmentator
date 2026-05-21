@@ -45,6 +45,9 @@ if __name__ == "__main__":
     usage:
     cd /mnt/nvme/data/multiseg/weights_upload/lightning_models
     python ~/dev/TotalSegmentator/resources/anonymise_lightning_yaml.py ct_age_splitOrig_2d_ns5_effnetv2
+
+    Remember to manually remove the events files:
+    find . -type f -name "events.out*" -delete
     """
     if len(sys.argv) != 2:
         print(f"usage: {Path(sys.argv[0]).name} <model_dir>")
