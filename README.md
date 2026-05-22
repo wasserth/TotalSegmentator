@@ -93,7 +93,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **appendicular_bones_mr**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius (for MR images)
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
 * **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images; works on all sequences but for DIXON prefer F for subcut./torso fat and W for muscle as input)
-* **tissue_4_types**: subcutaneous_fat, torso_fat, skeletal_muscle, intermuscular_fat (in contrast to `tissue_types` skeletal_muscle is split into two classes: muscle and fat)
+* **tissue_4_types**: subcutaneous_fat, torso_fat, skeletal_muscle, intermuscular_fat (in contrast to `tissue_types` skeletal_muscle is split into two classes: muscle and fat) (see [more details](#postprocessing))
 * **brain_structures**: brainstem, subarachnoid_space, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus (NOTE: this is for CT) (cite [paper](https://doi.org/10.1148/ryai.2020190183) as our model is partly based on this)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch), intervertebral_discs (for MR this is part of the `total_mr` task)
 * **face**: face_region (for anonymization)
@@ -253,6 +253,12 @@ The exact numbers of the results for the high-resolution model (1.5mm) can be fo
 
 ### Retrain model and run evaluation
 See [here](resources/train_nnunet.md) for more info on how to train a nnU-Net yourself on the TotalSegmentator dataset, how to split the data into train/validation/test set as in our paper, and how to run the same evaluation as in our paper.
+
+
+### Postprocessing
+
+In some cases the following kind of manual postprocessing might be useful:
+* `tissue_4_types`: Within the `skeletal_muscle` class threshold -190 to -30 HU and move this to `intermuscular_fat` class. This gives a more detailed segmentation of the intermuscular fat.
 
 
 ### Typical problems
