@@ -23,10 +23,15 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
         # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitXGB_2d_ns5_mo1_effnetv2",
         # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitXGB_2d_ns5_mo1_effnetv2",
         # current
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2",
-        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_splitOrig_2d_ns5_effnetv2",
-        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitOrig_2d_ns5_effnetv2",
-        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitOrig_2d_ns5_effnetv2",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2",
+        # "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_splitOrig_2d_ns5_effnetv2",
+        # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitOrig_2d_ns5_effnetv2",
+        # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitOrig_2d_ns5_effnetv2",
+        # with flipping daug
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2_fl1",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_splitOrig_2d_ns5_effnetv2_fl1",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitOrig_2d_ns5_effnetv2_fl1",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitOrig_2d_ns5_effnetv2_fl1",
     },
     "ct": {
         # older
@@ -39,10 +44,15 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
         # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitXGB_2d_ns5_mo1_effnetv2_npy0",
         # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitXGB_2d_ns5_mo1_effnetv2_npy0",
         # current
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2",
-        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns5_effnetv2",
-        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2",
-        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2",
+        # "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns5_effnetv2",
+        # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2",
+        # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2",
+        # with flipping daug
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2_fl1",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns5_effnetv2_fl1",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2_fl1",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2_fl1",
     },
 }
 BODY_STATS_CNN_DOWNLOAD_TASKS = {
