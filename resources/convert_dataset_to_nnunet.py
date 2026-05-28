@@ -79,7 +79,7 @@ if __name__ == "__main__":
     #   class_map_part_cardiac
     #   class_map_part_muscles
     #   class_map_part_ribs
-    class_map_name = sys.argv[3]'
+    class_map_name = sys.argv[3]
     
     if class_map_name in {k for k in class_map_5_parts.keys() if k != 'test'}:
         cmap = class_map_5_parts[class_map_name]
