@@ -17,8 +17,13 @@ import numpy as np
 from totalsegmentator.cnn import (
     predict_body_stats_with_cnn,
 )
-from totalsegmentator.python_api import totalsegmentator
-from totalsegmentator.config import get_totalseg_dir, get_weights_dir, send_usage_stats_application
+from totalsegmentator.python_api import show_license_info, totalsegmentator
+from totalsegmentator.config import (
+    get_weights_dir,
+    send_usage_stats_application,
+    set_license_number,
+    setup_totalseg,
+)
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti
 from totalsegmentator.libs import download_pretrained_weights
 from totalsegmentator.serialization_utils import filestream_to_nifti, nib_load_eager
@@ -295,6 +300,11 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
             other targets and derived measures
         debug: bool, optional - if True, print additional debugging information
     """
+    setup_totalseg()
+    if license_number is not None:
+        set_license_number(license_number)
+    show_license_info()
+
     yield {"id": 1, "progress": 2, "status": "Loading data"}
 
     if isinstance(img, Path) and f_type != "dicom":

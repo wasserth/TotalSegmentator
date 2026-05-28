@@ -138,7 +138,7 @@ If you want to know which contrast phase a CT image is you can use the following
 totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
 ```
 
-If you want to know body weight, size, age and sex you can use the following command (requires `pip install timm`). It runs on CPU in <1min. More details can be found [here](resources/body_stats_prediction.md):
+If you want to know body weight, size, age and sex you can use the following command (requires `pip install timm`). It runs on CPU in <1min. Requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md):
 ```bash
 totalseg_get_body_stats -i ct.nii.gz -o body_stats.json -m ct
 ```
