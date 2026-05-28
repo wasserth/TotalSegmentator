@@ -85,21 +85,21 @@ Thorax-abdomen-pelvis:
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
 | CNN | 4.52 ± 4.41 kg | 4.55 ± 3.92 cm | 4.90 ± 4.68 years | 0.91 ± 0.29 |
-| XGBoost | 4.20 ± 5.46 kg | 3.85 ± 3.88 cm | 5.74 ± 5.36 years | 0.96 ± 0.19 |
+| XGBoost | 4.03 ± 5.35 kg | 3.83 ± 3.91 cm | 5.67 ± 5.39 years | 0.96 ± 0.19 |
 
 Thorax-only:
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
 | CNN | 4.30 ± 6.10 kg | 5.43 ± 3.63 cm | 5.52 ± 6.89 years | 0.85 ± 0.36 |
-| XGBoost | 6.58 ± 6.85 kg | 5.24 ± 4.84 cm | 10.51 ± 8.13 years | 0.87 ± 0.34 |
+| XGBoost | 6.76 ± 6.90 kg | 5.45 ± 4.88 cm | 10.16 ± 8.18 years | 0.89 ± 0.32 |
 
 Abdomen-pelvis-only:
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
 | CNN | 3.64 ± 3.91 kg | 3.98 ± 3.86 cm | 5.76 ± 5.99 years | 0.98 ± 0.14 |
-| XGBoost | 5.65 ± 7.61 kg | 5.52 ± 5.22 cm | 6.58 ± 6.44 years | 0.91 ± 0.29 |
+| XGBoost | 5.59 ± 7.61 kg | 5.52 ± 5.26 cm | 6.60 ± 6.45 years | 0.91 ± 0.29 |
 
 
 ### MR

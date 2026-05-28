@@ -1,5 +1,6 @@
 ## Master
 * allow to pass minimum component size in mm3 to `--remove_small_blobs` argument (before was hard coded to 200mm3)
+* add improved model for `totalseg_get_body_stats` script: use CNN model instead of XGBoost model.
 
 
 ## Release 2.13.0 (17.03.2026)
