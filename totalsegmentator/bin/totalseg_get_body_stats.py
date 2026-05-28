@@ -13,7 +13,6 @@ import importlib.metadata
 
 import nibabel as nib
 import numpy as np
-import xgboost as xgb
 
 from totalsegmentator.cnn import (
     predict_body_stats_with_cnn,
@@ -64,6 +63,13 @@ def load_xgboost_model(clf, model_path):
 
 
 def load_models(classifier_path, target, fold=None):
+    try:
+        import xgboost as xgb
+    except ImportError as exc:
+        raise ImportError(
+            "XGBoost body-stats inference requires 'pip install xgboost'. "
+        ) from exc
+
     clfs = {}
     # Determine which folds to load
     fold_indices = [fold] if fold is not None else range(5)
@@ -557,7 +563,7 @@ def main():
     parser.add_argument("-m", metavar="modality", dest="modality", type=str, choices=["ct", "mr"], required=True,
                         help="Imaging modality: 'ct' or 'mr'")
 
-    parser.add_argument("-mt", "--model_type", type=str, choices=["xgboost", "cnn"], default="xgboost",
+    parser.add_argument("-mt", "--model_type", type=str, choices=["xgboost", "cnn"], default="cnn",
                         help="Prediction backend: 'xgboost' or 'cnn'.")
 
     parser.add_argument("--only_weight", action="store_true", default=False,
@@ -574,7 +580,7 @@ def main():
     #                     help="path to existing statistics json file. The script will not run TotalSegmentator but use the existing statistics.",
     #                     type=lambda p: Path(p).absolute(), required=False, default=None)
 
-    parser.add_argument("-d",'--device', type=str, default="gpu",
+    parser.add_argument("-d",'--device', type=str, default="cpu",
                         help="Device type: 'gpu', 'cpu', 'mps', or 'gpu:X' where X is an integer representing the GPU device ID.")
     
     parser.add_argument("-f", "--fold", type=int, default=None,

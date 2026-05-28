@@ -47,6 +47,8 @@ For CT, the 5 lung lobes are combined into `lung_left` and `lung_right`. Additio
 
 Then the volume and median intensity (HU value) of each structure is used as feature for a xgboost classifier.
 
+NOTE: The XGBoost Model uses the `tissue_types` model which is only available with a license. You can get a license [here](https://backend.totalsegmentator.com/license-academic/) and set it via `-l <license_number>`.
+
 
 ## Number of training images:  
 
@@ -102,7 +104,7 @@ Abdomen-pelvis-only:
 
 ### MR
 
-####Test set: 
+#### Test set: 
 - 636 MR images (hold-out)
 - mix of different FOVs (thorax, abdomen, pelvis, whole body)
 

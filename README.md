@@ -138,11 +138,10 @@ If you want to know which contrast phase a CT image is you can use the following
 totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
 ```
 
-If you want to know body weight, size, age and sex you can use the following command (requires `pip install xgboost monai`). More details can be found [here](resources/body_stats_prediction.md):
+If you want to know body weight, size, age and sex you can use the following command (requires `pip install timm`). It runs on CPU in <1min. More details can be found [here](resources/body_stats_prediction.md):
 ```bash
 totalseg_get_body_stats -i ct.nii.gz -o body_stats.json -m ct
 ```
-NOTE: This script uses the `tissue_types` model which is only available with a license. You can get a license [here](https://backend.totalsegmentator.com/license-academic/) and set it via `-l <license_number>`.
 
 If you want to know which modality (CT or MR) an image is you can use the following command (requires `pip install xgboost`). 
 ```bash
