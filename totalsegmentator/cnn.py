@@ -53,6 +53,12 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
         "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns5_effnetv2_fl1",
         "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2_fl1",
         "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2_fl1",
+        # with flipping daug + 20 slices
+        # -> do not use: better for some targets, worse for others
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns20_effnetv2_fl1",
+        # "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns20_effnetv2_fl1",
+        # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns20_effnetv2_fl1",
+        # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns20_effnetv2_fl1",
     },
 }
 BODY_STATS_CNN_DOWNLOAD_TASKS = {

@@ -46,8 +46,21 @@ if __name__ == "__main__":
     cd /mnt/nvme/data/multiseg/weights_upload/lightning_models
     python ~/dev/TotalSegmentator/resources/anonymise_lightning_yaml.py ct_age_splitOrig_2d_ns5_effnetv2
 
-    Remember to manually remove the events files:
+    Remember to manually remove the events files and mean directory:
     find . -type f -name "events.out*" -delete
+    find . -type d -name "mean" -prune -exec rm -rf -- {} +
+
+    Then zip all:
+    
+    zip -r mr_weight_splitOrig_2d_ns5_effnetv2_fl1.zip mr_weight_splitOrig_2d_ns5_effnetv2_fl1;\
+    zip -r mr_size_splitOrig_2d_ns5_effnetv2_fl1.zip mr_size_splitOrig_2d_ns5_effnetv2_fl1;\
+    zip -r mr_age_splitOrig_2d_ns5_effnetv2_fl1.zip mr_age_splitOrig_2d_ns5_effnetv2_fl1;\
+    zip -r mr_sex_splitOrig_2d_ns5_effnetv2_fl1.zip mr_sex_splitOrig_2d_ns5_effnetv2_fl1;\
+    zip -r ct_weight_splitOrig_2d_ns5_effnetv2_fl1.zip ct_weight_splitOrig_2d_ns5_effnetv2_fl1;\
+    zip -r ct_size_splitOrig_2d_ns5_effnetv2_fl1.zip ct_size_splitOrig_2d_ns5_effnetv2_fl1;\
+    zip -r ct_age_splitOrig_2d_ns5_effnetv2_fl1.zip ct_age_splitOrig_2d_ns5_effnetv2_fl1;\
+    zip -r ct_sex_splitOrig_2d_ns5_effnetv2_fl1.zip ct_sex_splitOrig_2d_ns5_effnetv2_fl1
+    
     """
     if len(sys.argv) != 2:
         print(f"usage: {Path(sys.argv[0]).name} <model_dir>")
