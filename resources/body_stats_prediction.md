@@ -1,5 +1,24 @@
 # Details on how the prediction of body size, weight, age and sex is done
 
+## CNN Model (default)
+
+The default model is a CNN model using 5 axial 2d-slices sampled along the z-axis as input.
+
+![Overview of the body stats prediction](imgs/body_stats_overview.png)
+
+Details CNN model:
+
+- Separate CNNs are trained for CT and MR, and for each target (weight, size, age, sex).
+- The models are 2D EfficientNetV2-S (`tf_efficientnetv2_s.in21k`) networks.
+- Input is 5 axial center slices from the image, used as 5 input channels.
+- Images are resampled to 2 mm spacing, then center cropped/padded to 240 × 240 pixels for CT and 210 × 210 pixels for MR.
+- Inference uses an ensemble of 5 folds; weight, size and age are regression tasks, while sex is a binary classification task.
+
+
+## XGBoost Model
+
+In addition we provide a second model which uses TotalSegmentator features + XGBoost. This is a slower and has lower accuracy. Therefore, this is only recommend as baseline or when the CNN model fails.
+
 ![Overview of the body stats prediction](imgs/body_stats_overview.png)
 
 TotalSegmentator is used to predict the following structures:
@@ -28,22 +47,14 @@ For CT, the 5 lung lobes are combined into `lung_left` and `lung_right`. Additio
 
 Then the volume and median intensity (HU value) of each structure is used as feature for a xgboost classifier.
 
-In addition we provide a second model which is based on a CNN instead of using TotalSegmentator features + XGBoost. This is a lot faster, but comes at the cost of reduced accuracy (see results below).
 
-Number of training images:  
+## Number of training images:  
 
 | Model    | CT     | MR     |
 |----------|--------|--------|
 | XGBoost  | 46972  | 31901  |
 | CNN      | 57292  | 45544  |
 
-Details CNN model:
-
-- Separate CNNs are trained for CT and MR, and for each target (weight, size, age, sex).
-- The models are 2D EfficientNetV2-S (`tf_efficientnetv2_s.in21k`) networks.
-- Input is 5 axial center slices from the image, used as 5 input channels.
-- Images are resampled to 2 mm spacing, then center cropped/padded to 240 × 240 pixels for CT and 210 × 210 pixels for MR.
-- Inference uses an ensemble of 5 folds; weight, size and age are regression tasks, while sex is a binary classification task.
 
 ## Results
 
@@ -51,14 +62,24 @@ For Weight, Size and Age the MAE is reported.
 For Sex the Accuracy is reported.
 Each shows the metric ± standard deviation.
 
+
 ### CT
 
 Test set: 501 CT images (hold-out)
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
 | CNN | 4.57 ± 4.93 kg | 4.49 ± 4.31 cm | 8.37 ± 6.70 years | 0.40 ± 0.49 |
+| XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
+
+
+External test set: 54 CT images from [Spine-Mets-CT-SEG](https://www.cancerimagingarchive.net/collection/spine-mets-ct-seg/)
+
+| Model | Weight | Size | Age | Sex |
+|-------|--------|------|-----|-----|
+| CNN | 4.57 ± 4.93 kg | 4.49 ± 4.31 cm | 8.37 ± 6.70 years | 0.40 ± 0.49 |
+| XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
+
 
 ### MR
 
@@ -66,20 +87,20 @@ Test set: 636 MR images (hold-out)
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| XGBoost | 4.82 ± 7.60 kg | 4.05 ± 4.42 cm | 9.35 ± 8.71 years | 0.92 ± 0.28 |
 | CNN | 4.92 ± 5.08 kg | 4.97 ± 4.95 cm | 9.72 ± 8.78 years | 0.83 ± 0.38 |
+| XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
 
 
 ### Runtime 
 
 Runtime for 512x512x807 CT image on a Nvidia RTX 3090:
 
-| Model | Time |
-|-------|------|
-| XGBoost (GPU) | 219 s |
-| XGBoost (CPU) | TODO s |
-| CNN (GPU) | 51 s |
-| CNN (CPU) | 48 s |
+| Model | Time | RAM |
+|-------|------|-----|
+| XGBoost (GPU) | 133 s | 11.5 GB |
+| XGBoost (CPU) | TODO s | TODO GB |
+| CNN (GPU) | 38 s | 4.0 GB |
+| CNN (CPU) | 37 s | 3.5 GB |
 
 
 ## Derived metrics
@@ -101,7 +122,7 @@ $$\text{BSA (m}^2\text{)} = \sqrt{\frac{\text{height (cm)} \times \text{weight (
 
 **The bigger the field of view the better the prediction (e.g. complete abdomen and thorax give a lot better results, than images with only the pelvis visible).**
 
-The classifier is an ensemble of 5 models. The output contains the 
+The classifier (both CNN and XGBoost) is an ensemble of 5 models. The output contains the 
 standard deviation of the predictions which can be used as a measure of confidence. If it is low the 5 models
 give similar predictions which is a good sign.
 
