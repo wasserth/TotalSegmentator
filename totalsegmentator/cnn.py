@@ -102,8 +102,27 @@ def _get_slice_indices(mid_idx: int, nr_slices: int, offset: int, size: int) -> 
     return np.clip(slice_indices, 0, size - 1).astype(int).tolist()
 
 
+def _get_even_slice_indices(
+    nr_slices: int, size: int, edge_fraction: float = 0.1
+) -> list[int]:
+    if nr_slices < 1:
+        raise ValueError(f"nr_slices must be >= 1, got {nr_slices}")
+    if size < 1:
+        raise ValueError(f"size must be >= 1, got {size}")
+
+    axis_max = size - 1
+    lower = int(round(axis_max * edge_fraction))
+    upper = int(round(axis_max * (1 - edge_fraction)))
+
+    if nr_slices == 1:
+        slice_indices = [int(round(axis_max / 2))]
+    else:
+        slice_indices = np.round(np.linspace(lower, upper, nr_slices)).astype(int).tolist()
+    return slice_indices
+
+
 def _extract_multi_orientation_slices(
-    img_data: np.ndarray, nr_slices: int, offset: int
+    img_data: np.ndarray, nr_slices: int, offset: int, sample_evenly: bool = False
 ) -> list[np.ndarray]:
     """Mirror multi_orientation=True from the deterministic validation dataset."""
     axis_offsets = np.array(
@@ -112,41 +131,52 @@ def _extract_multi_orientation_slices(
     )
     axis_offsets = np.minimum(axis_offsets, offset)
     mid = (np.array(img_data.shape) / 2).astype(int)
+    if sample_evenly:
+        x_indices = _get_even_slice_indices(nr_slices, img_data.shape[0])
+        y_indices = _get_even_slice_indices(nr_slices, img_data.shape[1])
+        z_indices = _get_even_slice_indices(nr_slices, img_data.shape[2])
+    else:
+        x_indices = _get_slice_indices(mid[0], nr_slices, axis_offsets[0], img_data.shape[0])
+        y_indices = _get_slice_indices(mid[1], nr_slices, axis_offsets[1], img_data.shape[1])
+        z_indices = _get_slice_indices(mid[2], nr_slices, axis_offsets[2], img_data.shape[2])
 
-    x_slices = img_data[
-        _get_slice_indices(mid[0], nr_slices, axis_offsets[0], img_data.shape[0]), :, :
-    ]
-    y_slices = img_data[
-        :, _get_slice_indices(mid[1], nr_slices, axis_offsets[1], img_data.shape[1]), :
-    ].transpose(1, 0, 2)
-    z_slices = img_data[
-        :, :, _get_slice_indices(mid[2], nr_slices, axis_offsets[2], img_data.shape[2])
-    ].transpose(2, 0, 1)
+    x_slices = img_data[x_indices, :, :]
+    y_slices = img_data[:, y_indices, :].transpose(1, 0, 2)
+    z_slices = img_data[:, :, z_indices].transpose(2, 0, 1)
 
     return [*x_slices, *y_slices, *z_slices]
 
 
 def _extract_single_orientation_slices(
-    img_data: np.ndarray, nr_slices: int, offset: int, orientation: str
+    img_data: np.ndarray,
+    nr_slices: int,
+    offset: int,
+    orientation: str,
+    sample_evenly: bool = False,
 ) -> list[np.ndarray]:
     mid = (np.array(img_data.shape) / 2).astype(int)
 
     if orientation == "x":
-        return list(
-            img_data[_get_slice_indices(mid[0], nr_slices, offset, img_data.shape[0]), :, :]
+        slice_indices = (
+            _get_even_slice_indices(nr_slices, img_data.shape[0])
+            if sample_evenly
+            else _get_slice_indices(mid[0], nr_slices, offset, img_data.shape[0])
         )
+        return list(img_data[slice_indices, :, :])
     if orientation == "y":
-        return list(
-            img_data[
-                :, _get_slice_indices(mid[1], nr_slices, offset, img_data.shape[1]), :
-            ].transpose(1, 0, 2)
+        slice_indices = (
+            _get_even_slice_indices(nr_slices, img_data.shape[1])
+            if sample_evenly
+            else _get_slice_indices(mid[1], nr_slices, offset, img_data.shape[1])
         )
+        return list(img_data[:, slice_indices, :].transpose(1, 0, 2))
     if orientation == "z":
-        return list(
-            img_data[
-                :, :, _get_slice_indices(mid[2], nr_slices, offset, img_data.shape[2])
-            ].transpose(2, 0, 1)
+        slice_indices = (
+            _get_even_slice_indices(nr_slices, img_data.shape[2])
+            if sample_evenly
+            else _get_slice_indices(mid[2], nr_slices, offset, img_data.shape[2])
         )
+        return list(img_data[:, :, slice_indices].transpose(2, 0, 1))
     raise ValueError(f"Unsupported slice orientation: {orientation}")
 
 
@@ -160,14 +190,19 @@ def _extract_slices(img_data: np.ndarray, hparams: dict | None) -> list[np.ndarr
     nr_slices = int(_require_hparam(hparams, "nr_slices"))
     multi_orientation = bool(_require_hparam(hparams, "multi_orientation"))
     orientation = hparams.get("slice_orientation", "z") if hparams else "z"
+    sample_evenly = bool(hparams.get("sample_evenly", False)) if hparams else False
     orientation_to_axis = {"x": 0, "y": 1, "z": 2}
     if orientation not in orientation_to_axis:
         raise ValueError(f"Unsupported slice orientation: {orientation}")
 
     offset = int(img_data.shape[orientation_to_axis[orientation]] / 8)
     if multi_orientation:
-        return _extract_multi_orientation_slices(img_data, nr_slices, offset)
-    return _extract_single_orientation_slices(img_data, nr_slices, offset, orientation)
+        return _extract_multi_orientation_slices(
+            img_data, nr_slices, offset, sample_evenly
+        )
+    return _extract_single_orientation_slices(
+        img_data, nr_slices, offset, orientation, sample_evenly
+    )
 
 
 def _apply_training_unpack_slice_stride(
