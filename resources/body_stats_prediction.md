@@ -75,7 +75,7 @@ Each shows the metric ± standard deviation.
 | XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
 
 
-####External test set: 
+#### External test set: 
 - 54 CT images from [Spine-Mets-CT-SEG](https://www.cancerimagingarchive.net/collection/spine-mets-ct-seg/)
 
 Thorax-abdomen-pelvis:
