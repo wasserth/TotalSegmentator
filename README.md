@@ -134,7 +134,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 
 ### Other commands
 
-If you want to know body weight, size, age, sex, BMI and BSA you can use the following command (requires `pip install timm`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md):
+If you want to know body weight, size, age, sex, BMI and BSA you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md):
 ```bash
 totalseg_get_body_stats -i ct.nii.gz -o body_stats.json -m ct
 ```

@@ -358,25 +358,43 @@ def _find_fold_checkpoint(model_dir: Path, fold_idx: int) -> Path:
     )
 
 
-def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
-    import torch 
+def _load_monai_meta_tensor():
     try:
-        import timm
+        from monai.data.meta_tensor import MetaTensor
     except ImportError as exc:
-        raise ImportError("CNN body-stats inference requires timm to be installed.") from exc
+        raise ImportError(
+            "CNN body-stats inference requires monai to load the pretrained checkpoints. "
+            "Install it with 'pip install monai'."
+        ) from exc
+    return MetaTensor
 
-    ckpt_file = _find_fold_checkpoint(model_dir, fold_idx)
+
+def _load_torch_checkpoint(ckpt_file: Path, weights_only: bool):
+    import torch
+
+    def _load(**kwargs):
+        try:
+            return torch.load(ckpt_file, map_location="cpu", **kwargs)
+        except ModuleNotFoundError as exc:
+            if exc.name == "monai":
+                raise ImportError(
+                    "CNN body-stats inference requires monai to load the pretrained checkpoints. "
+                    "Install it with 'pip install monai'."
+                ) from exc
+            raise
 
     try:
-        checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=True)
+        return _load(weights_only=weights_only)
     except pickle.UnpicklingError:
+        if not weights_only:
+            raise
+
         # Some Lightning checkpoints include MONAI objects such as MetaTensor in metadata.
         # Allowlist them so we can keep using the safer weights_only=True path when possible.
+        MetaTensor = _load_monai_meta_tensor()
         try:
-            from monai.data.meta_tensor import MetaTensor
-
             with torch.serialization.safe_globals([MetaTensor]):
-                checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=True)
+                return _load(weights_only=True)
         except Exception:
             # Fall back to the legacy loading mode for trusted local checkpoints.
             with warnings.catch_warnings():
@@ -385,7 +403,7 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
                     message="You are using `torch.load` with `weights_only=False`",
                     category=FutureWarning,
                 )
-                checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=False)
+                return _load(weights_only=False)
     except TypeError:
         # Support older PyTorch versions which do not expose weights_only yet.
         with warnings.catch_warnings():
@@ -394,7 +412,18 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
                 message="You are using `torch.load` with `weights_only=False`",
                 category=FutureWarning,
             )
-            checkpoint = torch.load(ckpt_file, map_location="cpu")
+            return _load()
+
+
+def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
+    try:
+        import timm
+    except ImportError as exc:
+        raise ImportError("CNN body-stats inference requires timm to be installed.") from exc
+
+    ckpt_file = _find_fold_checkpoint(model_dir, fold_idx)
+
+    checkpoint = _load_torch_checkpoint(ckpt_file, weights_only=True)
     if "state_dict" not in checkpoint:
         raise KeyError(f"Checkpoint {ckpt_file} does not contain a 'state_dict' entry.")
 
@@ -427,14 +456,8 @@ def _load_fold_model(model_dir: Path, fold_idx: int, device, target: str):
 
 
 def _load_fold_hparams(model_dir: Path, fold_idx: int) -> dict:
-    import torch
-
     ckpt_file = _find_fold_checkpoint(model_dir, fold_idx)
-
-    try:
-        checkpoint = torch.load(ckpt_file, map_location="cpu", weights_only=False)
-    except TypeError:
-        checkpoint = torch.load(ckpt_file, map_location="cpu")
+    checkpoint = _load_torch_checkpoint(ckpt_file, weights_only=True)
     return dict(checkpoint.get("hyper_parameters", {}))
 
 
