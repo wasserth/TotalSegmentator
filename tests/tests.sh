@@ -6,6 +6,9 @@ set -e
 # Test device type selection function
 pytest -v tests/test_device_type.py
 
+# Test config helpers
+pytest -v tests/test_config.py
+
 # Test - multilabel prediction
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel

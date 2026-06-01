@@ -74,17 +74,23 @@ def setup_totalseg(totalseg_id=None):
 
 
 def set_license_number(license_number, skip_validation=False):
-    if not skip_validation:
-        if not is_valid_license(license_number):
-            print("ERROR: Invalid license number. Please check your license number or contact support.")
-            sys.exit(1)
-
     totalseg_dir = get_totalseg_dir()
     totalseg_config_file = totalseg_dir / "config.json"
 
     if totalseg_config_file.exists():
         with open(totalseg_config_file) as f:
             config = json.load(f)
+        if config.get("license_number") == license_number:
+            return
+    else:
+        config = None
+
+    if not skip_validation:
+        if not is_valid_license(license_number):
+            print("ERROR: Invalid license number. Please check your license number or contact support.")
+            sys.exit(1)
+
+    if config is not None:
         config["license_number"] = license_number
         with open(totalseg_config_file, "w") as f:
             json.dump(config, f, indent=4)
