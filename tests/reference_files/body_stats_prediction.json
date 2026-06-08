@@ -1,37 +1,37 @@
 {
     "weight": {
-        "value": 69.9,
-        "min": 68.27,
-        "max": 70.59,
-        "stddev": 0.8482,
+        "value": 78.7,
+        "min": 75.33,
+        "max": 82.83,
+        "stddev": 2.6711,
         "unit": "kg"
     },
     "size": {
-        "value": 163.09,
-        "min": 162.65,
-        "max": 163.47,
-        "stddev": 0.3109,
+        "value": 176.21,
+        "min": 171.76,
+        "max": 179.33,
+        "stddev": 2.5103,
         "unit": "cm"
     },
     "age": {
-        "value": 70.88,
-        "min": 69.56,
-        "max": 72.03,
-        "stddev": 0.7977,
+        "value": 53.35,
+        "min": 47.85,
+        "max": 59.47,
+        "stddev": 4.0116,
         "unit": "years"
     },
     "sex": {
         "value": "M",
-        "probability": 0.8529,
-        "stddev": 0.0316,
+        "probability": 1.0,
+        "stddev": 0.0,
         "unit": null
     },
     "bmi": {
-        "value": 26.28,
+        "value": 25.35,
         "unit": "kg/m^2"
     },
     "bsa": {
-        "value": 1.78,
+        "value": 1.96,
         "unit": "m^2"
     }
 }
