@@ -26,20 +26,41 @@ from totalsegmentator.libs import nostdout
 
 # --- monkey-patch snippet (custom trainers) --- #
 from nnunetv2.utilities.find_class_by_name import recursive_find_python_class
+try:
+    import nnunetv2.utilities.find_objects as nnunet_find_objects
+except ImportError:
+    nnunet_find_objects = None
+import nnunetv2.inference.predict_from_raw_data as nnunet_predict_from_raw_data
 from totalsegmentator.custom_trainers import (nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring,
                                               nnUNetTrainerDiceTopK10Loss_2000epochs,
                                               nnUNetTrainerSkeletonRecall)
-def recursive_find_python_class_custom(folder: str, class_name: str, current_module: str):
-    if class_name == "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring":
-        return nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring
-    elif class_name == "nnUNetTrainerDiceTopK10Loss_2000epochs":
-        return nnUNetTrainerDiceTopK10Loss_2000epochs
-    elif class_name == "nnUNetTrainerSkeletonRecall":
-        return nnUNetTrainerSkeletonRecall
-    return recursive_find_python_class(folder, class_name, current_module)
+
+custom_trainers = {
+    "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring": nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring,
+    "nnUNetTrainerDiceTopK10Loss_2000epochs": nnUNetTrainerDiceTopK10Loss_2000epochs,
+    "nnUNetTrainerSkeletonRecall": nnUNetTrainerSkeletonRecall,
+}
+
+
+def recursive_find_python_class_custom(folder: str, class_name: str, current_module: str, *args, **kwargs):
+    if class_name in custom_trainers:
+        return custom_trainers[class_name]
+    return recursive_find_python_class(folder, class_name, current_module, *args, **kwargs)
+
+
+if nnunet_find_objects is not None:
+    recursive_find_trainer_class_by_name = nnunet_find_objects.recursive_find_trainer_class_by_name
+
+    def recursive_find_trainer_class_by_name_custom(trainer_name: str):
+        if trainer_name in custom_trainers:
+            return custom_trainers[trainer_name]
+        return recursive_find_trainer_class_by_name(trainer_name)
+
+    nnunet_find_objects.recursive_find_trainer_class_by_name = recursive_find_trainer_class_by_name_custom
+    nnunet_predict_from_raw_data.recursive_find_trainer_class_by_name = recursive_find_trainer_class_by_name_custom
+
 # monkey-patch
-import nnunetv2
-nnunetv2.inference.predict_from_raw_data.recursive_find_python_class = recursive_find_python_class_custom
+nnunet_predict_from_raw_data.recursive_find_python_class = recursive_find_python_class_custom
 # --- now we have included custom trainers into the nnUNetv2 basic package --- #
 
 # nnUNet 2.1
