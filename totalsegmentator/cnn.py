@@ -28,10 +28,15 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
         # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitOrig_2d_ns5_effnetv2",
         # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitOrig_2d_ns5_effnetv2",
         # with flipping daug
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2_fl1",
-        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_splitOrig_2d_ns5_effnetv2_fl1",
-        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitOrig_2d_ns5_effnetv2_fl1",
-        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitOrig_2d_ns5_effnetv2_fl1",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2_fl1",
+        # "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_splitOrig_2d_ns5_effnetv2_fl1",
+        # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitOrig_2d_ns5_effnetv2_fl1",
+        # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitOrig_2d_ns5_effnetv2_fl1",
+        # with flipping daug + even sampling
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_weight_splitOrig_2d_ns5_effnetv2_fl1_se1",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_size_splitOrig_2d_ns5_effnetv2_fl1_se1",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_age_splitOrig_2d_ns5_effnetv2_fl1_se1",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_sex_splitOrig_2d_ns5_effnetv2_fl1_se1",
     },
     "ct": {
         # older
@@ -49,10 +54,15 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
         # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2",
         # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2",
         # with flipping daug
-        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2_fl1",
-        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns5_effnetv2_fl1",
-        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2_fl1",
-        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2_fl1",
+        # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2_fl1",
+        # "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns5_effnetv2_fl1",
+        # "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2_fl1",
+        # "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2_fl1",
+        # with flipping daug + even sampling
+        "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns5_effnetv2_fl1_se1",
+        "size": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_size_splitOrig_2d_ns5_effnetv2_fl1_se1",
+        "age": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_age_splitOrig_2d_ns5_effnetv2_fl1_se1",
+        "sex": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_sex_splitOrig_2d_ns5_effnetv2_fl1_se1",
         # with flipping daug + 20 slices
         # -> do not use: better for some targets, worse for others
         # "weight": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_weight_splitOrig_2d_ns20_effnetv2_fl1",
@@ -103,7 +113,7 @@ def _get_slice_indices(mid_idx: int, nr_slices: int, offset: int, size: int) -> 
 
 
 def _get_even_slice_indices(
-    nr_slices: int, size: int, edge_fraction: float = 0.1
+    nr_slices: int, size: int, rand_int: int = 0, edge_fraction: float = 0.1
 ) -> list[int]:
     if nr_slices < 1:
         raise ValueError(f"nr_slices must be >= 1, got {nr_slices}")
@@ -118,7 +128,8 @@ def _get_even_slice_indices(
         slice_indices = [int(round(axis_max / 2))]
     else:
         slice_indices = np.round(np.linspace(lower, upper, nr_slices)).astype(int).tolist()
-    return slice_indices
+
+    return np.clip(np.array(slice_indices) + rand_int, lower, upper).astype(int).tolist()
 
 
 def _extract_multi_orientation_slices(

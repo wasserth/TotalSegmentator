@@ -407,31 +407,31 @@ def download_pretrained_weights(task_id):
 
     # CNN - MR
     elif task_id == "body_stats_cnn_mr_weight":
-        weights_path = config_dir / "lightning_models" / "mr_weight_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/mr_weight_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "mr_weight_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_weight_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
     elif task_id == "body_stats_cnn_mr_size":
-        weights_path = config_dir / "lightning_models" / "mr_size_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/mr_size_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "mr_size_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_size_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
     elif task_id == "body_stats_cnn_mr_age":
-        weights_path = config_dir / "lightning_models" / "mr_age_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/mr_age_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "mr_age_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_age_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
     elif task_id == "body_stats_cnn_mr_sex":
-        weights_path = config_dir / "lightning_models" / "mr_sex_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/mr_sex_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "mr_sex_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/mr_sex_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
 
     # CNN - CT
     elif task_id == "body_stats_cnn_ct_weight":
-        weights_path = config_dir / "lightning_models" / "ct_weight_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/ct_weight_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "ct_weight_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_weight_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
     elif task_id == "body_stats_cnn_ct_size":
-        weights_path = config_dir / "lightning_models" / "ct_size_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/ct_size_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "ct_size_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_size_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
     elif task_id == "body_stats_cnn_ct_age":
-        weights_path = config_dir / "lightning_models" / "ct_age_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/ct_age_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "ct_age_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_age_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
     elif task_id == "body_stats_cnn_ct_sex":
-        weights_path = config_dir / "lightning_models" / "ct_sex_splitOrig_2d_ns5_effnetv2_fl1"
-        WEIGHTS_URL = url + "/v2.5.0-weights/ct_sex_splitOrig_2d_ns5_effnetv2_fl1.zip"
+        weights_path = config_dir / "lightning_models" / "ct_sex_splitOrig_2d_ns5_effnetv2_fl1_se1"
+        WEIGHTS_URL = url + "/v2.5.0-weights/ct_sex_splitOrig_2d_ns5_effnetv2_fl1_se1.zip"
 
 
     else:
