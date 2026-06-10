@@ -90,6 +90,33 @@ warnings.filterwarnings("ignore", category=UserWarning, module="nnunetv2")
 warnings.filterwarnings("ignore", category=FutureWarning, module="nnunetv2")  # ignore torch.load warning
 
 
+# Optional cache of initialized nnUNetPredictor objects, keyed by the parameters that
+# determine the loaded model. Initializing a predictor (loading the network weights from
+# disk) is the expensive part; the prediction itself is unchanged. The cache is OFF by
+# default, so single-image runs behave exactly as before. Batch processing turns it on
+# (see totalseg_batch) so the weights are loaded once and reused across all images.
+_PREDICTOR_CACHE = {}
+_PREDICTOR_CACHE_ENABLED = False
+
+
+def set_predictor_cache_enabled(enabled: bool = True):
+    """Enable/disable reuse of initialized predictors across predictions.
+
+    Disabling also clears the cache so model weights are freed.
+    """
+    global _PREDICTOR_CACHE_ENABLED
+    _PREDICTOR_CACHE_ENABLED = enabled
+    if not enabled:
+        clear_predictor_cache()
+
+
+def clear_predictor_cache():
+    """Drop all cached predictors and free the associated GPU memory."""
+    _PREDICTOR_CACHE.clear()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+
 def get_full_task_name(task_id: int, src: str="raw"):
     if src == "raw":
         base = Path(os.environ['nnUNet_raw_data_base']) / "nnUNet_raw_data"
@@ -276,35 +303,44 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     #                       part_id=part_id,
     #                       device=device)
 
-    # nnUNet 2.2.1
-    if supports_keyword_argument(nnUNetPredictor, "perform_everything_on_gpu"):
-        predictor = nnUNetPredictor(
-            tile_step_size=step_size,
-            use_gaussian=True,
-            use_mirroring=not disable_tta,
-            perform_everything_on_gpu=True,  # for nnunetv2<=2.2.1
-            device=device,
-            verbose=verbose,
-            verbose_preprocessing=verbose,
-            allow_tqdm=allow_tqdm
+    # Reuse an already-initialized predictor if caching is enabled (batch mode). The cache
+    # key captures everything that determines the loaded model and the prediction settings.
+    cache_key = (model_folder, tuple(folds) if folds is not None else None,
+                 str(device), step_size, disable_tta, allow_tqdm)
+    predictor = _PREDICTOR_CACHE.get(cache_key) if _PREDICTOR_CACHE_ENABLED else None
+
+    if predictor is None:
+        # nnUNet 2.2.1
+        if supports_keyword_argument(nnUNetPredictor, "perform_everything_on_gpu"):
+            predictor = nnUNetPredictor(
+                tile_step_size=step_size,
+                use_gaussian=True,
+                use_mirroring=not disable_tta,
+                perform_everything_on_gpu=True,  # for nnunetv2<=2.2.1
+                device=device,
+                verbose=verbose,
+                verbose_preprocessing=verbose,
+                allow_tqdm=allow_tqdm
+            )
+        # nnUNet >= 2.2.2
+        else:
+            predictor = nnUNetPredictor(
+                tile_step_size=step_size,
+                use_gaussian=True,
+                use_mirroring=not disable_tta,
+                perform_everything_on_device=True,  # for nnunetv2>=2.2.2
+                device=device,
+                verbose=verbose,
+                verbose_preprocessing=verbose,
+                allow_tqdm=allow_tqdm
+            )
+        predictor.initialize_from_trained_model_folder(
+            model_folder,
+            use_folds=folds,
+            checkpoint_name=chk,
         )
-    # nnUNet >= 2.2.2
-    else:
-        predictor = nnUNetPredictor(
-            tile_step_size=step_size,
-            use_gaussian=True,
-            use_mirroring=not disable_tta,
-            perform_everything_on_device=True,  # for nnunetv2>=2.2.2
-            device=device,
-            verbose=verbose,
-            verbose_preprocessing=verbose,
-            allow_tqdm=allow_tqdm
-        )
-    predictor.initialize_from_trained_model_folder(
-        model_folder,
-        use_folds=folds,
-        checkpoint_name=chk,
-    )
+        if _PREDICTOR_CACHE_ENABLED:
+            _PREDICTOR_CACHE[cache_key] = predictor
     # new nnunetv2 feature: keep dir_out empty to return predictions as return value
     predictor.predict_from_files(dir_in, dir_out,
                                  save_probabilities=save_probabilities, overwrite=not continue_prediction,

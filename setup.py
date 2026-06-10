@@ -61,7 +61,8 @@ setup(name='TotalSegmentator',
                 'totalseg_evans_index=totalsegmentator.bin.totalseg_evans_index:main',
                 'totalseg_get_body_stats=totalsegmentator.bin.totalseg_get_body_stats:main',
                 'totalseg_info=totalsegmentator.bin.totalseg_info:main',
-                'totalseg_aggregate_stats=totalsegmentator.bin.totalseg_aggregate_stats:main'
+                'totalseg_aggregate_stats=totalsegmentator.bin.totalseg_aggregate_stats:main',
+                'totalseg_batch=totalsegmentator.bin.totalseg_batch:main'
             ],
         },
     )
