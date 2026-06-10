@@ -1,5 +1,7 @@
 import sys
 import os
+import json
+import importlib.metadata
 from pathlib import Path
 import time
 import textwrap
@@ -72,6 +74,60 @@ def select_device(device):
     return device
 
 
+def device_to_str(device):
+    """Normalize a device value (torch.device or string) to 'gpu'/'cpu'/'mps' for reporting."""
+    if hasattr(device, "type"):  # torch.device object
+        return "gpu" if device.type == "cuda" else device.type
+    return str(device)
+
+
+def build_run_report(input, output, task, device, fast, fastest, ml, output_type,
+                     roi_subset, runtime_seconds):
+    """Assemble a machine-readable manifest describing a completed run.
+
+    Pure function (no side effects): captures software versions, the resolved
+    device, the run options, the classes produced (filtered by roi_subset when
+    set) and the files written to the output directory. Used by the
+    `--report` CLI option so that automation can verify and chain runs without
+    parsing stdout.
+    """
+    from totalsegmentator.registry import task_modality, get_task_classes, requires_license, package_version
+
+    try:
+        nnunet_version = importlib.metadata.version("nnunetv2")
+    except importlib.metadata.PackageNotFoundError:
+        nnunet_version = None
+
+    classes = get_task_classes(task)
+    if roi_subset:
+        classes = {idx: name for idx, name in classes.items() if name in roi_subset}
+
+    output_files = []
+    if output is not None and Path(output).is_dir():
+        output_files = sorted(p.name for p in Path(output).glob("*.nii.gz"))
+
+    return {
+        "totalsegmentator_version": package_version(),
+        "nnunetv2_version": nnunet_version,
+        "torch_version": torch.__version__,
+        "task": task,
+        "modality": task_modality(task),
+        "license_required": requires_license(task),
+        "device": device_to_str(device),
+        "fast": fast,
+        "fastest": fastest,
+        "multilabel": ml,
+        "output_type": output_type,
+        "roi_subset": roi_subset,
+        "input": "Nifti1Image" if isinstance(input, Nifti1Image) else str(input),
+        "output": None if output is None else str(output),
+        "num_classes": len(classes),
+        "classes": {str(idx): name for idx, name in classes.items()},
+        "runtime_seconds": round(runtime_seconds, 2),
+        "output_files": output_files,
+    }
+
+
 def show_license_info():
     status, message = has_valid_license_offline()
     if status == "missing_license":
@@ -100,9 +156,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      skip_saving=False, device="gpu", license_number=None,
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
                      v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean",
-                     remove_small_blobs=False, statistics_normalized_intensities=False, 
+                     remove_small_blobs=False, statistics_normalized_intensities=False,
                      robust_crop=False, higher_order_resampling=False, save_probabilities=None,
-                     debug=False):
+                     debug=False, report=None):
     """
     Run TotalSegmentator from within python.
 
@@ -111,6 +167,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     Return: multilabel Nifti1Image
     """
+    run_start = time.time()
     if not isinstance(input, Nifti1Image):
         input = Path(input)
 
@@ -859,6 +916,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 input_path = input
             get_radiomics_features_for_entire_dir(input_path, output, stats_dir / "statistics_radiomics.json")
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
+
+    if report is not None:
+        report_data = build_run_report(input, output, task, device, fast, fastest, ml,
+                                       output_type, roi_subset, time.time() - run_start)
+        report_path = Path(report).absolute()
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(report_path, "w") as f:
+            json.dump(report_data, f, indent=2)
+        if not quiet: print(f"Run report written to {report_path}")
 
     # Restore initial torch settings
     torch.backends.cudnn.benchmark = initial_cudnn_benchmark

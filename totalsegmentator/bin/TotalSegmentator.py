@@ -4,6 +4,7 @@ import importlib.metadata
 from pathlib import Path
 import re
 from totalsegmentator.python_api import totalsegmentator, validate_device_type_api
+from totalsegmentator.registry import TASKS, format_tasks_table, format_classes_table
 
 
 def validate_device_type(value):
@@ -49,14 +50,16 @@ def main():
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
 
     parser.add_argument("-i", metavar="filepath", dest="input",
-                        help="CT nifti image or folder of dicom slices or zip file of dicom slices.",
-                        type=lambda p: Path(p).absolute(), required=True)
+                        help="CT nifti image or folder of dicom slices or zip file of dicom slices. "
+                             "(Required for segmentation; not needed for --list-tasks / --list-classes.)",
+                        type=lambda p: Path(p).absolute(), required=False)
 
     parser.add_argument("-o", metavar="directory", dest="output",
-                        help="Output directory for segmentation masks. " + 
-                             "Or path of multilabel output nifti file if --ml option is used." + 
-                             "Or path of output dicom seg file if --output_type is set to 'dicom_seg' or 'dicom_rtstruct'",
-                        type=lambda p: Path(p).absolute(), required=True)
+                        help="Output directory for segmentation masks. " +
+                             "Or path of multilabel output nifti file if --ml option is used." +
+                             "Or path of output dicom seg file if --output_type is set to 'dicom_seg' or 'dicom_rtstruct'. " +
+                             "(Required for segmentation; not needed for --list-tasks / --list-classes.)",
+                        type=lambda p: Path(p).absolute(), required=False)
 
     parser.add_argument("-ot", "--output_type", type=str, nargs="+",
                     help="Select output type(s). Choices: nifti, dicom_rtstruct, dicom_seg. Multiple are allowed e.g. -ot nifti dicom_seg OR -ot nifti,dicom_seg).",
@@ -86,18 +89,11 @@ def main():
 
     # cerebral_bleed: Intracerebral hemorrhage
     # liver_vessels: hepatic vessels
-    parser.add_argument("-ta", "--task", choices=["total", "body", "body_mr", "vertebrae_mr",
-                        "lung_vessels", "lung_vessels_LEGACY", "cerebral_bleed", "hip_implant", "coronary_arteries", "coronary_arteries_LEGACY",
-                        "pleural_pericard_effusion", "test",
-                        "appendicular_bones", "appendicular_bones_mr", "tissue_types", "heartchambers_highres",
-                        "face", "vertebrae_body", "total_mr", "tissue_types_mr", "tissue_4_types", "face_mr",
-                        "head_glands_cavities", "head_muscles", "headneck_bones_vessels", "headneck_muscles",
-                        "brain_structures", "liver_vessels", "liver_lesions", "liver_lesions_mr", "oculomotor_muscles",
-                        "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules", "kidney_cysts", 
-                        "breasts", "ventricle_parts", "aortic_sinuses", "liver_segments", "liver_segments_mr",
-                        "total_highres_test", "craniofacial_structures", "abdominal_muscles", "teeth",
-                        "trunk_cavities", "brain_aneurysm"],
-                        help="Select which model to use. This determines what is predicted.",
+    # The list of selectable tasks lives in totalsegmentator/registry.py (TASKS) so that the
+    # CLI choices and the totalseg_info introspection command can never drift apart.
+    parser.add_argument("-ta", "--task", choices=TASKS, metavar="task",
+                        help="Select which model to use. This determines what is predicted. "
+                             "Run 'totalseg_info --list-tasks' to see all options.",
                         default="total")
 
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
@@ -123,6 +119,11 @@ def main():
     parser.add_argument("-r", "--radiomics", action="store_true",
                         help="Calc radiomics features. Requires pyradiomics. Results will be in statistics_radiomics.json",
                         default=False)
+
+    parser.add_argument("-rp", "--report", type=lambda p: Path(p).absolute(), default=None,
+                        metavar="filepath",
+                        help="Write a machine-readable JSON run report (software/model versions, device, task, "
+                             "classes, runtime, output files) to this path. Useful for reproducible pipelines and automation.")
 
     parser.add_argument("-sii", "--stats_include_incomplete", action="store_true",
                         help="Normally statistics are only calculated for ROIs which are not cut off by the beginning or end of image. Use this option to calc anyways.",
@@ -190,9 +191,34 @@ def main():
                         help="Only needed for unittesting.",
                         default=0)
 
+    parser.add_argument("-lt", "--list-tasks", action="store_true", dest="list_tasks",
+                        help="List all available tasks (modality, license, number of classes) and exit. "
+                             "For machine-readable output use 'totalseg_info --json'.")
+
+    parser.add_argument("-lc", "--list-classes", dest="list_classes", nargs="?", const="total",
+                        metavar="task",
+                        help="List the classes of a task (index -> name) and exit. Defaults to 'total'.")
+
     parser.add_argument('--version', action='version', version=importlib.metadata.version("TotalSegmentator"))
 
     args = parser.parse_args()
+
+    # Capability discovery: these short-circuit before any input/output is required and
+    # before models are loaded, so scripts/agents can introspect the tool quickly.
+    if args.list_tasks:
+        print(format_tasks_table())
+        return
+    if args.list_classes is not None:
+        if args.list_classes not in TASKS:
+            parser.error(f"unknown task '{args.list_classes}' for --list-classes. "
+                         "Run --list-tasks to see all options.")
+        print(format_classes_table(args.list_classes))
+        return
+
+    # For an actual segmentation run, input and output are required.
+    missing = [flag for flag, val in (("-i", args.input), ("-o", args.output)) if val is None]
+    if missing:
+        parser.error(f"the following arguments are required for segmentation: {', '.join(missing)}")
 
     normalized_output_type = ["nifti"] if args.output_type is None else normalize_output_types(args.output_type)
     # Backward compatibility: single element stays a string
@@ -223,7 +249,7 @@ def main():
                      roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation, 
                      remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
                      robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
-                     save_probabilities=args.save_probabilities, debug=args.debug)
+                     save_probabilities=args.save_probabilities, debug=args.debug, report=args.report)
 
 
 if __name__ == '__main__':

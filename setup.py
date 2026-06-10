@@ -59,7 +59,8 @@ setup(name='TotalSegmentator',
                 'totalseg_get_phase=totalsegmentator.bin.totalseg_get_phase:main',
                 'totalseg_get_modality=totalsegmentator.bin.totalseg_get_modality:main',
                 'totalseg_evans_index=totalsegmentator.bin.totalseg_evans_index:main',
-                'totalseg_get_body_stats=totalsegmentator.bin.totalseg_get_body_stats:main'
+                'totalseg_get_body_stats=totalsegmentator.bin.totalseg_get_body_stats:main',
+                'totalseg_info=totalsegmentator.bin.totalseg_info:main'
             ],
         },
     )
