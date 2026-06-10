@@ -88,17 +88,51 @@ def touches_border(mask):
     return False
 
 
-def get_basic_statistics(seg: np.array, 
-                         ct_file: Union[Path, Nifti1Image], 
-                         file_out: Union[Path, None]=None, 
+def _empty_extra_metrics(target):
+    target["n_voxels"] = 0
+    target["intensity_std"] = 0.0
+    target["intensity_min"] = 0.0
+    target["intensity_max"] = 0.0
+    target["centroid_vox"] = None
+    target["bbox_vox"] = None
+
+
+def _add_extra_metrics(target, data, ct):
+    """Add morphometric + intensity-distribution metrics for one structure.
+
+    centroid_vox and bbox_vox are in voxel/index coordinates (numpy axes i,j,k);
+    bbox_vox is [[i_min,i_max],[j_min,j_max],[k_min,k_max]] with inclusive maxima.
+    """
+    idx = np.argwhere(data)
+    if idx.shape[0] == 0:
+        _empty_extra_metrics(target)
+        return
+    vals = ct[data]
+    target["n_voxels"] = int(idx.shape[0])
+    target["intensity_std"] = float(np.std(vals).round(5))
+    target["intensity_min"] = float(vals.min())
+    target["intensity_max"] = float(vals.max())
+    target["centroid_vox"] = [round(float(c), 2) for c in idx.mean(axis=0)]
+    target["bbox_vox"] = [[int(idx[:, a].min()), int(idx[:, a].max())] for a in range(idx.shape[1])]
+
+
+def get_basic_statistics(seg: np.array,
+                         ct_file: Union[Path, Nifti1Image],
+                         file_out: Union[Path, None]=None,
                          quiet: bool=False,
-                         task: str="total", 
+                         task: str="total",
                          exclude_masks_at_border: bool=True,
                          roi_subset: list=None,
                          metric: str="mean",
-                         normalized_intensities: bool=False):
+                         normalized_intensities: bool=False,
+                         extra_metrics: bool=False):
     """
     ct_file: path to a ct_file or a nifti file object
+
+    extra_metrics: in addition to volume and intensity, also compute
+        n_voxels, intensity_std/min/max and the morphometric centroid_vox and
+        bbox_vox (both in voxel/index coordinates). Off by default to keep the
+        default runtime unchanged.
     """
     ct_img = nib.load(ct_file) if isinstance(ct_file, (str, Path)) else ct_file
     ct = ct_img.get_fdata().astype(np.int16)
@@ -121,6 +155,8 @@ def get_basic_statistics(seg: np.array,
             # print(f"WARNING: {mask_name} touches border. Skipping.")
             stats[mask_name]["volume"] = 0.0
             stats[mask_name]["intensity"] = 0.0
+            if extra_metrics:
+                _empty_extra_metrics(stats[mask_name])
         else:
             stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3; 0.2s
             roi_mask = (data > 0).astype(np.uint8)  # 0.16s
@@ -131,6 +167,8 @@ def get_basic_statistics(seg: np.array,
             elif metric == "median":
                 stats[mask_name]["intensity"] = np.median(ct[roi_mask > 0]).round(5) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.014s
             # print(f"took: {time.time()-st:.4f}s")
+            if extra_metrics:
+                _add_extra_metrics(stats[mask_name], data, ct)
 
     if file_out is not None:
         with open(file_out, "w") as f:

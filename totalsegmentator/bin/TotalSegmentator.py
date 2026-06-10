@@ -133,6 +133,11 @@ def main():
                         help="Aggregation method for intensity statistics (default: mean).",
                         default="mean")
 
+    parser.add_argument("-sx", "--statistics_extra", action="store_true",
+                        help="Add extra per-structure metrics to the statistics: n_voxels, intensity std/min/max, "
+                             "and the morphometric centroid_vox and bbox_vox (voxel coordinates). Slightly increases statistics runtime.",
+                        default=False)
+
     parser.add_argument("-cp", "--crop_path", help="Custom path to masks used for cropping. If not set will use output directory.",
                         type=lambda p: Path(p).absolute(), default=None)
 
@@ -249,7 +254,8 @@ def main():
                      roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation, 
                      remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
                      robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
-                     save_probabilities=args.save_probabilities, debug=args.debug, report=args.report)
+                     save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
+                     statistics_extra=args.statistics_extra)
 
 
 if __name__ == '__main__':
