@@ -130,9 +130,18 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
+* `--report`: This will write a machine-readable JSON run manifest to the given path (software and model versions, resolved device, task, classes, runtime and the list of output files). Useful for reproducible pipelines and automation.
+* `--list-tasks` / `--list-classes [task]`: Print the available tasks (or the classes of one task) and exit, without running a segmentation. For machine-readable output use the `totalseg_info` command below.
 
 
 ### Other commands
+
+If you want to discover which tasks are available and which classes each one outputs (e.g. to find valid `--roi_subset` names) you can use the `totalseg_info` command. It runs instantly, needs no GPU and downloads no model weights, which also makes it convenient for scripts and AI coding agents:
+```bash
+totalseg_info --list-tasks              # table of tasks (modality, license, number of classes)
+totalseg_info --classes -ta total       # class index -> name for one task
+totalseg_info --json                    # full capability registry as JSON
+```
 
 If you want to know body weight, size, age, sex, BMI and BSA you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md):
 ```bash

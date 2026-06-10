@@ -9,8 +9,18 @@ pytest -v tests/test_device_type.py
 # Test config helpers
 pytest -v tests/test_config.py
 
-# Test - multilabel prediction
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu
+# Test task registry + totalseg_info command (no GPU/model needed)
+pytest -v tests/test_registry.py
+
+# Smoke test the introspection commands
+totalseg_info --list-tasks > /dev/null
+totalseg_info --classes -ta total --json > /dev/null
+TotalSegmentator --list-tasks > /dev/null
+
+# Test - multilabel prediction (also exercises --report manifest)
+TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu --report tests/unittest_run_report.json
+python -c "import json; r=json.load(open('tests/unittest_run_report.json')); assert r['task']=='total' and r['num_classes']>0, r"
+pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
 
 # Test - roi subset
@@ -62,4 +72,5 @@ rm tests/unittest_prediction_fast_force_split.nii.gz
 rm tests/unittest_prediction_fast_body_seg.nii.gz
 rm tests/unittest_phase_prediction.json
 rm tests/unittest_body_stats_prediction.json
+rm tests/unittest_run_report.json
 # rm tests/statistics.json

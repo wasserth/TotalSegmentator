@@ -1,4 +1,8 @@
 ## Master
+* add `totalseg_info` command to discover available tasks and their output classes (modality, license, class index -> name) as a human-readable table or JSON. Runs instantly without a GPU or model download. Useful for scripting and AI coding agents.
+* add `--list-tasks` and `--list-classes [task]` flags to the main `TotalSegmentator` command for the same discovery directly on the CLI.
+* add `--report <path.json>` option to write a machine-readable run manifest (software/model versions, device, task, classes, runtime, output files) for reproducible pipelines.
+* add `AGENTS.md` with guidance for using TotalSegmentator from automation and AI coding agents.
 * allow to pass minimum component size in mm3 to `--remove_small_blobs` argument (before was hard coded to 200mm3)
 * add improved model for `totalseg_get_body_stats` script: use CNN model instead of XGBoost model.
 * if `-l` is passed the backend license server will only be contacted if the license number is not already set in the config file or if you pass a different license number.
