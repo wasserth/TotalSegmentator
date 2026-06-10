@@ -73,7 +73,7 @@ Each shows the metric ± standard deviation.
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| CNN | 3.52 ± 4.42 kg | 3.38 ± 3.41 cm | 4.02 ± 3.76 years | 0.99 ± 0.11 |
+| CNN | 3.19 ± 4.24 kg | 3.63 ± 3.33 cm | 4.40 ± 3.92 years | 0.98 ± 0.13 |
 | XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
 
 
@@ -84,21 +84,21 @@ Thorax-abdomen-pelvis:
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| CNN | 4.52 ± 4.41 kg | 4.55 ± 3.92 cm | 4.90 ± 4.68 years | 0.91 ± 0.29 |
+| CNN | 2.96 ± 3.60 kg | 3.66 ± 3.45 cm | 5.63 ± 4.76 years | 0.93 ± 0.26 |
 | XGBoost | 4.03 ± 5.35 kg | 3.83 ± 3.91 cm | 5.67 ± 5.39 years | 0.96 ± 0.19 |
 
 Thorax-only:
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| CNN | 4.30 ± 6.10 kg | 5.43 ± 3.63 cm | 5.52 ± 6.89 years | 0.85 ± 0.36 |
+| CNN | 3.82 ± 4.61 kg | 4.08 ± 3.67 cm | 6.29 ± 5.20 years | 0.94 ± 0.23 |
 | XGBoost | 6.76 ± 6.90 kg | 5.45 ± 4.88 cm | 10.16 ± 8.18 years | 0.89 ± 0.32 |
 
 Abdomen-pelvis-only:
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| CNN | 3.64 ± 3.91 kg | 3.98 ± 3.86 cm | 5.76 ± 5.99 years | 0.98 ± 0.14 |
+| CNN | 3.95 ± 4.50 kg | 4.63 ± 4.22 cm | 6.32 ± 6.54 years | 0.94 ± 0.23 |
 | XGBoost | 5.59 ± 7.61 kg | 5.52 ± 5.26 cm | 6.60 ± 6.45 years | 0.91 ± 0.29 |
 
 
@@ -110,7 +110,7 @@ Abdomen-pelvis-only:
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| CNN | 3.02 ± 3.24 kg | 3.12 ± 3.07 cm | 4.21 ± 5.27 years | 0.98 ± 0.13 |
+| CNN | 2.69 ± 3.49 kg | 3.27 ± 3.07 cm | 3.95 ± 5.47 years | 0.99 ± 0.12 |
 | XGBoost | 4.82 ± 7.60 kg | 4.05 ± 4.42 cm | 9.35 ± 8.71 years | 0.92 ± 0.28 |
 
 
