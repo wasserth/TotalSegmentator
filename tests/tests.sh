@@ -21,7 +21,6 @@ TotalSegmentator --list-tasks > /dev/null
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu --report tests/unittest_run_report.json
 python -c "import json; r=json.load(open('tests/unittest_run_report.json')); assert r['task']=='total' and r['num_classes']>0, r"
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
-pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
 
 # Test - roi subset
 # 2 cpus:
