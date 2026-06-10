@@ -270,10 +270,10 @@ def get_tissue_types_slices(ct_img, vertebrae_img, tissue_types_img, body_img, v
 
 
 def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path = None,
-                   quiet: bool = False, device: str = "gpu", 
+                   quiet: bool = False, device: str = "cpu", 
                    existing_stats: dict = None, existing_seg_img: nib.Nifti1Image = None,
                    fold: int = None, license_number: str = None, use_border: bool = False,
-                   call_via_subprocess: bool = False, model_type: str = "xgboost",
+                   call_via_subprocess: bool = False, model_type: str = "cnn",
                    only_weight: bool = False, debug: bool = False):
     """
     Predict body weight, body size, age and sex based on a CT or MR scan.
