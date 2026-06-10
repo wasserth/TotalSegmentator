@@ -144,6 +144,11 @@ totalseg_info --classes -ta total       # class index -> name for one task
 totalseg_info --json                    # full capability registry as JSON
 ```
 
+If you want to process a whole folder of images (a cohort) you can use the following command. It loads the model weights only once and reuses them for every image, which is much faster than calling `TotalSegmentator` in a shell loop. Each case is written to `<output>/<case_id>/`, per-image failures are logged to `batch_errors.log` and the run continues, and with `--statistics` the per-case statistics are aggregated into `cohort_statistics.csv`:
+```bash
+totalseg_batch -i ct_folder -o output_folder --statistics
+```
+
 If you ran TotalSegmentator with `--statistics` on a cohort of images, you can merge all the per-image `statistics.json` files into one analysis-ready table (one row per subject and structure). The output format is chosen by the extension of `-o` (`.csv`, `.parquet` or `.json`):
 ```bash
 totalseg_aggregate_stats -i cohort_dir -o cohort_stats.csv

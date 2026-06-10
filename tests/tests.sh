@@ -12,6 +12,9 @@ pytest -v tests/test_config.py
 # Test task registry + totalseg_info command (no GPU/model needed)
 pytest -v tests/test_registry.py
 
+# Test batch command helpers (no GPU/model needed)
+pytest -v tests/test_batch.py
+
 # Smoke test the introspection commands
 totalseg_info --list-tasks > /dev/null
 totalseg_info --classes -ta total --json > /dev/null
@@ -21,6 +24,13 @@ TotalSegmentator --list-tasks > /dev/null
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu --report tests/unittest_run_report.json
 python -c "import json; r=json.load(open('tests/unittest_run_report.json')); assert r['task']=='total' and r['num_classes']>0, r"
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
+
+# Test - batch processing. Verifies that the cached-predictor (batch) path produces a
+# segmentation identical to the normal single-image path above (same options, same image).
+mkdir -p tests/unittest_batch_in
+cp tests/reference_files/example_ct_sm.nii.gz tests/unittest_batch_in/
+totalseg_batch -i tests/unittest_batch_in -o tests/unittest_batch_out -bs --ml -d cpu
+python -c "import nibabel as nib, numpy as np; a=nib.load('tests/unittest_prediction.nii.gz').get_fdata(); b=nib.load('tests/unittest_batch_out/example_ct_sm/segmentation.nii.gz').get_fdata(); assert np.array_equal(a, b), 'batch output differs from single-image output'"
 
 # Test - roi subset
 # 2 cpus:
@@ -79,4 +89,6 @@ rm tests/unittest_phase_prediction.json
 rm tests/unittest_body_stats_prediction.json
 rm tests/unittest_run_report.json
 rm tests/unittest_cohort_stats.csv
+rm -rf tests/unittest_batch_in
+rm -rf tests/unittest_batch_out
 # rm tests/statistics.json

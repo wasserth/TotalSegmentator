@@ -75,14 +75,24 @@ For per-class volume and intensity, add `--statistics` (writes `statistics.json`
 Add `--statistics_extra` for `n_voxels`, intensity std/min/max and the morphometric
 `centroid_vox` / `bbox_vox` (voxel coordinates).
 
-## Cohort analysis
+## Cohort processing
 
-When processing many images, merge their per-image `statistics.json` into one
-analysis-ready table (format chosen by the `-o` extension: `.csv`, `.parquet`, `.json`):
+To segment a whole folder of images, use `totalseg_batch`. It loads the model once and
+reuses it across all images (much faster than calling `TotalSegmentator` per file), keeps
+going if one image fails (failures go to `batch_errors.log`), and exits non-zero if any
+image failed:
+
+```bash
+totalseg_batch -i ct_folder -o out_folder --statistics   # each case -> out_folder/<case_id>/
+```
+
+To merge the per-image `statistics.json` of a cohort into one analysis-ready table (format
+chosen by the `-o` extension: `.csv`, `.parquet`, `.json`):
 
 ```bash
 totalseg_aggregate_stats -i cohort_dir -o cohort_stats.csv
 ```
+(With `--statistics`, `totalseg_batch` writes this table as `out_folder/cohort_statistics.csv` automatically.)
 
 Output is tidy/long — one row per `(subject, structure)`, one column per metric (nested
 metrics like `centroid_vox` are flattened to `centroid_vox_0/1/2`). Subject ids come from
