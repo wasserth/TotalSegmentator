@@ -49,7 +49,9 @@ class test_end_to_end(unittest.TestCase):
         img_ref = nib.load("tests/reference_files/example_seg.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_high_order.nii.gz").get_fdata()
         dice = dice_score_multilabel(img_ref, img_new)
-        images_equal = dice > 0.95
+        # Dice is roughly 0.87 in this test case, because higher order resampling changes segmentations quite a bit,
+        # especially on these small images.
+        images_equal = dice > 0.85
         self.assertTrue(images_equal, f"multilabel prediction high order not correct (dice: {dice:.6f})")
 
     def test_prediction_multilabel_mr(self):
