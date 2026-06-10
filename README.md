@@ -128,6 +128,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
+* `--statistics_extra`: In addition to volume and intensity, also compute `n_voxels`, intensity std/min/max and the morphometric `centroid_vox` and `bbox_vox` (voxel coordinates) for each class. Off by default to keep the statistics runtime unchanged.
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
 * `--report`: This will write a machine-readable JSON run manifest to the given path (software and model versions, resolved device, task, classes, runtime and the list of output files). Useful for reproducible pipelines and automation.
@@ -142,6 +143,12 @@ totalseg_info --list-tasks              # table of tasks (modality, license, num
 totalseg_info --classes -ta total       # class index -> name for one task
 totalseg_info --json                    # full capability registry as JSON
 ```
+
+If you ran TotalSegmentator with `--statistics` on a cohort of images, you can merge all the per-image `statistics.json` files into one analysis-ready table (one row per subject and structure). The output format is chosen by the extension of `-o` (`.csv`, `.parquet` or `.json`):
+```bash
+totalseg_aggregate_stats -i cohort_dir -o cohort_stats.csv
+```
+Subject ids are taken from the path of each statistics file relative to the input directory (e.g. `cohort_dir/subj001/statistics.json` -> `subj001`). Use `--filename statistics_radiomics.json` to aggregate radiomics features instead.
 
 If you want to know body weight, size, age, sex, BMI and BSA you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md):
 ```bash
