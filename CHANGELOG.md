@@ -1,4 +1,5 @@
 ## Master
+* add improved higher order resampling to make segmentations smoother (use `--higher_order_resampling` argument) during upsampling with only slightly higher runtime and memory usage. (before higher order upsampling of many labels was very very slow and memory hungry)
 
 
 ## Release 2.14.0 (10.06.2026)

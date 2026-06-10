@@ -718,9 +718,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
             # by undo_canonical)
 
-            # Advantage of nnunet_resampling: Will convert multilabel to one-hot and then high order 
-            # resampling (= smoother) is possible. Disadvantage: slower and uses a lot of memory if many labels.
-            # Ok if using with "roi_subset" because then only a few labels, otherwise infeasible runtime+memory.
+            st_resampling = time.time()
+            # Advantage of crop_resample: Will resample multilabel masks as cropped one-hot masks and then high order
+            # resampling (= smoother) is possible. By using crop it only uses slightly more memory than order=0 and
+            # with nr=4 only a bit more runtime than order=0.
             if nnunet_resampling:
                 if roi_subset is not None:
                     img_data_tmp = img_pred.get_fdata()
@@ -732,14 +733,23 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 # 1: best (smoothest)
                 # 2: somehow more uneven again
                 # 3: identical to 2
+                #
+                # Upsampling time (big CT image with total task):
+                # -nr 1: 59s, 11010MB
+                # -nr 4: 26s, 11130MB
+                # -nr 8: 18s, 11160MB
+                # Memory consumption stays almost identical to nearest neighbor resampling even for higher nr.
+                # This is possible due to cropped one-hot resampling.
                 img_pred = change_spacing(img_pred, resample, img_in_shape,
                                           order=1, dtype=np.uint8, nr_cpus=nr_threads_resampling,
-                                          force_affine=img_in.affine, nnunet_resample=True, use_gpu=use_gpu)
+                                          force_affine=img_in.affine, crop_resample=True, use_gpu=use_gpu)
             else:
+                # Upsampling time: 
+                # -nr=1: 7s, 11000MB
                 img_pred = change_spacing(img_pred, resample, img_in_shape,
                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
                                         force_affine=img_in.affine, use_gpu=use_gpu)
-            
+            if not quiet: print(f"  Resampled in {time.time() - st_resampling:.2f}s")
 
         if verbose: print("Undoing canonical...")
         img_pred = undo_canonical(img_pred, img_in_orig)

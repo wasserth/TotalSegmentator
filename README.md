@@ -170,6 +170,11 @@ After acquiring a license number for the non-open tasks you can set it with the 
 totalseg_set_license -l aca_12345678910
 ```
 
+If you want the segmentations to look smoother you can use higher order upsampling of the segmentations:
+```bash
+TotalSegmentator -i ct.nii.gz -o seg --higher_order_resampling -nr 4
+```
+
 You can output the softmax probabilities. This will give you a `.npz` file you can load with numpy. The geometry
 might not be identical to your input image. There will also be a `.pkl` output file with geometry
 information. This does not work well for the `total` task since this is based on multiple models.
@@ -191,6 +196,7 @@ We provide the following web applications to easily process your images:
 * [Volume Report](https://compute.totalsegmentator.com/volume-report/): Get the volume of abdominal organs + tissue und bone density. Also show percentile in population.
 * [Evans Index](https://compute.totalsegmentator.com/evans-index/): Compute the Evans index.
 * [Aorta Report](https://compute.totalsegmentator.com/aorta-report/): Analyse the diameter along the aorta.
+* [Body Stats](https://compute.totalsegmentator.com/body-stats/): Predict body stats like weight, size, age, sex, BMI and BSA from CT or MR scans.
 
 
 ### Run via docker
