@@ -111,7 +111,7 @@ Usage:
 TotalSegmentator -i ct.nii.gz -o segmentations -ta <task_name>
 ```
 
-Confused by all the structures and tasks? Check [this](https://backend.totalsegmentator.com/find-task/) to search through available structures and tasks.
+Confused by all the structures and tasks? Check [this](https://backend.totalsegmentator.com/find-task/) to search through available structures and tasks or run `totalseg_info`.
 
 The mapping from label ID to class name can be found [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/map_to_binary.py).
 
@@ -124,6 +124,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--device`: Choose `cpu` or `gpu` or `gpu:X (e.g., gpu:1 -> cuda:1)`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
 * `--save_lowres`: With `--fast` or `--fastest`, save the segmentation at the model resolution (3mm or 6mm) instead of upsampling it back to the input resolution to save runtime.
+* `--resampling_order`: Spline interpolation order for input image resampling (default: 3). Setting this to 1 will speed up resampling with very similar segmentation accuracy.
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
 * `--robust_crop`: For some tasks and for roi_subset a 6mm low resolution model is used to crop to the region of interest. Sometimes this model is incorrect, which leads to artifacts like segmentations being cut off. robust_crop will use a better but slower 3mm model instead.
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
@@ -137,13 +138,6 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 
 
 ### Other commands
-
-If you want to discover which tasks are available and which classes each one outputs (e.g. to find valid `--roi_subset` names) you can use the `totalseg_info` command. It runs instantly, needs no GPU and downloads no model weights, which also makes it convenient for scripts and AI coding agents:
-```bash
-totalseg_info --list-tasks              # table of tasks (modality, license, number of classes)
-totalseg_info --classes -ta total       # class index -> name for one task
-totalseg_info --json                    # full capability registry as JSON
-```
 
 If you want to know body weight, size, age, sex, BMI and BSA you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md):
 ```bash
@@ -186,6 +180,11 @@ If you want the segmentations to look smoother you can use higher order upsampli
 TotalSegmentator -i ct.nii.gz -o seg --higher_order_resampling -nr 4
 ```
 
+If you want to run as fast as possible to process many cases and lower resolution is ok, I would recommend this setting (for a large CT image this takes ~30s on GPU and ~70s on CPU):
+```bash
+TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -sl -ro 1
+```
+
 You can output the softmax probabilities. This will give you a `.npz` file you can load with numpy. The geometry
 might not be identical to your input image. There will also be a `.pkl` output file with geometry
 information. This does not work well for the `total` task since this is based on multiple models.
@@ -199,6 +198,12 @@ If you do not have internet access on the machine you want to run TotalSegmentat
 3. Copy the folder `~/.totalsegmentator` from this machine to the machine without internet.
 4. TotalSegmentator should now work also on the machine without internet.
 
+If you want to discover which tasks are available and which classes each one outputs (e.g. to find valid `--roi_subset` names) you can use the `totalseg_info` command. It runs instantly, needs no GPU and downloads no model weights, which also makes it convenient for scripts and AI coding agents:
+```bash
+totalseg_info --list-tasks              # table of tasks (modality, license, number of classes)
+totalseg_info --classes -ta total       # class index -> name for one task
+totalseg_info --json                    # full capability registry as JSON
+```
 
 ### Web applications
 We provide the following web applications to easily process your images:

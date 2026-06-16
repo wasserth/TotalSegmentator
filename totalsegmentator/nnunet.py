@@ -357,10 +357,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, higher_order_resampling=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
-                         debug=False, save_lowres=False):
+                         debug=False, save_lowres=False, resampling_order=3):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
+    resampling_order: interpolation order for input image resampling
     cascade: nibabel image or None
 
     output_type may be a string or a list of strings (multi-output support)
@@ -508,7 +509,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
             img_in_rsp = change_spacing(img_in, resample,
-                                        order=3, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
+                                        order=resampling_order, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
             if cascade:
                 cascade = change_spacing(cascade, resample,
                                          order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)

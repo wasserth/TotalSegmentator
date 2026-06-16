@@ -159,7 +159,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean",
                      remove_small_blobs=False, statistics_normalized_intensities=False,
                      robust_crop=False, higher_order_resampling=False, save_probabilities=None,
-                     debug=False, report=None, statistics_extra=False, save_lowres=False):
+                     debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=3):
     """
     Run TotalSegmentator from within python.
 
@@ -818,13 +818,14 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                                 save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                                 crop_addon=None, output_type=output_type, statistics=False,
                                 quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device,
-                                debug=debug)
+                                debug=debug, resampling_order=resampling_order)
             class_map_inv = {v: k for k, v in class_map[crop_task].items()}
             
         else:
             # If crop_model is specified, run totalsegmentator for the crop model
             organ_seg = totalsegmentator(input, None, task=crop_model, nr_thr_resamp=nr_thr_resamp, 
-                                         device=convert_device_to_string(device), quiet=quiet, verbose=verbose)
+                                         device=convert_device_to_string(device), quiet=quiet, verbose=verbose,
+                                         resampling_order=resampling_order)
             class_map_inv = {v: k for k, v in class_map[crop_model].items()}
 
         crop_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
@@ -857,7 +858,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
                             quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device,
-                            debug=debug)
+                            debug=debug, resampling_order=resampling_order)
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
@@ -874,7 +875,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             normalized_intensities=statistics_normalized_intensities,
                             higher_order_resampling=higher_order_resampling, save_probabilities=save_probabilities,
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
-                            debug=debug, save_lowres=save_lowres and (fast or fastest))
+                            debug=debug, save_lowres=save_lowres and (fast or fastest),
+                            resampling_order=resampling_order)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:

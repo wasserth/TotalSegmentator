@@ -1,4 +1,5 @@
 ## Master
+* add `--resampling_order` option to choose the spline interpolation order for input image resampling. Default remains 3; setting it to 1 can speed up resampling with very similar segmentation accuracy.
 * add `--save_lowres` option to save `--fast` or `--fastest` segmentations in the low-resolution model space (3mm / 6mm) without the slow upsampling step.
 * add `--statistics_extra` option to compute additional per-structure metrics (`n_voxels`, intensity std/min/max, and the morphometric `centroid_vox` and `bbox_vox`). Off by default so the normal statistics runtime is unchanged.
 * add `totalseg_info` command to discover available tasks and their output classes (modality, license, class index -> name) as a human-readable table or JSON. Runs instantly without a GPU or model download. Useful for scripting and AI coding agents.

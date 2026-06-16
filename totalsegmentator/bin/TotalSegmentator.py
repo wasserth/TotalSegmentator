@@ -25,6 +25,16 @@ def positive_float(value):
     return value
 
 
+def resampling_order(value):
+    try:
+        value = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"Invalid resampling order: '{value}'.")
+    if value < 0 or value > 5:
+        raise argparse.ArgumentTypeError("Resampling order must be between 0 and 5.")
+    return value
+
+
 def normalize_output_types(values):
 
     VALID_OUTPUT_TYPES = {"nifti", "dicom_rtstruct", "dicom_seg"}
@@ -69,6 +79,10 @@ def main():
                         default=False)
 
     parser.add_argument("-nr", "--nr_thr_resamp", type=int, help="Nr of threads for resampling", default=1)
+
+    parser.add_argument("-ro", "--resampling_order", type=resampling_order, default=3,
+                        help="Spline interpolation order for input image resampling (0-5). "
+                             "Default: 3. Setting this to 1 can speed up resampling with very similar segmentation accuracy.")
 
     parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations",
                         default=6)
@@ -260,7 +274,8 @@ def main():
                      remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
                      robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
                      save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
-                     statistics_extra=args.statistics_extra, save_lowres=args.save_lowres)
+                     statistics_extra=args.statistics_extra, save_lowres=args.save_lowres,
+                     resampling_order=args.resampling_order)
 
 
 if __name__ == '__main__':
