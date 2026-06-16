@@ -111,12 +111,13 @@ class TestRunReport(unittest.TestCase):
         report = build_run_report(
             input="ct.nii.gz", output=None, task="total", device="cpu",
             fast=False, fastest=False, ml=False, output_type="nifti",
-            roi_subset=["liver", "spleen"], runtime_seconds=12.345)
+            roi_subset=["liver", "spleen"], runtime_seconds=12.345,
+            save_lowres=False)
 
         expected_keys = {
             "totalsegmentator_version", "nnunetv2_version", "torch_version",
             "task", "modality", "license_required", "device", "fast", "fastest",
-            "multilabel", "output_type", "roi_subset", "input", "output",
+            "save_lowres", "multilabel", "output_type", "roi_subset", "input", "output",
             "num_classes", "classes", "runtime_seconds", "output_files",
         }
         self.assertEqual(set(report), expected_keys)

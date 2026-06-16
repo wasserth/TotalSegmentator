@@ -357,7 +357,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, nnunet_resampling=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
-                         debug=False):
+                         debug=False, save_lowres=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -404,6 +404,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     
     if type(resample) is float:
         resample = [resample, resample, resample]
+
+    if save_lowres and crop is not None:
+        raise ValueError("save_lowres is not supported together with cropping or roi_subset.")
     
     if v1_order and task_name == "total":
         label_map = class_map["total_v1"]
@@ -712,7 +715,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                                          normalized_intensities=normalized_intensities)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
-        if resample is not None:
+        if resample is not None and not save_lowres:
             if not quiet: print("Resampling...")
             if verbose: print(f"  back to original shape: {img_in_shape}")
             # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
@@ -758,7 +761,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if verbose: print("Undoing cropping...")
             img_pred = undo_crop(img_pred, img_in_orig, bbox)
 
-        check_if_shape_and_affine_identical(img_in_orig, img_pred)
+        if not save_lowres:
+            check_if_shape_and_affine_identical(img_in_orig, img_pred)
 
         img_data = img_pred.get_fdata().astype(np.uint8)
         if save_binary:
@@ -784,7 +788,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         # Copy header to make output header exactly the same as input. But change dtype otherwise it will be
         # float or int and therefore the masks will need a lot more space.
         # (infos on header: https://nipy.org/nibabel/nifti_images.html)
-        new_header = img_in_orig.header.copy()
+        new_header = img_pred.header.copy() if save_lowres else img_in_orig.header.copy()
         new_header.set_data_dtype(np.uint8)
         img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
         img_out = add_label_map_to_nifti(img_out, label_map)

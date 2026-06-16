@@ -79,6 +79,11 @@ def main():
     parser.add_argument("-ff", "--fastest", action="store_true", help="Run even faster lower resolution model (6mm)",
                         default=False)
 
+    parser.add_argument("-sl", "--save_lowres", action="store_true",
+                        help="When using --fast or --fastest, save the segmentation in the model resolution "
+                             "(3mm or 6mm) instead of upsampling to the input resolution.",
+                        default=False)
+
     parser.add_argument("-t", "--nora_tag", type=str,
                         help="tag in nora as mask. Pass nora project id as argument.",
                         default="None")
@@ -255,7 +260,7 @@ def main():
                      remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
                      robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
                      save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
-                     statistics_extra=args.statistics_extra)
+                     statistics_extra=args.statistics_extra, save_lowres=args.save_lowres)
 
 
 if __name__ == '__main__':

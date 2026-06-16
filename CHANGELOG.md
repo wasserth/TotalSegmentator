@@ -1,4 +1,5 @@
 ## Master
+* add `--save_lowres` option to save `--fast` or `--fastest` segmentations in the low-resolution model space (3mm / 6mm) without the slow upsampling step.
 * add `--statistics_extra` option to compute additional per-structure metrics (`n_voxels`, intensity std/min/max, and the morphometric `centroid_vox` and `bbox_vox`). Off by default so the normal statistics runtime is unchanged.
 * add `totalseg_info` command to discover available tasks and their output classes (modality, license, class index -> name) as a human-readable table or JSON. Runs instantly without a GPU or model download. Useful for scripting and AI coding agents.
 * add `--list-tasks` and `--list-classes [task]` flags to the main `TotalSegmentator` command for the same discovery directly on the CLI.

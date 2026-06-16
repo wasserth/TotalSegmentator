@@ -62,7 +62,7 @@ Pass `--report <path.json>` to write a manifest after the run completes. It cont
 | `totalsegmentator_version`, `nnunetv2_version`, `torch_version` | software versions used |
 | `task`, `modality`, `license_required` | what was run |
 | `device` | resolved device (`gpu` / `cpu` / `mps`) |
-| `fast`, `fastest`, `multilabel`, `output_type`, `roi_subset` | run options |
+| `fast`, `fastest`, `save_lowres`, `multilabel`, `output_type`, `roi_subset` | run options |
 | `input`, `output` | resolved paths (or `"Nifti1Image"` for an in-memory input) |
 | `num_classes`, `classes` | classes produced (`index -> name`), filtered by `roi_subset` |
 | `runtime_seconds` | wall-clock segmentation time |

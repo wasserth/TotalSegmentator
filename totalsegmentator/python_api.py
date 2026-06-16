@@ -82,7 +82,7 @@ def device_to_str(device):
 
 
 def build_run_report(input, output, task, device, fast, fastest, ml, output_type,
-                     roi_subset, runtime_seconds):
+                     roi_subset, runtime_seconds, save_lowres=False):
     """Assemble a machine-readable manifest describing a completed run.
 
     Pure function (no side effects): captures software versions, the resolved
@@ -116,6 +116,7 @@ def build_run_report(input, output, task, device, fast, fastest, ml, output_type
         "device": device_to_str(device),
         "fast": fast,
         "fastest": fastest,
+        "save_lowres": save_lowres,
         "multilabel": ml,
         "output_type": output_type,
         "roi_subset": roi_subset,
@@ -158,7 +159,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean",
                      remove_small_blobs=False, statistics_normalized_intensities=False,
                      robust_crop=False, higher_order_resampling=False, save_probabilities=None,
-                     debug=False, report=None, statistics_extra=False):
+                     debug=False, report=None, statistics_extra=False, save_lowres=False):
     """
     Run TotalSegmentator from within python.
 
@@ -198,6 +199,13 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             import highdicom
         except ImportError:
             raise ImportError("highdicom is required for output_type='dicom_seg'. Please install it with 'pip install highdicom'.")
+
+    if save_lowres and not (fast or fastest):
+        raise ValueError("save_lowres only works together with fast or fastest mode.")
+
+    output_types = [output_type] if isinstance(output_type, str) else list(output_type)
+    if save_lowres and any(out_type in ["dicom_rtstruct", "dicom_seg"] for out_type in output_types):
+        raise ValueError("save_lowres only supports nifti output.")
 
     if not quiet:
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
@@ -767,6 +775,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             body_seg = False
             print("INFO: For MR models the argument '--body_seg' is not supported and will be ignored.")
 
+    if save_lowres and (crop is not None or roi_subset is not None or cascade or body_seg):
+        raise ValueError("save_lowres is not supported together with cropping, roi_subset, body_seg, or cascade.")
+
     # Generate rough organ segmentation (6mm) for speed up if crop or roi_subset is used
     # (for "fast" on GPU it makes no big difference, but on CPU it can help even for "fast")
     if crop is not None or roi_subset is not None or cascade:
@@ -863,7 +874,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             normalized_intensities=statistics_normalized_intensities, 
                             nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities,
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
-                            debug=debug)
+                            debug=debug, save_lowres=save_lowres and (fast or fastest))
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:
@@ -920,7 +931,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     if report is not None:
         report_data = build_run_report(input, output, task, device, fast, fastest, ml,
-                                       output_type, roi_subset, time.time() - run_start)
+                                       output_type, roi_subset, time.time() - run_start,
+                                       save_lowres=save_lowres and (fast or fastest))
         report_path = Path(report).absolute()
         report_path.parent.mkdir(parents=True, exist_ok=True)
         with open(report_path, "w") as f:
