@@ -234,6 +234,28 @@ def download_pretrained_weights(task_id):
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
         WEIGHTS_URL = url + "/v2.0.0-weights/Dataset298_TotalSegmentator_total_6mm_1559subj.zip"
         # WEIGHTS_URL = url + "/v2.0.5-weights/Dataset298_TotalSegmentator_total_6mm_1559subj_v205.zip"
+    elif task_id == 831:
+        weights_path = config_dir / "Dataset831_TotalSegmentator_part1_organs_1830subj"
+        WEIGHTS_URL = url + "/v3.0.0-weights/Dataset831_TotalSegmentator_part1_organs_1830subj.zip"
+    elif task_id == 832:
+        weights_path = config_dir / "Dataset832_TotalSegmentator_part2_vertebrae_1559subj"
+        WEIGHTS_URL = url + "/v3.0.0-weights/Dataset832_TotalSegmentator_part2_vertebrae_1559subj.zip"
+    elif task_id == 833:
+        weights_path = config_dir / "Dataset833_TotalSegmentator_part3_cardiac_1830subj"
+        WEIGHTS_URL = url + "/v3.0.0-weights/Dataset833_TotalSegmentator_part3_cardiac_1830subj.zip"
+    elif task_id == 834:
+        weights_path = config_dir / "Dataset834_TotalSegmentator_part4_muscles_1830subj"
+        WEIGHTS_URL = url + "/v3.0.0-weights/Dataset834_TotalSegmentator_part4_muscles_1830subj.zip"
+    elif task_id == 835:
+        weights_path = config_dir / "Dataset835_TotalSegmentator_part5_ribs_1559subj"
+        WEIGHTS_URL = url + "/v3.0.0-weights/Dataset835_TotalSegmentator_part5_ribs_1559subj.zip"
+    elif task_id == 836:
+        weights_path = config_dir / "Dataset836_TotalSegmentator_total_3mm_1559subj"
+        WEIGHTS_URL = url + "/v3.0.0-weights/Dataset836_TotalSegmentator_total_3mm_1559subj.zip"
+    elif task_id == 837:
+        weights_path = config_dir / "Dataset837_TotalSegmentator_total_6mm_1559subj"
+        WEIGHTS_URL = url + "/v3.0.0-weights/Dataset837_TotalSegmentator_total_6mm_1559subj.zip"
+
     elif task_id == 299:
         weights_path = config_dir / "Dataset299_body_1559subj"
         # WEIGHTS_URL = url + "/static/totalseg_v2/Dataset299_body_1559subj.zip"

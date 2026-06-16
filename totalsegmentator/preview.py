@@ -302,6 +302,11 @@ roi_groups = {
     ]
 }
 
+roi_groups["total_v3"] = [
+    ["vertebrae_L6" if roi == "vertebrae_S1" else roi for roi in roi_group]
+    for roi_group in roi_groups["total"]
+]
+
 
 
 def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):

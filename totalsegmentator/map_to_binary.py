@@ -793,6 +793,9 @@ class_map = {
     }
 }
 
+class_map["total_v3"] = class_map["total"].copy()
+class_map["total_v3"][26] = "vertebrae_L6"
+
 
 commercial_models = {
     "heartchambers_highres": 301,
@@ -1058,6 +1061,9 @@ class_map_parts_headneck_muscles = {
     }
 }
 
+class_map_5_parts_total_v3 = {part_name: part_map.copy() for part_name, part_map in class_map_5_parts.items()}
+class_map_5_parts_total_v3["class_map_part_vertebrae"][2] = "vertebrae_L6"
+
 
 map_taskid_to_partname_ct = {
     291: "class_map_part_organs",
@@ -1065,6 +1071,11 @@ map_taskid_to_partname_ct = {
     293: "class_map_part_cardiac",
     294: "class_map_part_muscles",
     295: "class_map_part_ribs",
+    831: "class_map_part_organs",
+    832: "class_map_part_vertebrae",
+    833: "class_map_part_cardiac",
+    834: "class_map_part_muscles",
+    835: "class_map_part_ribs",
 
     517: "test",
 }

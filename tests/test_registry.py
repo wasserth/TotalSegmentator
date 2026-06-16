@@ -28,6 +28,9 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(task_modality("total"), "CT")
         self.assertFalse(requires_license("total"))
         self.assertEqual(len(get_task_classes("total")), 117)
+        self.assertEqual(len(get_task_classes("total_v3")), 117)
+        self.assertEqual(get_task_classes("total_v3")[26], "vertebrae_L6")
+        self.assertNotIn("vertebrae_S1", get_task_classes("total_v3").values())
         self.assertEqual(task_modality("total_mr"), "MR")
         self.assertEqual(task_modality("body_mr"), "MR")
         # TOF-MRI task whose name does not end in "_mr"

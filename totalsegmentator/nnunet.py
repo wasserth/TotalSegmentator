@@ -71,7 +71,7 @@ from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 
 from nnunetv2.utilities.file_path_utilities import get_output_folder
 
-from totalsegmentator.map_to_binary import class_map, class_map_5_parts, class_map_parts_mr, class_map_parts_headneck_muscles
+from totalsegmentator.map_to_binary import class_map, class_map_5_parts, class_map_5_parts_total_v3, class_map_parts_mr, class_map_parts_headneck_muscles
 from totalsegmentator.map_to_binary import map_taskid_to_partname_mr, map_taskid_to_partname_ct, map_taskid_to_partname_headneck_muscles
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
@@ -396,6 +396,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     if task_name == "total":
         class_map_parts = class_map_5_parts
         map_taskid_to_partname = map_taskid_to_partname_ct
+    elif task_name == "total_v3":
+        class_map_parts = class_map_5_parts_total_v3
+        map_taskid_to_partname = map_taskid_to_partname_ct
     elif task_name == "total_mr":
         class_map_parts = class_map_parts_mr
         map_taskid_to_partname = map_taskid_to_partname_mr
@@ -549,7 +552,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third*2+1-margin:], img_in_rsp.affine),
                     tmp_dir / "s03_0000.nii.gz")
 
-        if task_name == "total" and resample is not None and resample[0] < 3.0:
+        if task_name in ["total", "total_v3"] and resample is not None and resample[0] < 3.0:
             # overall speedup for 15mm model roughly 11% (GPU) and 100% (CPU)
             # overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
             # (dice 0.001 worse on test set -> ok)

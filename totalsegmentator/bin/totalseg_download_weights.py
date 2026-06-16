@@ -17,7 +17,7 @@ def main():
     parser = argparse.ArgumentParser(description="Import manually downloaded weights.",
                                      epilog="Written by Jakob Wasserthal.")
 
-    parser.add_argument("-t", "--task", choices=["total", "total_fast", "total_mr", "total_fast_mr",
+    parser.add_argument("-t", "--task", choices=["total", "total_fast", "total_v3", "total_v3_fast", "total_mr", "total_fast_mr",
                                                  "lung_vessels", "lung_vessels_LEGACY", "cerebral_bleed",
                                                  "hip_implant", "coronary_arteries", "coronary_arteries_LEGACY", "pleural_pericard_effusion",
                                                  "body", "body_fast", "body_mr", "body_mr_fast", "vertebrae_mr",
@@ -39,6 +39,8 @@ def main():
     task_to_id = {
         "total": [291, 292, 293, 294, 295, 298],
         "total_fast": [297, 298],
+        "total_v3": [831, 832, 833, 834, 835, 837],
+        "total_v3_fast": [836, 837],
         "total_mr": [850, 851],
         "total_fast_mr": [852, 853],
         "lung_vessels": [117],
