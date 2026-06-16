@@ -159,7 +159,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean",
                      remove_small_blobs=False, statistics_normalized_intensities=False,
                      robust_crop=False, higher_order_resampling=False, save_probabilities=None,
-                     debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=3):
+                     debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=3,
+                     plans="nnUNetPlans"):
     """
     Run TotalSegmentator from within python.
 
@@ -228,7 +229,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     remove_outside_dilation = None
     remove_mask = None
     modality = None
-    
+
     # Important: 'resample' expects [x,y,z] but in nnUNet plans.json file it is [z,y,x]. So when copying from plans.json make sure to reverse the order.
     
     if task == "total":
@@ -258,6 +259,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             task_id = 836
             resample = 3.0
             trainer = "nnUNetTrainer_4000epochs_NoMirroring"
+            # plans = "nnUNetResEncUNetLPlans_8"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
         elif fastest:
@@ -896,7 +898,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             higher_order_resampling=higher_order_resampling, save_probabilities=save_probabilities,
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
                             debug=debug, save_lowres=save_lowres and (fast or fastest),
-                            resampling_order=resampling_order)
+                            resampling_order=resampling_order, plans=plans)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:

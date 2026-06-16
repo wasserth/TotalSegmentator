@@ -72,7 +72,7 @@ from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 from nnunetv2.utilities.file_path_utilities import get_output_folder
 
 from totalsegmentator.map_to_binary import class_map, class_map_5_parts, class_map_5_parts_total_v3, class_map_parts_mr, class_map_parts_headneck_muscles
-from totalsegmentator.map_to_binary import map_taskid_to_partname_mr, map_taskid_to_partname_ct, map_taskid_to_partname_headneck_muscles
+from totalsegmentator.map_to_binary import map_taskid_to_partname_mr, map_taskid_to_partname_ct, map_taskid_to_partname_ct_v3, map_taskid_to_partname_headneck_muscles
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
@@ -357,7 +357,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, higher_order_resampling=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
-                         debug=False, save_lowres=False, resampling_order=3):
+                         debug=False, save_lowres=False, resampling_order=3, plans="nnUNetPlans"):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -398,7 +398,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         map_taskid_to_partname = map_taskid_to_partname_ct
     elif task_name == "total_v3":
         class_map_parts = class_map_5_parts_total_v3
-        map_taskid_to_partname = map_taskid_to_partname_ct
+        map_taskid_to_partname = map_taskid_to_partname_ct_v3
     elif task_name == "total_mr":
         class_map_parts = class_map_parts_mr
         map_taskid_to_partname = map_taskid_to_partname_mr
@@ -595,7 +595,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             #                nr_threads_resampling, nr_threads_saving)
                             nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
                                              nr_threads_resampling, nr_threads_saving,
-                                             device=device, quiet=quiet, step_size=step_size,
+                                             plans=plans, device=device, quiet=quiet, step_size=step_size,
                                              save_probabilities_path=save_probabilities)
                     except Exception as e:
                         if debug:
@@ -622,7 +622,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                         #                nr_threads_resampling, nr_threads_saving)
                         nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                                          nr_threads_resampling, nr_threads_saving,
-                                         device=device, quiet=quiet, step_size=step_size,
+                                         plans=plans, device=device, quiet=quiet, step_size=step_size,
                                          save_probabilities_path=save_probabilities)
                 except Exception as e:
                     if debug:

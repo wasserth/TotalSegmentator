@@ -1071,13 +1071,16 @@ map_taskid_to_partname_ct = {
     293: "class_map_part_cardiac",
     294: "class_map_part_muscles",
     295: "class_map_part_ribs",
+
+    517: "test",
+}
+
+map_taskid_to_partname_ct_v3 = {
     831: "class_map_part_organs",
     832: "class_map_part_vertebrae",
     833: "class_map_part_cardiac",
     834: "class_map_part_muscles",
     835: "class_map_part_ribs",
-
-    517: "test",
 }
 
 map_taskid_to_partname_mr = {
