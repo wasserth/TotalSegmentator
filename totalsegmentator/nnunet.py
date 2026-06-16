@@ -355,7 +355,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
-                         normalized_intensities=False, nnunet_resampling=False,
+                         normalized_intensities=False, higher_order_resampling=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
                          debug=False, save_lowres=False):
     """
@@ -725,7 +725,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             # Advantage of crop_resample: Will resample multilabel masks as cropped one-hot masks and then high order
             # resampling (= smoother) is possible. By using crop it only uses slightly more memory than order=0 and
             # with nr=4 only a bit more runtime than order=0.
-            if nnunet_resampling:
+            if higher_order_resampling:
                 if roi_subset is not None:
                     img_data_tmp = img_pred.get_fdata()
                     img_data_tmp *= np.isin(img_data_tmp, list(label_map.keys()))

@@ -871,8 +871,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             exclude_masks_at_border=statistics_exclude_masks_at_border,
                             no_derived_masks=no_derived_masks, v1_order=v1_order,
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
-                            normalized_intensities=statistics_normalized_intensities, 
-                            nnunet_resampling=higher_order_resampling, save_probabilities=save_probabilities,
+                            normalized_intensities=statistics_normalized_intensities,
+                            higher_order_resampling=higher_order_resampling, save_probabilities=save_probabilities,
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
                             debug=debug, save_lowres=save_lowres and (fast or fastest))
     seg = seg_img.get_fdata().astype(np.uint8)
