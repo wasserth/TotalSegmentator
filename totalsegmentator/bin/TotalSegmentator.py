@@ -109,7 +109,7 @@ def main():
                         default=False)
 
     parser.add_argument("-ho", "--higher_order_resampling", action="store_true", 
-                        help="Use higher order resampling for segmentations. Results in smoother segmentations on high resolution images but uses more runtime + memory.",
+                        help="Use higher order resampling for segmentations. Results in smoother segmentations. Use with e.g. -nr 4 for faster runtime.",
                         default=False)
 
     parser.add_argument("-s", "--statistics", nargs='?', const=True, default=False,

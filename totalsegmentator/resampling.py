@@ -76,6 +76,71 @@ def resample_img_cucim(img, zoom=0.5, order=0, nr_cpus=-1):
     return resampled_img
 
 
+def resample_one_hot_crop(seg, new_shape, order=1, nr_cpus=1):
+    """
+    Resample a multilabel segmentation by resampling cropped one-hot masks.
+
+    This avoids interpolation artifacts between label ids, like nnU-Net's one-hot
+    resampling, but only evaluates each label in and around its foreground bbox.
+    """
+    if len(seg.shape) != 3:
+        raise ValueError("resample_one_hot_crop only supports 3D segmentations.")
+
+    old_shape = np.array(seg.shape)
+    new_shape = np.array(new_shape).astype(int)
+    scale = new_shape / old_shape
+    labels = np.unique(seg)
+    labels = labels[labels != 0]
+    resampled = np.zeros(new_shape, dtype=seg.dtype)
+
+    if len(labels) == 0:
+        return resampled
+
+    nr_cpus = multiprocessing.cpu_count() if nr_cpus == -1 else nr_cpus
+    margin = max(2, order + 1)
+
+    def _resample_label(label):
+        foreground = np.where(seg == label)
+        bbox_start = np.array([axis.min() for axis in foreground])
+        bbox_end = np.array([axis.max() + 1 for axis in foreground])
+
+        crop_start = np.maximum(bbox_start - margin, 0)
+        crop_end = np.minimum(bbox_end + margin, old_shape)
+        crop_slices = tuple(slice(start, end) for start, end in zip(crop_start, crop_end))
+        label_crop = (seg[crop_slices] == label).astype(np.float32)
+
+        target_start = np.maximum(np.floor(crop_start * scale).astype(int), 0)
+        target_end = np.minimum(np.ceil(crop_end * scale).astype(int), new_shape)
+        target_shape = target_end - target_start
+
+        if np.any(target_shape <= 0):
+            return label, None, None
+
+        coord = []
+        for start, end, old_dim, new_dim, crop_offset in zip(
+            target_start, target_end, old_shape, new_shape, crop_start
+        ):
+            # Match the global resize coordinate system on the cropped label mask.
+            coord.append((np.arange(start, end) + 0.5) * old_dim / new_dim - 0.5 - crop_offset)
+
+        coord_map = np.array(np.meshgrid(*coord, indexing="ij"))
+        label_resampled = ndimage.map_coordinates(
+            label_crop, coord_map, order=order, mode="nearest", cval=0
+        )
+        target_slices = tuple(slice(start, end) for start, end in zip(target_start, target_end))
+        return label, target_slices, label_resampled >= 0.5
+
+    resampled_labels = Parallel(n_jobs=nr_cpus, prefer="threads")(
+        delayed(_resample_label)(label) for label in labels
+    )
+
+    for label, target_slices, label_mask in resampled_labels:
+        if target_slices is not None:
+            resampled[target_slices][label_mask] = label
+
+    return resampled
+
+
 def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.0,
                        order_data=3, order_seg=0):
     """
@@ -127,8 +192,8 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
 
 
 def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus=1,
-                   nnunet_resample=False, dtype=None, remove_negative=False, force_affine=None,
-                   use_gpu=False):
+                   nnunet_resample=False, crop_resample=False, dtype=None, remove_negative=False,
+                   force_affine=None, use_gpu=False):
     """
     Resample nifti image to the new spacing (uses resample_img() internally).
 
@@ -138,6 +203,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     order: resample order (optional)
     nnunet_resample: nnunet resampling will use order=0 sampling for z if very anisotropic. Sometimes results
                      in a little bit less blurry results
+    crop_resample: one-hot resample each label only within its foreground bbox. Faster than nnunet_resample
+                   for sparse multilabel segmentations.
     dtype: output datatype
     remove_negative: set all negative values to 0. Useful if resampling introduced negative values.
     force_affine: if you pass an affine then this will be used for the output image (useful if you have to make sure
@@ -200,9 +267,15 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     # vecs = affine[:3, :3]
     # spacing = tuple(np.sqrt(np.sum(vecs ** 2, axis=0)))
 
+    if nnunet_resample and crop_resample:
+        raise ValueError("Only one of nnunet_resample and crop_resample can be enabled.")
+
     if nnunet_resample:
         # new_data, _ = resample_img_nnunet(data, None, img_spacing, new_spacing, order_data=order, order_seg=order)
         _, new_data = resample_img_nnunet(None, data, img_spacing, new_spacing, order_data=order, order_seg=order)
+    elif crop_resample:
+        output_shape = np.round(old_shape * zoom).astype(int)
+        new_data = resample_one_hot_crop(data, output_shape, order=order, nr_cpus=nr_cpus)
     else:
         # GPU path only if available AND globally allowed
         if cupy_available and cucim_available and use_gpu:

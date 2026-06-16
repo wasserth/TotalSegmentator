@@ -22,6 +22,10 @@ TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest
 python -c "import json; r=json.load(open('tests/unittest_run_report.json')); assert r['task']=='total' and r['num_classes']>0, r"
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
 
+# Test - multilabel prediction - high order resampling
+TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_high_order.nii.gz -bs --ml -ho -d cpu
+pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_high_order
+
 # Test - roi subset
 # 2 cpus:
 #   example_ct_sm.nii.gz: 34s, 3.0GB
@@ -69,6 +73,7 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_body_stats_prediction
 rm -rf tests/unittest_prediction_roi_subset
 rm -rf tests/unittest_prediction_fast
 rm tests/unittest_prediction.nii.gz
+rm tests/unittest_prediction_high_order.nii.gz
 rm tests/unittest_prediction_fast.nii.gz
 rm tests/unittest_prediction_fast_force_split.nii.gz
 rm tests/unittest_prediction_fast_body_seg.nii.gz

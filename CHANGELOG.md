@@ -4,6 +4,10 @@
 * add `--list-tasks` and `--list-classes [task]` flags to the main `TotalSegmentator` command for the same discovery directly on the CLI.
 * add `--report <path.json>` option to write a machine-readable run manifest (software/model versions, device, task, classes, runtime, output files) for reproducible pipelines.
 * add `AGENTS.md` with guidance for using TotalSegmentator from automation and AI coding agents.
+* add improved higher order resampling to make segmentations smoother (use `--higher_order_resampling` argument) during upsampling with only slightly higher runtime and memory usage. (before higher order upsampling of many labels was very very slow and memory hungry)
+
+
+## Release 2.14.0 (10.06.2026)
 * allow to pass minimum component size in mm3 to `--remove_small_blobs` argument (before was hard coded to 200mm3)
 * add improved model for `totalseg_get_body_stats` script: use CNN model instead of XGBoost model.
 * if `-l` is passed the backend license server will only be contacted if the license number is not already set in the config file or if you pass a different license number.
