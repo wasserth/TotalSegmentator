@@ -75,19 +75,6 @@ For per-class volume and intensity, add `--statistics` (writes `statistics.json`
 Add `--statistics_extra` for `n_voxels`, intensity std/min/max and the morphometric
 `centroid_vox` / `bbox_vox` (voxel coordinates).
 
-## Cohort analysis
-
-When processing many images, merge their per-image `statistics.json` into one
-analysis-ready table (format chosen by the `-o` extension: `.csv`, `.parquet`, `.json`):
-
-```bash
-totalseg_aggregate_stats -i cohort_dir -o cohort_stats.csv
-```
-
-Output is tidy/long — one row per `(subject, structure)`, one column per metric (nested
-metrics like `centroid_vox` are flattened to `centroid_vox_0/1/2`). Subject ids come from
-each file's path relative to `cohort_dir`. This needs no GPU or model.
-
 ## Exit codes
 
 - `0` — success.

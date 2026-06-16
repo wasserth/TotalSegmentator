@@ -144,12 +144,6 @@ totalseg_info --classes -ta total       # class index -> name for one task
 totalseg_info --json                    # full capability registry as JSON
 ```
 
-If you ran TotalSegmentator with `--statistics` on a cohort of images, you can merge all the per-image `statistics.json` files into one analysis-ready table (one row per subject and structure). The output format is chosen by the extension of `-o` (`.csv`, `.parquet` or `.json`):
-```bash
-totalseg_aggregate_stats -i cohort_dir -o cohort_stats.csv
-```
-Subject ids are taken from the path of each statistics file relative to the input directory (e.g. `cohort_dir/subj001/statistics.json` -> `subj001`). Use `--filename statistics_radiomics.json` to aggregate radiomics features instead.
-
 If you want to know body weight, size, age, sex, BMI and BSA you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md):
 ```bash
 totalseg_get_body_stats -i ct.nii.gz -o body_stats.json -m ct

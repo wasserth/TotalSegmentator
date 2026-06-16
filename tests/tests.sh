@@ -42,11 +42,8 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_fast
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_statistics
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_preview
 
-# Research utilities: cohort statistics aggregation + extra metrics (no GPU needed)
+# Research utilities: extra statistics metrics (no GPU needed)
 pytest -v tests/test_research_utils.py
-# Aggregate the statistics.json just produced into a cohort table
-totalseg_aggregate_stats -i tests/unittest_prediction_fast -o tests/unittest_cohort_stats.csv
-python -c "import csv; rows=list(csv.DictReader(open('tests/unittest_cohort_stats.csv'))); assert len(rows)>0, 'empty cohort table'"
 
 # Test - fast - multilabel
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_fast.nii.gz --fast --ml -d cpu
@@ -78,5 +75,4 @@ rm tests/unittest_prediction_fast_body_seg.nii.gz
 rm tests/unittest_phase_prediction.json
 rm tests/unittest_body_stats_prediction.json
 rm tests/unittest_run_report.json
-rm tests/unittest_cohort_stats.csv
 # rm tests/statistics.json

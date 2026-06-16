@@ -1,5 +1,4 @@
 ## Master
-* add `totalseg_aggregate_stats` command to merge the per-image `statistics.json` files of a whole cohort into one analysis-ready table (CSV, parquet or JSON). Makes downstream analysis in pandas/R straightforward.
 * add `--statistics_extra` option to compute additional per-structure metrics (`n_voxels`, intensity std/min/max, and the morphometric `centroid_vox` and `bbox_vox`). Off by default so the normal statistics runtime is unchanged.
 * add `totalseg_info` command to discover available tasks and their output classes (modality, license, class index -> name) as a human-readable table or JSON. Runs instantly without a GPU or model download. Useful for scripting and AI coding agents.
 * add `--list-tasks` and `--list-classes [task]` flags to the main `TotalSegmentator` command for the same discovery directly on the CLI.
