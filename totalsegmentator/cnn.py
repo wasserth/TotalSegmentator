@@ -316,11 +316,11 @@ def _prepare_image_tensor(
     img_data = _apply_training_unpack_slice_stride(img_data, hparams)
     crop_size = tuple(hparams.get("crop_size", crop_size)) if hparams else crop_size
     slices = _extract_slices(img_data, hparams)
+    slices = _normalize_with_training_hparams(np.stack(slices, axis=0), hparams)
     slices = np.stack(
         [_center_pad_or_crop_2d(slice_2d, crop_size) for slice_2d in slices],
         axis=0,
     )
-    slices = _normalize_with_training_hparams(slices, hparams)
 
     try:
         import torch
