@@ -194,6 +194,75 @@ def _extract_orientation_from_datasets(datasets):
         return None
 
 
+def _seg_shape_matches_dicom_grid(seg_shape, rows, cols, slices):
+    """Check whether a segmentation shape can describe a DICOM rows/cols/slices grid."""
+    seg_shape = tuple(int(dim) for dim in seg_shape[:3])
+    rows = int(rows)
+    cols = int(cols)
+    slices = int(slices)
+    return seg_shape in {
+        (rows, cols, slices),
+        (cols, rows, slices),
+        (cols, slices, rows),
+        (slices, rows, cols),
+    }
+
+
+def _image_position_key(ds):
+    ipp = getattr(ds, "ImagePositionPatient", None)
+    if ipp is None:
+        return None
+    try:
+        return tuple(round(float(val), 5) for val in ipp)
+    except Exception:
+        return None
+
+
+def _select_first_image_per_position(source_images):
+    selected = []
+    seen_positions = set()
+    for ds in source_images:
+        key = _image_position_key(ds)
+        if key is None:
+            return source_images
+        if key not in seen_positions:
+            seen_positions.add(key)
+            selected.append(ds)
+    return selected
+
+
+def _filter_source_images_to_segmentation_grid(source_images, seg_shape):
+    """Keep only source images that belong to the same spatial grid as the segmentation.
+
+    MR series directories may contain localizers with a different matrix size or multiple
+    acquisitions at the same spatial positions. dicom2nifti converts only one compatible
+    image grid, so DICOM SEG export must use the corresponding source images.
+    """
+    if not source_images or len(seg_shape) < 3:
+        return source_images
+
+    by_matrix_size = {}
+    for ds in source_images:
+        rows = getattr(ds, "Rows", None)
+        cols = getattr(ds, "Columns", None)
+        if rows is None or cols is None:
+            continue
+        by_matrix_size.setdefault((int(rows), int(cols)), []).append(ds)
+
+    for (rows, cols), images in by_matrix_size.items():
+        if _seg_shape_matches_dicom_grid(seg_shape, rows, cols, len(images)):
+            return images
+
+    for (rows, cols), images in by_matrix_size.items():
+        deduplicated = _select_first_image_per_position(images)
+        if len(deduplicated) == len(images):
+            continue
+        if _seg_shape_matches_dicom_grid(seg_shape, rows, cols, len(deduplicated)):
+            return deduplicated
+
+    return source_images
+
+
 def dcm_to_nifti(input_path, output_path, tmp_dir=None, verbose=False):
     """
     Uses dicom2nifti package (also works on windows)
@@ -352,6 +421,8 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     
     # Load all DICOM slices
     source_images = [pydicom.dcmread(str(f)) for f in dcm_files]
+
+    source_images = _filter_source_images_to_segmentation_grid(source_images, img_data.shape)
 
     # Derive orientation metadata directly from loaded datasets
     orientation_metadata = _extract_orientation_from_datasets(source_images)
