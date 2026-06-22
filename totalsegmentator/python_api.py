@@ -160,7 +160,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      remove_small_blobs=False, statistics_normalized_intensities=False,
                      robust_crop=False, higher_order_resampling=False, save_probabilities=None,
                      debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=3,
-                     plans="nnUNetPlans"):
+                     plans="nnUNetPlans", model_size="big"):
     """
     Run TotalSegmentator from within python.
 
@@ -207,6 +207,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     output_types = [output_type] if isinstance(output_type, str) else list(output_type)
     if save_lowres and any(out_type in ["dicom_rtstruct", "dicom_seg"] for out_type in output_types):
         raise ValueError("save_lowres only supports nifti output.")
+
+    if model_size not in ["big", "small"]:
+        raise ValueError("model_size must be 'big' or 'small'.")
+    if model_size == "small" and task != "total_v3":
+        raise ValueError("model_size='small' is currently only supported for task 'total_v3'.")
 
     if not quiet:
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
@@ -255,11 +260,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
     elif task == "total_v3":
+        if model_size == "small":
+            plans = "nnUNetResEncUNetLPlans_8"
         if fast:
             task_id = 836
             resample = 3.0
             trainer = "nnUNetTrainer_4000epochs_NoMirroring"
-            # plans = "nnUNetResEncUNetLPlans_8"
             crop = None
             if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
         elif fastest:
