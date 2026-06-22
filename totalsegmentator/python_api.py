@@ -971,3 +971,4 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         return seg_img, stats
     else:
         return seg_img
+
