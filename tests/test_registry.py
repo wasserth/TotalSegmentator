@@ -36,6 +36,10 @@ class TestRegistry(unittest.TestCase):
         # TOF-MRI task whose name does not end in "_mr"
         self.assertEqual(task_modality("brain_aneurysm"), "MR")
         self.assertTrue(requires_license("tissue_types"))
+        self.assertTrue(requires_license("vertebrae_pp"))
+        self.assertEqual(len(get_task_classes("vertebrae_pp")), 24)
+        self.assertEqual(get_task_classes("vertebrae_pp")[1], "vertebrae_C1")
+        self.assertEqual(get_task_classes("vertebrae_pp")[24], "vertebrae_L5")
 
     def test_license_flag_matches_commercial_models(self):
         # Every licensed task is listed, and every commercial model is a selectable task.

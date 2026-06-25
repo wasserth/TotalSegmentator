@@ -615,6 +615,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task vertebrae_body does not work with option --fast")
         show_license_info()
+    elif task == "vertebrae_pp":
+        task_id = 803
+        resample = 1.5
+        trainer = "nnUNetTrainerNoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task vertebrae_pp does not work with option --fast")
+        show_license_info()
     elif task == "heartchambers_highres":
         task_id = 301
         resample = None

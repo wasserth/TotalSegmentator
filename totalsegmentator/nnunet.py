@@ -82,6 +82,7 @@ from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
 from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin, remove_auxiliary_labels
 from totalsegmentator.postprocessing import keep_largest_blob_multilabel, remove_small_blobs_multilabel
+from totalsegmentator.postprocessing import postprocess_vertebrae_pp
 from totalsegmentator.nifti_ext_header import save_multilabel_nifti, add_label_map_to_nifti
 from totalsegmentator.statistics import get_basic_statistics
 
@@ -671,6 +672,14 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
                                                         class_map[task_name], ["body_extremities"],
                                                         interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)
+            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+
+        if task_name == "vertebrae_pp":
+            voxel_spacing = img_pred.header.get_zooms()
+            vox_vol = np.prod(img_pred.header.get_zooms())
+            img_pred_pp = postprocess_vertebrae_pp(img_pred.get_fdata().astype(np.uint8),
+                                                   class_map[task_name], voxel_volume=vox_vol,
+                                                   voxel_spacing=voxel_spacing, verbose=verbose)
             img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
         
         # General postprocessing    

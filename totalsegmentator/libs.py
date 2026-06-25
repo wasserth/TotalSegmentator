@@ -407,6 +407,8 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset485_tissue_4types_1559subj"
     elif task_id == 305:
         weights_path = config_dir / "Dataset305_vertebrae_discs_1559subj"
+    elif task_id == 803:
+        weights_path = config_dir / "Dataset803_TotalSegmentator_vertebrae_inner_1559subj"
     elif task_id == 925:
         weights_path = config_dir / "Dataset925_MRI_tissue_subset_903subj"
     elif task_id == 856:

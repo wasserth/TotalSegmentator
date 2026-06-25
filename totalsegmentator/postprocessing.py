@@ -176,3 +176,157 @@ def remove_auxiliary_labels(img, task_name):
     else:
         return img
 
+
+def _multilabel_labels_touch(data):
+    for axis in range(data.ndim):
+        slicer_a = [slice(None)] * data.ndim
+        slicer_b = [slice(None)] * data.ndim
+        slicer_a[axis] = slice(1, None)
+        slicer_b[axis] = slice(None, -1)
+        a = data[tuple(slicer_a)]
+        b = data[tuple(slicer_b)]
+        if np.any((a > 0) & (b > 0) & (a != b)):
+            return True
+    return False
+
+
+def get_ellipsoid_structuring_element(voxel_spacing, radius_mm):
+    """
+    Create an anisotropic 3D ellipsoid kernel for morphology in physical space.
+    """
+    if radius_mm <= 0:
+        return np.ones((1, 1, 1), dtype=bool)
+
+    radii = [radius_mm / spacing for spacing in voxel_spacing]
+    grids = np.ogrid[
+        -radii[0]:radii[0]+1,
+        -radii[1]:radii[1]+1,
+        -radii[2]:radii[2]+1
+    ]
+    struct_elem = sum((grid * grid) / (radius * radius) for grid, radius in zip(grids, radii)) <= 1
+    return struct_elem
+
+
+def dilate_vertebrae_labels(data, label_map, voxel_spacing=(1.0, 1.0, 1.0), dilation_mm=3, verbose=False):
+    """
+    Undo the 3 mm training-label erosion after vertebrae labels are separated.
+
+    Each vertebra is dilated independently, but only into background voxels so
+    already assigned vertebra labels are not overwritten.
+    """
+    if dilation_mm <= 0:
+        return data
+
+    st = time.time()
+    struct_elem = get_ellipsoid_structuring_element(voxel_spacing, dilation_mm)
+    radius_vox = np.ceil([dilation_mm / spacing for spacing in voxel_spacing]).astype(int)
+    out = data.copy()
+    for label in sorted(label_map):
+        label_coords = np.where(data == label)
+        if len(label_coords[0]) == 0:
+            continue
+
+        bbox_min = [max(int(coords.min()) - radius, 0)
+                    for coords, radius in zip(label_coords, radius_vox)]
+        bbox_max = [min(int(coords.max()) + radius + 1, data.shape[axis])
+                    for axis, (coords, radius) in enumerate(zip(label_coords, radius_vox))]
+        bbox = tuple(slice(start, stop) for start, stop in zip(bbox_min, bbox_max))
+
+        label_mask = data[bbox] == label
+        dilated_mask = binary_dilation(label_mask, structure=struct_elem)
+        out_bbox = out[bbox]
+        out_bbox[(out_bbox == 0) & dilated_mask] = label
+
+    if verbose:
+        print(f"  dilated vertebrae in: {time.time() - st:.2f}s")
+    return out
+
+
+def postprocess_vertebrae_pp(data, label_map, min_size_mm3=100, voxel_volume=1.0,
+                             voxel_spacing=(1.0, 1.0, 1.0), dilation_mm=3, verbose=False):
+    """
+    Fix neighboring vertebrae labels that leaked into the same vertebral body.
+
+    The vertebrae_pp model only segments vertebral bodies. Different vertebrae
+    labels should therefore never touch. If they do, the combined binary mask is
+    split into connected bodies and relabeled anatomically from inferior to
+    superior, except head-only scans that contain C1 but not L5 are relabeled
+    from superior to inferior.
+    """
+    st = time.time()
+    data = data.astype(np.uint8, copy=False)
+    mixed_up = _multilabel_labels_touch(data)
+
+    if verbose:
+        print("Postprocessing vertebrae_pp:")
+        print(f"  mixed up vertebrae found: {mixed_up}")
+
+    if not mixed_up:
+        return dilate_vertebrae_labels(data, label_map, voxel_spacing, dilation_mm, verbose)
+
+    component_map, _ = ndimage.label(data > 0)
+    component_sizes = np.bincount(component_map.ravel())
+    keep_components = np.flatnonzero(component_sizes * voxel_volume >= min_size_mm3)
+    keep_components = keep_components[keep_components != 0]
+
+    if len(keep_components) == 0:
+        if verbose:
+            print(f"  connected components found after removing small ones (<{min_size_mm3} mm3): 0")
+            print("  counting starts: none")
+            print("  L5 in image: False")
+            print("  vertebrae labeled in the end: 0")
+            print(f"  postprocessing took: {time.time() - st:.2f}s")
+        return np.zeros_like(data, dtype=np.uint8)
+
+    keep_lookup = np.zeros(component_sizes.shape, dtype=bool)
+    keep_lookup[keep_components] = True
+    keep_mask = keep_lookup[component_map]
+
+    cleaned_data = data.copy()
+    cleaned_data[~keep_mask] = 0
+    present_labels = sorted(int(label) for label in np.unique(cleaned_data)
+                            if int(label) in label_map)
+    if len(present_labels) == 0:
+        if verbose:
+            print(f"  connected components found after removing small ones (<{min_size_mm3} mm3): {len(keep_components)}")
+            print("  counting starts: none")
+            print("  L5 in image: False")
+            print("  vertebrae labeled in the end: 0")
+            print(f"  postprocessing took: {time.time() - st:.2f}s")
+        return np.zeros_like(data, dtype=np.uint8)
+
+    label_map_inv = {v: k for k, v in label_map.items()}
+    c1_label = label_map_inv["vertebrae_C1"]
+    l5_label = label_map_inv["vertebrae_L5"]
+    l5_in_image = l5_label in present_labels
+    count_from_top = not l5_in_image and c1_label in present_labels
+
+    centers = ndimage.center_of_mass(keep_mask, component_map, keep_components)
+    if len(keep_components) == 1:
+        centers = [centers]
+    component_centers = [(component, center[2]) for component, center in zip(keep_components, centers)]
+
+    if count_from_top:
+        component_centers = sorted(component_centers, key=lambda item: item[1], reverse=True)
+        labels_to_assign = range(c1_label, max(label_map) + 1)
+        counting_starts = "top"
+    else:
+        component_centers = sorted(component_centers, key=lambda item: item[1])
+        labels_to_assign = range(max(present_labels), min(label_map) - 1, -1)
+        counting_starts = "bottom"
+
+    out = np.zeros_like(data, dtype=np.uint8)
+    vertebrae_labeled = 0
+    for (component, _), label in zip(component_centers, labels_to_assign):
+        out[component_map == component] = label
+        vertebrae_labeled += 1
+
+    if verbose:
+        print(f"  connected components found after removing small ones (<{min_size_mm3} mm3): {len(keep_components)}")
+        print(f"  counting starts: {counting_starts}")
+        print(f"  L5 in image: {l5_in_image}")
+        print(f"  vertebrae labeled in the end: {vertebrae_labeled}")
+        print(f"  postprocessing took: {time.time() - st:.2f}s")
+
+    return dilate_vertebrae_labels(out, label_map, voxel_spacing, dilation_mm, verbose)
+
