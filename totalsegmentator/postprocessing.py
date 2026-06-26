@@ -242,6 +242,30 @@ def dilate_vertebrae_labels(data, label_map, voxel_spacing=(1.0, 1.0, 1.0), dila
     return out
 
 
+def refine_vertebrae_pp_with_body_mask(data, body_data, label_map, voxel_spacing=(1.0, 1.0, 1.0),
+                                       dilation_mm=2, verbose=False):
+    """
+    Sharpen vertebrae_pp instance borders with the vertebrae_body model.
+
+    The instance labels are dilated slightly further and then clipped to the
+    vertebral-body foreground, preserving the per-vertebra labels.
+    """
+    st = time.time()
+    if data.shape != body_data.shape:
+        raise ValueError(f"vertebrae_pp and vertebrae_body shapes do not match: {data.shape} vs {body_data.shape}")
+
+    refined = dilate_vertebrae_labels(data, label_map, voxel_spacing, dilation_mm, verbose=False)
+    refined[body_data != 1] = 0
+
+    if verbose:
+        print("Refining vertebrae_pp with vertebrae_body:")
+        print(f"  dilated before intersection: {dilation_mm} mm")
+        print(f"  vertebrae labeled in the end: {len(np.unique(refined[refined > 0]))}")
+        print(f"  refinement took: {time.time() - st:.2f}s")
+
+    return refined.astype(np.uint8, copy=False)
+
+
 def postprocess_vertebrae_pp(data, label_map, min_size_mm3=100, voxel_volume=1.0,
                              voxel_spacing=(1.0, 1.0, 1.0), dilation_mm=3, verbose=False):
     """

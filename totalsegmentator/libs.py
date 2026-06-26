@@ -472,7 +472,8 @@ def download_pretrained_weights(task_id):
 
         commercial_models_inv = {v: k for k, v in commercial_models.items()}
         if task_id in commercial_models_inv:
-            download_model_with_license_and_unpack(commercial_models_inv[task_id], config_dir)
+            download_task_name = "vertebrae_pp" if task_id == 803 else commercial_models_inv[task_id]
+            download_model_with_license_and_unpack(download_task_name, config_dir)
         else:
             # r = requests.get(WEIGHTS_URL)
             # with zipfile.ZipFile(io.BytesIO(r.content)) as zip_f:

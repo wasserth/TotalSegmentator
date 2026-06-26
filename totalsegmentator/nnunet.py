@@ -83,6 +83,7 @@ from totalsegmentator.cropping import crop_to_mask, undo_crop
 from totalsegmentator.postprocessing import remove_outside_of_mask, extract_skin, remove_auxiliary_labels
 from totalsegmentator.postprocessing import keep_largest_blob_multilabel, remove_small_blobs_multilabel
 from totalsegmentator.postprocessing import postprocess_vertebrae_pp
+from totalsegmentator.postprocessing import refine_vertebrae_pp_with_body_mask
 from totalsegmentator.nifti_ext_header import save_multilabel_nifti, add_label_map_to_nifti
 from totalsegmentator.statistics import get_basic_statistics
 
@@ -358,7 +359,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, higher_order_resampling=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
-                         debug=False, save_lowres=False, resampling_order=3, plans="nnUNetPlans"):
+                         debug=False, save_lowres=False, resampling_order=3, plans="nnUNetPlans",
+                         vertebrae_body_mask=None, output_task_name=None):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -367,6 +369,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
     output_type may be a string or a list of strings (multi-output support)
     """
+    if output_task_name is None:
+        output_task_name = task_name
+
     # Normalize output_type to list for internal processing
     output_types = [output_type] if isinstance(output_type, str) else list(output_type)
 
@@ -416,7 +421,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     if v1_order and task_name == "total":
         label_map = class_map["total_v1"]
     else:
-        label_map = class_map[task_name]
+        label_map = class_map[output_task_name]
     
     # Keep only voxel values corresponding to the roi_subset
     if roi_subset is not None:
@@ -694,7 +699,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
             if not quiet: print(f"  Removed in {time.time() - st:.2f}s")
 
-        if preview:
+        preview_after_refinement = preview and output_task_name == "vertebrae_pp_refined" and vertebrae_body_mask is not None
+        if preview and not preview_after_refinement:
             from totalsegmentator.preview import generate_preview
             # Generate preview before upsampling so it is faster and still in canonical space
             # for better orientation.
@@ -705,7 +711,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 st = time.time()
                 smoothing = 20
                 preview_dir = file_out.parent if multilabel_image else file_out
-                generate_preview(img_in_rsp, preview_dir / f"preview_{task_name}.png", img_pred.get_fdata(), smoothing, task_name)
+                generate_preview(img_in_rsp, preview_dir / f"preview_{output_task_name}.png", img_pred.get_fdata(), smoothing, output_task_name)
                 if not quiet: print(f"  Generated in {time.time() - st:.2f}s")
 
         # Statistics calculated on the 3mm downsampled image are very similar to statistics
@@ -733,7 +739,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             else:
                 stats_file = None
             stats = get_basic_statistics(img_pred.get_fdata(), img_in_rsp, stats_file, 
-                                         quiet, task_name, exclude_masks_at_border, roi_subset,
+                                         quiet, output_task_name, exclude_masks_at_border, roi_subset,
                                          metric=stats_aggregation, 
                                          normalized_intensities=normalized_intensities)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
@@ -791,6 +797,14 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if save_binary:
             img_data = (img_data > 0).astype(np.uint8)
 
+        if output_task_name == "vertebrae_pp_refined" and vertebrae_body_mask is not None:
+            if verbose:
+                print("Applying vertebrae_pp_refined postprocessing...")
+            body_data = vertebrae_body_mask.get_fdata().astype(np.uint8)
+            img_data = refine_vertebrae_pp_with_body_mask(img_data, body_data, label_map,
+                                                          voxel_spacing=img_in_orig.header.get_zooms(),
+                                                          dilation_mm=2, verbose=verbose)
+
         # Reorder labels if needed
         if v1_order and task_name == "total":
             img_data = reorder_multilabel_like_v1(img_data, class_map["total"], class_map["total_v1"])
@@ -816,11 +830,23 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         img_out = nib.Nifti1Image(img_data, img_pred.affine, new_header)
         img_out = add_label_map_to_nifti(img_out, label_map)
 
+        if preview_after_refinement:
+            from totalsegmentator.preview import generate_preview
+            if not quiet: print("Generating preview...")
+            if file_out is None:
+                print("WARNING: No output directory specified. Skipping preview generation.")
+            else:
+                st = time.time()
+                smoothing = 20
+                preview_dir = file_out.parent if multilabel_image else file_out
+                generate_preview(img_in_orig, preview_dir / f"preview_{output_task_name}.png", img_data, smoothing, output_task_name)
+                if not quiet: print(f"  Generated in {time.time() - st:.2f}s")
+
         if file_out is not None and skip_saving is False:
             if not quiet: print("Saving segmentations...")
 
             # Select subset of classes if required
-            selected_classes = class_map[task_name]
+            selected_classes = class_map[output_task_name]
             if roi_subset is not None:
                 selected_classes = {k:v for k, v in selected_classes.items() if v in roi_subset}
 
@@ -831,7 +857,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 base_dir.mkdir(exist_ok=True, parents=True)
                 # Determine a base name for files
                 if file_out.is_dir():
-                    base_name = f"{task_name}_segmentation"
+                    base_name = f"{output_task_name}_segmentation"
                 else:
                     base_name = file_out.stem.split('.')[0]  # file_out may be a file specifying one of the outputs
                 
@@ -887,7 +913,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             pool = Pool(nr_threads_saving)
                             results = []
                             for k, v in selected_classes.items():
-                                results.append(pool.starmap_async(save_segmentation_nifti, [((k, v), tmp_dir, file_out, nora_tag, new_header, task_name, quiet)]))
+                                results.append(pool.starmap_async(save_segmentation_nifti, [((k, v), tmp_dir, file_out, nora_tag, new_header, output_task_name, quiet)]))
                             _ = [i.get() for i in results]
                             pool.close()
                             pool.join()

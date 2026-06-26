@@ -2,6 +2,7 @@ import numpy as np
 
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.postprocessing import postprocess_vertebrae_pp
+from totalsegmentator.postprocessing import refine_vertebrae_pp_with_body_mask
 
 
 def _add_block(data, z_start, z_stop, label):
@@ -74,3 +75,19 @@ def test_vertebrae_pp_postprocessing_counts_from_top_when_c1_present_without_l5(
     assert np.all(cleaned[:, :, 20:24] == 1)
     assert np.all(cleaned[:, :, 12:16] == 2)
     assert np.all(cleaned[:, :, 4:8] == 3)
+
+
+def test_refine_vertebrae_pp_with_body_mask_dilates_and_intersects_body():
+    data = np.zeros((7, 7, 7), dtype=np.uint8)
+    body = np.zeros_like(data)
+    data[3, 3, 3] = 24
+    body[2:5, 3, 3] = 1
+    body[3, 2:5, 3] = 1
+    body[3, 3, 2:5] = 1
+
+    refined = refine_vertebrae_pp_with_body_mask(data, body, class_map["vertebrae_pp"],
+                                                 voxel_spacing=(1, 1, 1), dilation_mm=2)
+
+    assert refined[2, 3, 3] == 24
+    assert refined[3, 4, 3] == 24
+    assert refined[3, 3, 1] == 0  # dilated, but outside vertebrae_body

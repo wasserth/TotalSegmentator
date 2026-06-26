@@ -40,6 +40,8 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(len(get_task_classes("vertebrae_pp")), 24)
         self.assertEqual(get_task_classes("vertebrae_pp")[1], "vertebrae_C1")
         self.assertEqual(get_task_classes("vertebrae_pp")[24], "vertebrae_L5")
+        self.assertTrue(requires_license("vertebrae_pp_refined"))
+        self.assertEqual(get_task_classes("vertebrae_pp_refined"), get_task_classes("vertebrae_pp"))
 
     def test_license_flag_matches_commercial_models(self):
         # Every licensed task is listed, and every commercial model is a selectable task.

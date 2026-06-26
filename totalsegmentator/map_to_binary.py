@@ -821,6 +821,7 @@ class_map = {
 
 class_map["total_v3"] = class_map["total"].copy()
 class_map["total_v3"][26] = "vertebrae_L6"
+class_map["vertebrae_pp_refined"] = class_map["vertebrae_pp"].copy()
 
 
 commercial_models = {
@@ -832,6 +833,7 @@ commercial_models = {
     "tissue_4_types": 485,
     "vertebrae_body": 305,
     "vertebrae_pp": 803,
+    "vertebrae_pp_refined": 803,
     "face": 303,
     "face_mr": 856,
     "brain_structures": 409,

@@ -624,6 +624,15 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task vertebrae_pp does not work with option --fast")
         show_license_info()
+    elif task == "vertebrae_pp_refined":
+        task_id = 803
+        resample = 1.5
+        trainer = "nnUNetTrainerNoMirroring"
+        crop = None
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task vertebrae_pp_refined does not work with option --fast")
+        show_license_info()
     elif task == "heartchambers_highres":
         task_id = 301
         resample = None
@@ -789,6 +798,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             download_pretrained_weights(tid)
     else:
         download_pretrained_weights(task_id)
+    if task == "vertebrae_pp_refined":
+        download_pretrained_weights(305)
 
     # For MR always run 3mm model for roi_subset, because 6mm too bad results
     #  (runtime for 3mm still very good for MR)
@@ -899,9 +910,23 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
 
+    vertebrae_body_mask = None
+    if task == "vertebrae_pp_refined":
+        st = time.time()
+        if not quiet: print("Generating vertebrae body mask for refinement...")
+        vertebrae_body_mask, _, _ = nnUNet_predict_image(input, None, 305, model="3d_fullres", folds=[0],
+                            trainer="nnUNetTrainer_DASegOrd0", tta=False, multilabel_image=True, resample=1.5,
+                            crop=None, crop_path=None, task_name="vertebrae_body", nora_tag="None", preview=False,
+                            save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
+                            crop_addon=crop_addon, output_type="nifti", statistics=False,
+                            quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device,
+                            debug=debug, resampling_order=resampling_order)
+        if verbose: print(f"Vertebrae body mask generated in {time.time()-st:.2f}s")
+
+    prediction_task = "vertebrae_pp" if task == "vertebrae_pp_refined" else task
     seg_img, ct_img, stats = nnUNet_predict_image(input, output, task_id, model=model, folds=folds,
                             trainer=trainer, tta=False, multilabel_image=ml, resample=resample,
-                            crop=crop, crop_path=crop_path, task_name=task, nora_tag=nora_tag, preview=preview,
+                            crop=crop, crop_path=crop_path, task_name=prediction_task, nora_tag=nora_tag, preview=preview,
                             nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving,
                             force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
                             output_type=output_type, statistics=statistics_fast,
@@ -913,7 +938,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             higher_order_resampling=higher_order_resampling, save_probabilities=save_probabilities,
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
                             debug=debug, save_lowres=save_lowres and (fast or fastest),
-                            resampling_order=resampling_order, plans=plans)
+                            resampling_order=resampling_order, plans=plans,
+                            vertebrae_body_mask=vertebrae_body_mask, output_task_name=task)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:
