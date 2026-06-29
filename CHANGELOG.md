@@ -6,7 +6,7 @@
 * add `--list-tasks` and `--list-classes [task]` flags to the main `TotalSegmentator` command for the same discovery directly on the CLI.
 * add `--report <path.json>` option to write a machine-readable run manifest (software/model versions, device, task, classes, runtime, output files) for reproducible pipelines.
 * add `AGENTS.md` with guidance for using TotalSegmentator from automation and AI coding agents.
-* add improved higher order resampling to make segmentations smoother (use `--higher_order_resampling` argument) during upsampling with only slightly higher runtime and memory usage. (before higher order upsampling of many labels was very very slow and memory hungry)
+* add improved higher order resampling to make segmentations smoother (use `--higher_order_resampling` argument) during upsampling with only slightly higher runtime and memory usage. This makes segmentations a lot better! (before higher order upsampling of many labels was very very slow and memory hungry)
 * runtime improvements (e.g. improved combining of segmentation parts)
 
 

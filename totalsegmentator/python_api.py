@@ -158,7 +158,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      statistics_exclude_masks_at_border=True, no_derived_masks=False,
                      v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean",
                      remove_small_blobs=False, statistics_normalized_intensities=False,
-                     robust_crop=False, higher_order_resampling=False, save_probabilities=None,
+                     robust_crop=False, higher_order_resampling_LEGACY=False, higher_order_resampling=False,
+                     save_probabilities=None,
                      debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=3,
                      plans="nnUNetPlans", model_size="big"):
     """
@@ -823,6 +824,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             body_seg = False
             print("INFO: For MR models the argument '--body_seg' is not supported and will be ignored.")
 
+    if higher_order_resampling:
+        resample = None
+        save_lowres = False
+
     if save_lowres and (crop is not None or roi_subset is not None or cascade or body_seg):
         raise ValueError("save_lowres is not supported together with cropping, roi_subset, body_seg, or cascade.")
 
@@ -935,11 +940,13 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             no_derived_masks=no_derived_masks, v1_order=v1_order,
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
                             normalized_intensities=statistics_normalized_intensities,
-                            higher_order_resampling=higher_order_resampling, save_probabilities=save_probabilities,
+                            higher_order_resampling_LEGACY=higher_order_resampling_LEGACY,
+                            save_probabilities=save_probabilities,
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
                             debug=debug, save_lowres=save_lowres and (fast or fastest),
                             resampling_order=resampling_order, plans=plans,
-                            vertebrae_body_mask=vertebrae_body_mask, output_task_name=task)
+                            vertebrae_body_mask=vertebrae_body_mask, output_task_name=task,
+                            use_cropped_logits_resampling=higher_order_resampling)
     seg = seg_img.get_fdata().astype(np.uint8)
 
     try:

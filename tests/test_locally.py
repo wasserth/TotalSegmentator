@@ -205,7 +205,8 @@ if __name__ == "__main__":
             else:
                 task = "total"
             st = time.time()
-            totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, task=task, device=device)
+            totalsegmentator(img_fn, pred_dir / img_fn.name, fast=fast, ml=True, task=task,
+                             device=device, higher_order_resampling=True)
             times[resolution].append(time.time()-st)
 
         print("Logging...")

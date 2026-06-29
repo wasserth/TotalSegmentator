@@ -131,8 +131,14 @@ def main():
     parser.add_argument("-rc", "--robust_crop", action="store_true", help="For cropping (which is required for several task) or roi_subset, use the more robust 3mm model instead of the default and faster 6mm model.",
                         default=False)
 
-    parser.add_argument("-ho", "--higher_order_resampling", action="store_true", 
-                        help="Use higher order resampling for segmentations. Results in smoother segmentations. Use with e.g. -nr 4 for faster runtime.",
+    parser.add_argument("--higher_order_resampling_LEGACY", "--high_order_resampling_LEGACY",
+                        action="store_true",
+                        help="LEGACY: use higher order resampling when upsampling final segmentation masks. "
+                             "Results in smoother segmentations. Use with e.g. -nr 4 for faster runtime.",
+                        default=False)
+
+    parser.add_argument("-ho", "--higher_order_resampling", "--high_order_resampling", action="store_true",
+                        help="Use cropped-logits resampling during nnU-Net export for lower memory usage.",
                         default=False)
 
     parser.add_argument("-s", "--statistics", nargs='?', const=True, default=False,
@@ -276,7 +282,9 @@ def main():
                      no_derived_masks=args.no_derived_masks, v1_order=args.v1_order, fastest=args.fastest,
                      roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation, 
                      remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
-                     robust_crop=args.robust_crop, higher_order_resampling=args.higher_order_resampling,
+                     robust_crop=args.robust_crop,
+                     higher_order_resampling_LEGACY=args.higher_order_resampling_LEGACY,
+                     higher_order_resampling=args.higher_order_resampling,
                      save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
                      statistics_extra=args.statistics_extra, save_lowres=args.save_lowres,
                      resampling_order=args.resampling_order, model_size=args.model_size)

@@ -34,6 +34,7 @@ import nnunetv2.inference.predict_from_raw_data as nnunet_predict_from_raw_data
 from totalsegmentator.custom_trainers import (nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring,
                                               nnUNetTrainerDiceTopK10Loss_2000epochs,
                                               nnUNetTrainerSkeletonRecall)
+from totalsegmentator.nnunet_runtime_patches import patch_nnunet_cropped_logits_resampling
 
 custom_trainers = {
     "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring": nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring,
@@ -62,6 +63,7 @@ if nnunet_find_objects is not None:
 # monkey-patch
 nnunet_predict_from_raw_data.recursive_find_python_class = recursive_find_python_class_custom
 # --- now we have included custom trainers into the nnUNetv2 basic package --- #
+patch_nnunet_cropped_logits_resampling()
 
 # nnUNet 2.1
 # with nostdout():
@@ -214,7 +216,7 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
                      plans="nnUNetPlans", device="cuda", quiet=False, step_size=0.5,
-                     save_probabilities_path=None):
+                     save_probabilities_path=None, use_cropped_logits_resampling=False):
     """
     Identical to bash function nnUNetv2_predict
     """
@@ -308,11 +310,16 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         checkpoint_name=chk,
     )
     # new nnunetv2 feature: keep dir_out empty to return predictions as return value
+    predict_kwargs = {}
+    if (use_cropped_logits_resampling and not save_probabilities
+            and supports_keyword_argument(predictor.predict_from_files, "use_cropped_logits_resampling")):
+        predict_kwargs["use_cropped_logits_resampling"] = True
     predictor.predict_from_files(dir_in, dir_out,
                                  save_probabilities=save_probabilities, overwrite=not continue_prediction,
                                  num_processes_preprocessing=npp, num_processes_segmentation_export=nps,
                                  folder_with_segs_from_prev_stage=prev_stage_predictions,
-                                 num_parts=num_parts, part_id=part_id)
+                                 num_parts=num_parts, part_id=part_id,
+                                 **predict_kwargs)
 
     if save_probabilities:
         shutil.copy(Path(dir_out) / "s01.npz", save_probabilities_path)
@@ -357,10 +364,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
                          device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
-                         normalized_intensities=False, higher_order_resampling=False,
+                         normalized_intensities=False, higher_order_resampling_LEGACY=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
                          debug=False, save_lowres=False, resampling_order=3, plans="nnUNetPlans",
-                         vertebrae_body_mask=None, output_task_name=None):
+                         vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -602,7 +609,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
                                              nr_threads_resampling, nr_threads_saving,
                                              plans=plans, device=device, quiet=quiet, step_size=step_size,
-                                             save_probabilities_path=save_probabilities)
+                                             save_probabilities_path=save_probabilities,
+                                             use_cropped_logits_resampling=use_cropped_logits_resampling)
                     except Exception as e:
                         if debug:
                             print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {tid}, part: {idx+1}/{len(task_id)}")
@@ -639,7 +647,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                         nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
                                          nr_threads_resampling, nr_threads_saving,
                                          plans=plans, device=device, quiet=quiet, step_size=step_size,
-                                         save_probabilities_path=save_probabilities)
+                                         save_probabilities_path=save_probabilities,
+                                         use_cropped_logits_resampling=use_cropped_logits_resampling)
                 except Exception as e:
                     if debug:
                         print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {task_id}")
@@ -754,7 +763,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             # Advantage of crop_resample: Will resample multilabel masks as cropped one-hot masks and then high order
             # resampling (= smoother) is possible. By using crop it only uses slightly more memory than order=0 and
             # with nr=4 only a bit more runtime than order=0.
-            if higher_order_resampling:
+            if higher_order_resampling_LEGACY:
                 if roi_subset is not None:
                     img_data_tmp = img_pred.get_fdata()
                     img_data_tmp *= np.isin(img_data_tmp, list(label_map.keys()))
