@@ -378,6 +378,12 @@ def get_verte_height(ct_img, verte_img, verte_label_map, verte_body_img,
         save_smoothed_body_mask_nifti(processor, smoothed_body_out, ct_img)
     
     if not vertebrae_info:
+        if preview_file:
+            create_empty_visualization(preview_file)
+        if combined_preview_file and combined_preview_file != preview_file:
+            create_empty_visualization(combined_preview_file)
+        if file_out:
+            save_results(vertebrae_info, file_out)
         return
     
     vertebrae_names = list(vertebrae_info.keys())
@@ -392,6 +398,19 @@ def get_verte_height(ct_img, verte_img, verte_label_map, verte_body_img,
     # Save results
     if file_out:
         save_results(vertebrae_info, file_out)
+
+
+def create_empty_visualization(output_file, message="No vertebrae measurements available"):
+    """Create a placeholder image for report generation when no vertebrae can be measured."""
+    fig, ax = plt.subplots(1, 1, figsize=(8, 12), facecolor='black')
+    ax.set_facecolor('black')
+    ax.text(0.5, 0.5, message, color='white', fontsize=18,
+            ha='center', va='center', wrap=True, transform=ax.transAxes)
+    ax.set_axis_off()
+    plt.tight_layout()
+    plt.savefig(output_file, dpi=150, bbox_inches='tight', facecolor='black')
+    plt.close(fig)
+    print(f"Empty visualization saved to {output_file}")
 
 
 def save_results(vertebrae_info, file_out):

@@ -9,6 +9,7 @@ import nibabel as nib
 import numpy as np
 
 from totalsegmentator.bin.totalseg_spine_report import create_spine_report
+from totalsegmentator.spine_report.measure_verte_height import get_verte_height
 
 
 REFERENCE_DIR = Path(__file__).parent / "reference_files" / "spine_report"
@@ -52,6 +53,31 @@ def test_spine_report_reference_json():
     assert "results" in data
     assert "metadata" in data
     assert "LWS_max" in data["results"]
+
+
+def test_empty_vertebra_measurements_write_report_outputs(tmp_path):
+    shape = (8, 8, 8)
+    ct_img = nib.Nifti1Image(np.zeros(shape, dtype=np.float32), np.eye(4))
+    empty_vertebra_img = nib.Nifti1Image(np.zeros(shape, dtype=np.uint8), np.eye(4))
+    output_json = tmp_path / "spine_report_heights.json"
+    preview_file = tmp_path / "spine_report_preview.png"
+    combined_preview_file = tmp_path / "spine_report_combined_preview.png"
+
+    get_verte_height(
+        ct_img,
+        empty_vertebra_img,
+        {1: "vertebrae_L1"},
+        empty_vertebra_img,
+        {},
+        preview_file,
+        combined_preview_file,
+        output_json,
+        debug=False,
+    )
+
+    assert json.loads(output_json.read_text()) == {"LWS_max": None}
+    assert preview_file.exists()
+    assert combined_preview_file.exists()
 
 
 @pytest.mark.skipif(not EXAMPLE_CT.exists(), reason="large spine report CT fixture is not available")

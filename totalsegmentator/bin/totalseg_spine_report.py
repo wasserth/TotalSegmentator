@@ -134,6 +134,7 @@ def create_spine_report(
     # Check if lumbar spine contains a fracture
     vertebrae_high_height_diff = []
     vertebrae_low_intensity = []
+    has_measurements = any(key.startswith("vertebrae_") for key in report_json)
     # for vertebrae in ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "L1", "L2", "L3", "L4", "L5"]:
     for vertebrae in ["L1", "L2", "L3", "L4", "L5"]:
         vertebrae_name = f"vertebrae_{vertebrae}"
@@ -158,6 +159,7 @@ def create_spine_report(
     tp = str(resources.files("totalsegmentator").joinpath("resources/spine_report"))  # templates_path
     template_vars = {"report_image": str(tmp_dir / "spine_report_combined_preview.png"),
                      "found_fracture": found_fracture,
+                     "has_measurements": has_measurements,
                      "vertebrae_high_height_diff": vertebrae_high_height_diff,
                      "vertebrae_low_intensity": vertebrae_low_intensity,
                      "metadata": metadata,
