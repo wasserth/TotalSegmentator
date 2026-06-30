@@ -123,18 +123,19 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 
 
 ### Advanced settings
-* `--device`: Choose `cpu` or `gpu` or `gpu:X (e.g., gpu:1 -> cuda:1)`
+* `--device`: Choose `cpu` or `gpu` or `gpu:X`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
-* `--save_lowres`: With `--fast` or `--fastest`, save the segmentation at the model resolution (3mm or 6mm) instead of upsampling it back to the input resolution to save runtime.
-* `--resampling_order`: Spline interpolation order for input image resampling (default: 3). Setting this to 1 will speed up resampling with very similar segmentation accuracy.
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
-* `--robust_crop`: For some tasks and for roi_subset a 6mm low resolution model is used to crop to the region of interest. Sometimes this model is incorrect, which leads to artifacts like segmentations being cut off. robust_crop will use a better but slower 3mm model instead.
-* `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
+* `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
 * `--statistics_extra`: In addition to volume and intensity, also compute `n_voxels`, intensity std/min/max and the morphometric `centroid_vox` and `bbox_vox` (voxel coordinates) for each class. Off by default to keep the statistics runtime unchanged.
+* `--higher_order_resampling`: Uses higher order upsampling of the segmentations. Smoother (especially for `--fast`) but slower.
+* `--resampling_order`: Spline interpolation order for input image resampling (default: 3). Setting this to 1 will speed up resampling with very similar segmentation accuracy.
+* `--save_lowres`: With `--fast` or `--fastest`, save the segmentation at the model resolution (3mm or 6mm) instead of upsampling it back to the input resolution to save runtime.
+* `--robust_crop`: For some tasks and for roi_subset a 6mm low resolution model is used to crop to the region of interest. Sometimes this model is incorrect, which leads to artifacts like segmentations being cut off. robust_crop will use a better but slower 3mm model instead.
+* `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
-* `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
 * `--report`: This will write a machine-readable JSON run manifest to the given path (software and model versions, resolved device, task, classes, runtime and the list of output files). Useful for reproducible pipelines and automation.
 * `--list-tasks` / `--list-classes [task]`: Print the available tasks (or the classes of one task) and exit, without running a segmentation. For machine-readable output use the `totalseg_info` command below.
 
@@ -175,11 +176,6 @@ This will download them to `~/.totalsegmentator/nnunet/results`. You can change 
 After acquiring a license number for the non-open tasks you can set it with the following command:
 ```bash
 totalseg_set_license -l aca_12345678910
-```
-
-If you want the segmentations to look smoother you can use higher order upsampling of the segmentations:
-```bash
-TotalSegmentator -i ct.nii.gz -o seg --higher_order_resampling -nr 4
 ```
 
 If you want to run as fast as possible to process many cases and lower resolution is ok, I would recommend this setting (for a large CT image this takes ~30s on GPU and ~70s on CPU):
