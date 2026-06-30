@@ -3,7 +3,7 @@ import os
 import warnings
 from copy import deepcopy
 from time import sleep
-from typing import Callable, List, Tuple, Union
+from typing import Callable, Union
 
 import numpy as np
 import torch
@@ -30,7 +30,7 @@ def _as_numpy(predicted_logits: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
     return predicted_logits
 
 
-def _get_bbox(mask: np.ndarray, margin: int) -> Union[Tuple[np.ndarray, np.ndarray], None]:
+def _get_bbox(mask: np.ndarray, margin: int) -> Union[tuple[np.ndarray, np.ndarray], None]:
     foreground = np.where(mask)
     if len(foreground) == 0 or len(foreground[0]) == 0:
         return None
@@ -42,10 +42,10 @@ def _get_bbox(mask: np.ndarray, margin: int) -> Union[Tuple[np.ndarray, np.ndarr
 
 
 def _resample_channel_crop(channel: np.ndarray,
-                           new_shape: Union[Tuple[int, ...], List[int], np.ndarray],
+                           new_shape: Union[tuple[int, ...], list[int], np.ndarray],
                            crop_start: np.ndarray,
                            crop_end: np.ndarray,
-                           order: int = 1) -> Tuple[Union[Tuple[slice, ...], None], Union[np.ndarray, None]]:
+                           order: int = 1) -> tuple[Union[tuple[slice, ...], None], Union[np.ndarray, None]]:
     old_shape = np.array(channel.shape)
     new_shape = np.array(new_shape).astype(int)
     scale = new_shape / old_shape
@@ -70,9 +70,9 @@ def _resample_channel_crop(channel: np.ndarray,
 def _convert_logits_to_segmentation_with_cropped_resampling(
         predicted_logits: Union[torch.Tensor, np.ndarray],
         label_manager: LabelManager,
-        new_shape: Union[Tuple[int, ...], List[int], np.ndarray],
-        current_spacing: Union[Tuple[float, ...], List[float], np.ndarray],
-        target_spacing: Union[Tuple[float, ...], List[float], np.ndarray],
+        new_shape: Union[tuple[int, ...], list[int], np.ndarray],
+        current_spacing: Union[tuple[float, ...], list[float], np.ndarray],
+        target_spacing: Union[tuple[float, ...], list[float], np.ndarray],
         resampling_fn_probabilities: Callable) -> np.ndarray:
     """
     Memory-light approximation of nnU-Net's default export.
@@ -245,8 +245,8 @@ def export_prediction_from_logits(predicted_array_or_file: Union[np.ndarray, tor
 
 
 def predict_from_files(self,
-                       list_of_lists_or_source_folder: Union[str, List[List[str]]],
-                       output_folder_or_list_of_truncated_output_files: Union[str, None, List[str]],
+                       list_of_lists_or_source_folder: Union[str, list[list[str]]],
+                       output_folder_or_list_of_truncated_output_files: Union[str, None, list[str]],
                        save_probabilities: bool = False,
                        overwrite: bool = True,
                        num_processes_preprocessing: int = default_num_processes,
@@ -389,10 +389,10 @@ def predict_from_data_iterator(self,
 
 
 def predict_from_list_of_npy_arrays(self,
-                                    image_or_list_of_images: Union[np.ndarray, List[np.ndarray]],
+                                    image_or_list_of_images: Union[np.ndarray, list[np.ndarray]],
                                     segs_from_prev_stage_or_list_of_segs_from_prev_stage,
-                                    properties_or_list_of_properties: Union[dict, List[dict]],
-                                    truncated_ofname: Union[str, List[str], None],
+                                    properties_or_list_of_properties: Union[dict, list[dict]],
+                                    truncated_ofname: Union[str, list[str], None],
                                     num_processes: int = 3,
                                     save_probabilities: bool = False,
                                     num_processes_segmentation_export: int = default_num_processes,
@@ -455,8 +455,8 @@ def predict_single_npy_array(self,
 
 
 def predict_from_files_sequential(self,
-                                  list_of_lists_or_source_folder: Union[str, List[List[str]]],
-                                  output_folder_or_list_of_truncated_output_files: Union[str, None, List[str]],
+                                  list_of_lists_or_source_folder: Union[str, list[list[str]]],
+                                  output_folder_or_list_of_truncated_output_files: Union[str, None, list[str]],
                                   save_probabilities: bool = False,
                                   overwrite: bool = True,
                                   folder_with_segs_from_prev_stage: str = None,
