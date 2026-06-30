@@ -24,7 +24,11 @@ setup(name='TotalSegmentator',
              "resources/modality_classifiers_normalized_2025_02_24.json.2",
              "resources/modality_classifiers_normalized_2025_02_24.json.3",
              "resources/modality_classifiers_normalized_2025_02_24.json.4",
-             "resources/ct_brain_atlas_1mm.nii.gz"]
+             "resources/ct_brain_atlas_1mm.nii.gz",
+             "resources/spine_report/report_template_frontpage.html",
+             "resources/spine_report/styles.css",
+             "resources/spine_report/logo_black.svg",
+             "resources/spine_report/usb_logo_white.svg"]
             },
         install_requires=[
             'torch>=2.1.2',  # torch < 2.6.0 required if using nnunetv2 < 2.6.0
@@ -37,7 +41,12 @@ setup(name='TotalSegmentator',
             'requests',
             'dicom2nifti',
             'pyarrow',
-            'xmltodict'
+            'xmltodict',
+            'blosc',
+            'imgkit',
+            'jinja2',
+            'Pillow',
+            'scikit-image'
         ],
         zip_safe=False,
         classifiers=[
@@ -59,6 +68,7 @@ setup(name='TotalSegmentator',
                 'totalseg_get_phase=totalsegmentator.bin.totalseg_get_phase:main',
                 'totalseg_get_modality=totalsegmentator.bin.totalseg_get_modality:main',
                 'totalseg_evans_index=totalsegmentator.bin.totalseg_evans_index:main',
+                'totalseg_spine_report=totalsegmentator.bin.totalseg_spine_report:main',
                 'totalseg_get_body_stats=totalsegmentator.bin.totalseg_get_body_stats:main',
                 'totalseg_info=totalsegmentator.bin.totalseg_info:main'
             ],

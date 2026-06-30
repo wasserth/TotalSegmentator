@@ -167,6 +167,11 @@ If you want to calculate the [Evans index](https://radiopaedia.org/articles/evan
 totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png
 ```
 
+If you want to find osteoporotic spine fractures you can use the following command (requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/)):
+```bash
+totalseg_spine_report.py -i ct.nii.gz -o spine_report.nii.gz -j spine_report.json -l spine_report.log
+```
+
 Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
 ```bash
 totalseg_download_weights -t <task_name>

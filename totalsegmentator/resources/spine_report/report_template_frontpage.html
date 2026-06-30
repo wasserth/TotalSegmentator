@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" type="text/css" href="{{ styles_path }}">
+  <title>Spine report</title>
+</head>
+
+<body class="w-100 sans-serif bg-black">
+
+  <header class="pt3 ph2-ns bg-b3lack white">
+    <div class="flex flex-wrap justify-between">
+      <div class="w-25">
+        <img src="{{ usb_logo_path }}" height=50>
+      </div>
+      <div class="w-50 tc">
+        <div class="f3 fw6 mt0 mb1 white">
+          Spine report
+          <small class="f6 ml2 light-silver fw2">{{ metadata['version'] }}</small>
+        </div>
+        <a class="dib f7 mt0 mb0 white">Generated on: <span class="fw6">{{ now() }} </span></a>
+      </div>
+      <div class="w-25 flex justify-end tr">
+        <img src="{{ logo_path }}" height=50>
+      </div>
+    </div>
+  </header>
+
+  <main class="bg-black white">
+
+    <header class="ph3 ph2-ns pt3 pb1 b--white ">
+      <article class="pa2 bgc ph3">
+        <h3 class="f6 ttu tracked mv0">Patient Details</h3>
+        <div class="cf">
+          <dl class="fl fn-l w-50 dib-l w-auto-l lh-title mr4-l">
+            <dd class="f6 fw4 ml0">Sex</dd>
+            <dd class="f4 fw6 ml0 primary">{{ metadata['PatientSex']}}</dd>
+          </dl>
+          <dl class="fl fn-l w-50 dib-l w-auto-l lh-title mr4-l">
+            <dd class="f6 fw4 ml0">Age</dd>
+            <dd class="f4 fw6 ml0 primary">{{ metadata['PatientAge'] }}</dd>
+          </dl>
+          <dl class="fl fn-l w-50 dib-l w-auto-l lh-title mr4-l">
+            <dd class="f6 fw4 ml0">Study</dd>
+            <dd class="f4 fw6 ml0 primary">{{ metadata['StudyDescription']}}</dd>
+          </dl>
+          <dl class="fl fn-l w-50 dib-l w-auto-l lh-title mr4-l">
+            <dd class="f6 fw4 ml0">Study Date</dd>
+            <dd class="f4 fw6 ml0 primary">{{ metadata['StudyDate'] | to_date }}</dd>
+          </dl>
+          <dl class="fl fn-l w-50 dib-l w-auto-l lh-title mr4-l">
+            <!-- <dd class="f6 fw4 ml0">Predicted Contrast Phase</dd> -->
+            <dd class="f6 fw4 ml0">Contrast Phase Header</dd>
+            <dd class="f4 fw6 ml0 primary">{{ contrast_phase }}</dd>
+          </dl>
+        </div>
+      </article>
+    </header>
+
+    <div class="ph2-ns pa1">
+      <div class="pv1 bgc ph3">
+
+        <div class="flex flex-wrap pb2 items-stretch">
+          <div class="w-50 pb2 pr1 flex">
+            <div class="{% if found_fracture %}warning-box{% else %}success-box{% endif %}">
+              {% if found_fracture %}
+                {% if vertebrae_high_height_diff|length > 0 %}
+                  Lumbar spine compression fracture in: <br>
+                  {{ vertebrae_high_height_diff | join(', ') }} <br>
+                {% endif %}
+                {% if vertebrae_low_intensity|length > 0 %}
+                  <br>
+                  Lumbar spine low attenuation in: <br>
+                  {{ vertebrae_low_intensity | join(', ') }}
+                {% endif %}
+              {% else %}
+                Lumbar spine contains no fracture. <br>
+              {% endif %}
+            </div>
+          </div>
+          <div class="w-50 pb2 pr1">
+            <img src="{{ report_image }}">
+          </div>
+        </div>
+    
+      </div>
+    </div>
+    
+  </main>
+
+  <footer class="ph2 ph2-l moon-gray bt b--moon-gray">
+    <div class="cf">
+      <h1 class="fl w-100 pv0 f7 fw6 tracked">
+        For informational purposes only. Not a medical device.
+      </h1>
+      <h1 class="fl w-100 pv0 f7 fw6 tracked">
+        Please cite the following article(s): https://pubs.rsna.org/doi/10.1148/ryai.230024
+      </h1>
+      <h1 class="f7">Copyright © AI Lab, Department of Radiology, University Hospital Basel</h1>
+    </div>
+    
+  </footer>
+</body>
+
+</html>

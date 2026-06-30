@@ -1,0 +1,8 @@
+{
+    "pi_time": 0.06,
+    "phase": "native",
+    "probability": 1.0,
+    "pi_time_min": -0.1,
+    "pi_time_max": 0.19,
+    "stddev": 0.1119
+}

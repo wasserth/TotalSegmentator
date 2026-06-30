@@ -8,6 +8,7 @@
 * add `AGENTS.md` with guidance for using TotalSegmentator from automation and AI coding agents.
 * add improved higher order resampling to make segmentations smoother (use `--higher_order_resampling` argument) during upsampling with only slightly higher runtime and memory usage. This makes segmentations a lot better! (before higher order upsampling of many labels was very very slow and memory hungry)
 * runtime improvements (e.g. improved combining of segmentation parts)
+* added `totalseg_spine_report`: find osteoporotic spine fractures in CT images.
 
 
 ## Release 2.14.0 (10.06.2026)
