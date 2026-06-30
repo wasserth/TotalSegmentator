@@ -82,7 +82,8 @@ def main():
 
     parser.add_argument("-ro", "--resampling_order", type=resampling_order, default=3,
                         help="Spline interpolation order for input image resampling (0-5). "
-                             "Default: 3. Setting this to 1 can speed up resampling with very similar segmentation accuracy.")
+                             "Default: 3. Setting this to 1 can speed up resampling with very similar segmentation accuracy."
+                             "(has no effect if -ho is used because then nnunet takes care of down- and upsampling)")
 
     parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations",
                         default=6)

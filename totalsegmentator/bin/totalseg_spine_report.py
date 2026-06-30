@@ -129,7 +129,7 @@ def create_spine_report(
 
     yield {"id": 6, "progress": 90, "status": "Generating report image"}
 
-    report_json = json.load(open(tmp_dir / "spine_report_heights.json", "r"))
+    report_json = json.load(open(tmp_dir / "spine_report_heights.json"))
 
     # Check if lumbar spine contains a fracture
     vertebrae_high_height_diff = []
@@ -256,7 +256,7 @@ def main():
 
     logger.info("Getting metadata...")
     if args.nodeinfo is not None and args.nodeinfo.exists():
-        with open(args.nodeinfo, "r") as f:
+        with open(args.nodeinfo) as f:
             metadata = json.load(f)
     else:
         logger.info("WARNING: Could not find nodeinfo.json. Using default metadata.")

@@ -245,7 +245,7 @@ class VertebraeProcessor:
             if centroid is not None:
                 # Check if this is a helper vertebra (only for centroid calculation)
                 if label_name in helper_vertebrae:
-                    print(f"  -> Helper vertebra (centroid kept for axis calculation)")
+                    print("  -> Helper vertebra (centroid kept for axis calculation)")
                     # Append centroid to keep indices consistent for axis estimation
                     centroids.append(centroid)
                     # Do not add to vertebrae_info to exclude from analysis/visualization

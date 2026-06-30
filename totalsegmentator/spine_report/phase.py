@@ -229,7 +229,7 @@ def get_pi_time_by_header(file_in, file_out, json_field_name, project_name, use_
                         print(acquisition_time)
                         print(content_time)
                         print(series_time)
-                        print(f"WARNING: time diff is large")
+                        print("WARNING: time diff is large")
 
                 time_diff_secs = abs((content_time - contrast_time).total_seconds())
             else:

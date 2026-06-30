@@ -94,7 +94,7 @@ def get_contrast_phase(ct_path, tmp_dir, logger, host="local", original_nifti_pa
                 print("Predict contrast phase")
                 subprocess.call(f"totalseg_get_phase -i {ct_path} -o {tmp_dir / 'contrast_phase.json'} -q", shell=True)
             else:
-                print(f"Use dicom header from Nora project")
+                print("Use dicom header from Nora project")
                 # Here we have to phase the original Nifti file path, otherwise we can not find the corresponding DICOM file in Nora
                 phase, pi_time = get_phase(original_nifti_path, "header", tmp_dir)
                 json.dump({"phase": phase, "pi_time": pi_time}, open(tmp_dir / "contrast_phase.json", "w"), indent=4)
