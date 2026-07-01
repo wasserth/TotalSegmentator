@@ -925,7 +925,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type="nifti", statistics=False,
                             quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device,
-                            debug=debug, resampling_order=resampling_order)
+                            debug=debug, resampling_order=resampling_order,
+                            use_cropped_logits_resampling=higher_order_resampling)
         if verbose: print(f"Vertebrae body mask generated in {time.time()-st:.2f}s")
 
     prediction_task = "vertebrae_pp" if task == "vertebrae_pp_refined" else task
