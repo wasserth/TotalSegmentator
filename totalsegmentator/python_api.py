@@ -783,7 +783,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         trainer = "nnUNetTrainer_DASegOrd0"
         crop = None  # Model only used for aorta_report and there only working on already cropped image
         model = "3d_fullres_high"
-        folds = [0]
+        folds = [0, 1, 2, 3, 4]
         if fast: raise ValueError("task aorta_annulus does not work with option --fast")
         show_license_info()
     elif task == "aortic_dissection":
@@ -792,7 +792,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
         crop = None  # Model only used for aorta_report and there only working on already cropped image
         model = "3d_fullres_high"
-        folds = [0]
+        folds = [0, 1, 2, 3, 4]
         if fast: raise ValueError("task aortic_dissection does not work with option --fast")
         show_license_info()
 
