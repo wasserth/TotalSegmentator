@@ -29,6 +29,11 @@ jobs:
         with:
           python-version: ${{matrix.python-version}}
           cache: 'pip'
+
+      - name: Install spine report system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wkhtmltopdf xvfb
           
       - name: Install dependencies
         run: |
