@@ -64,22 +64,29 @@
 
         <div class="flex flex-wrap pb2 items-stretch">
           <div class="w-50 pb2 pr1 flex">
-            <div class="{% if found_fracture or not has_measurements %}warning-box{% else %}success-box{% endif %}">
-              {% if not has_measurements %}
-                No vertebrae measurements available. <br>
-                Please check the segmentation output.
-              {% elif found_fracture %}
-                {% if vertebrae_high_height_diff|length > 0 %}
-                  Lumbar spine compression fracture in: <br>
-                  {{ vertebrae_high_height_diff | join(', ') }} <br>
+            <div class="status-box {% if found_fracture or not has_measurements %}warning-box{% else %}success-box{% endif %}">
+              <div class="status-text">
+                {% if not has_measurements %}
+                  No vertebrae measurements available. <br>
+                  Please check the segmentation output.
+                {% elif found_fracture %}
+                  {% if vertebrae_high_height_diff|length > 0 %}
+                    Lumbar spine compression fracture in: <br>
+                    {{ vertebrae_high_height_diff | join(', ') }} <br>
+                  {% endif %}
+                  {% if vertebrae_low_intensity|length > 0 %}
+                    <br>
+                    Lumbar spine low attenuation in: <br>
+                    {{ vertebrae_low_intensity | join(', ') }}
+                  {% endif %}
+                {% else %}
+                  Lumbar spine contains no fracture. <br>
                 {% endif %}
-                {% if vertebrae_low_intensity|length > 0 %}
-                  <br>
-                  Lumbar spine low attenuation in: <br>
-                  {{ vertebrae_low_intensity | join(', ') }}
-                {% endif %}
+              </div>
+              {% if found_fracture or not has_measurements %}
+                <div class="status-symbol status-symbol-x">X</div>
               {% else %}
-                Lumbar spine contains no fracture. <br>
+                <div class="status-symbol status-symbol-check">&#10003;</div>
               {% endif %}
             </div>
           </div>
