@@ -1,4 +1,7 @@
 ## Master
+
+
+## Release 2.15.0 (01.07.2026)
 * add `--resampling_order` option to choose the spline interpolation order for input image resampling. Default remains 3; setting it to 1 can speed up resampling with very similar segmentation accuracy.
 * add `--save_lowres` option to save `--fast` or `--fastest` segmentations in the low-resolution model space (3mm / 6mm) without the slow upsampling step.
 * add `--statistics_extra` option to compute additional per-structure metrics (`n_voxels`, intensity std/min/max, and the morphometric `centroid_vox` and `bbox_vox`). Off by default so the normal statistics runtime is unchanged.
