@@ -768,6 +768,33 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = [0]
         if fast: raise ValueError("task aortic_sinuses does not work with option --fast")
         show_license_info()
+    elif task == "renal_arteries":
+        task_id = 710
+        resample = 1.5
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = None  # Model only used for aorta_report and there only working on already cropped image
+        model = "3d_fullres"
+        folds = [0]
+        if fast: raise ValueError("task renal_arteries does not work with option --fast")
+        show_license_info()
+    elif task == "aorta_annulus":
+        task_id = 713
+        resample = [0.8, 0.8, 0.8]
+        trainer = "nnUNetTrainer_DASegOrd0"
+        crop = None  # Model only used for aorta_report and there only working on already cropped image
+        model = "3d_fullres_high"
+        folds = [0]
+        if fast: raise ValueError("task aorta_annulus does not work with option --fast")
+        show_license_info()
+    elif task == "aortic_dissection":
+        task_id = 716
+        resample = [0.8, 0.8, 0.8]
+        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
+        crop = None  # Model only used for aorta_report and there only working on already cropped image
+        model = "3d_fullres_high"
+        folds = [0]
+        if fast: raise ValueError("task aortic_dissection does not work with option --fast")
+        show_license_info()
 
     elif task == "test":
         task_id = [517]

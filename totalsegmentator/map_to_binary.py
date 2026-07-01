@@ -667,6 +667,22 @@ class_map = {
         3: "left_coronary_cusp",
         4: "non_coronary_cusp"
     },
+    "renal_arteries": {
+        1: "celiac_trunk",
+        2: "superior_mesenteric_artery",
+        3: "renal_arteries"
+    },
+    "renal_arteries_auxiliary": {
+        4: "aorta"
+    },
+    "aorta_annulus": {
+        1: "annulus_proper",
+        2: "sinotubular_junction"
+    },
+    "aortic_dissection": {
+        1: "aorta_true_lumen",
+        2: "aorta_false_lumen"
+    },
     "liver_segments": {
         1: "liver_segment_1",
         2: "liver_segment_2", 
@@ -841,7 +857,10 @@ commercial_models = {
     "thigh_shoulder_muscles_mr": 857,
     "coronary_arteries": 509,
     "coronary_arteries_LEGACY": 507,
-    "aortic_sinuses": 920
+    "aortic_sinuses": 920,
+    "renal_arteries": 710,
+    "aorta_annulus": 713,
+    "aortic_dissection": 716
 }
 
 

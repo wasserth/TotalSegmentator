@@ -31,7 +31,8 @@ TASKS = [
     "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules", "kidney_cysts",
     "breasts", "ventricle_parts", "aortic_sinuses", "liver_segments", "liver_segments_mr",
     "total_highres_test", "craniofacial_structures", "abdominal_muscles", "teeth",
-    "trunk_cavities", "brain_aneurysm",
+    "trunk_cavities", "brain_aneurysm", "renal_arteries", "aorta_annulus",
+    "aortic_dissection",
 ]
 
 # Tasks that operate on MR images but whose name does not end in "_mr".

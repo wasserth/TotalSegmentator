@@ -423,6 +423,12 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset509_coronary_arteries_cm_nativ_400subj_SKELETON"
     elif task_id == 920:
         weights_path = config_dir / "Dataset920_aortic_sinuses_cm_nativ_400subj"
+    elif task_id == 710:
+        weights_path = config_dir / "Dataset710_renal_arteries_127subj"
+    elif task_id == 713:
+        weights_path = config_dir / "Dataset713_annulus_proper_48subj"
+    elif task_id == 716:
+        weights_path = config_dir / "Dataset716_aorta_true_false_lumen_171subj"
 
     # XGBoost
     elif task_id == "body_stats":
