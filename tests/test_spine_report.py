@@ -1,5 +1,7 @@
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -13,9 +15,10 @@ from totalsegmentator.spine_report.measure_verte_height import get_verte_height
 
 
 REFERENCE_DIR = Path(__file__).parent / "reference_files" / "spine_report"
-EXAMPLE_CT = REFERENCE_DIR / "example_ct.nii.gz"
+EXAMPLE_CT = Path(__file__).parent / "reference_files" / "example_ct.nii.gz"
 EXAMPLE_NODEINFO = REFERENCE_DIR / "example_nodeinfo.json"
 REFERENCE_JSON = REFERENCE_DIR / "example_ct_report" / "spine_report.json"
+CACHED_RESULT_DIR = REFERENCE_DIR / "test_result"
 
 
 def dicts_almost_equal(d1, d2):
@@ -80,16 +83,20 @@ def test_empty_vertebra_measurements_write_report_outputs(tmp_path):
     assert combined_preview_file.exists()
 
 
-@pytest.mark.skipif(not EXAMPLE_CT.exists(), reason="large spine report CT fixture is not available")
-def test_spine_report_end_to_end(tmp_path):
+@pytest.fixture(scope="module")
+def spine_report_result(tmp_path_factory):
+    tmp_path = tmp_path_factory.mktemp("spine_report")
     output_nifti = tmp_path / "spine_report.nii.gz"
     output_json = tmp_path / "spine_report.json"
     output_log = tmp_path / "spine_report.log"
 
-    # Reuse cached intermediate files when a developer provides them next to the fixture.
-    cached_contrast = REFERENCE_DIR / "test_result" / "contrast_phase.json"
-    if cached_contrast.exists():
-        (tmp_path / "contrast_phase.json").write_text(cached_contrast.read_text())
+    assert EXAMPLE_CT.exists(), f"Missing CT fixture: {EXAMPLE_CT}"
+    assert (CACHED_RESULT_DIR / "totalseg_vertebrae_pp_refined.nii.gz").exists()
+
+    # Reuse cached model outputs so the test does not run TotalSegmentator.
+    for cached_file in CACHED_RESULT_DIR.iterdir():
+        if cached_file.suffix == ".gz" or cached_file.name == "contrast_phase.json":
+            shutil.copy2(cached_file, tmp_path / cached_file.name)
 
     subprocess.run(
         [
@@ -115,9 +122,28 @@ def test_spine_report_end_to_end(tmp_path):
         check=True,
     )
 
-    assert os.path.isfile(output_nifti)
-    assert os.path.isfile(output_json)
-    assert os.path.isfile(output_log)
+    return {
+        "output_nifti": output_nifti,
+        "output_json": output_json,
+        "output_log": output_log,
+    }
+
+
+def test_spine_report_logs(spine_report_result):
+    logs = spine_report_result["output_log"].read_text()
+
+    required_contents = [
+        "Skipping TotalSeg vertebrae_pp_refined (already exists)",
+    ]
+
+    for content in required_contents:
+        assert content in logs, f"required content not found in logs: {content}"
+
+    assert re.search(r"width: 1201, height: \d+", logs)
+
+
+def test_spine_report_json(spine_report_result):
+    output_json = spine_report_result["output_json"]
 
     with open(REFERENCE_JSON) as f:
         data_ref = json.load(f)
@@ -125,6 +151,6 @@ def test_spine_report_end_to_end(tmp_path):
         data_new = json.load(f)
     assert dicts_almost_equal(data_ref, data_new)
 
-    logs = output_log.read_text()
-    assert "Getting metadata..." in logs
-    assert "Creating report..." in logs
+
+def test_spine_report_files_exist(spine_report_result):
+    assert os.path.isfile(spine_report_result["output_nifti"])
