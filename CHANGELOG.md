@@ -1,8 +1,11 @@
 ## Master
 
+
+## Release 2.16.0 (21.07.2026)
 * add `totalseg_pulmonary_report` command to generate pulmonary artery landmark measurements, JSON results and an RGB NIfTI report.
 * add `totalseg_aorta_report` command to generate an aorta report with landmark diameters, section lengths/volumes, optional CPR visualization, JSON results and an RGB NIfTI report.
 * change the default input image resampling order from 3 to 1 for faster resampling with very similar segmentation accuracy.
+
 
 ## Release 2.15.0 (01.07.2026)
 * add `--resampling_order` option to choose the spline interpolation order for input image resampling. Default remains 3; setting it to 1 can speed up resampling with very similar segmentation accuracy.
