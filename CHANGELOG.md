@@ -1,4 +1,5 @@
 ## Master
+* speed up `totalseg_get_phase` by using `--save_lowres` for the fast total segmentation (stats are computed on the low-res image anyway).
 
 
 ## Release 2.16.0 (21.07.2026)

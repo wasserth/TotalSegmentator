@@ -76,7 +76,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True, debug=False):
         stats_total_path = tmp_dir / "stats_total.json"
         seg_total_path = tmp_dir / "seg_total.nii.gz"
         subprocess.call(
-            f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast"
+            f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast --save_lowres"
             f" -s {stats_total_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
             shell=True)
         seg_img = nib_load_eager(seg_total_path)
@@ -157,8 +157,9 @@ def get_ct_contrast_phase(ct_img, f_type: str = "niigz", model_file: Path = None
         st = time.time()
         if existing_stats is None:
             yield {"id": 2, "progress": 10, "status": "Running TotalSegmentator model"}
-            seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, statistics=True, 
-                                            roi_subset=None, statistics_exclude_masks_at_border=False,
+            seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, save_lowres=True,
+                                            statistics=True, roi_subset=None,
+                                            statistics_exclude_masks_at_border=False,
                                             quiet=True, stats_aggregation="median", device=device,
                                             debug=debug)
         else:
