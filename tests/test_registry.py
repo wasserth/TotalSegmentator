@@ -10,6 +10,7 @@ from totalsegmentator.registry import (
     list_tasks, task_registry, format_tasks_table, format_classes_table,
 )
 from totalsegmentator.map_to_binary import commercial_models
+from totalsegmentator.bin import totalseg_download_weights as download_weights
 
 
 class TestRegistry(unittest.TestCase):
@@ -156,3 +157,41 @@ class TestRunReport(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDownloadWeightsTasks(unittest.TestCase):
+    """`totalseg_download_weights -t <task>` must accept every task it can download.
+
+    The --task choices and the task->dataset-id table used to be maintained by hand
+    as two separate lists, and drifted: six downloadable tasks were rejected by
+    argparse (issue #589). The choices are now derived from the table, and this test
+    pins that they cannot diverge again.
+    """
+
+    def test_every_downloadable_task_is_accepted_by_the_cli(self):
+        parser = download_weights.build_parser()
+        for task in download_weights.TASK_TO_ID:
+            self.assertEqual(parser.parse_args(["-t", task]).task, task)
+
+    def test_every_accepted_task_resolves_to_dataset_ids(self):
+        # The inverse direction: argparse must not accept a task the download step
+        # would then KeyError on.
+        parser = download_weights.build_parser()
+        accepted = parser._option_string_actions["--task"].choices
+        for task in accepted:
+            if task == "all":
+                continue
+            self.assertIn(task, download_weights.TASK_TO_ID)
+            self.assertTrue(download_weights.TASK_TO_ID[task],
+                            f"task '{task}' maps to no dataset id")
+
+    def test_all_is_still_selectable(self):
+        self.assertEqual(download_weights.build_parser().parse_args(["-t", "all"]).task, "all")
+
+    def test_default_is_total(self):
+        self.assertEqual(download_weights.build_parser().parse_args([]).task, "total")
+
+    def test_regression_issue_589_brain_aneurysm(self):
+        parser = download_weights.build_parser()
+        self.assertEqual(parser.parse_args(["-t", "brain_aneurysm"]).task, "brain_aneurysm")
+        self.assertEqual(download_weights.TASK_TO_ID["brain_aneurysm"], [615])
