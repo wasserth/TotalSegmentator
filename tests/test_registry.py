@@ -36,11 +36,11 @@ class TestRegistry(unittest.TestCase):
         # TOF-MRI task whose name does not end in "_mr"
         self.assertEqual(task_modality("brain_aneurysm"), "MR")
         self.assertTrue(requires_license("tissue_types"))
-        self.assertTrue(requires_license("vertebrae_pp"))
+        self.assertFalse(requires_license("vertebrae_pp"))
         self.assertEqual(len(get_task_classes("vertebrae_pp")), 24)
         self.assertEqual(get_task_classes("vertebrae_pp")[1], "vertebrae_C1")
         self.assertEqual(get_task_classes("vertebrae_pp")[24], "vertebrae_L5")
-        self.assertTrue(requires_license("vertebrae_pp_refined"))
+        self.assertFalse(requires_license("vertebrae_pp_refined"))
         self.assertEqual(get_task_classes("vertebrae_pp_refined"), get_task_classes("vertebrae_pp"))
         self.assertTrue(requires_license("renal_arteries"))
         self.assertEqual(get_task_classes("renal_arteries")[3], "renal_arteries")

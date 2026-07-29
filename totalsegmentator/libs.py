@@ -391,6 +391,12 @@ def download_pretrained_weights(task_id):
     elif task_id == 615:
         weights_path = config_dir / "Dataset615_MAXIMUS"
         WEIGHTS_URL = url + "/v2.5.0-weights/Dataset615_MAXIMUS.zip"
+    elif task_id == 305:
+        weights_path = config_dir / "Dataset305_vertebrae_discs_1559subj"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset305_vertebrae_discs_1559subj.zip"
+    elif task_id == 803:
+        weights_path = config_dir / "Dataset803_TotalSegmentator_vertebrae_inner_1559subj"
+        WEIGHTS_URL = url + "/v2.5.0-weights/Dataset803_TotalSegmentator_vertebrae_inner_1559subj.zip"
 
     # Commercial models
     elif task_id == 304:
@@ -405,10 +411,6 @@ def download_pretrained_weights(task_id):
         weights_path = config_dir / "Dataset481_tissue_1559subj"
     elif task_id == 485:
         weights_path = config_dir / "Dataset485_tissue_4types_1559subj"
-    elif task_id == 305:
-        weights_path = config_dir / "Dataset305_vertebrae_discs_1559subj"
-    elif task_id == 803:
-        weights_path = config_dir / "Dataset803_TotalSegmentator_vertebrae_inner_1559subj"
     elif task_id == 925:
         weights_path = config_dir / "Dataset925_MRI_tissue_subset_903subj"
     elif task_id == 856:
@@ -460,7 +462,7 @@ def download_pretrained_weights(task_id):
 
         commercial_models_inv = {v: k for k, v in commercial_models.items()}
         if task_id in commercial_models_inv:
-            download_task_name = "vertebrae_pp" if task_id == 803 else commercial_models_inv[task_id]
+            download_task_name = commercial_models_inv[task_id]
             download_model_with_license_and_unpack(download_task_name, config_dir)
         else:
             # r = requests.get(WEIGHTS_URL)

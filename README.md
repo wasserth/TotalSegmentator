@@ -84,6 +84,9 @@ Openly available for any usage (Apache-2.0 license):
 * **ventricle_parts**: ventricle_frontal_horn_left, ventricle_occipital_horn_left, ventricle_body_left, ventricle_temporal_horn_left, ventricle_trigone_left, ventricle_frontal_horn_right, ventricle_occipital_horn_right, ventricle_body_right, ventricle_temporal_horn_right, ventricle_trigone_right, third_ventricle, fourth_ventricle
 * **liver_lesions**: liver_lesions (cite [paper](https://doi.org/10.1007/s10278-025-01716-y), download [training dataset](https://doi.org/10.5281/zenodo.20272571))*
 * **liver_lesions_mr**: liver_lesions (for MR images) (cite [paper](https://doi.org/10.1007/s10278-025-01716-y), download [training dataset](https://doi.org/10.5281/zenodo.20272347))*
+* **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch), intervertebral_discs (for MR this is part of the `total_mr` task)
+* **vertebrae_pp**: vertebral bodies C1-L5 with per-vertebra labels
+* **vertebrae_pp_refined**: vertebral bodies C1-L5 with per-vertebra labels, refined with the `vertebrae_body` mask for sharper borders
 
 *: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
@@ -95,9 +98,6 @@ Available with a license (free licenses available for non-commercial usage [here
 * **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images; works on all sequences but for DIXON prefer F for subcut./torso fat and W for muscle as input)
 * **tissue_4_types**: subcutaneous_fat, torso_fat, skeletal_muscle, intermuscular_fat (in contrast to `tissue_types` skeletal_muscle is split into two classes: muscle and fat) (see [more details](#postprocessing))
 * **brain_structures**: brainstem, subarachnoid_space, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus (NOTE: this is for CT) (cite [paper](https://doi.org/10.1148/ryai.2020190183) as our model is partly based on this)
-* **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch), intervertebral_discs (for MR this is part of the `total_mr` task)
-* **vertebrae_pp**: vertebral bodies C1-L5 with per-vertebra labels
-* **vertebrae_pp_refined**: vertebral bodies C1-L5 with per-vertebra labels, refined with the `vertebrae_body` mask for sharper borders
 * **face**: face_region (for anonymization)
 * **face_mr**: face_region (for anonymization)
 * **thigh_shoulder_muscles**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii
@@ -167,7 +167,7 @@ If you want to calculate the [Evans index](https://radiopaedia.org/articles/evan
 totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png
 ```
 
-If you want to find osteoporotic spine fractures you can use the following command (requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/)). Please cite this [paper](https://rdcu.be/fp2jd):
+If you want to find osteoporotic spine fractures you can use the following command. Please cite this [paper](https://rdcu.be/fp2jd):
 ```bash
 totalseg_spine_report.py -i ct.nii.gz -o spine_report.nii.gz -j spine_report.json -l spine_report.log
 ```

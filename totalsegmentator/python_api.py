@@ -605,8 +605,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         folds = None
         if not quiet: print("INFO: This task only works with TOF MRI images.\n")
         if fast: raise ValueError("task brain_aneurysm does not work with option --fast")
-
-    # Commercial models
     elif task == "vertebrae_body":
         task_id = 305
         resample = 1.5
@@ -615,7 +613,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task vertebrae_body does not work with option --fast")
-        show_license_info()
     elif task == "vertebrae_pp":
         task_id = 803
         resample = 1.5
@@ -624,7 +621,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task vertebrae_pp does not work with option --fast")
-        show_license_info()
     elif task == "vertebrae_pp_refined":
         task_id = 803
         resample = 1.5
@@ -633,7 +629,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         model = "3d_fullres"
         folds = [0]
         if fast: raise ValueError("task vertebrae_pp_refined does not work with option --fast")
-        show_license_info()
+
+    # Commercial models
     elif task == "heartchambers_highres":
         task_id = 301
         resample = None
