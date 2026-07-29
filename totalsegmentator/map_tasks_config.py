@@ -534,6 +534,10 @@ TASK_ID_WEIGHTS_CONFIGS = {
     # Trying to keep original order as much as possible but might make more sense to organize by release version and then task_id?
     # Could be simplified if you don't need the zenodo_weights_url or alt_weights_url or alt_version_urls which were previously commented out.
 
+    # foldername = local and URL foldername
+    # version = weights release URL version string
+    # rel_path = (optional) extra local path
+
     # Total CT v2
     291: {
         "foldername": "Dataset291_TotalSegmentator_part1_organs_1559subj",
@@ -636,9 +640,9 @@ TASK_ID_WEIGHTS_CONFIGS = {
         "zenodo_weights_url": "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1",
         "alt_weights_url": "/static/totalseg_v2/Dataset258_lung_vessels_248subj.zip",
     },
-    200: {"rel_path": Path("Task200_covid_challenge"), "version": "TODO"},
-    201: {"rel_path": Path("Task201_covid"), "version": "TODO"},
-    # 152: {"rel_path": Path("Task152_icbbig_TN"), "version": "TODO"},
+    200: {"foldername": "Task200_covid_challenge", "version": "TODO"},
+    201: {"foldername": "Task201_covid", "version": "TODO"},
+    # 152: {"foldername": Path("Task152_icbbig_TN"), "version": "TODO"},
     150: {
         "foldername": "Dataset150_icb_v0",
         "version": "v2.0.0-weights",
@@ -693,20 +697,19 @@ TASK_ID_WEIGHTS_CONFIGS = {
 
     # XGBoost
     "body_stats": {
-        "rel_path": Path("body_stats_models_2026_03_24"),
-        "version": "v2.5.0-weights",
-        "url_filename": "body_stats_models_2026_03_24",
+        "foldername": "body_stats_models_2026_03_24",
+        "version": "v2.5.0-weights"
     },
 
     # CNN body stats: one multi-target model per modality
     "body_stats_cnn_mr": {
-        "rel_path": Path("lightning_models") / "mr_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
+        "rel_path": "lightning_models",
+        "foldername" : "mr_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
         "version": "v2.5.0-weights",
-        "url_filename": "mr_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
     },
     "body_stats_cnn_ct": {
-        "rel_path": Path("lightning_models") / "ct_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
+        "rel_path": "lightning_models",
+        "foldername": "ct_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
         "version": "v2.5.0-weights",
-        "url_filename": "ct_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
     },
 }

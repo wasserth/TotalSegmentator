@@ -202,8 +202,11 @@ def download_pretrained_weights(task_id):
     info = TASK_ID_WEIGHTS_CONFIGS[task_id]
 
     # Resolve Path
-    rel_path = info.get("rel_path") or info.get("foldername")
-    weights_path = config_dir / Path(rel_path)
+    folder_path = info.get("foldername")
+    rel_path = info.get("rel_path")
+    if rel_path is not None:
+        folder_path = Path(rel_path) / Path(folder_path)
+    weights_path = config_dir / Path(folder_path)
 
     # Resolve URL
     version = info.get("version")
@@ -212,7 +215,7 @@ def download_pretrained_weights(task_id):
     if version == "TODO":
         WEIGHTS_URL = "TODO"
     elif version is not None:
-        filename = info.get("url_filename") or info.get("foldername")
+        filename = info.get("foldername")
         WEIGHTS_URL = f"{url}/{version}/{filename}.zip"
 
     for old_weight in old_weights:
