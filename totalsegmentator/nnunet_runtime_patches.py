@@ -365,7 +365,7 @@ def predict_from_data_iterator(self,
 
         print("GPU prediction completed. Waiting for remaining segmentation exports to finish...")
         ret = [None] * len(r)
-        with prd.tqdm(desc="Collecting results", total=len(r), disable=not self.allow_tqdm) as pbar:
+        with prd.tqdm(desc="Collecting results", total=len(r), disable=not self.verbose) as pbar:
             for i, result in enumerate(r):
                 while True:
                     all_alive = all([j.is_alive() for j in worker_list])

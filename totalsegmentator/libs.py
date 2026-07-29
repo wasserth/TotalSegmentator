@@ -245,8 +245,7 @@ def download_pretrained_weights(task_id):
 
             weights_path.parent.mkdir(exist_ok=True, parents=True)
             download_url_and_unpack(WEIGHTS_URL, weights_path.parent)
-    else:
-        print(f"Weights path {weights_path} already exists for Task {task_id}.")
+
 
 def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
     """
