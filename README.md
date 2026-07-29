@@ -85,8 +85,6 @@ Openly available for any usage (Apache-2.0 license):
 * **liver_lesions**: liver_lesions (cite [paper](https://doi.org/10.1007/s10278-025-01716-y), download [training dataset](https://doi.org/10.5281/zenodo.20272571))*
 * **liver_lesions_mr**: liver_lesions (for MR images) (cite [paper](https://doi.org/10.1007/s10278-025-01716-y), download [training dataset](https://doi.org/10.5281/zenodo.20272347))*
 * **vertebrae_pp**: vertebral bodies C1-L5 with per-vertebra labels (a lot less segmentation errors than vertebrae segmentations from `total` task because of added postprocessing)
-
-More specialised tasks not relevant for most users:
 * **vertebrae_pp_refined**: vertebral bodies C1-L5 with per-vertebra labels, refined with the `vertebrae_body` mask for sharper borders (borders are more accurate than in `vertebrae_pp` but has longer runtime)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch), intervertebral_discs (for MR this is part of the `total_mr` task)
 
