@@ -1,6 +1,4 @@
-from pathlib import Path
-
-# Standard default parameters across tasks
+# Task standard default parameters
 DEFAULT_CONFIG = {
     "resample": None,
     "crop": None,
@@ -21,7 +19,7 @@ DEFAULT_CONFIG = {
 
 # Important: 'resample' expects [x,y,z] but in nnUNet plans.json file it is [z,y,x]. So when copying from plans.json make sure to reverse the order.
 
-# Task Lookup Table
+# Task custom parameters
 TASK_CONFIGS = {
     # Tasks with sub-modes (fast / fastest / default)
     "total": {
@@ -531,61 +529,64 @@ TASK_CONFIGS = {
 }
 
 TASK_ID_WEIGHTS_CONFIGS = {
-    # Trying to keep original order as much as possible but might make more sense to organize by release version and then task_id?
-    # Could be simplified if you don't need the zenodo_weights_url or alt_weights_url or alt_version_urls which were previously commented out.
+    # Trying to keep original order and comments as much as possible
 
     # foldername = local and URL foldername
     # version = weights release URL version string
-    # rel_path = (optional) extra local path
+    # rel_path = (optional) extra local path prior to foldername
+    # zenodo_weights_url = (optional) previously commented out zenodo url path
+    # alt_weights_url = (optional) previously commented out static url path
 
     # Total CT v2
     291: {
         "foldername": "Dataset291_TotalSegmentator_part1_organs_1559subj",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/6802342/files/Task251_TotalSegmentator_part1_organs_1139subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset291_TotalSegmentator_part1_organs_1559subj.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/6802342/files/Task251_TotalSegmentator_part1_organs_1139subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset291_TotalSegmentator_part1_organs_1559subj.zip",
     },
     292: {
         "foldername": "Dataset292_TotalSegmentator_part2_vertebrae_1532subj",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/6802358/files/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/6802358/files/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip",
     },
     293: {
         "foldername": "Dataset293_TotalSegmentator_part3_cardiac_1559subj",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/6802360/files/Task253_TotalSegmentator_part3_cardiac_1139subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/6802360/files/Task253_TotalSegmentator_part3_cardiac_1139subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip",
     },
     294: {
         "foldername": "Dataset294_TotalSegmentator_part4_muscles_1559subj",
-        "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/6802366/files/Task254_TotalSegmentator_part4_muscles_1139subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip",
+        "version": "v2.0.0-weights"
+        # "zenodo_weights_url": "https://zenodo.org/record/6802366/files/Task254_TotalSegmentator_part4_muscles_1139subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip",
     },
     295: {
         "foldername": "Dataset295_TotalSegmentator_part5_ribs_1559subj",
-        "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip",
+        "version": "v2.0.0-weights"
+        # "zenodo_weights_url": "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip",
     },
     297: {
         "foldername": "Dataset297_TotalSegmentator_total_3mm_1559subj",
-        "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip",
-        "alt_version_urls": [
-            "/v2.0.4-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v204.zip",
-            "/v2.0.5-weights/Dataset297_TotalSegmentator_total_3mm_1559subj_v205.zip",
-        ],
+        "version": "v2.0.0-weights"
+        # "zenodo_weights_url": "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip",
+
+        # "foldername" : "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",
+        # "version" : "v2.0.4-weights"
+
+        # "foldername" : "Dataset297_TotalSegmentator_total_3mm_1559subj_v205",
+        # "version" : "v2.0.5-weights",
     },
     298: {
         "foldername": "Dataset298_TotalSegmentator_total_6mm_1559subj",
         "version": "v2.0.0-weights",
-        "alt_weights_url": "/static/totalseg_v2/Dataset298_TotalSegmentator_total_6mm_1559subj.zip",
-        "alt_version_urls": [
-            "/v2.0.5-weights/Dataset298_TotalSegmentator_total_6mm_1559subj_v205.zip",
-        ],
+        # "alt_weights_url": "/static/totalseg_v2/Dataset298_TotalSegmentator_total_6mm_1559subj.zip",
+
+        # "foldername" : "Dataset298_TotalSegmentator_total_6mm_1559subj_v205",
+        # "version" : "v2.0.5-weights"
     },
 
     # Total CT v3
@@ -601,13 +602,13 @@ TASK_ID_WEIGHTS_CONFIGS = {
     299: {
         "foldername": "Dataset299_body_1559subj",
         "version": "v2.0.0-weights",
-        "alt_weights_url": "/static/totalseg_v2/Dataset299_body_1559subj.zip",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset299_body_1559subj.zip",
     },
     300: {
         "foldername": "Dataset300_body_6mm_1559subj",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset300_body_6mm_1559subj.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset300_body_6mm_1559subj.zip",
     },
     775: {"foldername": "Dataset775_head_glands_cavities_492subj", "version": "v2.3.0-weights"},
     776: {"foldername": "Dataset776_headneck_bones_vessels_492subj", "version": "v2.3.0-weights"},
@@ -637,8 +638,8 @@ TASK_ID_WEIGHTS_CONFIGS = {
     258: {
         "foldername": "Dataset258_lung_vessels_248subj",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset258_lung_vessels_248subj.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/7064718/files/Task258_lung_vessels_248subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset258_lung_vessels_248subj.zip",
     },
     200: {"foldername": "Task200_covid_challenge", "version": "TODO"},
     201: {"foldername": "Task201_covid", "version": "TODO"},
@@ -646,20 +647,20 @@ TASK_ID_WEIGHTS_CONFIGS = {
     150: {
         "foldername": "Dataset150_icb_v0",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/7079161/files/Task150_icb_v0.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset150_icb_v0.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/7079161/files/Task150_icb_v0.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset150_icb_v0.zip",
     },
     260: {
         "foldername": "Dataset260_hip_implant_71subj",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/7234263/files/Task260_hip_implant_71subj.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset260_hip_implant_71subj.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/7234263/files/Task260_hip_implant_71subj.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset260_hip_implant_71subj.zip",
     },
     315: {
         "foldername": "Dataset315_thoraxCT",
         "version": "v2.0.0-weights",
-        "zenodo_weights_url": "https://zenodo.org/record/7510288/files/Task315_thoraxCT.zip?download=1",
-        "alt_weights_url": "/static/totalseg_v2/Dataset315_thoraxCT.zip",
+        # "zenodo_weights_url": "https://zenodo.org/record/7510288/files/Task315_thoraxCT.zip?download=1",
+        # "alt_weights_url": "/static/totalseg_v2/Dataset315_thoraxCT.zip",
     },
     8: {"foldername": "Dataset008_HepaticVessel", "version": "v2.4.0-weights"},
 
