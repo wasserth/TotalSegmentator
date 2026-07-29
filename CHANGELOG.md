@@ -1,6 +1,8 @@
 ## Master
+* add `map_tasks_config.py`
 * change category of `vertebrae_body`, `vertebrae_pp` and `vertebrae_pp_refined` tasks.
 * speed up `totalseg_get_phase` by using `--save_lowres` for the fast total segmentation (stats are computed on the low-res image anyway).
+* fix `totalseg_download_weights`: derive `--task` choices from the task→id map so downloadable tasks can no longer be rejected as invalid choices
 
 
 ## Release 2.16.0 (21.07.2026)
