@@ -18,6 +18,7 @@ from totalsegmentator.config import setup_nnunet, setup_totalseg, increase_predi
 from totalsegmentator.config import send_usage_stats, set_license_number, has_valid_license_offline
 from totalsegmentator.config import get_config_key, set_config_key
 from totalsegmentator.map_to_binary import class_map
+from totalsegmentator.map_tasks_config import DEFAULT_CONFIG, TASK_CONFIGS
 from totalsegmentator.map_to_total import map_to_total
 import re
 
@@ -150,6 +151,54 @@ def show_license_info():
         sys.exit(1)
 
 
+def get_task_config(task, fast=False, fastest=False, quiet=False, robust_crop=None, plans=None, model_size=None):
+    """Retrieves and builds task configurations dynamically based on parameters."""
+    if task not in TASK_CONFIGS:
+        raise ValueError(f"Unknown task: {task}")
+
+    # Build base config using defaults
+    config = DEFAULT_CONFIG.copy()
+    raw_task = TASK_CONFIGS[task]
+
+    # Explicit overrides for defaults from pass-through arguments
+    if robust_crop is not None:
+        config["robust_crop"] = robust_crop
+
+    if plans is not None:
+        config["plans"] = plans
+
+    # Update config values for sub-mode tasks (fast / fastest / default)
+    if "sub_modes" in raw_task:
+        mode = "fast" if fast else ("fastest" if fastest else "default")
+        if mode not in raw_task["sub_modes"]:
+            # Fall back to default if 'fastest' requested but only 'fast' defined (e.g., body tasks)
+            mode = "fast" if fast or fastest else "default"
+
+        sub_config = raw_task["sub_modes"][mode]
+        config.update(sub_config)
+
+        if not quiet and mode in ["fast", "fastest"]:
+            resample_mm = int(sub_config["resample"])
+            print(f"Using '{mode}' option: resampling to lower resolution ({resample_mm}mm)")
+    else:
+        # Update config values for standard tasks
+        config.update({k: v for k, v in raw_task.items() if k not in ("disallow_fast", "commercial", "info_msg")})
+
+        if raw_task.get("disallow_fast") and fast:
+            raise ValueError(f"task {task} does not work with option --fast")
+
+    # Handle special case task-specific logic and options
+    if task == "total_v3" and model_size == "small":
+        config["plans"] = "nnUNetResEncUNetLPlans_8"
+
+    if "info_msg" in raw_task and not quiet:
+        print(raw_task["info_msg"])
+
+    if raw_task.get("commercial"):
+        show_license_info()
+
+    return config
+
 def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path, None]=None, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics: Union[bool, str, Path]=False, radiomics=False, crop_path=None, body_seg=False,
@@ -228,587 +277,25 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     from totalsegmentator.nnunet import nnUNet_predict_image  # this has to be after setting new env vars
 
-    crop_model = None
-    crop_addon = [3, 3, 3]  # default value
-    cascade = None
-    remove_outside = None
-    remove_outside_dilation = None
-    remove_mask = None
-    modality = None
+    # Unpack the retrieved config directly into local variable names
+    task_config = get_task_config(task, fast=fast, fastest=fastest, plans=plans, robust_crop=robust_crop, quiet=quiet, model_size=model_size)
 
-    # Important: 'resample' expects [x,y,z] but in nnUNet plans.json file it is [z,y,x]. So when copying from plans.json make sure to reverse the order.
-    
-    if task == "total":
-        if fast:
-            task_id = 297
-            resample = 3.0
-            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
-            # trainer = "nnUNetTrainerNoMirroring"
-            crop = None
-            if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
-        elif fastest:
-            task_id = 298
-            resample = 6.0
-            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
-            crop = None
-            if not quiet: print("Using 'fastest' option: resampling to lower resolution (6mm)")
-        else:
-            task_id = [291, 292, 293, 294, 295]
-            resample = 1.5
-            trainer = "nnUNetTrainerNoMirroring"
-            # trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-            crop = None
-        model = "3d_fullres"
-        folds = [0]
-    elif task == "total_v3":
-        if model_size == "small":
-            plans = "nnUNetResEncUNetLPlans_8"
-        if fast:
-            task_id = 836
-            resample = 3.0
-            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
-            crop = None
-            if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
-        elif fastest:
-            task_id = 837
-            resample = 6.0
-            trainer = "nnUNetTrainer_4000epochs_NoMirroring"
-            crop = None
-            if not quiet: print("Using 'fastest' option: resampling to lower resolution (6mm)")
-        else:
-            task_id = [831, 832, 833, 834, 835]
-            resample = 1.5
-            trainer = "nnUNetTrainerNoMirroring"
-            crop = None
-        model = "3d_fullres"
-        folds = [0]
-    # todo: add to download and preview
-    # elif task == "total_highres_test":
-    #     # task_id = 955
-    #     task_id = 956
-    #     # resample = [0.75, 0.75, 1.0]
-    #     resample = [0.78125, 0.78125, 1.0]
-    #     trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-    #     crop_addon = [30, 30, 30]
-    #     crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
-    #     # model = "3d_fullres_high"
-    #     # model = "3d_fullres_high_bigPS"
-    #     model = "3d_fullres"
-    #     cascade = True
-    #     folds = [0]
-    elif task == "total_highres_test":
-        task_id = 957
-        resample = [0.75, 0.75, 1.0]
-        trainer = "nnUNetTrainerNoMirroring"
-        # crop_addon = [30, 30, 30]
-        # crop = ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"] # abdomen_thorax
-        crop = None
-        model = "3d_fullres_high"
-        # model = "3d_fullres_high_bigPS"
-        cascade = False
-        folds = [0]
-    elif task == "total_mr":
-        if fast:
-            task_id = 852
-            resample = 3.0
-            trainer = "nnUNetTrainer_2000epochs_NoMirroring"
-            # trainer = "nnUNetTrainerNoMirroring"
-            crop = None
-            if not quiet: print("Using 'fast' option: resampling to lower resolution (3mm)")
-        elif fastest:
-            task_id = 853
-            resample = 6.0
-            trainer = "nnUNetTrainer_2000epochs_NoMirroring"
-            crop = None
-            if not quiet: print("Using 'fastest' option: resampling to lower resolution (6mm)")
-        else:
-            task_id = [850, 851]
-            resample = 1.5
-            trainer = "nnUNetTrainer_2000epochs_NoMirroring"
-            crop = None
-        model = "3d_fullres"
-        folds = [0]
-    elif task == "lung_vessels":
-        task_id = 117
-        resample = [0.703125, 0.703125, 1.0]
-        trainer = "nnUNetTrainerSkeletonRecall"
-        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        robust_crop = True
-        # todo: adapt code to support removing outside of body (so far only "total" task classes supported)
-        # remove_outside = ["body_trunc"]
-        # remove_outside_dilation = 0  # mm
-        model = "3d_fullres"
-        folds = [0]
-    elif task == "lung_vessels_LEGACY":
-        task_id = 258
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        if fast: raise ValueError("task lung_vessels_LEGACY does not work with option --fast")
-        model = "3d_fullres"
-        folds = [0]
-    # elif task == "covid":
-    #     task_id = 201
-    #     resample = None
-    #     trainer = "nnUNetTrainer"
-    #     crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-    #             "lung_middle_lobe_right", "lung_lower_lobe_right"]
-    #     model = "3d_fullres"
-    #     folds = [0]
-    #     print("WARNING: The COVID model finds many types of lung opacity not only COVID. Use with care!")
-    #     if fast: raise ValueError("task covid does not work with option --fast")
-    elif task == "cerebral_bleed":
-        task_id = 150
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["brain"]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task cerebral_bleed does not work with option --fast")
-    elif task == "hip_implant":
-        task_id = 260
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["femur_left", "femur_right", "hip_left", "hip_right"]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task hip_implant does not work with option --fast")
-    elif task == "body":
-        if fast:
-            task_id = 300
-            resample = 6.0
-            trainer = "nnUNetTrainer"
-            crop = None
-            model = "3d_fullres"
-            folds = [0]
-            if not quiet: print("Using 'fast' option: resampling to lower resolution (6mm)")
-        else:
-            task_id = 299
-            resample = 1.5
-            trainer = "nnUNetTrainer"
-            crop = None
-            model = "3d_fullres"
-            folds = [0]
-    elif task == "body_mr":
-        if fast:
-            task_id = 598  # todo: train
-            resample = 6.0
-            trainer = "nnUNetTrainer_DASegOrd0"
-            crop = None
-            model = "3d_fullres"
-            folds = [0]
-            if not quiet: print("Using 'fast' option: resampling to lower resolution (6mm)")
-        else:
-            task_id = 597
-            resample = 1.5
-            trainer = "nnUNetTrainer_DASegOrd0"
-            crop = None
-            model = "3d_fullres"
-            folds = [0]
-    elif task == "vertebrae_mr":
-        task_id = 756
-        resample = 1.5
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-    elif task == "pleural_pericard_effusion":
-        task_id = 315
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        crop_addon = [50, 50, 50]
-        model = "3d_fullres"
-        folds = None
-        if fast: raise ValueError("task pleural_pericard_effusion does not work with option --fast")
-    elif task == "liver_vessels":
-        task_id = 8
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["liver"]
-        crop_addon = [20, 20, 20]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task liver_vessels does not work with option --fast")
-    elif task == "head_glands_cavities":
-        task_id = 775
-        resample = [0.75, 0.75, 1.0]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["skull"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task head_glands_cavities does not work with option --fast")
-    elif task == "headneck_bones_vessels":
-        task_id = 776
-        resample = [0.75, 0.75, 1.0]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        # crop = ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
-        # crop_addon = [10, 10, 10]
-        crop = ["clavicula_left", "clavicula_right", "vertebrae_C1", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
-        crop_addon = [40, 40, 40]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task headneck_bones_vessels does not work with option --fast")
-    elif task == "head_muscles":
-        task_id = 777
-        resample = [0.75, 0.75, 1.0]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["skull"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task head_muscles does not work with option --fast")
-    elif task == "headneck_muscles":
-        task_id = [778, 779]
-        resample = [0.75, 0.75, 1.0]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        # crop = ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
-        # crop_addon = [10, 10, 10]
-        crop = ["clavicula_left", "clavicula_right", "vertebrae_C1", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"]
-        crop_addon = [40, 40, 40]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task headneck_muscles does not work with option --fast")
-    elif task == "oculomotor_muscles":
-        task_id = 351
-        resample = [0.47251562774181366, 0.47251562774181366, 0.8500002026557922]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["skull"]
-        crop_addon = [20, 20, 20]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task oculomotor_muscles does not work with option --fast")
-    elif task == "lung_nodules":
-        task_id = 913
-        resample = [1.5, 1.5, 1.5]
-        trainer = "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring"
-        crop = ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
-                "lung_middle_lobe_right", "lung_lower_lobe_right"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task lung_nodules does not work with option --fast")
-    elif task == "kidney_cysts":
-        task_id = 789
-        resample = [1.5, 1.5, 1.5]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["kidney_left", "kidney_right", "liver", "spleen", "colon"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task kidney_cysts does not work with option --fast")
-    elif task == "breasts":
-        task_id = 527
-        resample = [1.5, 1.5, 1.5]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task breasts does not work with option --fast")
-    elif task == "ventricle_parts":
-        task_id = 552
-        resample = [0.4384765625, 0.4345703125, 1.0]
-        trainer = "nnUNetTrainerNoMirroring"
-        crop = ["brain"]
-        crop_addon = [0, 0, 0]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task ventricle_parts does not work with option --fast")
-    elif task == "liver_segments":
-        task_id = 570
-        resample = [0.8046879768371582, 0.8046879768371582, 1.5]
-        trainer = "nnUNetTrainerNoMirroring"
-        crop = ["liver"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task liver_segments does not work with option --fast")
-    elif task == "liver_segments_mr":
-        task_id = 576
-        resample = [1.1250001788139343, 1.1875, 3.0]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["liver"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task liver_segments_mr does not work with option --fast")
-    elif task == "liver_lesions":
-        task_id = 591
-        resample = [0.75, 0.75, 1.0]
-        trainer = "nnUNetTrainer"
-        crop = ["liver"]
-        crop_addon = [10, 10, 10]
-        robust_crop = True
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task liver_lesions does not work with option --fast")
-    elif task == "liver_lesions_mr":
-        task_id = 589
-        resample = [0.8603515625, 0.857421875, 1.0]
-        trainer = "nnUNetTrainer_DASegOrd0"
-        crop = ["liver"]
-        crop_addon = [3, 3, 3]
-        robust_crop = True
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task liver_lesions_mr does not work with option --fast")
-    elif task == "craniofacial_structures":
-        task_id = 115
-        resample = [0.5, 0.5, 0.5]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["skull"]
-        crop_addon = [20, 20, 20]
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task craniofacial_structures does not work with option --fast")
-    # This model only segments within T4-L4. In training only labels in this region were annotated. Therefore,
-    # I do not have to crop to this region, but model automatically only predicts in this region.
-    elif task == "abdominal_muscles":
-        task_id = 952
-        resample = [0.75, 0.75, 1]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["body_trunc"]
-        crop_addon = [5, 5, 5]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task abdominal_muscles does not work with option --fast")
-    elif task == "teeth":
-        task_id = 113  # trained with nnUNet v2.6.2; might not be compatible with older nnunet versions
-        resample = [0.5, 0.5, 0.5]
-        trainer = "nnUNetTrainer_onlyMirror01"
-        # mandible not included, because would increase FOV way too much -> many wrong segmentation in regions outside of teeth
-        # (model was trained on pretty narrow FOV because of CBCT data)
-        crop = ["teeth_lower", "teeth_upper"]
-        crop_model = "craniofacial_structures"
-        crop_addon = [10, 10, 10]
-        model = "3d_lowres_high"
-        folds = [0]
-        if fast: raise ValueError("task teeth does not work with option --fast")
-    elif task == "trunk_cavities":
-        task_id = 343
-        resample = [1.5, 1.5, 1.5]
-        trainer = "nnUNetTrainer"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task trunk_cavities does not work with option --fast")
-    elif task == "brain_aneurysm":
-        task_id = 615
-        resample = [0.390625, 0.390625, 0.5000016391277313]
-        trainer = "nnUNetTrainerDiceTopK10Loss_2000epochs"
-        crop = None  # no cropping needed, because TOF MRI images only cover brain
-        model = "3d_fullres"
-        folds = None
-        if not quiet: print("INFO: This task only works with TOF MRI images.\n")
-        if fast: raise ValueError("task brain_aneurysm does not work with option --fast")
-    elif task == "vertebrae_body":
-        task_id = 305
-        resample = 1.5
-        trainer = "nnUNetTrainer_DASegOrd0"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task vertebrae_body does not work with option --fast")
-    elif task == "vertebrae_pp":
-        task_id = 803
-        resample = 1.5
-        trainer = "nnUNetTrainerNoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task vertebrae_pp does not work with option --fast")
-    elif task == "vertebrae_pp_refined":
-        task_id = 803
-        resample = 1.5
-        trainer = "nnUNetTrainerNoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task vertebrae_pp_refined does not work with option --fast")
+    crop_model = task_config.get("crop_model")
+    crop_addon = task_config.get("crop_addon")
+    cascade = task_config.get("cascade")
+    remove_outside = task_config.get("remove_outside")
+    remove_outside_dilation = task_config.get("remove_outside_dilation")
+    remove_mask = task_config.get("remove_mask")
+    modality = task_config.get("modality")
 
-    # Commercial models
-    elif task == "heartchambers_highres":
-        task_id = 301
-        resample = None
-        trainer = "nnUNetTrainer"
-        crop = ["heart"]
-        crop_addon = [5, 5, 5]
-        remove_outside = ["heart", "aorta", "inferior_vena_cava"]
-        remove_outside_dilation = 10  # mm
-        robust_crop = True
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task heartchambers_highres does not work with option --fast")
-        show_license_info()
-    elif task == "appendicular_bones":
-        task_id = 304
-        resample = 1.5
-        trainer = "nnUNetTrainerNoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task appendicular_bones does not work with option --fast")
-        show_license_info()
-    elif task == "appendicular_bones_mr":
-        task_id = 855
-        resample = 1.5
-        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task appendicular_bones_mr does not work with option --fast")
-        show_license_info()
-    elif task == "tissue_types":
-        task_id = 481
-        resample = 1.5
-        trainer = "nnUNetTrainer"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task tissue_types does not work with option --fast")
-        show_license_info()
-    elif task == "tissue_types_mr":
-        task_id = 925
-        resample = 1.5
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task tissue_types_mr does not work with option --fast")
-        show_license_info()
-    elif task == "tissue_4_types":
-        task_id = 485
-        resample = 1.5
-        trainer = "nnUNetTrainer"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task tissue_4_types does not work with option --fast")
-        show_license_info()
-    elif task == "face":
-        task_id = 303
-        resample = 1.5
-        trainer = "nnUNetTrainerNoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task face does not work with option --fast")
-        show_license_info()
-    elif task == "face_mr":
-        task_id = 856
-        resample = 1.5
-        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task face_mr does not work with option --fast")
-        show_license_info()
-    elif task == "brain_structures":
-        task_id = 409
-        resample = [0.5, 0.5, 1.0]
-        trainer = "nnUNetTrainer_DASegOrd0"
-        crop = ["brain"]
-        crop_addon = [10, 10, 10]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task brain_structures does not work with option --fast")
-        show_license_info()
-    elif task == "thigh_shoulder_muscles":
-        task_id = 857  # at the moment only one mixed model for CT and MR; when annotated all CT samples -> train separate CT model
-        resample = 1.5
-        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task thigh_shoulder_muscles does not work with option --fast")
-        show_license_info()
-    elif task == "thigh_shoulder_muscles_mr":
-        task_id = 857
-        resample = 1.5
-        trainer = "nnUNetTrainer_2000epochs_NoMirroring"
-        crop = None
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task thigh_shoulder_muscles_mr does not work with option --fast")
-        show_license_info()
-    elif task == "coronary_arteries":
-        task_id = 509
-        resample = [0.7, 0.7, 0.7]
-        trainer = "nnUNetTrainerSkeletonRecall"
-        crop = ["heart"]
-        crop_addon = [20, 20, 20]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task coronary_arteries does not work with option --fast")
-        show_license_info()
-    elif task == "coronary_arteries_LEGACY":
-        task_id = 507
-        resample = [0.7, 0.7, 0.7]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["heart"]
-        crop_addon = [20, 20, 20]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task coronary_arteries_LEGACY does not work with option --fast")
-        show_license_info()
-    elif task == "aortic_sinuses":
-        task_id = 920
-        resample = [0.7, 0.7, 0.7]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = ["heart"]
-        crop_addon = [0, 0, 0]
-        model = "3d_fullres_high"
-        folds = [0]
-        if fast: raise ValueError("task aortic_sinuses does not work with option --fast")
-        show_license_info()
-    elif task == "renal_arteries":
-        task_id = 710
-        resample = 1.5
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = None  # Model only used for aorta_report and there only working on already cropped image
-        model = "3d_fullres"
-        folds = [0]
-        if fast: raise ValueError("task renal_arteries does not work with option --fast")
-        show_license_info()
-    elif task == "aorta_annulus":
-        task_id = 713
-        resample = [0.8, 0.8, 0.8]
-        trainer = "nnUNetTrainer_DASegOrd0"
-        crop = None  # Model only used for aorta_report and there only working on already cropped image
-        model = "3d_fullres_high"
-        folds = [0, 1, 2, 3, 4]
-        if fast: raise ValueError("task aorta_annulus does not work with option --fast")
-        show_license_info()
-    elif task == "aortic_dissection":
-        task_id = 716
-        resample = [0.8, 0.8, 0.8]
-        trainer = "nnUNetTrainer_DASegOrd0_NoMirroring"
-        crop = None  # Model only used for aorta_report and there only working on already cropped image
-        model = "3d_fullres_high"
-        folds = [0, 1, 2, 3, 4]
-        if fast: raise ValueError("task aortic_dissection does not work with option --fast")
-        show_license_info()
-    elif task == "pulmonary_artery_landmarks":
-        task_id = 514
-        resample = [0.7802734375, 0.7802734375, 1.0]
-        trainer = "nnUNetTrainer"
-        crop = None
-        model = "3d_fullres"
-        folds = [0, 1, 2, 3, 4]
-        if fast: raise ValueError("task pulmonary_artery_landmarks does not work with option --fast")
-        show_license_info()
-
-    elif task == "test":
-        task_id = [517]
-        resample = None
-        trainer = "nnUNetTrainerV2"
-        crop = "body"
-        model = "3d_fullres"
-        folds = [0]
+    task_id = task_config.get("task_id")
+    resample = task_config.get("resample")
+    trainer = task_config.get("trainer")
+    crop = task_config.get("crop")
+    model = task_config.get("model")
+    folds = task_config.get("folds")
+    plans = task_config.get("plans")
+    robust_crop = task_config.get("robust_crop")
 
     if crop_path is None:
         crop_path = output.parent if output is not None else None
