@@ -4,6 +4,8 @@ Tool for segmentation of most major anatomical structures in any CT or MR image.
 
 **ANNOUNCEMENT: TotalSegmentator now can predict height, weight, age and sex: [totalseg_get_body_stats](#other-commands).**  
 
+**ANNOUNCEMENT: The new tasks `vertebrae_pp` will greatly improve vertebrae segmentations (less mixup of neighboring vertebrae).**  
+
 **ANNOUNCEMENT: We created web applications for [abdominal organ volume](https://compute.totalsegmentator.com/volume-report/), [aorta diameter](https://compute.totalsegmentator.com/aorta-report/), [spine report](https://compute.totalsegmentator.com/spine-report/), [pulmonary artery diameter](https://compute.totalsegmentator.com/pulmonary-report/), [contrast phase detection](https://compute.totalsegmentator.com/contrast-phase/) and [body weight prediction](https://compute.totalsegmentator.com/body-stats/).**
 
 Main classes for CT and MR:
