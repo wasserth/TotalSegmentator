@@ -569,8 +569,22 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
 
     # 1) DICOM has orientation (rows, cols, slices), while HIGHDICOM expects (slices, rows, cols)
     # 2) Flip along x and z axes to correct coordinate system difference between DICOM and HIGHDICOM
+    #
+    # The axial row flip below assumes the conventional column direction cosine
+    # [0, 1, 0] ("top of image = anterior"). Some DICOM series have it negated,
+    # [0, -1, 0] ("top of image = posterior") -- for those the same unconditional
+    # flip mirrors the segmentation anterior/posterior. Use the actual direction
+    # cosines (already extracted above) rather than the coarse plane label to
+    # decide whether the flip is needed.
+    axial_row_flip_needed = True
+    iop = orientation_metadata.get("image_orientation_patient")
+    if iop is not None and len(iop) == 6:
+        axial_row_flip_needed = iop[4] >= 0
+
     if orientation_metadata.get("plane") == "axial":
-        img_data = xp.transpose(img_data, (2, 0, 1))[:, ::-1, :]
+        img_data = xp.transpose(img_data, (2, 0, 1))
+        if axial_row_flip_needed:
+            img_data = img_data[:, ::-1, :]
     elif orientation_metadata.get("plane") == "coronal":
         img_data = xp.transpose(img_data, (2, 1, 0))[::-1, ::-1, :]
     elif orientation_metadata.get("plane") == "sagittal":
