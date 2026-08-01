@@ -72,6 +72,7 @@ setup(name='TotalSegmentator',
             'mcp': [
                 'mcp',
                 'uvicorn',
+                "xgboost",
             ],
         },
         zip_safe=False,
