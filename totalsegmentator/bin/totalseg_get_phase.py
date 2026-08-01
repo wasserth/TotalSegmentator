@@ -14,6 +14,9 @@ import importlib.metadata
 import nibabel as nib
 import numpy as np
 
+# Load XGBoost before python_api imports PyTorch. On Apple Silicon, loading the
+# legacy pickled XGBoost models after PyTorch can segfault in xgboost.__setstate__.
+import xgboost
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.config import send_usage_stats_application
 from totalsegmentator.serialization_utils import filestream_to_nifti, nib_load_eager
