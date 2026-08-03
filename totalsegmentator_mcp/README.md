@@ -4,6 +4,7 @@ The Model Context Protocol (MCP) server gives AI clients access to TotalSegmenta
 
 Configure either stdio or Streamable HTTP for each client.
 
+
 ## Install
 
 Install TotalSegmentator in an isolated environment with uv or pipx. Choose one method.
@@ -28,6 +29,7 @@ Make sure that the command is available:
 totalseg_mcp --help
 ```
 
+
 ## Install the agent skill
 
 The corresponding skill teaches compatible agents how to select TotalSegmentator tasks, classes, and run options. Execute the following command and choose the agent(s) of your choice:
@@ -37,6 +39,7 @@ npx skills add wasserth/TotalSegmentator@totalsegmentator --global
 ```
 
 The MCP server works without the skill.
+
 
 ## Connect with stdio
 
@@ -48,12 +51,16 @@ Stdio is the recommended transport for local use. The client starts and stops th
 codex mcp add TotalSegmentator -- totalseg_mcp --transport stdio
 ```
 
+
+
 ### Claude Code
 
 ```bash
 claude mcp add --scope user --transport stdio TotalSegmentator \
   -- totalseg_mcp --transport stdio
 ```
+
+
 
 ### Cursor
 
@@ -89,12 +96,16 @@ While clients use the server, keep this process active. The MCP endpoint is `htt
 codex mcp add TotalSegmentator --url http://127.0.0.1:8000/mcp
 ```
 
+
+
 ### Claude Code
 
 ```bash
 claude mcp add --scope user --transport http \
   TotalSegmentator http://127.0.0.1:8000/mcp
 ```
+
+
 
 ### Cursor
 
@@ -110,6 +121,8 @@ Add this configuration to `~/.cursor/mcp.json`:
 }
 ```
 
+
+
 ## Available tools
 
 - `list_all_classes`: List output classes by modality.
@@ -120,6 +133,8 @@ Add this configuration to `~/.cursor/mcp.json`:
 - `detect_contrast_phase`: Estimate the contrast phase of a CT image.
 - `estimate_body_statistics`: Estimate body measurements and patient attributes.
 - `run_segmentation`: Run segmentation and return a machine-readable report.
+
+
 
 ## Notes
 
