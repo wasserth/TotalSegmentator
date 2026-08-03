@@ -194,6 +194,16 @@ def _extract_orientation_from_datasets(datasets):
         return None
 
 
+def _needs_axial_row_flip(orientation_metadata):
+    """Return whether an axial mask needs its row axis reversed for DICOM output."""
+    if not orientation_metadata:
+        return True
+    iop = orientation_metadata.get("image_orientation_patient")
+    if iop is None or len(iop) != 6:
+        return True
+    return float(iop[4]) >= 0
+
+
 def _seg_shape_matches_dicom_grid(seg_shape, rows, cols, slices):
     """Check whether a segmentation shape can describe a DICOM rows/cols/slices grid."""
     seg_shape = tuple(int(dim) for dim in seg_shape[:3])
@@ -332,6 +342,7 @@ def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output
     # create new RT Struct - requires original DICOM
     rtstruct = RTStructBuilder.create_new(dicom_series_path=dcm_reference_file)
     orientation_metadata = _extract_orientation_from_datasets(rtstruct.series_data)
+    axial_row_flip_needed = _needs_axial_row_flip(orientation_metadata)
 
     # add mask to RT Struct
     for class_idx, class_name in tqdm(selected_classes.items()):
@@ -340,7 +351,9 @@ def save_mask_as_rtstruct(img_data, selected_classes, dcm_reference_file, output
 
             # rotate nii to match DICOM orientation
             if orientation_metadata.get("plane") == "axial":
-                binary_img = np.transpose(binary_img, (1, 0, 2))[::-1, :, :]
+                binary_img = np.transpose(binary_img, (1, 0, 2))
+                if axial_row_flip_needed:
+                    binary_img = binary_img[::-1, :, :]
             elif orientation_metadata.get("plane") == "coronal":
                 binary_img = np.transpose(binary_img, (2, 0, 1))[::-1, :, ::-1]
             elif orientation_metadata.get("plane") == "sagittal":
@@ -576,10 +589,7 @@ def save_mask_as_dicomseg(img_data, selected_classes, dcm_reference_file, output
     # flip mirrors the segmentation anterior/posterior. Use the actual direction
     # cosines (already extracted above) rather than the coarse plane label to
     # decide whether the flip is needed.
-    axial_row_flip_needed = True
-    iop = orientation_metadata.get("image_orientation_patient")
-    if iop is not None and len(iop) == 6:
-        axial_row_flip_needed = iop[4] >= 0
+    axial_row_flip_needed = _needs_axial_row_flip(orientation_metadata)
 
     if orientation_metadata.get("plane") == "axial":
         img_data = xp.transpose(img_data, (2, 0, 1))
