@@ -34,6 +34,15 @@ Install Totalsegmentator
 pip install TotalSegmentator
 ```
 
+### MCP server
+
+TotalSegmentator provides a Model Context Protocol (MCP) server for AI clients. See the [MCP server documentation](totalsegmentator_mcp/README.md) for stdio, HTTP, Claude Code, and Cursor instructions.
+
+```bash
+pipx install \
+  'TotalSegmentator[mcp] @ git+https://github.com/wasserth/TotalSegmentator.git'
+```
+
 
 ### Usage
 For CT images:

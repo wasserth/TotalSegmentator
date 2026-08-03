@@ -14,6 +14,9 @@ import importlib.metadata
 import nibabel as nib
 import numpy as np
 
+# Load XGBoost before python_api imports PyTorch. On Apple Silicon, loading the
+# legacy pickled XGBoost models after PyTorch can segfault in xgboost.__setstate__.
+import xgboost
 from totalsegmentator.python_api import totalsegmentator
 from totalsegmentator.config import send_usage_stats_application
 from totalsegmentator.serialization_utils import filestream_to_nifti, nib_load_eager
@@ -77,7 +80,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True, debug=False):
         seg_total_path = tmp_dir / "seg_total.nii.gz"
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast --save_lowres"
-            f" -s {stats_total_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
+            f" -s {stats_total_path} -sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
             shell=True)
         seg_img = nib_load_eager(seg_total_path)
         with open(stats_total_path) as f:
@@ -88,7 +91,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True, debug=False):
         seg_hn_path = tmp_dir / "seg_hn.nii.gz"
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_hn_path} --ml"
-            f" -ta headneck_bones_vessels -s {stats_hn_path} --sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
+            f" -ta headneck_bones_vessels -s {stats_hn_path} -sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
             shell=True)
         seg_img_hn = nib_load_eager(seg_hn_path)
         with open(stats_hn_path) as f:
