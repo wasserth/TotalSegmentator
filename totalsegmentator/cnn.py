@@ -13,8 +13,8 @@ from totalsegmentator.resampling import change_spacing
 
 DEFAULT_BODY_STATS_CNN_ROOT_DIR = get_weights_dir() / "lightning_models"
 DEFAULT_BODY_STATS_CNN_DIRS = {
-    "mr": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
-    "ct": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
+    "mr": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "mr_all_ext_splitOrig_noise_can1_huber",
+    "ct": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_all_ext_splitOrig_noise_can1_huber",
 }
 BODY_STATS_CNN_DOWNLOAD_TASKS = {
     "mr": "body_stats_cnn_mr",
@@ -27,12 +27,77 @@ CNN_FALLBACK_CROP_SIZE = {
 }
 CNN_TARGET_SPACING_MM = 2.0
 CNN_TTA_FLIP_AXES = (0, 1, 2)
+MANUFACTURER_MAP = {
+    "siemens": 0,
+    "philips": 1,
+    "ge": 2,
+    "toshiba": 3,
+    "canon": 4,
+    "other": 5,
+}
+MR_SEQUENCE_MAP = {
+    "t1": 0,
+    "pd": 1,
+    "t2": 2,
+    "flair": 3,
+    "stir": 4,
+    "t2star": 5,
+    "swi": 6,
+    "dwi": 7,
+    "mra": 8,
+    "other": 9,
+}
+VERTEBRA_NAMES = (
+    [f"C{i}" for i in range(1, 8)]
+    + [f"T{i}" for i in range(1, 13)]
+    + [f"L{i}" for i in range(1, 6)]
+)
+VERTEBRA_MAP = {
+    f"vertebrae_{name}": position
+    for position, name in enumerate(VERTEBRA_NAMES, start=1)
+}
 CNN_MODEL_TARGET_ORDER = ["PatientWeight", "PatientSize", "PatientAge", "PatientSex_01"]
+CNN_MODEL_TARGET_ORDERS = {
+    "mr": [
+        *CNN_MODEL_TARGET_ORDER,
+        "Manufacturer_int",
+        "contrast",
+        "verte_upper",
+        "verte_lower",
+        "noise_p75",
+        "mr_sequence_int",
+    ],
+    "ct": [
+        *CNN_MODEL_TARGET_ORDER,
+        "Manufacturer_int",
+        "KVP",
+        "XRayTubeCurrent",
+        "ConvolutionKernel",
+        "contrast",
+        "pi_time",
+        "verte_upper",
+        "verte_lower",
+        "noise_p75",
+    ],
+}
 CNN_TARGET_SPECS = {
     "weight": {"training_name": "PatientWeight", "unit": "kg"},
     "size": {"training_name": "PatientSize", "unit": "cm"},
     "age": {"training_name": "PatientAge", "unit": "years"},
     "sex": {"training_name": "PatientSex_01", "unit": None},
+    "manufacturer": {"training_name": "Manufacturer_int", "unit": None},
+    "contrast": {"training_name": "contrast", "unit": None},
+    "verte_upper": {"training_name": "verte_upper", "unit": None},
+    "verte_lower": {"training_name": "verte_lower", "unit": None},
+    "noise": {"training_name": "noise_p75", "unit": None},
+    "mr_sequence": {"training_name": "mr_sequence_int", "unit": None},
+    "kvp": {"training_name": "KVP", "unit": "kV"},
+    "xray_tube_current": {"training_name": "XRayTubeCurrent", "unit": "mA"},
+    "convolution_kernel": {"training_name": "ConvolutionKernel", "unit": None},
+    "pi_time": {"training_name": "pi_time", "unit": "seconds"},
+}
+CNN_TRAINING_NAME_TO_TARGET = {
+    spec["training_name"]: target for target, spec in CNN_TARGET_SPECS.items()
 }
 
 
@@ -554,7 +619,8 @@ def _get_nr_channels(hparams: dict) -> int:
 
 
 def _get_nr_classes(hparams: dict) -> int:
-    nr_classes = int(hparams.get("nr_classes", len(CNN_MODEL_TARGET_ORDER)))
+    target_names = hparams.get("reg_target_names") or CNN_MODEL_TARGET_ORDER
+    nr_classes = int(hparams.get("nr_classes", len(target_names)))
     if hparams.get("loss") == "bce":
         nr_classes -= 1
     return nr_classes
@@ -672,6 +738,15 @@ def _validate_target(target: str) -> None:
 def _validate_modality_and_target(modality: str, target: str) -> None:
     _validate_modality(modality)
     _validate_target(target)
+    supported_targets = [
+        CNN_TRAINING_NAME_TO_TARGET[training_name]
+        for training_name in CNN_MODEL_TARGET_ORDERS[modality]
+    ]
+    if target not in supported_targets:
+        raise ValueError(
+            f"Unsupported CNN target '{target}' for modality '{modality}'. "
+            f"Supported: {', '.join(supported_targets)}"
+        )
 
 
 def _resolve_body_stats_model_dir(
@@ -699,17 +774,31 @@ def _resolve_body_stats_model_dir(
     return resolved_dir
 
 
-def _get_model_target_names(hparams: dict, output_count: int) -> list[str]:
+def _get_model_target_names(
+    hparams: dict, output_count: int, modality: str | None = None
+) -> list[str]:
     target_names = hparams.get("reg_target_names") or []
     if target_names:
-        return list(target_names)
+        target_names = list(target_names)
+        if len(target_names) != output_count:
+            raise ValueError(
+                f"Checkpoint defines {len(target_names)} target names, "
+                f"but the model produced {output_count} outputs."
+            )
+        return target_names
+    if modality is not None:
+        modality_target_order = CNN_MODEL_TARGET_ORDERS[modality]
+        if output_count == len(modality_target_order):
+            return modality_target_order
     if output_count == len(CNN_MODEL_TARGET_ORDER):
         return CNN_MODEL_TARGET_ORDER
     return []
 
 
-def _get_target_output_index(hparams: dict, target: str, output_count: int) -> int:
-    target_names = _get_model_target_names(hparams, output_count)
+def _get_target_output_index(
+    hparams: dict, target: str, output_count: int, modality: str | None = None
+) -> int:
+    target_names = _get_model_target_names(hparams, output_count, modality)
     training_name = CNN_TARGET_SPECS[target]["training_name"]
     if training_name in target_names:
         return target_names.index(training_name)
@@ -723,8 +812,6 @@ def _get_target_output_index(hparams: dict, target: str, output_count: int) -> i
 
 
 def _apply_regression_target_denormalization(pred: np.ndarray, hparams: dict) -> np.ndarray:
-    if not hparams.get("loss", "mse").startswith("mse"):
-        return pred
     if not bool(hparams.get("reg_target_normalize", False)):
         return pred
 
@@ -744,22 +831,67 @@ def _apply_regression_target_denormalization(pred: np.ndarray, hparams: dict) ->
     return pred * stds.reshape(pred.shape) + means.reshape(pred.shape)
 
 
+def _format_binary_result(
+    preds: np.ndarray, negative_label: str, positive_label: str
+) -> dict:
+    mean_score = float(np.mean(preds))
+    pred_binary = int(mean_score >= 0.5)
+    class_probs = np.clip(
+        preds if pred_binary == 1 else 1.0 - preds, 0.0, 1.0
+    )
+    result = {
+        "value": positive_label if pred_binary == 1 else negative_label,
+        "unit": None,
+    }
+    if len(class_probs) > 1:
+        result["probability"] = round(float(np.mean(class_probs)), 4)
+        result["stddev"] = round(float(np.std(class_probs)), 4)
+    return result
+
+
+def _format_mapped_result(
+    preds: np.ndarray,
+    value_map: dict[str, int],
+    fallback: str | None,
+    max_out_of_range_distance: int | None = None,
+) -> dict:
+    mean_score = float(np.mean(preds))
+    class_idx = int(np.floor(mean_score + 0.5))
+    inverse_map = {value: name for name, value in value_map.items()}
+    if (
+        class_idx not in inverse_map
+        and max_out_of_range_distance is not None
+    ):
+        closest_idx = min(inverse_map, key=lambda idx: abs(idx - class_idx))
+        if abs(closest_idx - class_idx) <= max_out_of_range_distance:
+            class_idx = closest_idx
+    result = {
+        "value": inverse_map.get(class_idx, fallback),
+        "unit": None,
+    }
+    if len(preds) > 1:
+        result["stddev"] = round(float(np.std(preds)), 4)
+    return result
+
+
 def _format_regression_result(preds: np.ndarray, target: str) -> dict:
     target_spec = CNN_TARGET_SPECS[target]
     preds = preds.reshape(-1).astype(np.float32)
 
     if target == "sex":
-        mean_score = float(np.mean(preds))
-        pred_binary = int(mean_score >= 0.5)
-        pred = "M" if pred_binary == 1 else "F"
-        class_probs = np.clip(preds if pred_binary == 1 else 1.0 - preds, 0.0, 1.0)
-        result = {
-            "value": pred,
-            "unit": None,
-        }
-        if len(class_probs) > 1:
-            result["probability"] = round(float(np.mean(class_probs)), 4)
-            result["stddev"] = round(float(np.std(class_probs)), 4)
+        return _format_binary_result(preds, "F", "M")
+    if target == "contrast":
+        return _format_binary_result(preds, "no", "yes")
+    if target == "manufacturer":
+        return _format_mapped_result(preds, MANUFACTURER_MAP, "other")
+    if target == "mr_sequence":
+        return _format_mapped_result(preds, MR_SEQUENCE_MAP, "other")
+    if target in {"verte_upper", "verte_lower"}:
+        result = _format_mapped_result(
+            preds, VERTEBRA_MAP, None, max_out_of_range_distance=2
+        )
+        if result["value"] is not None:
+            result["value"] = result["value"].removeprefix("vertebrae_")
         return result
 
     result = {
@@ -773,11 +905,19 @@ def _format_regression_result(preds: np.ndarray, target: str) -> dict:
     return result
 
 
-def _format_all_body_stats(preds: np.ndarray, hparams: dict) -> dict:
+def _format_all_body_stats(
+    preds: np.ndarray, hparams: dict, modality: str | None = None
+) -> dict:
     output_count = preds.shape[1] if preds.ndim > 1 else 1
+    training_names = _get_model_target_names(hparams, output_count, modality)
     result = {}
-    for target in CNN_TARGET_SPECS:
-        target_idx = _get_target_output_index(hparams, target, output_count)
+    for training_name in training_names:
+        target = CNN_TRAINING_NAME_TO_TARGET.get(training_name)
+        if target is None:
+            raise ValueError(f"Unsupported CNN model target: {training_name}")
+        target_idx = _get_target_output_index(
+            hparams, target, output_count, modality
+        )
         result[target] = _format_regression_result(preds[:, target_idx], target)
     return result
 
@@ -827,7 +967,7 @@ def predict_all_body_stats_with_cnn(
                 preds.append(_apply_regression_target_denormalization(pred, fold_hparams))
 
     preds = np.stack(preds, axis=0)
-    return _format_all_body_stats(preds, hparams)
+    return _format_all_body_stats(preds, hparams, modality)
 
 
 def predict_body_stats_with_cnn(
