@@ -1,5 +1,6 @@
 ## Master
 * fix anterior/posterior mirroring in DICOM SEG and RT Struct exports for axial series with a negated column direction cosine
+* add MCP server
 
 
 ## Release 2.17.0 (29.07.2026)
