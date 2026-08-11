@@ -7,7 +7,6 @@ import json
 import pickle
 import tempfile
 import subprocess
-from pprint import pprint
 import importlib.resources
 import importlib.metadata
 
@@ -554,6 +553,16 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
     yield {"id": 8, "progress": 100, "status": "Done", "result": result}
 
 
+def print_body_stats_result(result: dict):
+    """Pretty-print body stats results as aligned key/value lines."""
+    label_width = max(len(str(key)) for key in result) + 1
+    for key, entry in result.items():
+        value = entry["value"]
+        unit = entry.get("unit")
+        value_str = f"{value} {unit}" if unit else str(value)
+        print(f"{key + ':':<{label_width}}  {value_str}")
+
+
 def main():
     """
     Predicts the body weight and size based on a CT or MR scan. Results are a lot better if the field of view 
@@ -629,6 +638,7 @@ def main():
 
     existing_stats = None
 
+    st = time.time()
     res_gen = get_body_stats(args.input_file, args.modality, f_type=f_type,
                              model_file=args.model_file, quiet=args.quiet, device=args.device,
                              existing_stats=existing_stats, fold=args.fold,
@@ -643,14 +653,16 @@ def main():
     for r in res_gen:
         if not args.quiet:
             print(r['status'])
+            if r["progress"] == 100:
+                print(f"took {time.time() - st:.1f}s")
+                print()
         if r["progress"] == 100:
             final_result = r
 
     res = final_result["result"]
 
     if not args.quiet:
-        print("Result:")
-        pprint(res)
+        print_body_stats_result(res)
 
     if args.output_file is not None:
         with open(args.output_file, "w") as f:

@@ -1,129 +1,138 @@
-# Details on how the prediction of body size, weight, age and sex is done
+# Body statistics and acquisition-property prediction
+
 
 ## CNN Model (default)
 
-The default model is a Convolutional Neural Network (CNN) using 5 axial 2d-slices sampled along the z-axis as input.
+The default method uses one 3D CNN for CT and one for MR. Each model processes the complete resampled image volume and predicts all modality-specific targets in a single forward pass.
 
-![Overview of the body stats prediction](imgs/body_stats_overview_cnn.png)
+![Overview of the 3D multitask body-statistics CNN](imgs/body_stats_overview_cnn.png)
 
-Details:
+Both modalities predict:
 
-- Separate CNNs are trained for CT and MR, and for each target (weight, size, age, sex).
-- The models are 2D EfficientNetV2-S (`tf_efficientnetv2_s.in21k`) networks.
-- Input is 5 axial slices from the image, used as 5 input channels. The slices are evenly sampled along the z-axis.
-- Images are resampled to 2 mm spacing, then center cropped/padded to 240 × 240 pixels for CT and 210 × 210 pixels for MR.
-- Inference uses an ensemble of 5 folds; weight, size and age are regression tasks, while sex is a binary classification task.
+- weight
+- height (`size`)
+- age
+- sex
 
+CT additionally predicts:
 
-## XGBoost Model
+- scanner manufacturer
+- tube voltage (`kvp`)
+- tube current (`xray_tube_current`)
+- vendor-harmonized convolution-kernel code (from 20 (soft / tissue) to 80 (hard / bone) kernels)
+- contrast presence
+- post-injection time
+- cranial-most and caudal-most visible vertebral level (`verte_upper`, `verte_lower`)
+- image-noise score
 
-In addition we provide a second model which uses TotalSegmentator features + XGBoost. This is a slower and has lower accuracy. Therefore, this is only recommend as baseline or when the CNN model fails.
+MR additionally reports:
 
-![Overview of the body stats prediction](imgs/body_stats_overview_xgboost.png)
+- contrast presence
+- cranial-most and caudal-most visible vertebral level
+- image-noise score
+- MR sequence class: T1, proton density, T2, FLAIR, STIR, T2*, susceptibility-weighted, diffusion-weighted, MR angiography, or other
 
-TotalSegmentator is used to predict the following structures:
-```python
-organs = [
-    'gluteus_maximus_left', 'hip_right', 'spinal_cord', 'heart', 'spleen', 'hip_left',
-    'clavicula_left', 'scapula_left', 'gluteus_maximus_right', 'gallbladder', 'humerus_right',
-    'gluteus_minimus_right', 'autochthon_left', 'gluteus_minimus_left', 'scapula_right',
-    'femur_right', 'pancreas', 'prostate', 'aorta', 'liver', 'iliopsoas_left',
-    'clavicula_right', 'brain', 'gluteus_medius_left', 'humerus_left', 'gluteus_medius_right',
-    'kidney_left', 'femur_left', 'kidney_right', 'autochthon_right', 'iliopsoas_right',
-    'lung_left', 'lung_right'
-]
-
-vertebrae = [
-    'vertebrae_C1', 'vertebrae_C2', 'vertebrae_C3', 'vertebrae_C4', 'vertebrae_C5',
-    'vertebrae_C6', 'vertebrae_C7', 'vertebrae_T1', 'vertebrae_T2', 'vertebrae_T3',
-    'vertebrae_T4', 'vertebrae_T5', 'vertebrae_T6', 'vertebrae_T7', 'vertebrae_T8',
-    'vertebrae_T9', 'vertebrae_T10', 'vertebrae_T11', 'vertebrae_T12', 'vertebrae_L1',
-    'vertebrae_L2', 'vertebrae_L3', 'vertebrae_L4', 'vertebrae_L5'
-]
-
-tissue_types = ['subcutaneous_fat', 'torso_fat', 'skeletal_muscle']
-```
-For CT, the 5 lung lobes are combined into `lung_left` and `lung_right`. Additionally, for each tissue type a slice is extracted at each vertebra level (tissue_type × vertebra combinations).
-
-Then the volume and median intensity (HU value) of each structure is used as feature for a xgboost classifier.
-
-NOTE: The XGBoost Model uses the `tissue_types` model which is only available with a license. You can get a license [here](https://backend.totalsegmentator.com/license-academic/) and set it via `-l <license_number>`.
+BMI and body surface area are derived from predicted weight and height.
 
 
-## Number of training images:  
+## Training data
 
-| Model    | CT     | MR     |
-|----------|--------|--------|
-| XGBoost  | 46972  | 31901  |
-| CNN      | 57292  | 45544  |
+The CNNs were trained on heterogeneous clinical examinations rather than one standardized acquisition protocol.
+
+| Modality | Examinations | Patients |
+|----------|-------------:|---------:|
+| CT | 57,291 | 34,257 |
+| MR | 43,200 | 29,073 |
+
+
+### CT target distributions
+
+![CT training-target distributions](imgs/body_stats_data_distribution_all_ext_ct.png)
+
+
+### MR target distributions
+
+![MR training-target distributions](imgs/body_stats_data_distribution_all_ext_mr.png)
 
 
 ## Results
 
-For Weight, Size and Age the median absolute error is reported.
-For Sex the Accuracy is reported.
-Each shows the metric ± standard deviation.
-
+Values below are mean absolute error (MAE) ± standard deviation. Sex is reported as F1 score. Classification targets in the additional-target table are F1 scores.
 
 ### CT
 
-#### Test set: 
-- 501 CT images (hold-out)
-- mix of different FOVs (thorax, abdomen, pelvis, whole body)
+#### Internal test set
+
+- 501 held-out CT examinations
+- mixed fields of view
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| CNN | 3.19 ± 4.24 kg | 3.63 ± 3.33 cm | 4.40 ± 3.92 years | 0.98 ± 0.13 |
-| XGBoost | 3.55 ± 4.76 kg | 3.53 ± 3.31 cm | 5.47 ± 5.31 years | 0.96 ± 0.19 |
+| CNN | 3.90 ± 4.18 kg | 3.68 ± 2.86 cm | 4.42 ± 3.50 years | 0.990 |
+| XGBoost | 4.90 ± 4.76 kg | 4.29 ± 3.31 cm | 6.60 ± 5.31 years | 0.969 |
 
 
-#### External test set: 
-- 54 CT images from [Spine-Mets-CT-SEG](https://www.cancerimagingarchive.net/collection/spine-mets-ct-seg/)
+#### Additional CT targets
 
-Thorax-abdomen-pelvis:
+| Target | Performance |
+|--------|-------------|
+| Manufacturer | 0.988 F1 |
+| Tube voltage | 5.58 ± 6.72 kV |
+| Tube current | 165.84 ± 223.64 mA |
+| Convolution-kernel code | 2.29 ± 2.64 |
+| Contrast presence | 0.963 F1 |
+| Post-injection time | 5.36 ± 7.24 s |
+| Cranial vertebral boundary | 0.75 ± 1.28 levels |
+| Caudal vertebral boundary | 0.21 ± 0.45 levels |
+| 75th-percentile noise score | 1.54 ± 1.91 |
 
-| Model | Weight | Size | Age | Sex |
-|-------|--------|------|-----|-----|
-| CNN | 2.96 ± 3.60 kg | 3.66 ± 3.45 cm | 5.63 ± 4.76 years | 0.93 ± 0.26 |
-| XGBoost | 4.03 ± 5.35 kg | 3.83 ± 3.91 cm | 5.67 ± 5.39 years | 0.96 ± 0.19 |
 
-Thorax-only:
+#### External test set
 
-| Model | Weight | Size | Age | Sex |
-|-------|--------|------|-----|-----|
-| CNN | 3.82 ± 4.61 kg | 4.08 ± 3.67 cm | 6.29 ± 5.20 years | 0.94 ± 0.23 |
-| XGBoost | 6.76 ± 6.90 kg | 5.45 ± 4.88 cm | 10.16 ± 8.18 years | 0.89 ± 0.32 |
+- 54 CT examinations from [Spine-Mets-CT-SEG](https://www.cancerimagingarchive.net/collection/spine-mets-ct-seg/)
 
-Abdomen-pelvis-only:
-
-| Model | Weight | Size | Age | Sex |
-|-------|--------|------|-----|-----|
-| CNN | 3.95 ± 4.50 kg | 4.63 ± 4.22 cm | 6.32 ± 6.54 years | 0.94 ± 0.23 |
-| XGBoost | 5.59 ± 7.61 kg | 5.52 ± 5.26 cm | 6.60 ± 6.45 years | 0.91 ± 0.29 |
+| Field of view | Model | Weight | Size | Age | Sex |
+|---------------|-------|--------|------|-----|-----|
+| Thorax–abdomen–pelvis | CNN | 4.45 ± 3.24 kg | 4.05 ± 2.82 cm | 5.17 ± 3.57 years | 0.971 |
+| Thorax–abdomen–pelvis | XGBoost | 5.26 ± 5.35 kg | 4.64 ± 3.91 cm | 7.49 ± 5.39 years | 0.971 |
+| Thorax only | CNN | 6.24 ± 5.26 kg | 4.83 ± 3.81 cm | 5.86 ± 4.73 years | 0.941 |
+| Thorax only | XGBoost | 8.63 ± 6.90 kg | 6.05 ± 4.88 cm | 11.53 ± 8.18 years | 0.909 |
+| Abdomen–pelvis | CNN | 3.78 ± 3.39 kg | 4.53 ± 3.04 cm | 5.39 ± 4.44 years | 0.972 |
+| Abdomen–pelvis | XGBoost | 7.63 ± 7.61 kg | 6.48 ± 5.26 cm | 8.44 ± 6.45 years | 0.928 |
 
 
 ### MR
 
-#### Test set: 
-- 636 MR images (hold-out)
-- mix of different FOVs (thorax, abdomen, pelvis, whole body)
+#### Internal test set
+
+- 636 held-out MR examinations
+- mixed fields of view
 
 | Model | Weight | Size | Age | Sex |
 |-------|--------|------|-----|-----|
-| CNN | 2.69 ± 3.49 kg | 3.27 ± 3.07 cm | 3.95 ± 5.47 years | 0.99 ± 0.12 |
-| XGBoost | 4.82 ± 7.60 kg | 4.05 ± 4.42 cm | 9.35 ± 8.71 years | 0.92 ± 0.28 |
+| CNN | 4.34 ± 4.32 kg | 4.62 ± 3.61 cm | 7.13 ± 5.95 years | 0.970 |
+| XGBoost | 7.08 ± 7.60 kg | 5.21 ± 4.42 cm | 11.46 ± 8.71 years | 0.932 |
 
 
-### Runtime 
+#### Additional MR targets
 
-Runtime for 512x512x807 CT image on a Nvidia RTX 3090:
+| Target | Performance |
+|--------|-------------|
+| Contrast presence | 0.823 F1 |
+| Cranial vertebral boundary | 2.83 ± 4.44 levels |
+| Caudal vertebral boundary | 2.50 ± 4.51 levels |
+| 75th-percentile noise score | 2.34 ± 2.15 |
+| MR sequence | 0.953 micro-F1 |
 
-| Model | Time | RAM |
-|-------|------|-----|
-| XGBoost (GPU) | 133 s | 11.5 GB |
-| XGBoost (CPU) | 872 s | 11.5 GB |
-| CNN (GPU) | 38 s | 4.0 GB |
-| CNN (CPU) | 37 s | 3.5 GB |
+
+### Runtime
+
+Runtime covers preprocessing and the complete five-fold CNN ensemble on CPU.
+
+| Modality and input shape | Time | Peak RAM |
+|--------------------------|-----:|---------:|
+| CT, 512 × 512 × 807 | 20 s | 3.8 GB |
+| MR, 320 × 250 × 72 | 12 s | 1.7 GB |
 
 
 ## Derived metrics
@@ -139,20 +148,48 @@ $$\text{BMI} = \frac{\text{weight (kg)}}{\text{height (m)}^2}$$
 $$\text{BSA (m}^2\text{)} = \sqrt{\frac{\text{height (cm)} \times \text{weight (kg)}}{3600}}$$
 
 
-## Info
+## Limitations
 
 **Do not use for age < 16 years, since the model was not trained on children.**
 
-**The bigger the field of view the better the prediction (e.g. complete abdomen and thorax give a lot better results, than images with only the pelvis visible).**
+**Performance depends on the field of view. Very limited head, extremity, or small spine examinations may be unreliable.**
 
-The classifier (both CNN and XGBoost) is an ensemble of 5 models. The output contains the 
-standard deviation of the predictions which can be used as a measure of confidence. If it is low the 5 models
-give similar predictions which is a good sign.
+Weight and height predictions are intended for metadata plausibility checks, retrospective research, and approximate derived measures. They should not replace direct measurement when an error could affect high-risk dosing or ventilation settings. Predicted age is not suitable for forensic or legal age assessment.
 
-The following plots show the distribution of the training data. If you try to predict cases out of this distribution, the model will likely not perform well.
+The models were trained on heterogeneous clinical data, which improves coverage of routine acquisition variation. However, most ground truths came from DICOM metadata or automated algorithms and may be missing, estimated, outdated, or incorrect. Some uncommon acquisition classes are underrepresented.
 
-![Distribution of the training data](imgs/body_stats_data_distribution.png)
+External validation is currently limited to a relatively small CT cohort. Independent multicenter MR validation and broader external validation of the additional acquisition and quality-control targets are still needed.
 
-## Limitations
 
-The model was trained on clinical data. This makes the model more robust and more generalizable to other clinical settings (e.g. in contrast to a model trained on some population study like UK Biobank). However, sometimes the body weight and size are not exactly measured but only estimated when being added to the DICOM header by clinicians. This reduces the accuracy of the model.
+## Technical details
+
+
+### Architecture and preprocessing
+
+- Model: 3D ResNet-10
+- Images are converted to closest canonical orientation and resampled to 2 mm isotropic spacing.
+- CT input is center cropped or padded to 240 × 240 × 240 voxels. CT intensities are clipped to the training-set 2nd–98th percentiles and normalized with training-set statistics.
+- MR input is center cropped or padded to 210 × 210 × 150 voxels. Each MR volume is standardized individually.
+- All continuous and encoded categorical targets are optimized jointly with Huber loss after fold-specific target standardization.
+- The release model is an ensemble of five folds. Final values are means of the five denormalized predictions.
+- CPU is sufficient for inference; no segmentation is required by the default CNN.
+
+
+### Noise and coverage labels
+
+Noise labels are generated from local 10 mm patches in TotalSegmentator tissue masks. A 3D affine intensity trend is removed from each patch, and residual noise is estimated robustly from the median absolute deviation.
+
+- For CT, the score combines absolute residual noise from skeletal muscle, subcutaneous fat, and torso fat.
+- For MR, residual noise is divided by local signal because MR intensity is arbitrarily scaled. Valid relative-noise patches are pooled across tissue regions.
+- The CNN predicts the 75th percentile so that locally noisy image regions influence the score. Higher values indicate more noise.
+
+Visible coverage is encoded using the cranial-most and caudal-most detected vertebra from C1 through L5. These outputs provide a compact indication of which part of the body is present in the image.
+
+
+## XGBoost Model
+
+An alternative model uses TotalSegmentator segmentations and XGBoost. It is slower, requires several segmentation steps, and had lower performance than the CNN for all four core targets in the current internal CT and MR test sets. It is mainly retained as a baseline or fallback.
+
+TotalSegmentator provides organ, bone, vertebral, and tissue-compartment segmentations. Region volumes and median intensities, together with vertebral-level measurements of subcutaneous fat, torso fat, and skeletal muscle, are used as XGBoost features. Separate target-specific ensembles predict weight, height, age, and sex.
+
+The XGBoost model uses the `tissue_types` task, which requires a license. An academic license is available [here](https://backend.totalsegmentator.com/license-academic/) and can be provided with `-l <license_number>`.
