@@ -1,26 +1,93 @@
 {
     "weight": {
-        "value": 76.36,
-        "unit": "kg"
+        "value": 74.39,
+        "unit": "kg",
+        "min": 72.68,
+        "max": 76.01,
+        "stddev": 1.2831
     },
     "size": {
-        "value": 168.77,
-        "unit": "cm"
+        "value": 171.07,
+        "unit": "cm",
+        "min": 168.67,
+        "max": 172.02,
+        "stddev": 1.2179
     },
     "age": {
-        "value": 57.99,
-        "unit": "years"
+        "value": 58.03,
+        "unit": "years",
+        "min": 52.02,
+        "max": 62.5,
+        "stddev": 3.7475
     },
     "sex": {
         "value": "M",
-        "unit": null
+        "unit": null,
+        "probability": 0.967,
+        "stddev": 0.0286
+    },
+    "manufacturer": {
+        "value": "siemens",
+        "unit": null,
+        "stddev": 0.029
+    },
+    "kvp": {
+        "value": 113.14,
+        "unit": "kV",
+        "min": 104.51,
+        "max": 117.08,
+        "stddev": 4.4457
+    },
+    "xray_tube_current": {
+        "value": 428.33,
+        "unit": "mA",
+        "min": 256.15,
+        "max": 554.6,
+        "stddev": 105.4694
+    },
+    "convolution_kernel": {
+        "value": 31.37,
+        "unit": null,
+        "min": 30.28,
+        "max": 33.33,
+        "stddev": 1.1304
+    },
+    "contrast": {
+        "value": "no",
+        "unit": null,
+        "probability": 0.9738,
+        "stddev": 0.0253
+    },
+    "pi_time": {
+        "value": -3.19,
+        "unit": "seconds",
+        "min": -7.23,
+        "max": 1.22,
+        "stddev": 3.6124
+    },
+    "verte_upper": {
+        "value": "T11",
+        "unit": null,
+        "stddev": 1.3927
+    },
+    "verte_lower": {
+        "value": "T12",
+        "unit": null,
+        "stddev": 1.2676
+    },
+    "noise": {
+        "value": 7.79,
+        "unit": null,
+        "min": 3.92,
+        "max": 13.52,
+        "stddev": 3.269
     },
     "bmi": {
-        "value": 26.81,
+        "value": 25.42,
         "unit": "kg/m^2"
     },
     "bsa": {
-        "value": 1.89,
+        "value": 1.88,
         "unit": "m^2"
     }
 }

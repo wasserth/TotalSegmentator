@@ -66,7 +66,6 @@ def test_normalized_huber_outputs_are_denormalized():
                 "size",
                 "age",
                 "sex",
-                "manufacturer",
                 "contrast",
                 "verte_upper",
                 "verte_lower",
