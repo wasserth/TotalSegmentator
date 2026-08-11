@@ -1,7 +1,7 @@
 # Body statistics and acquisition-property prediction
 
 
-## CNN Model (default)
+## CNN Model
 
 The default method uses one 3D CNN for CT and one for MR. Each model processes the complete resampled image volume and predicts all modality-specific targets in a single forward pass.
 
