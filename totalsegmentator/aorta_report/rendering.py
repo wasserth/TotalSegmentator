@@ -10,6 +10,7 @@ from totalsegmentator.aorta_report.constants import REPORT_FRAMES, REPORT_PLOT_T
 from totalsegmentator.aorta_report.cpr_animated import generate_animated_cpr_nifti
 from totalsegmentator.aorta_report.nifti import combine_as_nifti
 from totalsegmentator.aorta_report.plotting import plot_aorta_3d, plot_masks_3d
+from totalsegmentator.rendering import fury_display_context
 from totalsegmentator.reporting import generate_html
 from totalsegmentator.serialization_utils import serialize_and_compress
 
@@ -25,9 +26,7 @@ def render_previews(
     debug=False,
     animated_cpr=None,
 ):
-    from xvfbwrapper import Xvfb
-
-    with Xvfb():
+    with fury_display_context():
         plot_aorta_3d(
             aorta,
             true_lumen,

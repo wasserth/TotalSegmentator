@@ -13,9 +13,9 @@ from totalsegmentator.aorta_report.cpr import (
 )
 from totalsegmentator.aorta_report.cpr_animated import (
     _content_crop_bounds,
-    _direction_to_vtk,
+    _direction_to_render,
     _panel_with_position_line,
-    _voxel_to_vtk,
+    _voxel_to_render,
 )
 from totalsegmentator.aorta_report.nifti import (
     _allocate_rgb_nifti_buffer,
@@ -94,9 +94,11 @@ def test_animation_geometry_and_crop_helpers():
     point = np.array([2.0, 3.0, 4.0])
     direction = np.array([1.0, 2.0, 3.0])
     np.testing.assert_array_equal(
-        _voxel_to_vtk(point, (10, 20, 30)), [16.0, 4.0, 7.0]
+        _voxel_to_render(point, (10, 20, 30)), [16.0, 4.0, 7.0]
     )
-    np.testing.assert_array_equal(_direction_to_vtk(direction), [-2.0, 3.0, -1.0])
+    np.testing.assert_array_equal(
+        _direction_to_render(direction), [-2.0, 3.0, -1.0]
+    )
 
     image = np.zeros((10, 12, 3), dtype=np.uint8)
     image[3:6, 4:8] = 10
