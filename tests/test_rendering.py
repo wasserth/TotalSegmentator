@@ -56,3 +56,29 @@ def test_offscreen_renderer_returns_requested_image_size():
 def test_volume_slice_is_available_on_both_fury_generations():
     data = np.arange(8 * 8 * 8, dtype=np.float32).reshape((8, 8, 8))
     assert volume_slice(data, np.eye(4), (0, data.max())) is not None
+
+
+def test_parallel_camera_tightly_fits_wide_scene():
+    scene = window.Scene()
+    mask = _cube_mask()
+    for column in range(6):
+        scene.add(
+            plot_mask(
+                scene,
+                mask,
+                np.eye(4),
+                column * 20,
+                0,
+                smoothing=0,
+            )
+        )
+
+    renderer = SceneRenderer(scene, (384, 96), parallel=True)
+    try:
+        image = renderer.snapshot()
+    finally:
+        renderer.close()
+
+    foreground = image.max(axis=2) > 5
+    _, columns = np.where(foreground)
+    assert columns.max() - columns.min() > image.shape[1] * 0.8

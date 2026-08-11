@@ -250,21 +250,22 @@ class SceneRenderer:
                     view_dir=(0, 0, -1),
                     up=(0, 1, 0),
                     scale=1.02,
+                    match_aspect=True,
                 )
             self.show_manager.render()
             self.show_manager.window.draw()
             self._target = self._scene_center()
         else:
-            if parallel:
-                scene.projection(proj_type="parallel")
-            if reset_camera:
-                scene.reset_camera_tight(margin_factor=1.02)
             self.show_manager = window.ShowManager(
                 scene=scene,
                 size=self.size,
                 reset_camera=False,
             )
             self.show_manager.initialize()
+            if parallel:
+                scene.projection(proj_type="parallel")
+            if reset_camera:
+                scene.reset_camera_tight(margin_factor=1.02)
             self.show_manager.render()
 
     def _scene_center(self):
