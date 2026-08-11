@@ -17,8 +17,8 @@ DEFAULT_BODY_STATS_CNN_DIRS = {
     "ct": DEFAULT_BODY_STATS_CNN_ROOT_DIR / "ct_all_ext_splitOrig_noise_can1_huber",
 }
 BODY_STATS_CNN_DOWNLOAD_TASKS = {
-    "mr": "body_stats_cnn_mr",
-    "ct": "body_stats_cnn_ct",
+    "mr": "body_stats_mr",
+    "ct": "body_stats_ct",
 }
 
 CNN_FALLBACK_CROP_SIZE = {

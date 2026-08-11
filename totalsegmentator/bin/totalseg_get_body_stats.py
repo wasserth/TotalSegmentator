@@ -352,7 +352,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
 
     needs_default_xgboost_models = model_type == "xgboost" and model_file is None
     if needs_default_xgboost_models and not check_body_stats_models_exist():
-        download_pretrained_weights("body_stats")
+        download_pretrained_weights("body_stats_xgb")
 
     if model_type == "cnn":
         yield {

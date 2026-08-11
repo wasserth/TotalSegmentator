@@ -531,59 +531,38 @@ TASK_ID_WEIGHTS_CONFIGS = {
     # foldername = local and URL foldername
     # version = weights release URL version string
     # rel_path = (optional) extra local path prior to foldername
+    # commercial = (optional) download from license server instead of GitHub
     # zenodo_weights_url = (optional) previously commented out zenodo url path
     # alt_weights_url = (optional) previously commented out static url path
 
     # Total CT v2
     291: {
         "foldername": "Dataset291_TotalSegmentator_part1_organs_1559subj",
-        "version": "v2.0.0-weights",
-        # "zenodo_weights_url": "https://zenodo.org/record/6802342/files/Task251_TotalSegmentator_part1_organs_1139subj.zip?download=1",
-        # "alt_weights_url": "/static/totalseg_v2/Dataset291_TotalSegmentator_part1_organs_1559subj.zip",
+        "version": "v2.0.0-weights"
     },
     292: {
         "foldername": "Dataset292_TotalSegmentator_part2_vertebrae_1532subj",
-        "version": "v2.0.0-weights",
-        # "zenodo_weights_url": "https://zenodo.org/record/6802358/files/Task252_TotalSegmentator_part2_vertebrae_1139subj.zip?download=1",
-        # "alt_weights_url": "/static/totalseg_v2/Dataset292_TotalSegmentator_part2_vertebrae_1532subj.zip",
+        "version": "v2.0.0-weights"
     },
     293: {
         "foldername": "Dataset293_TotalSegmentator_part3_cardiac_1559subj",
-        "version": "v2.0.0-weights",
-        # "zenodo_weights_url": "https://zenodo.org/record/6802360/files/Task253_TotalSegmentator_part3_cardiac_1139subj.zip?download=1",
-        # "alt_weights_url": "/static/totalseg_v2/Dataset293_TotalSegmentator_part3_cardiac_1559subj.zip",
+        "version": "v2.0.0-weights"
     },
     294: {
         "foldername": "Dataset294_TotalSegmentator_part4_muscles_1559subj",
         "version": "v2.0.0-weights"
-        # "zenodo_weights_url": "https://zenodo.org/record/6802366/files/Task254_TotalSegmentator_part4_muscles_1139subj.zip?download=1",
-        # "alt_weights_url": "/static/totalseg_v2/Dataset294_TotalSegmentator_part4_muscles_1559subj.zip",
     },
     295: {
         "foldername": "Dataset295_TotalSegmentator_part5_ribs_1559subj",
         "version": "v2.0.0-weights"
-        # "zenodo_weights_url": "https://zenodo.org/record/6802452/files/Task255_TotalSegmentator_part5_ribs_1139subj.zip?download=1",
-        # "alt_weights_url": "/static/totalseg_v2/Dataset295_TotalSegmentator_part5_ribs_1559subj.zip",
     },
     297: {
         "foldername": "Dataset297_TotalSegmentator_total_3mm_1559subj",
         "version": "v2.0.0-weights"
-        # "zenodo_weights_url": "https://zenodo.org/record/6802052/files/Task256_TotalSegmentator_3mm_1139subj.zip?download=1",
-        # "alt_weights_url": "/static/totalseg_v2/Dataset297_TotalSegmentator_total_3mm_1559subj.zip",
-
-        # "foldername" : "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",
-        # "version" : "v2.0.4-weights"
-
-        # "foldername" : "Dataset297_TotalSegmentator_total_3mm_1559subj_v205",
-        # "version" : "v2.0.5-weights",
     },
     298: {
         "foldername": "Dataset298_TotalSegmentator_total_6mm_1559subj",
-        "version": "v2.0.0-weights",
-        # "alt_weights_url": "/static/totalseg_v2/Dataset298_TotalSegmentator_total_6mm_1559subj.zip",
-
-        # "foldername" : "Dataset298_TotalSegmentator_total_6mm_1559subj_v205",
-        # "version" : "v2.0.5-weights"
+        "version": "v2.0.0-weights"
     },
 
     # Total CT v3
@@ -694,20 +673,20 @@ TASK_ID_WEIGHTS_CONFIGS = {
     514: {"foldername": "Dataset514_annulus_pulmonary_70subj"},
 
     # XGBoost
-    "body_stats": {
+    "body_stats_xgb": {
         "foldername": "body_stats_models_2026_03_24",
         "version": "v2.5.0-weights"
     },
 
-    # CNN body stats: one multi-target model per modality
-    "body_stats_cnn_mr": {
+    # CNN body stats: one multi-target model per modality (license server)
+    "body_stats_mr": {
         "rel_path": "lightning_models",
-        "foldername" : "mr_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
-        "version": "v2.5.0-weights",
+        "foldername": "mr_all_ext_splitOrig_noise_can1_huber",
+        "commercial": True,
     },
-    "body_stats_cnn_ct": {
+    "body_stats_ct": {
         "rel_path": "lightning_models",
-        "foldername": "ct_all_splitOrig_3d_resnet10_fl2_ep40_rtn1_can1",
-        "version": "v2.5.0-weights",
+        "foldername": "ct_all_ext_splitOrig_noise_can1_huber",
+        "commercial": True,
     },
 }

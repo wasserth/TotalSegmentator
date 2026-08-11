@@ -227,9 +227,13 @@ def download_pretrained_weights(task_id):
         print(f"Downloading model for Task {task_id} ...")
 
         commercial_models_inv = {v: k for k, v in commercial_models.items()}
+        weights_path.parent.mkdir(exist_ok=True, parents=True)
         if task_id in commercial_models_inv:
             download_task_name = commercial_models_inv[task_id]
-            download_model_with_license_and_unpack(download_task_name, config_dir)
+            download_model_with_license_and_unpack(download_task_name, weights_path.parent)
+        elif info.get("commercial"):
+            # String task ids (e.g. body_stats_ct) that are served from the license server
+            download_model_with_license_and_unpack(task_id, weights_path.parent)
         else:
             # r = requests.get(WEIGHTS_URL)
             # with zipfile.ZipFile(io.BytesIO(r.content)) as zip_f:
@@ -243,7 +247,6 @@ def download_pretrained_weights(task_id):
             # delete tmp file
             # (config_dir / "tmp_download_file.zip").unlink()
 
-            weights_path.parent.mkdir(exist_ok=True, parents=True)
             download_url_and_unpack(WEIGHTS_URL, weights_path.parent)
 
 
