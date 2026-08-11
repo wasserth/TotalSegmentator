@@ -713,11 +713,9 @@ def _load_fold_hparams(model_dir: Path, fold_idx: int) -> dict:
     return hparams
 
 
-def _get_fold_indices(fold: int | str | None = 0) -> list[int]:
-    if fold == "all":
+def _get_fold_indices(fold: int | str | None = "all") -> list[int]:
+    if fold is None or fold == "all":
         return list(range(5))
-    if fold is None:
-        fold = 0
     fold = int(fold)
     if fold not in range(5):
         raise ValueError(f"Fold must be in [0, 4] or 'all', got {fold}.")
@@ -915,6 +913,8 @@ def _format_all_body_stats(
         target = CNN_TRAINING_NAME_TO_TARGET.get(training_name)
         if target is None:
             raise ValueError(f"Unsupported CNN model target: {training_name}")
+        if modality == "mr" and target == "manufacturer":
+            continue
         target_idx = _get_target_output_index(
             hparams, target, output_count, modality
         )
@@ -926,7 +926,7 @@ def predict_all_body_stats_with_cnn(
     img: nib.Nifti1Image,
     modality: str = "mr",
     model_dir: Path | str | None = None,
-    fold: int | str | None = 0,
+    fold: int | str | None = "all",
     device="gpu",
     skip_canonical: bool = False,
     test_time_augmentation: bool = False,
@@ -975,7 +975,7 @@ def predict_body_stats_with_cnn(
     target: str,
     modality: str = "mr",
     model_dir: Path | str | None = None,
-    fold: int | str | None = 0,
+    fold: int | str | None = "all",
     device="gpu",
     skip_canonical: bool = False,
     test_time_augmentation: bool = False,
@@ -993,7 +993,7 @@ def predict_body_weight_with_cnn(
     img: nib.Nifti1Image,
     modality: str = "mr",
     model_dir: Path | str | None = None,
-    fold: int | str | None = 0,
+    fold: int | str | None = "all",
     device="gpu",
     skip_canonical: bool = False,
     test_time_augmentation: bool = False,
