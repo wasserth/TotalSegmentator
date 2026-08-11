@@ -2,9 +2,11 @@ import numpy as np
 from fury import window
 
 from totalsegmentator.rendering import (
+    FURY_GE_2,
     SceneRenderer,
     plane_actors,
     plot_mask,
+    record_rotating_scene,
     remove_actors,
     text,
     volume_slice,
@@ -82,3 +84,30 @@ def test_parallel_camera_tightly_fits_wide_scene():
     foreground = image.max(axis=2) > 5
     _, columns = np.where(foreground)
     assert columns.max() - columns.min() > image.shape[1] * 0.8
+
+
+def test_legacy_rotating_scene_preserves_fury_record_camera(monkeypatch, tmp_path):
+    if FURY_GE_2:
+        return
+
+    class FakeScene:
+        def __init__(self):
+            self.margin_factor = None
+
+        def reset_camera_tight(self, margin_factor):
+            self.margin_factor = margin_factor
+
+    captured = {}
+
+    def fake_record(**kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr(window, "record", fake_record)
+    scene = FakeScene()
+    record_rotating_scene(scene, tmp_path / "frame_", (700, 900), 12, 36)
+
+    assert scene.margin_factor == 1.02
+    assert captured["reset_camera"] is True
+    assert captured["path_numbering"] is True
+    assert captured["n_frames"] == 12
+    assert captured["az_ang"] == 36

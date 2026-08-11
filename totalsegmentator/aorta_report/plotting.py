@@ -373,6 +373,8 @@ def plot_masks_3d(masks, output_path, file_prefix, smoothing=20, nr_frames=12, d
     scene = window.Scene()
     try:
         for idx, mask in enumerate(masks):
+            if not np.any(mask):
+                continue
             color = list(colors.keys())[idx] if colors_subset is None else colors_subset[idx]
             scene.add(plot_mask(
                 scene, mask, np.eye(4), 0, 0, smoothing=smoothing,
@@ -418,10 +420,11 @@ def plot_aorta_3d(aorta, true_lumen, false_lumen, all_vessels, centerline, landm
             scene, aorta, np.eye(4), 0, 0, smoothing=smoothing,
             color=colors["gray_light"], opacity=.3, orientation="sagittal",
         ))
-        scene.add(plot_mask(
-            scene, false_lumen, np.eye(4), 0, 0, smoothing=smoothing,
-            color=colors["red"], opacity=.1, orientation="sagittal",
-        ))
+        if np.any(false_lumen):
+            scene.add(plot_mask(
+                scene, false_lumen, np.eye(4), 0, 0, smoothing=smoothing,
+                color=colors["red"], opacity=.1, orientation="sagittal",
+            ))
         scene.add(plot_mask(
             scene, all_vessels, np.eye(4), 0, 0, smoothing=smoothing,
             color=colors["gray_dark"], opacity=1.0, orientation="sagittal",

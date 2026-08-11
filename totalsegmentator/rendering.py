@@ -249,8 +249,8 @@ class SceneRenderer:
                     scene.main_scene,
                     view_dir=(0, 0, -1),
                     up=(0, 1, 0),
-                    scale=1.02,
-                    match_aspect=True,
+                    scale=1.02 if parallel else 1.1,
+                    match_aspect=parallel,
                 )
             self.show_manager.render()
             self.show_manager.window.draw()
@@ -330,6 +330,19 @@ def record_rotating_scene(
     azimuth_angle,
 ):
     """Render a numbered sequence while rotating the camera."""
+    if not FURY_GE_2:
+        scene.reset_camera_tight(margin_factor=1.02)
+        window.record(
+            scene=scene,
+            size=size,
+            out_path=str(output_prefix),
+            reset_camera=True,
+            path_numbering=True,
+            n_frames=nr_frames,
+            az_ang=azimuth_angle,
+        )
+        return
+
     renderer = SceneRenderer(scene, size, reset_camera=True)
     try:
         for frame_index in range(nr_frames):
