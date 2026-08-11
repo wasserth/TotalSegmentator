@@ -56,4 +56,4 @@ SECTION_LANDMARKS = {
 
 REPORT_PLOT_TYPES = ("preview_3d_rotating_", "preview_tf_lumen_")
 REPORT_FRAMES = 24
-REPORT_SMOOTHING = 100
+REPORT_SMOOTHING = 120
