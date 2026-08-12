@@ -1,4 +1,7 @@
 ## Master
+
+
+## Release 2.18.0 (12.08.2026)
 * fix anterior/posterior mirroring in DICOM SEG and RT Struct exports for axial series with a negated column direction cosine
 * add MCP server
 * add new models and more targets to `totalseg_get_body_stats`.
