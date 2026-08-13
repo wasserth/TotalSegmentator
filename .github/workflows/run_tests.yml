@@ -78,7 +78,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb
           python -m pip install --upgrade pip
-          pip install pytest scikit-image "${{ matrix.numpy-version }}" "${{ matrix.fury-version }}"
+          pip install pytest scipy pillow scikit-image "${{ matrix.numpy-version }}" "${{ matrix.fury-version }}"
+          pip install --no-deps .
       - name: Test FURY rendering compatibility
         run: ${{ matrix.pytest_prefix }} pytest -v tests/test_rendering.py
 
