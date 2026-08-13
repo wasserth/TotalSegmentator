@@ -183,6 +183,22 @@ Noise labels are generated from local 10 mm patches in TotalSegmentator tissue m
 - For MR, residual noise is divided by local signal because MR intensity is arbitrarily scaled. Valid relative-noise patches are pooled across tissue regions.
 - The CNN predicts the 75th percentile so that locally noisy image regions influence the score. Higher values indicate more noise.
 
+The table below shows training-set percentiles (57,291 CT and 43,200 MR examinations). CT and MR scores are not on the same scale and should not be compared across modalities.
+
+| Percentile | CT | MR |
+|-----------:|---:|---:|
+| 1st | 12.1 | 1.1 |
+| 5th | 14.0 | 8.0 |
+| 10th | 14.9 | 10.5 |
+| 25th | 16.7 | 15.1 |
+| 50th | 21.1 | 22.8 |
+| 75th | 27.4 | 30.5 |
+| 90th | 44.1 | 36.6 |
+| 95th | 85.8 | 40.4 |
+| 99th | 147.4 | 45.4 |
+
+These percentiles can be used as quality-control cutoffs. For example, excluding examinations above the 95th percentile corresponds to `noise > 85` for CT and `noise > 40` for MR.
+
 Visible coverage is encoded using the cranial-most and caudal-most detected vertebra from C1 through L5. These outputs provide a compact indication of which part of the body is present in the image.
 
 
