@@ -33,7 +33,13 @@ jobs:
       - name: Install spine report system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y wkhtmltopdf xvfb
+          sudo apt-get install -y \
+            libegl1-mesa-dev \
+            libgl1-mesa-dri \
+            libxcb-xfixes0-dev \
+            mesa-vulkan-drivers \
+            wkhtmltopdf \
+            xvfb
           
       - name: Install dependencies
         run: |
@@ -76,7 +82,12 @@ jobs:
       - name: Install rendering test dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb
+          sudo apt-get install -y \
+            libegl1-mesa-dev \
+            libgl1-mesa-dri \
+            libxcb-xfixes0-dev \
+            mesa-vulkan-drivers \
+            xvfb
           python -m pip install --upgrade pip
           pip install pytest scipy pillow scikit-image "${{ matrix.numpy-version }}" "${{ matrix.fury-version }}"
           pip install --no-deps .
