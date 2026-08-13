@@ -65,7 +65,7 @@ setup(name='TotalSegmentator',
             'networkx',
             'pandas',
             'scikit-learn',
-            'fury<2',  # fury>=2 dropped vtk (needed for --preview)
+            'fury',
             'dipy'
         ],
         extras_require={

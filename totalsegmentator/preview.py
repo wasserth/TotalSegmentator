@@ -8,10 +8,15 @@ import gc
 
 import nibabel as nib
 import numpy as np
-from fury import window, actor, ui, io, utils
+from fury import window
 
-from totalsegmentator.vtk_utils import contour_from_roi_smooth, plot_mask
 from totalsegmentator.map_to_binary import class_map
+from totalsegmentator.rendering import (
+    fury_display_context,
+    plot_mask,
+    save_scene,
+    volume_slice,
+)
 
 
 np.random.seed(1234)   # only set for numpy, not for random, because this would lead to same tmp directories for xvfb
@@ -353,16 +358,13 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
     window_size = (subject_width * nr_cols, subject_height)
 
     scene = window.Scene()
-    showm = window.ShowManager(scene=scene, size=window_size, reset_camera=False)
-    showm.initialize()
 
     # ct_img = nib.load(subject_path)
     data = ct_img.get_fdata()
     data = data.transpose(1, 2, 0)  # Show sagittal view
     data = data[::-1, :, :]
     value_range = (-115, 225)  # soft tissue window
-    slice_actor = actor.slicer(data=data, affine=ct_img.affine, value_range=value_range)
-    slice_actor.SetPosition(0, 0, 0)
+    slice_actor = volume_slice(data, ct_img.affine, value_range)
     scene.add(slice_actor)
 
     # Plot 3D rois
@@ -383,18 +385,14 @@ def plot_subject(ct_img, output_path, df=None, roi_data=None, smoothing=20,
     #                  focal_point=(612., 331., 228.),
     #                  view_up=(0.0, 1.0, 0.0))
 
-    scene.projection(proj_type="parallel")
-    scene.reset_camera_tight(margin_factor=1.02)  # need to do reset_camera=False in record for this to work in
-    reset_camera = False
-
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    window.record(scene=scene, size=window_size,
-                  out_path=output_path, reset_camera=reset_camera)
-    scene.clear()
+    try:
+        save_scene(scene, output_path, window_size, parallel=True)
+    finally:
+        scene.clear()
 
 
 def generate_preview(ct_in, file_out, roi_data, smoothing, task_name):
-    from xvfbwrapper import Xvfb
     # do not set random seed, otherwise can not call xvfb in parallel, because all generate same tmp dir (numpy random seed is ok)
-    with Xvfb() as xvfb:
+    with fury_display_context():
         plot_subject(ct_in, file_out, None, roi_data, smoothing, task_name)

@@ -31,6 +31,7 @@ from totalsegmentator.pulmonary_report.rendering import (
     render_report_image,
     serialize_outputs,
 )
+from totalsegmentator.rendering import fury_display_context
 from totalsegmentator.reporting import setup_logger
 from totalsegmentator.resampling import change_spacing
 from totalsegmentator.serialization_utils import filestream_to_nifti
@@ -253,9 +254,7 @@ def create_pulmonary_report(
         )
 
         yield {"id": 7, "progress": 85, "status": "Generating report images"}
-        from xvfbwrapper import Xvfb
-
-        with Xvfb():
+        with fury_display_context():
             plot_pulmonary_seg(
                 data["pulmonary_artery"],
                 data["landmarks"],

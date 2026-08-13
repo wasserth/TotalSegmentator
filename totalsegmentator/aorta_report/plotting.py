@@ -342,17 +342,16 @@ def plot_cpr_overview(img, mask, output_path, vmin, vmax, true_lumen_mask=None, 
     final_img.save(output_path)
 
 
-def _record_rotating_scene(window, scene, output_prefix, window_size, nr_frames):
-    scene.reset_camera_tight(margin_factor=1.02)
+def _record_rotating_scene(scene, output_prefix, window_size, nr_frames):
+    from totalsegmentator.rendering import record_rotating_scene
+
     azimuth_angle = int(360 / nr_frames * 1.2)
-    window.record(
-        scene=scene,
-        size=window_size,
-        out_path=str(output_prefix),
-        reset_camera=True,
-        path_numbering=True,
-        n_frames=nr_frames,
-        az_ang=azimuth_angle,
+    record_rotating_scene(
+        scene,
+        output_prefix,
+        window_size,
+        nr_frames,
+        azimuth_angle,
     )
     for frame_index in range(nr_frames):
         frame_path = f"{output_prefix}{frame_index:06d}.png"
@@ -368,19 +367,21 @@ def plot_masks_3d(masks, output_path, file_prefix, smoothing=20, nr_frames=12, d
     masks: list of binary mask ([ndarray])
     """
     from fury import window
-    from totalsegmentator.vtk_utils import plot_mask
+    from totalsegmentator.rendering import plot_mask
 
     window_size = (700, 900)
     scene = window.Scene()
     try:
         for idx, mask in enumerate(masks):
+            if not np.any(mask):
+                continue
             color = list(colors.keys())[idx] if colors_subset is None else colors_subset[idx]
             scene.add(plot_mask(
                 scene, mask, np.eye(4), 0, 0, smoothing=smoothing,
                 color=colors[color], opacity=1.0, orientation="sagittal",
             ))
         _record_rotating_scene(
-            window, scene, Path(output_path) / file_prefix, window_size, nr_frames
+            scene, Path(output_path) / file_prefix, window_size, nr_frames
         )
     finally:
         scene.clear()
@@ -394,8 +395,8 @@ def plot_aorta_3d(aorta, true_lumen, false_lumen, all_vessels, centerline, landm
     all_vessels: binary mask (ndarray)
     landsmakrs: dict of all landsmarks. each landmark has keys cl_idx, roi, diameter
     """
-    from fury import actor, window
-    from totalsegmentator.vtk_utils import plot_mask
+    from fury import window
+    from totalsegmentator.rendering import plot_mask, text
 
     for lm_nr, lm_dict in landmarks.items():
         lm_dict["color"] = list(colors.values())[lm_nr-1]
@@ -419,10 +420,11 @@ def plot_aorta_3d(aorta, true_lumen, false_lumen, all_vessels, centerline, landm
             scene, aorta, np.eye(4), 0, 0, smoothing=smoothing,
             color=colors["gray_light"], opacity=.3, orientation="sagittal",
         ))
-        scene.add(plot_mask(
-            scene, false_lumen, np.eye(4), 0, 0, smoothing=smoothing,
-            color=colors["red"], opacity=.1, orientation="sagittal",
-        ))
+        if np.any(false_lumen):
+            scene.add(plot_mask(
+                scene, false_lumen, np.eye(4), 0, 0, smoothing=smoothing,
+                color=colors["red"], opacity=.1, orientation="sagittal",
+            ))
         scene.add(plot_mask(
             scene, all_vessels, np.eye(4), 0, 0, smoothing=smoothing,
             color=colors["gray_dark"], opacity=1.0, orientation="sagittal",
@@ -445,12 +447,9 @@ def plot_aorta_3d(aorta, true_lumen, false_lumen, all_vessels, centerline, landm
             x, y, z = y, z, x
             x = size[1] - x
             position = np.array([x, y, z]) + lm_dict["txt_offset"]
-            scene.add(actor.vector_text(
-                text=f"{lm_nr}", pos=position, scale=(8, 8, 8), color=colors["white"]
-            ))
+            scene.add(text(lm_nr, position, (8, 8, 8), colors["white"]))
 
         _record_rotating_scene(
-            window,
             scene,
             Path(output_path) / "preview_3d_rotating_",
             window_size,

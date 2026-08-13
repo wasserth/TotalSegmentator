@@ -1,5 +1,4 @@
 import gc
-from contextlib import suppress
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -52,69 +51,23 @@ def _centerline_tangents(points):
     return tangents / norms
 
 
-def _voxel_to_vtk(point, volume_shape):
+def _voxel_to_render(point, volume_shape):
     size_x, size_y, _ = volume_shape
     return np.array([size_y - 1 - point[1], point[2], size_x - 1 - point[0]])
 
 
-def _direction_to_vtk(direction):
+def _direction_to_render(direction):
     return np.array([-direction[1], direction[2], -direction[0]])
 
 
-def _plane_transform(center_vtk, normal_vtk):
-    import vtk
-
-    normal = np.asarray(normal_vtk, dtype=float)
-    norm = np.linalg.norm(normal)
-    normal = normal / norm if norm > 1e-10 else np.array([0.0, 0.0, 1.0])
-    transform = vtk.vtkTransform()
-    transform.Translate(*center_vtk)
-    z_axis = np.array([0.0, 0.0, 1.0])
-    cross = np.cross(z_axis, normal)
-    cross_norm = np.linalg.norm(cross)
-    dot = np.dot(z_axis, normal)
-    if cross_norm > 1e-8:
-        transform.RotateWXYZ(
-            np.degrees(np.arccos(np.clip(dot, -1.0, 1.0))), *(cross / cross_norm)
-        )
-    elif dot < 0:
-        transform.RotateX(180)
-    return transform
-
-
-def _make_plane_actor(radius):
-    """Create one origin-centered plane actor whose transform can be reused."""
-    import vtk
-
-    assembly = vtk.vtkAssembly()
-    for inner_radius, outer_radius, color, opacity in (
-        (0.0, radius, (1.0, 0.6, 0.0), 0.85),
-        (radius * 0.88, radius, (1.0, 0.5, 0.0), 1.0),
-    ):
-        disk = vtk.vtkDiskSource()
-        disk.SetInnerRadius(inner_radius)
-        disk.SetOuterRadius(outer_radius)
-        disk.SetRadialResolution(1)
-        disk.SetCircumferentialResolution(64)
-        mapper = vtk.vtkPolyDataMapper()
-        mapper.SetInputConnection(disk.GetOutputPort())
-        actor = vtk.vtkActor()
-        actor.SetMapper(mapper)
-        actor.GetProperty().SetColor(*color)
-        actor.GetProperty().SetOpacity(opacity)
-        assembly.AddPart(actor)
-    return assembly
-
-
-def _set_plane_pose(actor, center_vtk, normal_vtk):
-    actor.SetUserTransform(_plane_transform(center_vtk, normal_vtk))
-
-
-def _create_vtk_scene(aorta, smoothing, plane_radius, centers_vtk, normals_vtk):
+def _create_scene(aorta, smoothing, plane_radius, centers, normals):
     from fury import window
-    import vtk
-    from vtk.util import numpy_support as vtk_np
-    from totalsegmentator.vtk_utils import plot_mask
+    from totalsegmentator.rendering import (
+        SceneRenderer,
+        plane_actors,
+        plot_mask,
+        remove_actors,
+    )
 
     scene = window.Scene()
     aorta_actor = plot_mask(
@@ -125,41 +78,16 @@ def _create_vtk_scene(aorta, smoothing, plane_radius, centers_vtk, normals_vtk):
 
     bounds_actors = []
     for center, normal in (
-        (centers_vtk[0], normals_vtk[0]),
-        (centers_vtk[-1], normals_vtk[-1]),
+        (centers[0], normals[0]),
+        (centers[-1], normals[-1]),
     ):
-        actor = _make_plane_actor(plane_radius)
-        _set_plane_pose(actor, center, normal)
-        scene.add(actor)
-        bounds_actors.append(actor)
+        actors = plane_actors(center, normal, plane_radius)
+        scene.add(*actors)
+        bounds_actors.extend(actors)
 
-    render_window = vtk.vtkRenderWindow()
-    render_window.SetOffScreenRendering(1)
-    render_window.AddRenderer(scene)
-    render_window.SetSize(350, 700)
-    render_window.Render()
-    scene.projection(proj_type="parallel")
-    scene.reset_camera_tight(margin_factor=1.08)
-    for actor in bounds_actors:
-        scene.rm(actor)
-
-    plane_actor = _make_plane_actor(plane_radius)
-    scene.add(plane_actor)
-    window_to_image = vtk.vtkWindowToImageFilter()
-    window_to_image.SetInput(render_window)
-    window_to_image.SetInputBufferTypeToRGB()
-    return scene, render_window, window_to_image, plane_actor, vtk_np
-
-
-def _snapshot_scene(render_window, window_to_image, vtk_np):
-    render_window.Render()
-    window_to_image.Modified()
-    window_to_image.Update()
-    vtk_image = window_to_image.GetOutput()
-    width, height, _ = vtk_image.GetDimensions()
-    scalars = vtk_image.GetPointData().GetScalars()
-    components = scalars.GetNumberOfComponents()
-    return vtk_np.vtk_to_numpy(scalars).reshape(height, width, components)[::-1].copy()
+    renderer = SceneRenderer(scene, (350, 700), parallel=True, reset_camera=True)
+    remove_actors(scene, bounds_actors)
+    return scene, renderer
 
 
 def _content_crop_bounds(image, padding=12):
@@ -321,23 +249,6 @@ def _compose_frame(panels, titles, title_height, title_font):
     return np.asarray(image)
 
 
-def _cleanup_vtk(scene, render_window, window_to_image):
-    if window_to_image is not None:
-        with suppress(Exception):
-            window_to_image.SetInput(None)
-    if scene is not None:
-        with suppress(Exception):
-            scene.clear()
-    if render_window is not None:
-        if scene is not None:
-            with suppress(Exception):
-                render_window.RemoveRenderer(scene)
-        with suppress(Exception):
-            render_window.SetOffScreenRendering(0)
-        with suppress(Exception):
-            render_window.Finalize()
-
-
 def generate_animated_cpr_nifti(
     aorta, cl, affine,
     res_ct_img, res_seg_img,
@@ -374,8 +285,8 @@ def generate_animated_cpr_nifti(
 
     cl_pts, rsp_vox = _resample_animation_centerline(cl, affine, sp_mm)
     tan = _centerline_tangents(rsp_vox)
-    centers_vtk = np.asarray([_voxel_to_vtk(point, aorta.shape) for point in rsp_vox])
-    normals_vtk = np.asarray([_direction_to_vtk(direction) for direction in tan])
+    centers = np.asarray([_voxel_to_render(point, aorta.shape) for point in rsp_vox])
+    normals = np.asarray([_direction_to_render(direction) for direction in tan])
 
     ct_cpr = res_ct_img.get_fdata()
     seg_cpr = (res_seg_img.get_fdata() > 0.5).astype(np.uint8)
@@ -445,24 +356,26 @@ def generate_animated_cpr_nifti(
         layout_base[0].width, layout_base[0].height, nr_frames
     )
 
-    scene = render_window = window_to_image = None
+    from totalsegmentator.rendering import plane_actors, remove_actors
+
+    scene = renderer = None
     try:
-        scene, render_window, window_to_image, plane_actor, vtk_np = _create_vtk_scene(
-            aorta, smoothing, max_dia_all * 0.75, centers_vtk, normals_vtk
+        scene, renderer = _create_scene(
+            aorta, smoothing, max_dia_all * 0.75, centers, normals
         )
-        plane_actor.SetVisibility(False)
-        crop_bounds = _content_crop_bounds(
-            _snapshot_scene(render_window, window_to_image, vtk_np)
-        )
-        plane_actor.SetVisibility(True)
+        crop_bounds = _content_crop_bounds(renderer.snapshot())
         row_start, row_end, column_start, column_end = crop_bounds
 
         for frame_number in tqdm(range(nr_frames), desc="Animated CPR"):
             cpr_index = frame_indices[frame_number]
-            _set_plane_pose(
-                plane_actor, centers_vtk[cpr_index], normals_vtk[cpr_index]
+            current_plane_actors = plane_actors(
+                centers[cpr_index],
+                normals[cpr_index],
+                max_dia_all * 0.75,
             )
-            snapshot = _snapshot_scene(render_window, window_to_image, vtk_np)
+            scene.add(*current_plane_actors)
+            snapshot = renderer.snapshot()
+            remove_actors(scene, current_plane_actors)
             snapshot = snapshot[row_start:row_end, column_start:column_end]
             panel_3d = np.asarray(
                 Image.fromarray(snapshot).resize((width_3d, TARGET_H), Image.LANCZOS)
@@ -493,9 +406,12 @@ def generate_animated_cpr_nifti(
             _write_rgb_frame(nifti_buffer, np.asarray(layout_frame), frame_number)
     finally:
         try:
-            _cleanup_vtk(scene, render_window, window_to_image)
+            if renderer is not None:
+                renderer.close()
+            if scene is not None:
+                scene.clear()
         finally:
-            scene = render_window = window_to_image = None
+            scene = renderer = None
             gc.collect()
 
     _save_rgb_nifti_buffer(nifti_buffer, output_path)

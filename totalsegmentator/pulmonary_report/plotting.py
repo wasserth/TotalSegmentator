@@ -15,8 +15,8 @@ def plot_pulmonary_seg(
     debug=False,
 ):
     """Render the pulmonary artery and its five measurement planes."""
-    from fury import actor, window
-    from totalsegmentator.vtk_utils import plot_mask
+    from fury import window
+    from totalsegmentator.rendering import plot_mask, record_rotating_scene, text
 
     del debug
     for landmark_index, landmark in landmarks.items():
@@ -59,26 +59,16 @@ def plot_pulmonary_seg(
             x, y, z = y, z, x
             x = size[1] - x
             position = np.array([x, y, z]) + landmark["txt_offset"]
-            scene.add(
-                actor.vector_text(
-                    text=f"{landmark_index}",
-                    pos=position,
-                    scale=(5, 5, 5),
-                    color=colors["white"],
-                )
-            )
+            scene.add(text(landmark_index, position, (5, 5, 5), colors["white"]))
 
-        scene.reset_camera_tight(margin_factor=1.02)
         azimuth_angle = int(360 / nr_frames * 1.2)
         prefix = Path(output_path) / "preview_3d_rotating_"
-        window.record(
-            scene=scene,
-            size=(700, 700),
-            out_path=str(prefix),
-            reset_camera=True,
-            path_numbering=True,
-            n_frames=nr_frames,
-            az_ang=azimuth_angle,
+        record_rotating_scene(
+            scene,
+            prefix,
+            (700, 700),
+            nr_frames,
+            azimuth_angle,
         )
         for frame_index in range(nr_frames):
             frame_path = f"{prefix}{frame_index:06d}.png"

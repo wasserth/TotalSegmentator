@@ -26,7 +26,7 @@ Install dependencies:
 * [PyTorch](http://pytorch.org/) >= 2.0.0
 
 Optionally:
-* if you use the option `--preview` you have to install xvfb (`apt-get install xvfb`) and fury (`pip install 'fury<2'`)
+* if you use the option `--preview` you have to install fury (`pip install fury`). FURY <2 additionally requires xvfb (`apt-get install xvfb`).
 
 
 Install Totalsegmentator
