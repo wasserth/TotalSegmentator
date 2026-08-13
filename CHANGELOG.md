@@ -1,4 +1,5 @@
 ## Master
+* make work with fury > v2. This does not used VTK anymore.
 
 
 ## Release 2.18.0 (12.08.2026)
