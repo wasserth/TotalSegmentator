@@ -432,6 +432,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     if task_name == "total":
         class_map_parts = class_map_5_parts
         map_taskid_to_partname = map_taskid_to_partname_ct
+    elif task_name == "total_highres":
+        class_map_parts = class_map_5_parts
+        map_taskid_to_partname = map_taskid_to_partname_ct
     elif task_name == "total_v2":
         class_map_parts = class_map_5_parts_total_v2
         map_taskid_to_partname = map_taskid_to_partname_ct

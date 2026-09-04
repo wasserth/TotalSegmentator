@@ -15,6 +15,7 @@ TASK_TO_ID = {
     "total_v2_fast": [297, 298],
     "total_mr": [870, 871],
     "total_fast_mr": [872, 873],
+    "total_highres": [841, 842, 843, 844, 845],
     "lung_vessels": [117],
     "lung_vessels_LEGACY": [258],
     "cerebral_bleed": [150],
@@ -46,7 +47,7 @@ TASK_TO_ID = {
     "brain_aneurysm": [615],
 
     "heartchambers_highres": [301],
-    "appendicular_bones": [304],
+    "appendicular_bones": [838],
     "appendicular_bones_mr": [875],
     "tissue_types": [481],
     "tissue_types_mr": [925],

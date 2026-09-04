@@ -8,7 +8,9 @@
 * removed `dipy` dependency
 * update `total` to improved model. **breaking change**: class 26 is now `vertebrae_L6` instead of `vertebrae_S1`. The previous `total` models remain available as `total_v2`.
 * update `total_mr` and `appendicular_bones_mr` to improved model
+* update `appendicular_bones` to Dataset838 (1830 subjects)
 * introduce parameter `--model_size small` for task `total` to further introduce runtime on CPU
+* add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm
 
 
 ## Release 2.18.0 (12.08.2026)

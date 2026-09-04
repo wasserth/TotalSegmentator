@@ -1,5 +1,10 @@
 # Changes and improvements in TotalSegmentator v3
 
+* `total` task: TODO
+* `total_mr` task: TODO
+* `appendicular_bones_mr` task: TODO
+* `total_highres` task: TODO
+
 
 ## Breaking changes from v2 to v3
 * `total` task: class 26 is vertebrae_L6 instead of vertebrae_S1. TODO EXPLAIN MORE

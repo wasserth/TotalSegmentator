@@ -20,7 +20,7 @@ from totalsegmentator.map_to_binary import class_map, commercial_models
 # bin/TotalSegmentator.py imports this list for its --task choices so the two
 # can never drift apart.
 TASKS = [
-    "total", "total_v2", "body", "body_mr", "vertebrae_mr",
+    "total", "total_v2", "total_highres", "body", "body_mr", "vertebrae_mr",
     "lung_vessels", "lung_vessels_LEGACY", "cerebral_bleed", "hip_implant",
     "coronary_arteries", "coronary_arteries_LEGACY",
     "pleural_pericard_effusion", "test",
@@ -30,7 +30,7 @@ TASKS = [
     "brain_structures", "liver_vessels", "liver_lesions", "liver_lesions_mr", "oculomotor_muscles",
     "thigh_shoulder_muscles", "thigh_shoulder_muscles_mr", "lung_nodules", "kidney_cysts",
     "breasts", "ventricle_parts", "aortic_sinuses", "liver_segments", "liver_segments_mr",
-    "total_highres_test", "craniofacial_structures", "abdominal_muscles", "teeth",
+    "craniofacial_structures", "abdominal_muscles", "teeth",
     "trunk_cavities", "brain_aneurysm", "renal_arteries", "aorta_annulus",
     "aortic_dissection", "pulmonary_artery_landmarks",
 ]

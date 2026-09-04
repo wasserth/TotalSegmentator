@@ -324,6 +324,7 @@ roi_groups["total_v2"] = [
     ["vertebrae_S1" if roi == "vertebrae_L6" else roi for roi in roi_group]
     for roi_group in roi_groups["total"]
 ]
+roi_groups["total_highres"] = roi_groups["total"]
 roi_groups["vertebrae_pp_refined"] = roi_groups["vertebrae_pp"]
 
 

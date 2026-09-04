@@ -103,29 +103,14 @@ TASK_CONFIGS = {
     },
 
     # Direct task mappings
-    # todo: add to download and preview
-    # "total_highres_test": {
-    #     # task_id = 955
-    #     "task_id": 956,
-    #     # resample = [0.75, 0.75, 1.0]
-    #     "resample": [0.78125, 0.78125, 1.0],
-    #     "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
-    #     "crop_addon": [30, 30, 30],
-    #     "crop": ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"], # abdomen_thorax
-    #     # model = "3d_fullres_high"
-    #     # model = "3d_fullres_high_bigPS"
-    #     "model": "3d_fullres",
-    #     "cascade": True,
-    # },
-    "total_highres_test": {
-        "task_id": 957,
+    "total_highres": {
+        "task_id": [841, 842, 843, 844, 845],
         "resample": [0.75, 0.75, 1.0],
         "trainer": "nnUNetTrainerNoMirroring",
-        # "crop_addon": [30, 30, 30],
-        # "crop": ["liver", "spleen", "colon", "small_bowel", "stomach", "lung_upper_lobe_left", "lung_upper_lobe_right", "aorta"], # abdomen_thorax
         "model": "3d_fullres_high",
-        # "model": "3d_fullres_high_bigPS",
-        "cascade": False,
+        "plans": "nnUNetResEncUNetLPlans_16",
+        "disallow_fast": True,
+        "commercial": True,
     },
     "lung_vessels": {
         "task_id": 117,
@@ -380,7 +365,7 @@ TASK_CONFIGS = {
         "commercial": True,
     },
     "appendicular_bones": {
-        "task_id": 304,
+        "task_id": 838,
         "resample": 1.5,
         "trainer": "nnUNetTrainerNoMirroring",
         "disallow_fast": True,
@@ -575,6 +560,13 @@ TASK_ID_WEIGHTS_CONFIGS = {
     836: {"foldername": "Dataset836_TotalSegmentator_total_3mm_1559subj", "version": "v3.0.0-weights"},
     837: {"foldername": "Dataset837_TotalSegmentator_total_6mm_1559subj", "version": "v3.0.0-weights"},
 
+    # Total CT highres (commercial)
+    841: {"foldername": "Dataset841_TotalSeg_highres_part1_organs_1830subj", "commercial": True},
+    842: {"foldername": "Dataset842_TotalSegmentator_part2_vertebrae_1559subj", "commercial": True},
+    843: {"foldername": "Dataset843_TotalSegmentator_part3_cardiac_1830subj", "commercial": True},
+    844: {"foldername": "Dataset844_TotalSegmentator_part4_muscles_1830subj", "commercial": True},
+    845: {"foldername": "Dataset845_TotalSegmentator_part5_ribs_1559subj", "commercial": True},
+
     # Body, etc. CT v2
     299: {
         "foldername": "Dataset299_body_1559subj",
@@ -660,6 +652,7 @@ TASK_ID_WEIGHTS_CONFIGS = {
 
     # Commercial models
     304: {"foldername": "Dataset304_appendicular_bones_ext_1559subj"},
+    838: {"foldername": "Dataset838_appendicular_bones_ext_1830subj"},
     855: {"foldername": "Dataset855_TotalSegMRI_appendicular_bones_1088subj"},
     875: {"foldername": "Dataset875_TotalSegMRI_appendicular_bones_1751subj", "version": "v3.0.0-weights"},
     301: {"foldername": "Dataset301_heart_highres_1559subj"},

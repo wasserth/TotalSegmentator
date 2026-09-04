@@ -45,7 +45,7 @@ TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
 ```
 > Note: A Nifti file or a folder (or zip file) with all DICOM slices of one patient is allowed as input.
 
-> Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--roi_subset` to greatly improve runtime. If you run on a M-series Mac use `--device mps` for great speedup.
+> Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--model_size small` (uses smaller model) or `--roi_subset` to greatly improve runtime. Use `-ml` to speedup saving (save one combined file instead of one file per class). If you run on a M-series Mac use `--device mps` for great speedup.
 
 > Note: This is not a medical device and is not intended for clinical usage. However, it is part of several FDA-approved products, where it has been certified as a component of the overall system.
 
@@ -94,6 +94,7 @@ Openly available for any usage (Apache-2.0 license):
 
 
 Available with a license (free licenses available for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). For a commercial license contact jakob.wasserthal@usb.ch):
+* **total_highres**: same 117 classes as `total`, but at submillimeter resolution instead of 1.5mm
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution; [details](resources/heartchambers_highres_details.md))
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
 * **appendicular_bones_mr**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius (for MR images)
@@ -128,6 +129,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 ### Advanced settings
 * `--device`: Choose `cpu` or `gpu` or `gpu:X`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
+* `--model_size small`: Use a smaller model (less filters) to reduce runtime (especially on CPU). (Only works for `total` and `total`+ `--fast`)
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
