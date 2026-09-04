@@ -38,6 +38,8 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(get_task_classes("total_highres")[26], "vertebrae_L6")
         self.assertEqual(task_modality("total_highres"), "CT")
         self.assertEqual(task_modality("total_mr"), "MR")
+        self.assertEqual(task_modality("total_v2_mr"), "MR")
+        self.assertEqual(get_task_classes("total_v2_mr"), get_task_classes("total_mr"))
         self.assertEqual(task_modality("body_mr"), "MR")
         # TOF-MRI task whose name does not end in "_mr"
         self.assertEqual(task_modality("brain_aneurysm"), "MR")

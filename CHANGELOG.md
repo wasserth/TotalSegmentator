@@ -7,10 +7,10 @@
 * pin `uharfbuzz<0.56.1` so FURY >=2 / pygfx does not crash on import with Cython 3.3 Limited API wheels (`TypeError: Shared Cython type cython_function_or_method has the wrong size`).
 * removed `dipy` dependency
 * update `total` to improved model. **breaking change**: class 26 is now `vertebrae_L6` instead of `vertebrae_S1`. The previous `total` models remain available as `total_v2`.
-* update `total_mr` and `appendicular_bones_mr` to improved model
+* update `total_mr` and `appendicular_bones_mr` to improved model. The previous `total_mr` models remain available as `total_v2_mr`.
 * update `appendicular_bones` to Dataset838 (1830 subjects)
 * introduce parameter `--model_size small` for task `total` to further introduce runtime on CPU
-* add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm
+* add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm. Always crops to the body region (`--body_seg`).
 
 
 ## Release 2.18.0 (12.08.2026)

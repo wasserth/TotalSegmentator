@@ -438,7 +438,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     elif task_name == "total_v2":
         class_map_parts = class_map_5_parts_total_v2
         map_taskid_to_partname = map_taskid_to_partname_ct
-    elif task_name == "total_mr":
+    elif task_name in ["total_mr", "total_v2_mr"]:
         class_map_parts = class_map_parts_mr
         map_taskid_to_partname = map_taskid_to_partname_mr
     elif task_name == "headneck_muscles":
@@ -597,7 +597,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         #   overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
         #   (dice 0.001 worse on test set -> ok)
         #   (for lung_trachea_bronchia somehow a lot lower dice)
-        if task_name in ["total", "total_v2", "total_mr"]:
+        if task_name in ["total", "total_v2", "total_mr", "total_v2_mr"]:
             step_size = 0.8
         else:
             step_size = 0.5

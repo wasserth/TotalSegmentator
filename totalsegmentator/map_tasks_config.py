@@ -81,6 +81,25 @@ TASK_CONFIGS = {
             },
         }
     },
+    "total_v2_mr": {
+        "sub_modes": {
+            "fast": {
+                "task_id": 852,
+                "resample": 3.0,
+                "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
+            },
+            "fastest": {
+                "task_id": 853,
+                "resample": 6.0,
+                "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
+            },
+            "default": {
+                "task_id": [850, 851],
+                "resample": 1.5,
+                "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
+            },
+        }
+    },
     "body": {
         "sub_modes": {
             "fast": {"task_id": 300, "resample": 6.0, "trainer": "nnUNetTrainer"},

@@ -334,6 +334,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             body_seg = False
             print("INFO: For MR models the argument '--body_seg' is not supported and will be ignored.")
 
+    if task == "total_highres":
+        body_seg = True
+
     if higher_order_resampling and save_lowres:
         raise ValueError("save_lowres cannot be used together with --higher_order_resampling "
                          "(higher-order resampling upsamples to the input resolution).")
@@ -372,7 +375,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if crop_model is None:  # use default "total" model for cropping
             if robust_rs or robust_crop:
                 print("  (Using more robust (but slower) 3mm model for cropping.)")
-                if task.endswith("_mr"):
+                if task == "total_v2_mr":
+                    crop_model_task = 852
+                elif task.endswith("_mr"):
                     crop_model_task = 872
                 elif task == "total_v2":
                     crop_model_task = 297
@@ -382,7 +387,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             else:
                 # For MR always run 3mm model for cropping, because 6mm too bad results
                 #  (runtime for 3mm still very good for MR)
-                if task.endswith("_mr"):
+                if task == "total_v2_mr":
+                    crop_model_task = 852
+                    crop_spacing = 3.0
+                elif task.endswith("_mr"):
                     crop_model_task = 872
                     crop_spacing = 3.0
                 elif task == "total_v2":
@@ -391,7 +399,9 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 else:
                     crop_model_task = 837
                     crop_spacing = 6.0
-            if task.endswith("_mr") or modality == "mr":
+            if task == "total_v2_mr":
+                crop_task = "total_v2_mr"
+            elif task.endswith("_mr") or modality == "mr":
                 crop_task = "total_mr"
             elif task == "total_v2":
                 crop_task = "total_v2"

@@ -826,6 +826,7 @@ class_map = {
 class_map["total_v2"] = class_map["total"].copy()
 class_map["total_v2"][26] = "vertebrae_S1"
 class_map["total_highres"] = class_map["total"].copy()
+class_map["total_v2_mr"] = class_map["total_mr"].copy()
 class_map["vertebrae_pp_refined"] = class_map["vertebrae_pp"].copy()
 
 

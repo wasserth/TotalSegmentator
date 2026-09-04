@@ -15,6 +15,8 @@ TASK_TO_ID = {
     "total_v2_fast": [297, 298],
     "total_mr": [870, 871],
     "total_fast_mr": [872, 873],
+    "total_v2_mr": [850, 851],
+    "total_v2_fast_mr": [852, 853],
     "total_highres": [841, 842, 843, 844, 845],
     "lung_vessels": [117],
     "lung_vessels_LEGACY": [258],
