@@ -35,8 +35,31 @@ from totalsegmentator.custom_trainers import (nnUNetTrainer_MOSAIC_1k_QuarterLR_
                                               nnUNetTrainerDiceTopK10Loss_2000epochs,
                                               nnUNetTrainerSkeletonRecall)
 from totalsegmentator.nnunet_runtime_patches import patch_nnunet_cropped_logits_resampling
+from nnunetv2.training.nnUNetTrainer.nnUNetTrainer import nnUNetTrainer
+from nnunetv2.training.nnUNetTrainer.variants.data_augmentation.nnUNetTrainerNoMirroring import (
+    nnUNetTrainerNoMirroring,
+    nnUNetTrainer_onlyMirror01,
+)
+from nnunetv2.training.nnUNetTrainer.variants.data_augmentation.nnUNetTrainerDAOrd0 import (
+    nnUNetTrainer_DASegOrd0,
+    nnUNetTrainer_DASegOrd0_NoMirroring,
+)
+from nnunetv2.training.nnUNetTrainer.variants.training_length.nnUNetTrainer_Xepochs_NoMirroring import (
+    nnUNetTrainer_2000epochs_NoMirroring,
+    nnUNetTrainer_4000epochs_NoMirroring,
+)
 
-custom_trainers = {
+# Resolve trainers used by TotalSegmentator by direct import. nnU-Net's recursive
+# module walk can import unrelated trainer packages (e.g. primus) and abort the
+# whole prediction if one of those imports fails.
+known_trainers = {
+    "nnUNetTrainer": nnUNetTrainer,
+    "nnUNetTrainerNoMirroring": nnUNetTrainerNoMirroring,
+    "nnUNetTrainer_onlyMirror01": nnUNetTrainer_onlyMirror01,
+    "nnUNetTrainer_DASegOrd0": nnUNetTrainer_DASegOrd0,
+    "nnUNetTrainer_DASegOrd0_NoMirroring": nnUNetTrainer_DASegOrd0_NoMirroring,
+    "nnUNetTrainer_2000epochs_NoMirroring": nnUNetTrainer_2000epochs_NoMirroring,
+    "nnUNetTrainer_4000epochs_NoMirroring": nnUNetTrainer_4000epochs_NoMirroring,
     "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring": nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring,
     "nnUNetTrainerDiceTopK10Loss_2000epochs": nnUNetTrainerDiceTopK10Loss_2000epochs,
     "nnUNetTrainerSkeletonRecall": nnUNetTrainerSkeletonRecall,
@@ -44,8 +67,8 @@ custom_trainers = {
 
 
 def recursive_find_python_class_custom(folder: str, class_name: str, current_module: str, *args, **kwargs):
-    if class_name in custom_trainers:
-        return custom_trainers[class_name]
+    if class_name in known_trainers:
+        return known_trainers[class_name]
     return recursive_find_python_class(folder, class_name, current_module, *args, **kwargs)
 
 
@@ -53,8 +76,8 @@ if nnunet_find_objects is not None:
     recursive_find_trainer_class_by_name = nnunet_find_objects.recursive_find_trainer_class_by_name
 
     def recursive_find_trainer_class_by_name_custom(trainer_name: str):
-        if trainer_name in custom_trainers:
-            return custom_trainers[trainer_name]
+        if trainer_name in known_trainers:
+            return known_trainers[trainer_name]
         return recursive_find_trainer_class_by_name(trainer_name)
 
     nnunet_find_objects.recursive_find_trainer_class_by_name = recursive_find_trainer_class_by_name_custom

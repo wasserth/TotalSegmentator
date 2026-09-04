@@ -66,7 +66,13 @@ setup(name='TotalSegmentator',
             'pandas',
             'scikit-learn',
             'fury',
-            'dipy'
+            # FURY >=2 pulls pygfx -> uharfbuzz. uharfbuzz 0.56.1 wheels were built with
+            # Cython 3.3.0 Limited API (abi3 targeting 3.10) and crash on import when another
+            # Cython 3.3 Limited API module is already loaded:
+            #   TypeError: Shared Cython type cython_function_or_method has the wrong size
+            # See https://github.com/cython/cython/issues/7914. 0.56.0 is the last release
+            # built before Cython 3.3.0.
+            'uharfbuzz>=0.52,<0.56.1'
         ],
         extras_require={
             'mcp': [

@@ -44,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest Cython fury xgboost
+          pip install pytest fury "uharfbuzz>=0.52,<0.56.1" xgboost
           pip install torch==2.6.0 -f https://download.pytorch.org/whl/cpu
           pip install timm monai
           pip install .
@@ -89,7 +89,7 @@ jobs:
             mesa-vulkan-drivers \
             xvfb
           python -m pip install --upgrade pip
-          pip install pytest scipy pillow scikit-image "${{ matrix.numpy-version }}" "${{ matrix.fury-version }}"
+          pip install pytest scipy pillow scikit-image "${{ matrix.numpy-version }}" "${{ matrix.fury-version }}" "uharfbuzz>=0.52,<0.56.1"
           pip install --no-deps .
       - name: Test FURY rendering compatibility
         run: ${{ matrix.pytest_prefix }} pytest -v tests/test_rendering.py
