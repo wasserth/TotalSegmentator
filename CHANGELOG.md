@@ -1,8 +1,14 @@
 ## Master
+
+
+## Release 3.0.0 (XX.09.2026)
 * make work with fury > v2. This does not used VTK anymore.
 * `--save_lowres` now also works with the default (1.5mm) models, not only `--fast`/`--fastest`.
 * pin `uharfbuzz<0.56.1` so FURY >=2 / pygfx does not crash on import with Cython 3.3 Limited API wheels (`TypeError: Shared Cython type cython_function_or_method has the wrong size`).
 * removed `dipy` dependency
+* update `total` to improved model. **breaking change**: class 26 is now `vertebrae_L6` instead of `vertebrae_S1`. The previous `total` models remain available as `total_v2`.
+* update `total_mr` and `appendicular_bones_mr` to improved model
+* introduce parameter `--model_size small` for task `total` to further introduce runtime on CPU
 
 
 ## Release 2.18.0 (12.08.2026)

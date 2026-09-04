@@ -44,7 +44,7 @@ roi_groups = {
          "lung_upper_lobe_right"],
         ["lung_lower_lobe_left", "lung_middle_lobe_right", "lung_lower_lobe_right",
          "pancreas", "brain"],
-        ["vertebrae_S1", "vertebrae_L5", "vertebrae_L4", "vertebrae_L3", "vertebrae_L2",
+        ["vertebrae_L6", "vertebrae_L5", "vertebrae_L4", "vertebrae_L3", "vertebrae_L2",
          "vertebrae_L1", "vertebrae_T12", "vertebrae_T11", "vertebrae_T10", "vertebrae_T9",
          "vertebrae_T8", "vertebrae_T7", "vertebrae_T6", "vertebrae_T5", "vertebrae_T4",
          "vertebrae_T3", "vertebrae_T2", "vertebrae_T1", "vertebrae_C7", "vertebrae_C6",
@@ -320,8 +320,8 @@ roi_groups = {
     ]
 }
 
-roi_groups["total_v3"] = [
-    ["vertebrae_L6" if roi == "vertebrae_S1" else roi for roi in roi_group]
+roi_groups["total_v2"] = [
+    ["vertebrae_S1" if roi == "vertebrae_L6" else roi for roi in roi_group]
     for roi_group in roi_groups["total"]
 ]
 roi_groups["vertebrae_pp_refined"] = roi_groups["vertebrae_pp"]

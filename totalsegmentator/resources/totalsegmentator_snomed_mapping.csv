@@ -80,6 +80,7 @@ stomach,SCT,123037004,Anatomical Structure,SCT,69695003,Stomach,,,,,,,,,,"180,70
 trachea,SCT,123037004,Anatomical Structure,SCT,44567001,Trachea,,,,,,,,,,"0,180,200"
 urinary_bladder,SCT,123037004,Anatomical Structure,SCT,89837001,Urinary bladder,,,,,,,,,,"54,94,216"
 vertebrae_S1,SCT,123037004,Anatomical Structure,SCT,65985001,S1 vertebra,,,,,,,,,,"205,180,145"
+vertebrae_L6,SCT,123037004,Anatomical Structure,SCT,66794005,Lumbar vertebra,,,,,,,,,,"205,180,145"
 vertebrae_C1,SCT,123037004,Anatomical Structure,SCT,14806007,C1 vertebra,,,,,,,,,,"242,217,182"
 vertebrae_C2,SCT,123037004,Anatomical Structure,SCT,39976000,C2 vertebra,,,,,,,,,,"23,254,219"
 vertebrae_C3,SCT,123037004,Anatomical Structure,SCT,113205007,C3 vertebra,,,,,,,,,,"60,35,0"

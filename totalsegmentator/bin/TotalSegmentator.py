@@ -122,7 +122,7 @@ def main():
                         default="total")
 
     parser.add_argument("-ms", "--model_size", choices=["big", "small"], default="big",
-                        help="Select model size. Currently only affects task 'total_v3': "
+                        help="Select model size. Currently only affects task 'total': "
                              "'small' uses nnUNetResEncUNetLPlans_8. Default: big.")
 
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",

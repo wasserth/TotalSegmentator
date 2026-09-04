@@ -9,12 +9,12 @@ from totalsegmentator.config import setup_totalseg, set_config_key
 # derived from this map so the CLI and the id table can never drift apart
 # (see issue #589).
 TASK_TO_ID = {
-    "total": [291, 292, 293, 294, 295, 298],
-    "total_fast": [297, 298],
-    "total_v3": [831, 832, 833, 834, 835, 837],
-    "total_v3_fast": [836, 837],
-    "total_mr": [850, 851],
-    "total_fast_mr": [852, 853],
+    "total": [831, 832, 833, 834, 835, 837],
+    "total_fast": [836, 837],
+    "total_v2": [291, 292, 293, 294, 295, 298],
+    "total_v2_fast": [297, 298],
+    "total_mr": [870, 871],
+    "total_fast_mr": [872, 873],
     "lung_vessels": [117],
     "lung_vessels_LEGACY": [258],
     "cerebral_bleed": [150],
@@ -47,7 +47,7 @@ TASK_TO_ID = {
 
     "heartchambers_highres": [301],
     "appendicular_bones": [304],
-    "appendicular_bones_mr": [855],
+    "appendicular_bones_mr": [875],
     "tissue_types": [481],
     "tissue_types_mr": [925],
     "tissue_4_types": [485],

@@ -25,26 +25,6 @@ TASK_CONFIGS = {
     "total": {
         "sub_modes": {
             "fast": {
-                "task_id": 297,
-                "resample": 3.0,
-                "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
-                # "trainer": "nnUNetTrainerNoMirroring",
-            },
-            "fastest": {
-                "task_id": 298,
-                "resample": 6.0,
-                "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
-            },
-            "default": {
-                "task_id": [291, 292, 293, 294, 295],
-                "resample": 1.5,
-                "trainer": "nnUNetTrainerNoMirroring",
-            },
-        }
-    },
-    "total_v3": {
-        "sub_modes": {
-            "fast": {
                 "task_id": 836,
                 "resample": 3.0,
                 "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
@@ -61,23 +41,43 @@ TASK_CONFIGS = {
             },
         }
     },
+    "total_v2": {
+        "sub_modes": {
+            "fast": {
+                "task_id": 297,
+                "resample": 3.0,
+                "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
+            },
+            "fastest": {
+                "task_id": 298,
+                "resample": 6.0,
+                "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
+            },
+            "default": {
+                "task_id": [291, 292, 293, 294, 295],
+                "resample": 1.5,
+                "trainer": "nnUNetTrainerNoMirroring",
+            },
+        }
+    },
     "total_mr": {
         "sub_modes": {
             "fast": {
-                "task_id": 852,
+                "task_id": 872,
                 "resample": 3.0,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
                 # "trainer": "nnUNetTrainerNoMirroring",
             },
             "fastest": {
-                "task_id": 853,
+                "task_id": 873,
                 "resample": 6.0,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
             },
             "default": {
-                "task_id": [850, 851],
+                "task_id": [870, 871],
                 "resample": 1.5,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
+                "model": "3d_fullres_15mm",
             },
         }
     },
@@ -387,9 +387,10 @@ TASK_CONFIGS = {
         "commercial": True,
     },
     "appendicular_bones_mr": {
-        "task_id": 855,
+        "task_id": 875,
         "resample": 1.5,
         "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
+        "model": "3d_fullres_15mm",
         "disallow_fast": True,
         "commercial": True,
     },
@@ -603,8 +604,12 @@ TASK_ID_WEIGHTS_CONFIGS = {
     # MR models
     850: {"foldername": "Dataset850_TotalSegMRI_part1_organs_1088subj", "version": "v2.5.0-weights"},
     851: {"foldername": "Dataset851_TotalSegMRI_part2_muscles_1088subj", "version": "v2.5.0-weights"},
+    870: {"foldername": "Dataset870_TotalSegMRI_part1_organs_1751subj", "version": "v3.0.0-weights"},
+    871: {"foldername": "Dataset871_TotalSegMRI_part2_muscles_1751subj", "version": "v3.0.0-weights"},
     852: {"foldername": "Dataset852_TotalSegMRI_total_3mm_1088subj", "version": "v2.5.0-weights"},
     853: {"foldername": "Dataset853_TotalSegMRI_total_6mm_1088subj", "version": "v2.5.0-weights"},
+    872: {"foldername": "Dataset872_TotalSegMRI_total_3mm_1751subj", "version": "v3.0.0-weights"},
+    873: {"foldername": "Dataset873_TotalSegMRI_total_6mm_1751subj", "version": "v3.0.0-weights"},
     597: {"foldername": "Dataset597_mri_body_139subj", "version": "v2.5.0-weights"},
     598: {"foldername": "Dataset598_mri_body_6mm_139subj", "version": "v2.5.0-weights"},
     756: {"foldername": "Dataset756_mri_vertebrae_1076subj", "version": "v2.5.0-weights"},
@@ -656,6 +661,7 @@ TASK_ID_WEIGHTS_CONFIGS = {
     # Commercial models
     304: {"foldername": "Dataset304_appendicular_bones_ext_1559subj"},
     855: {"foldername": "Dataset855_TotalSegMRI_appendicular_bones_1088subj"},
+    875: {"foldername": "Dataset875_TotalSegMRI_appendicular_bones_1751subj", "version": "v3.0.0-weights"},
     301: {"foldername": "Dataset301_heart_highres_1559subj"},
     303: {"foldername": "Dataset303_face_1559subj"},
     481: {"foldername": "Dataset481_tissue_1559subj"},

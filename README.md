@@ -58,6 +58,7 @@ Next to the default task (`total`) there are more subtasks with more classes. If
 
 Openly available for any usage (Apache-2.0 license):
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes; see [here](resources/class_details.md) for more details)
+* **total_v2**: previous `total` model (class 26 is `vertebrae_S1` instead of `vertebrae_L6`)
 * **total_mr**: default task containing 50 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **lung_vessels**: lung_arteries, lung_veins, lung_airways, lung_airways_wall (partly based on [paper](https://www.nature.com/articles/s41597-025-06074-6), also cite [paper](https://arxiv.org/abs/2404.03010))
 * **lung_vessels_LEGACY**: lung_vessels, lung_trachea_bronchia (cite [paper](https://www.sciencedirect.com/science/article/pii/S0720048X22001097))
@@ -400,7 +401,7 @@ For some classes they differ which you can see in the table below.
 |    23 | kidney\_cyst\_left               |                             |
 |    24 | kidney\_cyst\_right              |                             |
 |    25 | sacrum                           |                             |
-|    26 | vertebrae\_S1                    |                             |
+|    26 | vertebrae\_L6                    |                             |
 |    27 | vertebrae\_L5                    |                             |
 |    28 | vertebrae\_L4                    |                             |
 |    29 | vertebrae\_L3                    |                             |

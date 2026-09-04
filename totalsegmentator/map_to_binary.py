@@ -108,7 +108,7 @@ class_map = {
         104: "urinary_bladder"
     },
 
-    # classes of new TotalSegmentator v2
+    # classes of TotalSegmentator v2/v3 (v3: vertebrae_L6 instead of vertebrae_S1)
     "total": {
         1: "spleen",
         2: "kidney_right",
@@ -135,7 +135,7 @@ class_map = {
         23: "kidney_cyst_left",
         24: "kidney_cyst_right",
         25: "sacrum",
-        26: "vertebrae_S1",
+        26: "vertebrae_L6",
         27: "vertebrae_L5",
         28: "vertebrae_L4",
         29: "vertebrae_L3",
@@ -471,6 +471,12 @@ class_map = {
         13: "femur",
         14: "liver",
         15: "spleen"
+    },
+    "appendicular_bones_mr_auxiliary": {
+        9: "humerus_aux",
+        10: "femur_aux",
+        11: "liver_aux",
+        12: "spleen_aux"
     },
     "tissue_types": {
         1: "subcutaneous_fat",
@@ -844,15 +850,15 @@ class_map = {
     }
 }
 
-class_map["total_v3"] = class_map["total"].copy()
-class_map["total_v3"][26] = "vertebrae_L6"
+class_map["total_v2"] = class_map["total"].copy()
+class_map["total_v2"][26] = "vertebrae_S1"
 class_map["vertebrae_pp_refined"] = class_map["vertebrae_pp"].copy()
 
 
 commercial_models = {
     "heartchambers_highres": 301,
     "appendicular_bones": 304,
-    "appendicular_bones_mr": 855,
+    "appendicular_bones_mr": 875,
     "tissue_types": 481,
     "tissue_types_mr": 925,
     "tissue_4_types": 485,
@@ -904,7 +910,7 @@ class_map_5_parts = {
     # 26 classes
     "class_map_part_vertebrae": {
         1: "sacrum",
-        2: "vertebrae_S1",
+        2: "vertebrae_L6",
         3: "vertebrae_L5",
         4: "vertebrae_L4",
         5: "vertebrae_L3",
@@ -1116,8 +1122,8 @@ class_map_parts_headneck_muscles = {
     }
 }
 
-class_map_5_parts_total_v3 = {part_name: part_map.copy() for part_name, part_map in class_map_5_parts.items()}
-class_map_5_parts_total_v3["class_map_part_vertebrae"][2] = "vertebrae_L6"
+class_map_5_parts_total_v2 = {part_name: part_map.copy() for part_name, part_map in class_map_5_parts.items()}
+class_map_5_parts_total_v2["class_map_part_vertebrae"][2] = "vertebrae_S1"
 
 
 map_taskid_to_partname_ct = {
@@ -1127,20 +1133,20 @@ map_taskid_to_partname_ct = {
     294: "class_map_part_muscles",
     295: "class_map_part_ribs",
 
-    517: "test",
-}
-
-map_taskid_to_partname_ct_v3 = {
     831: "class_map_part_organs",
     832: "class_map_part_vertebrae",
     833: "class_map_part_cardiac",
     834: "class_map_part_muscles",
     835: "class_map_part_ribs",
+
+    517: "test",
 }
 
 map_taskid_to_partname_mr = {
     850: "class_map_part_organs",
-    851: "class_map_part_muscles"
+    851: "class_map_part_muscles",
+    870: "class_map_part_organs",
+    871: "class_map_part_muscles",
 }
 
 map_taskid_to_partname_headneck_muscles = {

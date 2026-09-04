@@ -96,8 +96,8 @@ from nnunetv2.inference.predict_from_raw_data import nnUNetPredictor
 
 from nnunetv2.utilities.file_path_utilities import get_output_folder
 
-from totalsegmentator.map_to_binary import class_map, class_map_5_parts, class_map_5_parts_total_v3, class_map_parts_mr, class_map_parts_headneck_muscles
-from totalsegmentator.map_to_binary import map_taskid_to_partname_mr, map_taskid_to_partname_ct, map_taskid_to_partname_ct_v3, map_taskid_to_partname_headneck_muscles
+from totalsegmentator.map_to_binary import class_map, class_map_5_parts, class_map_5_parts_total_v2, class_map_parts_mr, class_map_parts_headneck_muscles
+from totalsegmentator.map_to_binary import map_taskid_to_partname_mr, map_taskid_to_partname_ct, map_taskid_to_partname_headneck_muscles
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
 from totalsegmentator.resampling import change_spacing
@@ -432,9 +432,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     if task_name == "total":
         class_map_parts = class_map_5_parts
         map_taskid_to_partname = map_taskid_to_partname_ct
-    elif task_name == "total_v3":
-        class_map_parts = class_map_5_parts_total_v3
-        map_taskid_to_partname = map_taskid_to_partname_ct_v3
+    elif task_name == "total_v2":
+        class_map_parts = class_map_5_parts_total_v2
+        map_taskid_to_partname = map_taskid_to_partname_ct
     elif task_name == "total_mr":
         class_map_parts = class_map_parts_mr
         map_taskid_to_partname = map_taskid_to_partname_mr
@@ -448,7 +448,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
     if save_lowres and crop is not None:
         raise ValueError("save_lowres is not supported together with cropping or roi_subset.")
     
-    if v1_order and task_name == "total":
+    if v1_order and task_name in ["total", "total_v2"]:
         label_map = class_map["total_v1"]
     else:
         label_map = class_map[output_task_name]
@@ -594,7 +594,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         #   overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
         #   (dice 0.001 worse on test set -> ok)
         #   (for lung_trachea_bronchia somehow a lot lower dice)
-        if task_name in ["total", "total_v3", "total_mr"]:
+        if task_name in ["total", "total_v2", "total_mr"]:
             step_size = 0.8
         else:
             step_size = 0.5
@@ -696,7 +696,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
         img_pred = nib.load(tmp_dir / "s01.nii.gz")
 
-        # Currently only relevant for T304 (appendicular bones)
+        # Currently only relevant for appendicular_bones / appendicular_bones_mr
         img_pred = remove_auxiliary_labels(img_pred, task_name)
 
         # Postprocessing multilabel (run here on lower resolution)
@@ -843,8 +843,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                                                           dilation_mm=2, verbose=verbose)
 
         # Reorder labels if needed
-        if v1_order and task_name == "total":
-            img_data = reorder_multilabel_like_v1(img_data, class_map["total"], class_map["total_v1"])
+        if v1_order and task_name in ["total", "total_v2"]:
+            img_data = reorder_multilabel_like_v1(img_data, class_map[task_name], class_map["total_v1"])
 
         # Keep only voxel values corresponding to the roi_subset
         if roi_subset is not None:

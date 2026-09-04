@@ -188,7 +188,7 @@ def get_task_config(task, fast=False, fastest=False, quiet=False, robust_crop=No
             raise ValueError(f"task {task} does not work with option --fast")
 
     # Handle special case task-specific logic and options
-    if task == "total_v3" and model_size == "small":
+    if task == "total" and model_size == "small":
         config["plans"] = "nnUNetResEncUNetLPlans_8"
 
     if "info_msg" in raw_task and not quiet:
@@ -257,8 +257,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     if model_size not in ["big", "small"]:
         raise ValueError("model_size must be 'big' or 'small'.")
-    if model_size == "small" and task != "total_v3":
-        raise ValueError("model_size='small' is currently only supported for task 'total_v3'.")
+    if model_size == "small" and task != "total":
+        raise ValueError("model_size='small' is currently only supported for task 'total'.")
 
     if not quiet:
         print("\nIf you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024\n")
@@ -372,19 +372,29 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if crop_model is None:  # use default "total" model for cropping
             if robust_rs or robust_crop:
                 print("  (Using more robust (but slower) 3mm model for cropping.)")
-                crop_model_task = 852 if task.endswith("_mr") else 297
+                if task.endswith("_mr"):
+                    crop_model_task = 872
+                elif task == "total_v2":
+                    crop_model_task = 297
+                else:
+                    crop_model_task = 836
                 crop_spacing = 3.0
             else:
                 # For MR always run 3mm model for cropping, because 6mm too bad results
                 #  (runtime for 3mm still very good for MR)
                 if task.endswith("_mr"):
-                    crop_model_task = 852
+                    crop_model_task = 872
                     crop_spacing = 3.0
-                else:
+                elif task == "total_v2":
                     crop_model_task = 298
+                    crop_spacing = 6.0
+                else:
+                    crop_model_task = 837
                     crop_spacing = 6.0
             if task.endswith("_mr") or modality == "mr":
                 crop_task = "total_mr"
+            elif task == "total_v2":
+                crop_task = "total_v2"
             else:
                 crop_task = "total"
             crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"
