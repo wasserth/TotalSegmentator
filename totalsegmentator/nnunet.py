@@ -609,10 +609,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             if roi_subset is not None:
                 part_names = []
                 new_task_id = []
+                # Reverse-map only the current task's IDs. total / total_v2 / total_highres
+                # (and the MR equivalents) share part names, so using the full dict would
+                # pick the last overlapping dataset (e.g. highres 841 instead of total 831).
+                map_partname_to_taskid = {map_taskid_to_partname[tid]: tid for tid in task_id}
                 for part_name, part_map in class_map_parts.items():
                     if any(organ in roi_subset for organ in part_map.values()):
-                        # get taskid associated to model part_name
-                        map_partname_to_taskid = {v:k for k,v in map_taskid_to_partname.items()}
                         new_task_id.append(map_partname_to_taskid[part_name])
                         part_names.append(part_name)
                 task_id = new_task_id
