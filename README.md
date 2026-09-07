@@ -90,6 +90,8 @@ Openly available for any usage (Apache-2.0 license):
 * **vertebrae_pp**: vertebral bodies C1-L5 with per-vertebra labels (a lot less segmentation errors than vertebrae segmentations from `total` task because of added postprocessing)
 * **vertebrae_pp_refined**: vertebral bodies C1-L5 with per-vertebra labels, refined with the `vertebrae_body` mask for sharper borders (borders are more accurate than in `vertebrae_pp` but has longer runtime)
 * **vertebrae_body**: vertebral body of all vertebrae (without the vertebral arch), intervertebral_discs (for MR this is part of the `total_mr` task)
+* **thigh_shoulder_muscles**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii
+* **thigh_shoulder_muscles_mr**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (for MR images)
 
 *: These models are not trained on the full totalsegmentator dataset but on some small other datasets. Therefore, expect them to work less robustly.
 
@@ -105,8 +107,6 @@ Available with a license (free licenses available for non-commercial usage [here
 * **brain_structures**: brainstem, subarachnoid_space, venous_sinuses, septum_pellucidum, cerebellum, caudate_nucleus, lentiform_nucleus, insular_cortex, internal_capsule, ventricle, central_sulcus, frontal_lobe, parietal_lobe, occipital_lobe, temporal_lobe, thalamus (NOTE: this is for CT) (cite [paper](https://doi.org/10.1148/ryai.2020190183) as our model is partly based on this)
 * **face**: face_region (for anonymization)
 * **face_mr**: face_region (for anonymization)
-* **thigh_shoulder_muscles**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii
-* **thigh_shoulder_muscles_mr**: quadriceps_femoris_left, quadriceps_femoris_right, thigh_medial_compartment_left, thigh_medial_compartment_right, thigh_posterior_compartment_left, thigh_posterior_compartment_right, sartorius_left, sartorius_right, deltoid, supraspinatus, infraspinatus, subscapularis, coracobrachial, trapezius, pectoralis_minor, serratus_anterior, teres_major, triceps_brachii (for MR images)
 * **coronary_arteries**: coronary_arteries (also works on non-contrast images)
 * **coronary_arteries_LEGACY**: coronary_arteries (previous version of the coronary_arteries task used until v2.12.0)
 * **aortic_sinuses**: left_ventricular_outflow_tract, right_coronary_cusp, left_coronary_cusp, non_coronary_cusp

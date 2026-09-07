@@ -11,6 +11,7 @@
 * update `appendicular_bones` to Dataset838 (1830 subjects)
 * introduce parameter `--model_size small` for task `total` to further introduce runtime on CPU
 * add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm. Always crops to the body region (`--body_seg`).
+* make `thigh_shoulder_muscles` and `thigh_shoulder_muscles_mr` openly available (Apache-2.0).
 
 
 ## Release 2.18.0 (12.08.2026)

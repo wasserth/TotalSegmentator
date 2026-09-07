@@ -370,6 +370,18 @@ TASK_CONFIGS = {
         "trainer": "nnUNetTrainerNoMirroring",
         "disallow_fast": True,
     },
+    "thigh_shoulder_muscles": {
+        "task_id": 857,  # at the moment only one mixed model for CT and MR; when annotated all CT samples -> train separate CT model
+        "resample": 1.5,
+        "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
+        "disallow_fast": True,
+    },
+    "thigh_shoulder_muscles_mr": {
+        "task_id": 857,
+        "resample": 1.5,
+        "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
+        "disallow_fast": True,
+    },
 
     # Commercial models
     "heartchambers_highres": {
@@ -440,20 +452,6 @@ TASK_CONFIGS = {
         "crop": ["brain"],
         "crop_addon": [10, 10, 10],
         "model": "3d_fullres_high",
-        "disallow_fast": True,
-        "commercial": True,
-    },
-    "thigh_shoulder_muscles": {
-        "task_id": 857,  # at the moment only one mixed model for CT and MR; when annotated all CT samples -> train separate CT model
-        "resample": 1.5,
-        "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
-        "disallow_fast": True,
-        "commercial": True,
-    },
-    "thigh_shoulder_muscles_mr": {
-        "task_id": 857,
-        "resample": 1.5,
-        "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
         "disallow_fast": True,
         "commercial": True,
     },
@@ -581,10 +579,10 @@ TASK_ID_WEIGHTS_CONFIGS = {
 
     # Total CT highres (commercial)
     841: {"foldername": "Dataset841_TotalSeg_highres_part1_organs_1830subj", "commercial": True},
-    842: {"foldername": "Dataset842_TotalSegmentator_part2_vertebrae_1559subj", "commercial": True},
-    843: {"foldername": "Dataset843_TotalSegmentator_part3_cardiac_1830subj", "commercial": True},
-    844: {"foldername": "Dataset844_TotalSegmentator_part4_muscles_1830subj", "commercial": True},
-    845: {"foldername": "Dataset845_TotalSegmentator_part5_ribs_1559subj", "commercial": True},
+    842: {"foldername": "Dataset842_TotalSeg_highres_part2_vertebrae_1559subj", "commercial": True},
+    843: {"foldername": "Dataset843_TotalSeg_highres_part3_cardiac_1830subj", "commercial": True},
+    844: {"foldername": "Dataset844_TotalSeg_highres_part4_muscles_1830subj", "commercial": True},
+    845: {"foldername": "Dataset845_TotalSeg_highres_part5_ribs_1559subj", "commercial": True},
 
     # Body, etc. CT v2
     299: {
@@ -624,6 +622,7 @@ TASK_ID_WEIGHTS_CONFIGS = {
     597: {"foldername": "Dataset597_mri_body_139subj", "version": "v2.5.0-weights"},
     598: {"foldername": "Dataset598_mri_body_6mm_139subj", "version": "v2.5.0-weights"},
     756: {"foldername": "Dataset756_mri_vertebrae_1076subj", "version": "v2.5.0-weights"},
+    857: {"foldername": "Dataset857_TotalSegMRI_thigh_shoulder_1088subj", "version": "v3.0.0-weights"},
 
     # Models from other projects
     117: {"foldername": "Dataset117_lung_airways_arteries_veins_282subj", "version": "v2.5.0-weights"},
@@ -681,7 +680,6 @@ TASK_ID_WEIGHTS_CONFIGS = {
     925: {"foldername": "Dataset925_MRI_tissue_subset_903subj"},
     856: {"foldername": "Dataset856_TotalSegMRI_face_1088subj"},
     409: {"foldername": "Dataset409_neuro_550subj"},
-    857: {"foldername": "Dataset857_TotalSegMRI_thigh_shoulder_1088subj"},
     507: {"foldername": "Dataset507_coronary_arteries_cm_nativ_400subj"},
     509: {"foldername": "Dataset509_coronary_arteries_cm_nativ_400subj_SKELETON"},
     920: {"foldername": "Dataset920_aortic_sinuses_cm_nativ_400subj"},

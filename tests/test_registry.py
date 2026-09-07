@@ -49,6 +49,8 @@ class TestRegistry(unittest.TestCase):
         self.assertEqual(get_task_classes("vertebrae_pp")[1], "vertebrae_C1")
         self.assertEqual(get_task_classes("vertebrae_pp")[24], "vertebrae_L5")
         self.assertFalse(requires_license("vertebrae_pp_refined"))
+        self.assertFalse(requires_license("thigh_shoulder_muscles"))
+        self.assertFalse(requires_license("thigh_shoulder_muscles_mr"))
         self.assertEqual(get_task_classes("vertebrae_pp_refined"), get_task_classes("vertebrae_pp"))
         self.assertTrue(requires_license("renal_arteries"))
         self.assertEqual(get_task_classes("renal_arteries")[3], "renal_arteries")
