@@ -17,35 +17,17 @@ If you need the same segmentation results as in v2, you can use the task `total_
 
 
 ## Speed improvements
-* We added a new option `--model_size small` which uses a model with less feature maps. This reduces runtime and memory usage. On GPU this makes less of a difference since runtime is dominated by pre/postprocessing. But on CPU this increases runtime by >2x.
+* We added a new option `--model_size small` which uses a model with less feature maps. This reduces runtime and memory usage. On GPU this makes less of a difference since runtime is dominated by pre/postprocessing. But on CPU this increases runtime by 2.5x. `--model_size small` leads to reduced accuracy but is still better than using `--fast` which uses a lower-resolution model.
 
-
-# Default model
-TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f
-| Device | Step size | Steps        | Time | RAM   | GPU   |
-|--------|-----------|--------------|------|-------|-------|
-| GPU    | 0.8       | 16,  13it/s  |  41s | 7.0GB | ?     |
-| CPU    | 0.8       | 16, 2.6s/it  |  80s | 6.7GB | -     | 
-
-# Small model
- otalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small 
-| Device | Step size | Steps        | Time | RAM   | GPU   |
-|--------|-----------|--------------|------|-------|-------|
-| GPU    | 0.8       | 16,  13it/s  |  41s | 7.1GB | ?     |
-| CPU    | 0.8       | 16, 1.2s/it  |  61s | 6.9GB | -     | 
-
-# Small model + faster resampling + saving
-TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -sl
-| Device | Step size | Steps        | Time | RAM   | GPU   |
-|--------|-----------|--------------|------|-------|-------|
-| GPU    | 0.8       | 16,  13it/s  |  29s | 7.1GB | ?     |
-| CPU    | 0.8       | 16, 1.2s/it  |  49s | 6.9GB | -     | 
+Measured runtime, RAM and GPU memory for these options (and for `total_highres`) are in [runtime.md](runtime.md).
 
 
 
 ## Public dataset
 
 The public training dataset for `total` and `total_mr` was updated to contain these new images and labels.
+
+For v3 we did not use a `validation` set anymore. There is only `train` and `test` set.
 
 
 ## Still open problems

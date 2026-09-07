@@ -130,7 +130,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 ### Advanced settings
 * `--device`: Choose `cpu` or `gpu` or `gpu:X`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
-* `--model_size small`: Use a smaller model (less filters) to reduce runtime (especially on CPU). (Only works for `total` and `total`+ `--fast`)
+* `--model_size small`: Use a smaller model (less filters) to reduce runtime (especially on CPU). (Only works for `total` and `total` + `--fast`)
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
@@ -264,6 +264,8 @@ we added more classes.)
 
 ![Alt text](resources/imgs/runtime_table.png)
 
+More measurements (including `--model_size small`, `--save_lowres`, `total_highres`, and CPU vs GPU) are in [resources/runtime.md](resources/runtime.md).
+
 If you want to reduce memory consumption you can use the following options:
 * `--fast`: This will use a lower-resolution model
 * `--body_seg`: This will crop the image to the body region before processing it
@@ -355,7 +357,7 @@ Our Radiology AI publication refers to TotalSegmentator v1.
 
 ### Other
 * TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
-* At [changes and improvements](resources/improvements_in_v2.md) you can see an overview of differences between v1 and v2.
+* At [changes and improvements](resources/improvements_in_v2.md) you can see an overview of differences between v1 and v2. For v3 see [changes and improvements](resources/improvements_in_v3.md) and [runtime measurements](resources/runtime.md).
 
 
 ### Reference
