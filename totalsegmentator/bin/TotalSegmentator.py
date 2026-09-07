@@ -123,7 +123,7 @@ def main():
 
     parser.add_argument("-ms", "--model_size", choices=["big", "small"], default="big",
                         help="Select model size. Currently only affects task 'total': "
-                             "'small' uses nnUNetResEncUNetLPlans_8. Default: big.")
+                             "'small' uses model with less parameters. Default: big.")
 
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
                         help="Define a subset of classes to save (space separated list of class names). If running 1.5mm model, will only run the appropriate models for these rois.")
