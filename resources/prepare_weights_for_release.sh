@@ -26,13 +26,15 @@ print(get_full_task_name_v2($dataset_id))
     # Copy dataset folder
     # cp -r "$nnUNet_results/$task_name" .
     
-    # Get the only folder inside task_name
-    trainer_folder=$(ls "$task_name" | head -n 1)
+    # Anonymize pkl files in every trainer folder
+    for trainer_folder in "$task_name"/*; do
+        if [ -d "$trainer_folder" ]; then
+            echo "Anonymizing $trainer_folder..."
+            python ~/dev/TotalSegmentator/resources/anonymise_nnunet_pkl_v2.py "$trainer_folder"
+        fi
+    done
     
-    # Anonymize the pkl files
-    python ~/dev/TotalSegmentator/resources/anonymise_nnunet_pkl_v2.py "$task_name/$trainer_folder"
-    
-    # Create zip archive
+    # Create one zip archive containing all trainers
     zip -r "${task_name}.zip" "$task_name"
     
     echo "Completed processing $task_name"
