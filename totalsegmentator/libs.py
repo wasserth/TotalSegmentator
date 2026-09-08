@@ -251,6 +251,12 @@ def download_pretrained_weights(task_id):
 
             download_url_and_unpack(WEIGHTS_URL, weights_path.parent)
 
+        if not weights_path.exists():
+            raise RuntimeError(
+                f"Download of task {task_id} finished, but the expected weights folder "
+                f"was not created: {weights_path}. The archive may contain a different dataset."
+            )
+
 
 def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
     """
