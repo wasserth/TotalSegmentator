@@ -498,8 +498,6 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             resampling_order=resampling_order, plans=plans,
                             vertebrae_body_mask=vertebrae_body_mask, output_task_name=task,
                             use_cropped_logits_resampling=higher_order_resampling)
-    seg = seg_img.get_fdata().astype(np.uint8)
-
     try:
         # this can result in error if running multiple processes in parallel because all try to write the same file.
         # Trying to fix with lock from portalocker did not work. Network drive seems to not support this locking.
@@ -512,6 +510,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         pass
 
     if statistics:
+        seg = np.asanyarray(seg_img.dataobj).astype(np.uint8, copy=False)
         if not quiet: print("Calculating statistics...")
         st = time.time()
         # Check if statistics is a custom path (string or Path) rather than just True

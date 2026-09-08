@@ -10,6 +10,7 @@
 * update `total_mr` and `appendicular_bones_mr` to improved model. The previous `total_mr` models remain available as `total_v2_mr`.
 * update `appendicular_bones` to Dataset838 (1830 subjects)
 * introduce parameter `--model_size small` for task `total` to further introduce runtime on CPU
+* improve inference runtime and peak RAM by keeping nnU-Net inputs and predictions in memory, overlapping the first model load with input resampling, merging model/split outputs in memory, and avoiding unnecessary full-volume float64 conversions. See [runtime measurements](resources/runtime.md).
 * add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm. Always crops to the body region (`--body_seg`).
 * make `thigh_shoulder_muscles` and `thigh_shoulder_muscles_mr` openly available (Apache-2.0).
 

@@ -15,6 +15,8 @@ import tempfile
 import inspect
 import warnings
 import atexit
+from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import nibabel as nib
@@ -34,7 +36,10 @@ import nnunetv2.inference.predict_from_raw_data as nnunet_predict_from_raw_data
 from totalsegmentator.custom_trainers import (nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring,
                                               nnUNetTrainerDiceTopK10Loss_2000epochs,
                                               nnUNetTrainerSkeletonRecall)
-from totalsegmentator.nnunet_runtime_patches import patch_nnunet_cropped_logits_resampling
+from totalsegmentator.nnunet_runtime_patches import (
+    convert_predicted_logits_to_segmentation_with_correct_shape,
+    patch_nnunet_cropped_logits_resampling,
+)
 from nnunetv2.training.nnUNetTrainer.nnUNetTrainer import nnUNetTrainer
 from nnunetv2.training.nnUNetTrainer.variants.data_augmentation.nnUNetTrainerNoMirroring import (
     nnUNetTrainerNoMirroring,
@@ -235,20 +240,25 @@ def nnUNet_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                         step_size=step_size, checkpoint_name=chk)
 
 
-def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
-                     trainer="nnUNetTrainer", tta=False,
-                     num_threads_preprocessing=3, num_threads_nifti_save=2,
-                     plans="nnUNetPlans", device="cuda", quiet=False, step_size=0.5,
-                     save_probabilities_path=None, use_cropped_logits_resampling=False):
-    """
-    Identical to bash function nnUNetv2_predict
-    """
-    dir_in = str(dir_in)
-    dir_out = str(dir_out)
+def _detect_available_folds(model_folder, checkpoint_name):
+    """Same as nnUNetPredictor.auto_detect_available_folds, but without printing to stdout."""
+    fold_folders = sorted(
+        p.name for p in Path(model_folder).glob("fold_*")
+        if p.is_dir() and p.name != "fold_all" and (p / checkpoint_name).is_file()
+    )
+    return [int(name.split("_")[-1]) for name in fold_folders]
 
-    # if task_id in [291, 292, 293, 294, 295, 957]:
-    #     plans = "nnUNetResEncUNetLPlans_8"
 
+def _build_nnunetv2_predictor(task_id, model="3d_fullres", folds=None,
+                              trainer="nnUNetTrainer", tta=False,
+                              plans="nnUNetPlans", device="cuda", quiet=False,
+                              step_size=0.5):
+    """
+    Create the nnUNetPredictor object without loading weights. This part prints to stdout
+    (nnU-Net does so unconditionally for non-cuda devices), so it has to run on the main
+    thread where nostdout() can silence it. Loading the weights happens in
+    _initialize_nnunetv2_predictor and is safe to run on a background thread.
+    """
     model_folder = get_output_folder(task_id, trainer, plans, model)
 
     assert device in ['cpu', 'cuda',
@@ -270,40 +280,9 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         device = torch.device('mps')
     disable_tta = not tta
     verbose = False
-    if save_probabilities_path is None:
-        save_probabilities = False
-    else:
-        save_probabilities = True
-    continue_prediction = False
     chk = "checkpoint_final.pth"
-    npp = num_threads_preprocessing
-    nps = num_threads_nifti_save
-    prev_stage_predictions = None
-    num_parts = 1
-    part_id = 0
     allow_tqdm = not quiet
 
-    # nnUNet 2.1
-    # predict_from_raw_data(dir_in,
-    #                       dir_out,
-    #                       model_folder,
-    #                       folds,
-    #                       step_size,
-    #                       use_gaussian=True,
-    #                       use_mirroring=not disable_tta,
-    #                       perform_everything_on_gpu=True,
-    #                       verbose=verbose,
-    #                       save_probabilities=save_probabilities,
-    #                       overwrite=not continue_prediction,
-    #                       checkpoint_name=chk,
-    #                       num_processes_preprocessing=npp,
-    #                       num_processes_segmentation_export=nps,
-    #                       folder_with_segs_from_prev_stage=prev_stage_predictions,
-    #                       num_parts=num_parts,
-    #                       part_id=part_id,
-    #                       device=device)
-
-    # nnUNet 2.2.1
     if supports_keyword_argument(nnUNetPredictor, "perform_everything_on_gpu"):
         predictor = nnUNetPredictor(
             tile_step_size=step_size,
@@ -327,11 +306,60 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
             verbose_preprocessing=verbose,
             allow_tqdm=allow_tqdm
         )
+    if folds is None:
+        folds = _detect_available_folds(model_folder, chk)
+    return predictor, model_folder, folds, chk
+
+
+def _initialize_nnunetv2_predictor(predictor, model_folder, folds, checkpoint_name):
     predictor.initialize_from_trained_model_folder(
         model_folder,
         use_folds=folds,
-        checkpoint_name=chk,
+        checkpoint_name=checkpoint_name,
     )
+    return predictor
+
+
+def _create_nnunetv2_predictor(task_id, model="3d_fullres", folds=None,
+                               trainer="nnUNetTrainer", tta=False,
+                               plans="nnUNetPlans", device="cuda", quiet=False,
+                               step_size=0.5):
+    predictor_setup = _build_nnunetv2_predictor(
+        task_id, model, folds, trainer, tta, plans, device, quiet, step_size
+    )
+    return _initialize_nnunetv2_predictor(*predictor_setup)
+
+
+def _shutdown_predictor_loader(executor, future, wait=True):
+    if future is not None:
+        future.cancel()
+    if executor is not None:
+        executor.shutdown(wait=wait)
+
+
+def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
+                     trainer="nnUNetTrainer", tta=False,
+                     num_threads_preprocessing=3, num_threads_nifti_save=2,
+                     plans="nnUNetPlans", device="cuda", quiet=False, step_size=0.5,
+                     save_probabilities_path=None, use_cropped_logits_resampling=False):
+    """
+    Identical to bash function nnUNetv2_predict
+    """
+    dir_in = str(dir_in)
+    dir_out = str(dir_out)
+
+    predictor = _create_nnunetv2_predictor(
+        task_id, model, folds, trainer, tta, plans, device, quiet, step_size
+    )
+
+    save_probabilities = save_probabilities_path is not None
+    continue_prediction = False
+    npp = num_threads_preprocessing
+    nps = num_threads_nifti_save
+    prev_stage_predictions = None
+    num_parts = 1
+    part_id = 0
+
     # new nnunetv2 feature: keep dir_out empty to return predictions as return value
     predict_kwargs = {}
     if (use_cropped_logits_resampling and not save_probabilities
@@ -348,22 +376,78 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         shutil.copy(Path(dir_out) / "s01.npz", save_probabilities_path)
         shutil.copy(Path(dir_out) / "s01.pkl", save_probabilities_path.with_suffix(".pkl"))
 
-    # # Use numpy as input. TODO: In entire pipeline do not save to disk
-    # input_image = nib.load(Path(dir_in) / "s01_0000.nii.gz")
-    # input_data = np.asanyarray(input_image.dataobj).transpose(2, 1, 0)[None,...].astype(np.float32)
-    # spacing = input_image.header.get_zooms()
-    # affine = input_image.affine
-    # # Do i have to transpose spacing? does not matter because anyways isotropic at this point.
-    # spacing = (spacing[2], spacing[1], spacing[0])
-    # props = {"spacing": spacing}
-    # # from nnunetv2.imageio.simpleitk_reader_writer import SimpleITKIO
-    # # input_data, props = SimpleITKIO().read_images([os.path.join(dir_in, "s01_0000.nii.gz")])
-    # seg = predictor.predict_single_npy_array(input_data, props,
-    #                                          prev_stage_predictions, None,
-    #                                          save_probabilities)
-    # seg = seg.transpose(2, 1, 0)
-    # nib.save(nib.Nifti1Image(seg.astype(np.uint8), affine), Path(dir_out) / "s01.nii.gz")
 
+def _nifti_images_to_nnunet_array(images):
+    """Convert nibabel XYZ images to nnU-Net's CZYX in-memory input format."""
+    arrays = [
+        np.asanyarray(image.dataobj).transpose((2, 1, 0))
+        for image in images
+    ]
+    data = arrays[0][None] if len(arrays) == 1 else np.stack(arrays)
+    properties = {
+        "nibabel_stuff": {"original_affine": images[0].affine},
+        "spacing": [float(value) for value in images[0].header.get_zooms()[:3][::-1]],
+    }
+    return data, properties
+
+
+def _preprocessing_signature(predictor):
+    """Return the settings that must match to safely reuse preprocessed data."""
+    config = predictor.configuration_manager.configuration
+    relevant_keys = (
+        "spacing",
+        "preprocessor_name",
+        "normalization_schemes",
+        "use_mask_for_norm",
+        "resampling_fn_data",
+        "resampling_fn_data_kwargs",
+    )
+    relevant_config = tuple(
+        (key, repr(config.get(key)))
+        for key in relevant_keys
+    )
+    return (
+        tuple(predictor.plans_manager.transpose_forward),
+        relevant_config,
+        repr(predictor.plans_manager.foreground_intensity_properties_per_channel),
+    )
+
+
+def _preprocess_nnunet_array(predictor, data, properties):
+    preprocessor = predictor.configuration_manager.preprocessor_class(verbose=False)
+    data_properties = deepcopy(properties)
+    result = preprocessor.run_case_npy(
+        data,
+        None,
+        data_properties,
+        predictor.plans_manager,
+        predictor.configuration_manager,
+        predictor.dataset_json,
+    )
+    # nnU-Net 2.3.1-2.5.x mutates data_properties and returns (data, seg).
+    # Newer versions additionally return data_properties as the third item.
+    if len(result) == 3:
+        preprocessed, _, data_properties = result
+    else:
+        preprocessed, _ = result
+    return torch.from_numpy(preprocessed), data_properties
+
+
+def _predict_preprocessed_nnunet_array(predictor, data, properties,
+                                       use_cropped_logits_resampling=False):
+    logits = predictor.predict_logits_from_preprocessed_data(data).cpu()
+    segmentation = convert_predicted_logits_to_segmentation_with_correct_shape(
+        logits,
+        predictor.plans_manager,
+        predictor.configuration_manager,
+        predictor.label_manager,
+        properties,
+        return_probabilities=False,
+        use_cropped_logits_resampling=use_cropped_logits_resampling,
+    )
+    del logits
+    # nnU-Net arrays use ZYX. TotalSegmentator/nibabel uses XYZ.
+    return np.asarray(segmentation).transpose((2, 1, 0))
 
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
     k, v = class_map_item
@@ -501,8 +585,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if img_dtype.fields is not None:
             raise TypeError(f"Invalid dtype {img_dtype}. Expected a simple dtype, not a structured one.")
 
-        # takes ~0.9s for medium image
-        img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
+        # All following operations return new images, so materializing a float64
+        # copy of the complete input here is unnecessary.
+        img_in = img_in_orig
 
         if crop is not None:
             if type(crop) is str:
@@ -545,31 +630,57 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if cascade:
             cascade = as_closest_canonical(cascade)
 
-        if resample is not None:
-            if not quiet: print("Resampling...")
-            st = time.time()
-            img_in_shape = img_in.shape
-            img_in_zooms = img_in.header.get_zooms()
-            img_in_rsp = change_spacing(img_in, resample,
-                                        order=resampling_order, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
-            if cascade:
-                cascade = change_spacing(cascade, resample,
-                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)
-            if verbose:
-                print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
-            if not quiet: print(f"  Resampled in {time.time() - st:.2f}s")
+        # Use fewer overlapping tiles for every resolution variant of the total
+        # CT and MR models, including fast and fastest modes.
+        if task_name in ["total", "total_v2", "total_mr", "total_v2_mr"]:
+            step_size = 0.8
         else:
-            img_in_rsp = img_in
+            step_size = 0.5
 
-        nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
+        # Load the first model while the input is being resampled. Model loading is
+        # CPU/storage bound and can overlap with image preprocessing.
+        predictor_executor = None
+        predictor_future = None
+        predictor_future_task_id = None
+        # With a roi_subset the list of multimodel parts is only known after filtering below.
+        if test == 0 and save_probabilities is None and (roi_subset is None or not multimodel):
+            predictor_future_task_id = task_id[0] if multimodel else task_id
+            with nostdout(verbose):
+                predictor_setup = _build_nnunetv2_predictor(
+                    predictor_future_task_id, model, folds, trainer, tta, plans, device, quiet, step_size
+                )
+            predictor_executor = ThreadPoolExecutor(max_workers=1)
+            predictor_future = predictor_executor.submit(_initialize_nnunetv2_predictor, *predictor_setup)
 
-        if cascade:
-            nib.save(cascade, tmp_dir / "s01_0001.nii.gz")
+        try:
+            if resample is not None:
+                if not quiet: print("Resampling...")
+                st = time.time()
+                img_in_shape = img_in.shape
+                img_in_zooms = img_in.header.get_zooms()
+                img_in_rsp = change_spacing(
+                    img_in, resample, order=resampling_order, dtype=np.int32,
+                    nr_cpus=nr_threads_resampling, use_gpu=use_gpu
+                )
+                if cascade:
+                    cascade = change_spacing(
+                        cascade, resample, order=0, dtype=np.uint8,
+                        nr_cpus=nr_threads_resampling, use_gpu=use_gpu
+                    )
+                if verbose:
+                    print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
+                if not quiet: print(f"  Resampled in {time.time() - st:.2f}s")
+            else:
+                img_in_rsp = img_in
+        except Exception:
+            _shutdown_predictor_loader(predictor_executor, predictor_future)
+            predictor_executor = None
+            predictor_future = None
+            raise
 
         # todo important: change
         nr_voxels_thr = 512*512*900
         # nr_voxels_thr = 256*256*900
-        img_parts = ["s01"]
         ss = img_in_rsp.shape
         # If image to big then split into 3 parts along z axis. Also make sure that z-axis is at least 200px otherwise
         # splitting along it does not really make sense.
@@ -578,128 +689,227 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             do_triple_split = True
         if cascade:
             do_triple_split = False
+
+        part_inputs = {"s01": [img_in_rsp] + ([cascade] if cascade else [])}
         if do_triple_split:
             if not quiet: print("Splitting into subparts...")
-            img_parts = ["s01", "s02", "s03"]
             third = img_in_rsp.shape[2] // 3
             margin = 20  # set margin with fixed values to avoid rounding problem if using percentage of third
-            img_in_rsp_data = img_in_rsp.get_fdata()
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, :third+margin], img_in_rsp.affine),
-                    tmp_dir / "s01_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third+1-margin:third*2+margin], img_in_rsp.affine),
-                    tmp_dir / "s02_0000.nii.gz")
-            nib.save(nib.Nifti1Image(img_in_rsp_data[:, :, third*2+1-margin:], img_in_rsp.affine),
-                    tmp_dir / "s03_0000.nii.gz")
+            img_in_rsp_data = np.asanyarray(img_in_rsp.dataobj)
+            part_inputs = {
+                "s01": [nib.Nifti1Image(img_in_rsp_data[:, :, :third+margin], img_in_rsp.affine)],
+                "s02": [nib.Nifti1Image(
+                    img_in_rsp_data[:, :, third+1-margin:third*2+margin], img_in_rsp.affine
+                )],
+                "s03": [nib.Nifti1Image(img_in_rsp_data[:, :, third*2+1-margin:], img_in_rsp.affine)],
+            }
+        img_parts = list(part_inputs)
 
-        # Use fewer overlapping tiles for every resolution variant of the total
-        # CT and MR models, including fast and fastest modes.
-        #   overall speedup for 15mm model roughly 11% (GPU) and 100% (CPU)
-        #   overall speedup for  3mm model roughly  0% (GPU) and  10% (CPU)
-        #   (dice 0.001 worse on test set -> ok)
-        #   (for lung_trachea_bronchia somehow a lot lower dice)
-        if task_name in ["total", "total_v2", "total_mr", "total_v2_mr"]:
-            step_size = 0.8
-        else:
-            step_size = 0.5
+        # Probability export and test/reference modes still rely on nnU-Net's file API.
+        # Normal inference stays in memory from the resampled input through part merging.
+        use_in_memory_prediction = test == 0 and save_probabilities is None
+        if not use_in_memory_prediction:
+            for img_part, images in part_inputs.items():
+                for channel_idx, image in enumerate(images):
+                    nib.save(image, tmp_dir / f"{img_part}_{channel_idx:04d}.nii.gz")
+
+        # Only compute model parts containing the requested ROI subset.
+        if multimodel and roi_subset is not None:
+            part_names = []
+            new_task_id = []
+            # Reverse-map only the current task's IDs. total / total_v2 / total_highres
+            # (and the MR equivalents) share part names, so using the full dict would
+            # pick the last overlapping dataset (e.g. highres 841 instead of total 831).
+            map_partname_to_taskid = {map_taskid_to_partname[tid]: tid for tid in task_id}
+            for part_name, part_map in class_map_parts.items():
+                if any(organ in roi_subset for organ in part_map.values()):
+                    new_task_id.append(map_partname_to_taskid[part_name])
+                    part_names.append(part_name)
+            task_id = new_task_id
+            if verbose:
+                print(f"Computing parts: {part_names} based on the provided roi_subset")
 
         st = time.time()
-        if multimodel:  # if running multiple models
+        if use_in_memory_prediction:
+            try:
+                raw_inputs = {
+                    img_part: _nifti_images_to_nnunet_array(images)
+                    for img_part, images in part_inputs.items()
+                }
+            except Exception:
+                _shutdown_predictor_loader(predictor_executor, predictor_future)
+                predictor_executor = None
+                predictor_future = None
+                raise
+            cached_preprocessing_signature = None
+            cached_preprocessed_inputs = None
 
-            # only compute model parts containing the roi subset
-            if roi_subset is not None:
-                part_names = []
-                new_task_id = []
-                # Reverse-map only the current task's IDs. total / total_v2 / total_highres
-                # (and the MR equivalents) share part names, so using the full dict would
-                # pick the last overlapping dataset (e.g. highres 841 instead of total 831).
-                map_partname_to_taskid = {map_taskid_to_partname[tid]: tid for tid in task_id}
-                for part_name, part_map in class_map_parts.items():
-                    if any(organ in roi_subset for organ in part_map.values()):
-                        new_task_id.append(map_partname_to_taskid[part_name])
-                        part_names.append(part_name)
-                task_id = new_task_id
-                if verbose:
-                    print(f"Computing parts: {part_names} based on the provided roi_subset")
-
-            if test == 0:
+            if multimodel:
                 class_map_inv = {v: k for k, v in class_map[task_name].items()}
-                (tmp_dir / "parts").mkdir(exist_ok=True)
-                seg_combined = {}
-                # iterate over subparts of image
-                for img_part in img_parts:
-                    img_shape = nib.load(tmp_dir / f"{img_part}_0000.nii.gz").shape
-                    seg_combined[img_part] = np.zeros(img_shape, dtype=np.uint8)
-                # Run several tasks and combine results into one segmentation
-                for idx, tid in enumerate(task_id):
-                    if not quiet: print(f"Predicting part {idx+1} of {len(task_id)} ...")
-                    try:
-                        with nostdout(verbose):
-                            # nnUNet_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                            #                nr_threads_resampling, nr_threads_saving)
-                            nnUNetv2_predict(tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
-                                             nr_threads_resampling, nr_threads_saving,
-                                             plans=plans, device=device, quiet=quiet, step_size=step_size,
-                                             save_probabilities_path=save_probabilities,
-                                             use_cropped_logits_resampling=use_cropped_logits_resampling)
-                    except Exception as e:
-                        if debug:
-                            print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {tid}, part: {idx+1}/{len(task_id)}")
-                        raise
-                    # iterate over models (different sets of classes)
-                    # Map part-model labels to the final TotalSegmentator labels with a
-                    # lookup table. This avoids per-label boolean masks and reduces
-                    # runtime for "total" from about 3min to 2min 45s.
-                    part_map = class_map_parts[map_taskid_to_partname[tid]]
-                    lut = np.zeros(max(part_map.keys()) + 1, dtype=np.uint8)
-                    for jdx, class_name in part_map.items():
-                        lut[jdx] = class_map_inv[class_name]
-                    for img_part in img_parts:
-                        (tmp_dir / f"{img_part}.nii.gz").rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
-                        seg = np.asanyarray(nib.load(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz").dataobj).astype(np.uint8)
+                segmentations = {
+                    img_part: np.zeros(images[0].shape, dtype=np.uint8)
+                    for img_part, images in part_inputs.items()
+                }
+                task_ids = task_id
+            else:
+                if not quiet: print("Predicting...")
+                segmentations = {}
+                task_ids = [task_id]
 
-                        if seg.size > 0 and seg.max() >= len(lut):
-                            lut = np.pad(lut, (0, int(seg.max()) + 1 - len(lut)), mode="constant")
-                        mapped_seg = lut[seg]
-                        np.copyto(seg_combined[img_part], mapped_seg, where=mapped_seg != 0)
-                # iterate over subparts of image
-                for img_part in img_parts:
-                    nib.save(nib.Nifti1Image(seg_combined[img_part], img_in_rsp.affine), tmp_dir / f"{img_part}.nii.gz")
-            elif test == 1:
-                print("WARNING: Using reference seg instead of prediction for testing.")
-                shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz", tmp_dir / "s01.nii.gz")
-        else:
-            if not quiet: print("Predicting...")
-            if test == 0:
+            for idx, tid in enumerate(task_ids):
+                if multimodel and not quiet:
+                    print(f"Predicting part {idx+1} of {len(task_ids)} ...")
                 try:
                     with nostdout(verbose):
-                        # nnUNet_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                        #                nr_threads_resampling, nr_threads_saving)
-                        nnUNetv2_predict(tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
-                                         nr_threads_resampling, nr_threads_saving,
-                                         plans=plans, device=device, quiet=quiet, step_size=step_size,
-                                         save_probabilities_path=save_probabilities,
-                                         use_cropped_logits_resampling=use_cropped_logits_resampling)
-                except Exception as e:
+                        if predictor_future is not None and tid == predictor_future_task_id:
+                            predictor = predictor_future.result()
+                            predictor_future = None
+                            predictor_executor.shutdown(wait=False)
+                            predictor_executor = None
+                        else:
+                            predictor = _create_nnunetv2_predictor(
+                                tid, model, folds, trainer, tta, plans, device, quiet, step_size
+                            )
+                        signature = _preprocessing_signature(predictor)
+                        if signature != cached_preprocessing_signature:
+                            # Keep at most one preprocessed full volume. Consecutive
+                            # models with compatible plans reuse it; incompatible
+                            # models replace it instead of growing host RAM usage.
+                            cached_preprocessed_inputs = None
+                            cached_preprocessed_inputs = {
+                                img_part: _preprocess_nnunet_array(predictor, data, properties)
+                                for img_part, (data, properties) in raw_inputs.items()
+                            }
+                            cached_preprocessing_signature = signature
+                        predicted_parts = {
+                            img_part: _predict_preprocessed_nnunet_array(
+                                predictor,
+                                preprocessed,
+                                properties,
+                                use_cropped_logits_resampling,
+                            )
+                            for img_part, (preprocessed, properties)
+                            in cached_preprocessed_inputs.items()
+                        }
+                except Exception:
+                    _shutdown_predictor_loader(predictor_executor, predictor_future)
+                    predictor_executor = None
+                    predictor_future = None
                     if debug:
-                        print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {task_id}")
+                        print(f"Error during prediction for input: {file_in}, task: {task_name}, "
+                              f"task_id: {tid}, part: {idx+1}/{len(task_ids)}")
                     raise
-            # elif test == 2:
-            #     print("WARNING: Using reference seg instead of prediction for testing.")
-            #     shutil.copy(Path("tests") / "reference_files" / "example_seg_fast.nii.gz", tmp_dir / f"s01.nii.gz")
-            elif test == 3:
-                print("WARNING: Using reference seg instead of prediction for testing.")
-                shutil.copy(Path("tests") / "reference_files" / "example_seg_lung_vessels.nii.gz", tmp_dir / "s01.nii.gz")
+                finally:
+                    if "predictor" in locals():
+                        del predictor
+                    nnunet_predict_from_raw_data.compute_gaussian.cache_clear()
+                    if torch.cuda.is_available():
+                        torch.cuda.empty_cache()
+
+                if multimodel:
+                    # Map each part-model's local labels into the final TotalSegmentator labels.
+                    part_map = class_map_parts[map_taskid_to_partname[tid]]
+                    lut = np.zeros(max(part_map.keys()) + 1, dtype=np.uint8)
+                    for local_label, class_name in part_map.items():
+                        lut[local_label] = class_map_inv[class_name]
+                    for img_part, seg in predicted_parts.items():
+                        max_label = int(seg.max()) if seg.size else 0
+                        if max_label >= len(lut):
+                            lut = np.pad(lut, (0, max_label + 1 - len(lut)), mode="constant")
+                        mapped_seg = lut[seg]
+                        np.copyto(segmentations[img_part], mapped_seg, where=mapped_seg != 0)
+                else:
+                    segmentations = predicted_parts
+
+            del cached_preprocessed_inputs, raw_inputs
+            if predictor_executor is not None:
+                _shutdown_predictor_loader(predictor_executor, predictor_future)
+                predictor_executor = None
+                predictor_future = None
+        else:
+            if multimodel:
+                if test == 0:
+                    class_map_inv = {v: k for k, v in class_map[task_name].items()}
+                    (tmp_dir / "parts").mkdir(exist_ok=True)
+                    segmentations = {
+                        img_part: np.zeros(images[0].shape, dtype=np.uint8)
+                        for img_part, images in part_inputs.items()
+                    }
+                    for idx, tid in enumerate(task_id):
+                        if not quiet: print(f"Predicting part {idx+1} of {len(task_id)} ...")
+                        try:
+                            with nostdout(verbose):
+                                nnUNetv2_predict(
+                                    tmp_dir, tmp_dir, tid, model, folds, trainer, tta,
+                                    nr_threads_resampling, nr_threads_saving,
+                                    plans=plans, device=device, quiet=quiet, step_size=step_size,
+                                    save_probabilities_path=save_probabilities,
+                                    use_cropped_logits_resampling=use_cropped_logits_resampling,
+                                )
+                        except Exception:
+                            if debug:
+                                print(f"Error during prediction for input: {file_in}, task: {task_name}, "
+                                      f"task_id: {tid}, part: {idx+1}/{len(task_id)}")
+                            raise
+                        part_map = class_map_parts[map_taskid_to_partname[tid]]
+                        lut = np.zeros(max(part_map.keys()) + 1, dtype=np.uint8)
+                        for local_label, class_name in part_map.items():
+                            lut[local_label] = class_map_inv[class_name]
+                        for img_part in img_parts:
+                            part_file = tmp_dir / f"{img_part}.nii.gz"
+                            part_file.rename(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz")
+                            seg = np.asanyarray(
+                                nib.load(tmp_dir / "parts" / f"{img_part}_{tid}.nii.gz").dataobj
+                            ).astype(np.uint8)
+                            max_label = int(seg.max()) if seg.size else 0
+                            if max_label >= len(lut):
+                                lut = np.pad(lut, (0, max_label + 1 - len(lut)), mode="constant")
+                            mapped_seg = lut[seg]
+                            np.copyto(segmentations[img_part], mapped_seg, where=mapped_seg != 0)
+                elif test == 1:
+                    print("WARNING: Using reference seg instead of prediction for testing.")
+                    shutil.copy(Path("tests") / "reference_files" / "example_seg.nii.gz",
+                                tmp_dir / "s01.nii.gz")
+                    segmentations = {
+                        "s01": np.asanyarray(nib.load(tmp_dir / "s01.nii.gz").dataobj).astype(np.uint8)
+                    }
+            else:
+                if not quiet: print("Predicting...")
+                if test == 0:
+                    try:
+                        with nostdout(verbose):
+                            nnUNetv2_predict(
+                                tmp_dir, tmp_dir, task_id, model, folds, trainer, tta,
+                                nr_threads_resampling, nr_threads_saving,
+                                plans=plans, device=device, quiet=quiet, step_size=step_size,
+                                save_probabilities_path=save_probabilities,
+                                use_cropped_logits_resampling=use_cropped_logits_resampling,
+                            )
+                    except Exception:
+                        if debug:
+                            print(f"Error during prediction for input: {file_in}, task: {task_name}, "
+                                  f"task_id: {task_id}")
+                        raise
+                elif test == 3:
+                    print("WARNING: Using reference seg instead of prediction for testing.")
+                    shutil.copy(Path("tests") / "reference_files" / "example_seg_lung_vessels.nii.gz",
+                                tmp_dir / "s01.nii.gz")
+                segmentations = {
+                    img_part: np.asanyarray(nib.load(tmp_dir / f"{img_part}.nii.gz").dataobj).astype(np.uint8)
+                    for img_part in img_parts
+                }
+
         if not quiet: print(f"  Predicted in {time.time() - st:.2f}s")
 
-        # Combine image subparts back to one image
+        # Combine image subparts in memory.
         if do_triple_split:
             combined_img = np.zeros(img_in_rsp.shape, dtype=np.uint8)
-            combined_img[:,:,:third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:,:,:-margin]
-            combined_img[:,:,third:third*2] = nib.load(tmp_dir / "s02.nii.gz").get_fdata()[:,:,margin-1:-margin]
-            combined_img[:,:,third*2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:,:,margin-1:]
-            nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
-
-        img_pred = nib.load(tmp_dir / "s01.nii.gz")
+            combined_img[:,:,:third] = segmentations["s01"][:,:,:-margin]
+            combined_img[:,:,third:third*2] = segmentations["s02"][:,:,margin-1:-margin]
+            combined_img[:,:,third*2:] = segmentations["s03"][:,:,margin-1:]
+            img_pred = nib.Nifti1Image(combined_img, img_in_rsp.affine)
+        else:
+            img_pred = nib.Nifti1Image(segmentations["s01"], img_in_rsp.affine)
 
         # Currently only relevant for appendicular_bones / appendicular_bones_mr
         img_pred = remove_auxiliary_labels(img_pred, task_name)
@@ -835,7 +1045,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if not save_lowres:
             check_if_shape_and_affine_identical(img_in_orig, img_pred)
 
-        img_data = img_pred.get_fdata().astype(np.uint8)
+        img_data = np.asanyarray(img_pred.dataobj).astype(np.uint8, copy=False)
         if save_binary:
             img_data = (img_data > 0).astype(np.uint8)
 

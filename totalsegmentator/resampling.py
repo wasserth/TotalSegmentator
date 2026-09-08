@@ -221,7 +221,15 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
 
     Note: Only works properly if affine is all 0 except for diagonal and offset (=no rotation and sheering)
     """
-    data = img_in.get_fdata()  # quite slow
+    use_cucim = cupy_available and cucim_available and use_gpu
+
+    # Nearest-neighbor interpolation with scipy does not need float64 input. Keeping label
+    # maps in their native dtype avoids a full-volume conversion and cuts peak RAM.
+    # cucim/skimage resize rescales integer input to [0, 1], so that path keeps float input.
+    if order == 0 and not (crop_resample or nnunet_resample or use_cucim):
+        data = np.asanyarray(img_in.dataobj)
+    else:
+        data = img_in.get_fdata()
     old_shape = np.array(data.shape)
     img_spacing = np.array(img_in.header.get_zooms())
 
@@ -278,7 +286,7 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
         new_data = resample_one_hot_crop(data, output_shape, order=order, nr_cpus=nr_cpus)
     else:
         # GPU path only if available AND globally allowed
-        if cupy_available and cucim_available and use_gpu:
+        if use_cucim:
             new_data = resample_img_cucim(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # gpu resampling
         else:
             new_data = resample_img(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # cpu resampling
