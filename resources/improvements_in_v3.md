@@ -22,6 +22,21 @@ If you need the same segmentation results as in v2, you can use the task `total_
 * We improved inference runtime and peak RAM by keeping nnU-Net inputs and predictions in memory, overlapping the first model load with input resampling, merging multi-model and split-image outputs in memory, and avoiding unnecessary full-volume copies and float64 conversions. See [runtime_improvements.md](runtime_improvements.md) for improvement in numbers.
 
 
+## Accuracy
+
+Dice score and normalised surface distance (NSD, distance threshold 3 mm) for the `total` model in v3:
+
+| Setting                                      | Dice  | NSD   |
+| -------------------------------------------- | ----- | ----- |
+| default (1.5 mm)                             | 0.924 | 0.96  |
+| default + `--model_size small`               | 0.888 | 0.93  |
+| `--fast` (3 mm)                              | 0.846 | 0.933 |
+| `--fastest` (6 mm)                           | 0.667 | 0.831 |
+| `--fast` (3 mm) + `--model_size small`       | 0.804 | 0.904 |
+
+So basically `default` is best. If you need faster use `--model_size small` and if you need even faster use `--fast`. If you need even faster use `--fast --model_size small`. Only use `--fastest` to find very rough positions of structures.
+
+
 ## Public dataset
 
 The public training dataset for `total` and `total_mr` was updated to contain these new images and labels.
