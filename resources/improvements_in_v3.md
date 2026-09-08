@@ -17,12 +17,9 @@ If you need the same segmentation results as in v2, you can use the task `total_
 
 
 ## Speed improvements
-* We added a new option `--model_size small` which uses a model with less feature maps. This reduces runtime and memory usage. On GPU this makes less of a difference since runtime is dominated by pre/postprocessing. On CPU it is about 2.5x faster. `--model_size small` leads to reduced accuracy but is still better than using `--fast` which uses a lower-resolution model.
+* We added a new option `--model_size small` which uses a model with less feature maps. This reduces runtime and memory usage. On GPU this makes less of a difference since runtime is dominated by pre/postprocessing. On CPU it is about 2.5x faster. `--model_size small` leads to reduced accuracy but is still better than using `--fast` which uses a lower-resolution model. Measured runtime, RAM and GPU memory for these options (and for `total_highres`) are in [runtime.md](runtime.md).
 
-* We improved inference runtime and peak RAM by keeping nnU-Net inputs and predictions in memory, overlapping the first model load with input resampling, merging multi-model and split-image outputs in memory, and avoiding unnecessary full-volume copies and float64 conversions.
-
-Measured runtime, RAM and GPU memory for these options (and for `total_highres`) are in [runtime.md](runtime.md).
-
+* We improved inference runtime and peak RAM by keeping nnU-Net inputs and predictions in memory, overlapping the first model load with input resampling, merging multi-model and split-image outputs in memory, and avoiding unnecessary full-volume copies and float64 conversions. See [runtime_improvements.md](runtime_improvements.md) for improvement in numbers.
 
 
 ## Public dataset
