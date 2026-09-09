@@ -67,23 +67,27 @@ not directly comparable with the Linux RAM columns.
 ## Real life example: Get lungs in Chest CT
 
 A more typical case: a chest CT (**512 x 512 x 139**, spacing **0.76 x 0.76 x 2.50 mm**)
-and only the five lung-lobe classes. Every command below also used
+and only the five lung-lobe classes. The first three commands also used
 
 `--roi_subset lung_upper_lobe_left lung_lower_lobe_left lung_upper_lobe_right lung_middle_lobe_right lung_lower_lobe_right`.
 
-
-| Command                                                        | GPU  | CPU  | MPS  |
-| -------------------------------------------------------------- | ---- | ---- | ---- |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`              | 23 s | 37 s | 21 s |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`    | 25 s | 29 s | 14 s |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`       | 31 s | 27 s | 16 s |
+`total_highres` was run without `--roi_subset` (it always body-crops, then predicts all classes).
 
 
-| Command                                                        | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
-| -------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`              | 3.8 GB               | 2.4 GB   | 4.7 GB               | 6.5 GB             |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`    | 3.6 GB               | 4.7 GB   | 5.1 GB               | 7.3 GB             |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`       | 4.0 GB               | 1.7 GB   | 4.7 GB               | 6.2 GB             |
+| Command                                                             | GPU   | CPU    | MPS   |
+| ------------------------------------------------------------------- | ----- | ------ | ----- |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 23 s  | 37 s   | 21 s  |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`         | 25 s  | 29 s   | 14 s  |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 31 s  | 27 s   | 16 s  |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 191 s | 1662 s | 847 s |
+
+
+| Command                                                             | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
+| ------------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 3.8 GB               | 2.4 GB   | 4.7 GB               | 6.5 GB             |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`         | 3.6 GB               | 4.7 GB   | 5.1 GB               | 7.3 GB             |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 4.0 GB               | 1.7 GB   | 4.7 GB               | 6.2 GB             |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 12.2 GB              | 9.3 GB   | 14.5 GB              | 18.5 GB            |
 
 
 
