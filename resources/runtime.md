@@ -64,6 +64,29 @@ not directly comparable with the Linux RAM columns.
 
 
 
+## Real life example: Get lungs in Chest CT
+
+A more typical case: a chest CT (**512 x 512 x 139**, spacing **0.76 x 0.76 x 2.50 mm**)
+and only the five lung-lobe classes. Every command below also used
+
+`--roi_subset lung_upper_lobe_left lung_lower_lobe_left lung_upper_lobe_right lung_middle_lobe_right lung_lower_lobe_right`.
+
+
+| Command                                                        | GPU  | CPU  | MPS  |
+| -------------------------------------------------------------- | ---- | ---- | ---- |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`              | 23 s | 37 s | 21 s |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`    | 25 s | 29 s | 14 s |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`       | 31 s | 27 s | 16 s |
+
+
+| Command                                                        | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
+| -------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`              | 3.8 GB               | 2.4 GB   | 4.7 GB               | 6.5 GB             |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`    | 3.6 GB               | 4.7 GB   | 5.1 GB               | 7.3 GB             |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`       | 4.0 GB               | 1.7 GB   | 4.7 GB               | 6.2 GB             |
+
+
+
 ## Summary
 
 - If you have a GPU: use default mode
