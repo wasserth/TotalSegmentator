@@ -208,7 +208,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      v1_order=False, fastest=False, roi_subset_robust=None, stats_aggregation="mean",
                      remove_small_blobs=False, statistics_normalized_intensities=False,
                      robust_crop=False, higher_order_resampling_LEGACY=False, higher_order_resampling=False,
-                     save_probabilities=None,
+                     save_probabilities=None, torch_resample=False,
                      debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=1,
                      plans="nnUNetPlans", model_size="big"):
     """
@@ -492,7 +492,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
                             normalized_intensities=statistics_normalized_intensities,
                             higher_order_resampling_LEGACY=higher_order_resampling_LEGACY,
-                            save_probabilities=save_probabilities,
+                            save_probabilities=save_probabilities, torch_resample=torch_resample,
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
                             debug=debug, save_lowres=save_lowres,
                             resampling_order=resampling_order, plans=plans,

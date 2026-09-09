@@ -469,7 +469,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          save_binary=False, nr_threads_resampling=1, nr_threads_saving=6, force_split=False,
                          crop_addon=[3,3,3], roi_subset=None, output_type="nifti",
                          statistics=False, quiet=False, verbose=False, test=0, skip_saving=False,
-                         device="cuda", exclude_masks_at_border=True, no_derived_masks=False,
+                         device="cuda", torch_resample=False, exclude_masks_at_border=True, no_derived_masks=False,
                          v1_order=False, stats_aggregation="mean", remove_small_blobs=False,
                          normalized_intensities=False, higher_order_resampling_LEGACY=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
@@ -660,7 +660,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 img_in_zooms = img_in.header.get_zooms()
                 img_in_rsp = change_spacing(
                     img_in, resample, order=resampling_order, dtype=np.int32,
-                    nr_cpus=nr_threads_resampling, use_gpu=use_gpu
+                    nr_cpus=nr_threads_resampling, use_gpu=use_gpu,
+                    torch_resample=torch_resample, device=device
                 )
                 if cascade:
                     cascade = change_spacing(

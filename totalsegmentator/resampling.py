@@ -2,6 +2,7 @@
 
 import os
 import time
+import functools
 import importlib
 import multiprocessing
 
@@ -141,6 +142,69 @@ def resample_one_hot_crop(seg, new_shape, order=1, nr_cpus=1):
     return resampled
 
 
+@functools.lru_cache(maxsize=128)
+def _zoom_axis_operator(n_in, n_out, order, mode):
+    """The exact 1-D operator of ``scipy.ndimage.zoom`` along one axis, ``(n_out, n_in)`` float64.
+
+    ``zoom`` is linear and separable, so zooming an identity matrix along one axis *is* the
+    operator for that axis - spline prefilter, boundary mode and the corner-aligned
+    coordinate convention included, for any order. scipy builds these (they are tiny and
+    cached); torch applies them. Exact by construction: there is no sampling or boundary
+    handling reimplemented here to get subtly wrong.
+
+    ``grid_mode=False`` is what pins the convention: the voxel-corner point grid
+    ``change_spacing`` has always used. The same probe with ``grid_mode=True`` gives the
+    voxel-center (half-pixel) operator - ``skimage.resize``, and nnU-Net's own resampler.
+    The convention lives in the probe, not in anything below it.
+    """
+    if n_in == n_out:
+        return np.eye(n_in)
+    probe = ndimage.zoom(np.eye(n_in, dtype=np.float64), (1.0, n_out / n_in),
+                         order=order, mode=mode, grid_mode=False)
+    if probe.shape != (n_in, n_out):
+        raise RuntimeError(f"scipy zoom probe produced {probe.shape}, expected {(n_in, n_out)}")
+    return np.ascontiguousarray(probe.T)
+
+
+def resample_img_torch(data, new_shape, device="mps", order=3):
+    """GPU resample of a 3D intensity array [x,y,z] to ``new_shape`` on MPS / CUDA / CPU.
+
+    The torch analogue of ``resample_img`` / ``resample_img_cucim``. It does not
+    reimplement ``scipy.ndimage.zoom``; it applies scipy's own per-axis operators
+    (:func:`_zoom_axis_operator`) as matmuls on ``device``, so the result matches
+    ``ndimage.zoom(order=order, mode="nearest")`` to float precision on CPU and ~1e-6
+    relative on MPS/CUDA. Needs nothing beyond numpy, scipy and torch.
+
+    Intensity data only.
+    """
+    import torch
+
+    arr = np.asarray(data)
+    if arr.ndim != 3:
+        raise ValueError(f"expected a 3-D volume; got shape {arr.shape}")
+    new_shape = tuple(int(s) for s in new_shape)
+    if len(new_shape) != 3:
+        raise ValueError(f"new_shape must have 3 entries; got {new_shape}")
+
+    dev = torch.device(device)
+    # float64 is unsupported on MPS and unnecessary here: the operators are float32-exact
+    # to ~1e-7 relative, far below the intensity quantization these volumes carry.
+    work = torch.float64 if (dev.type == "cpu" and arr.dtype == np.float64) else torch.float32
+    t = torch.as_tensor(np.ascontiguousarray(arr), device=dev, dtype=work)
+    for axis in range(3):
+        n_in, n_out = int(t.shape[axis]), new_shape[axis]
+        if n_in == n_out:
+            continue
+        w = torch.as_tensor(_zoom_axis_operator(n_in, n_out, int(order), "nearest"),
+                            device=dev, dtype=work)
+        t = t.movedim(axis, -1)
+        shape = t.shape
+        t = (t.reshape(-1, shape[-1]) @ w.t()).reshape(*shape[:-1], w.shape[0]).movedim(-1, axis)
+    out = t.cpu().numpy()
+    del t
+    return out
+
+
 def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.0,
                        order_data=3, order_seg=0):
     """
@@ -193,7 +257,7 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
 
 def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus=1,
                    nnunet_resample=False, crop_resample=False, dtype=None, remove_negative=False,
-                   force_affine=None, use_gpu=False):
+                   force_affine=None, use_gpu=False, torch_resample=False, device="cpu"):
     """
     Resample nifti image to the new spacing (uses resample_img() internally).
 
@@ -278,7 +342,28 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     if nnunet_resample and crop_resample:
         raise ValueError("Only one of nnunet_resample and crop_resample can be enabled.")
 
-    if nnunet_resample:
+    # Opt-in torch resampling backend (torch_resample=True; runs on `device`).
+    # torch-based, so it runs on Apple Silicon (MPS) where the cucim path cannot, and it
+    # applies scipy's own zoom operators, so results match the CPU path.
+    #
+    # Scope: forward image intensity data (order > 0).
+    _one_hot = nnunet_resample or crop_resample      # both mean "resample labels, not intensities"
+    _use_torch = torch_resample and data.ndim == 3 and order != 0 and not _one_hot
+    if _use_torch:
+        # Keep the device INDEX. select_device() hands down a torch.device("cuda:N"), whose
+        # .type is just "cuda" - resampling on that would land on whichever CUDA device is
+        # current while inference runs on N: cross-device on a multi-GPU box, and on a
+        # shared cluster it reaches for a GPU this process was not allocated.
+        _dev = str(device)
+        _kind = device.type if hasattr(device, "type") else _dev.split(":")[0]
+        if _kind not in ("mps", "cuda", "cpu"):
+            _dev = "cpu"
+        if target_shape is not None:
+            new_shape = tuple(int(s) for s in target_shape)
+        else:
+            new_shape = tuple(int(round(o * z)) for o, z in zip(old_shape, zoom))
+        new_data = resample_img_torch(data, new_shape, device=_dev, order=order)
+    elif nnunet_resample:
         # new_data, _ = resample_img_nnunet(data, None, img_spacing, new_spacing, order_data=order, order_seg=order)
         _, new_data = resample_img_nnunet(None, data, img_spacing, new_spacing, order_data=order, order_seg=order)
     elif crop_resample:
