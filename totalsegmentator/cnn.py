@@ -96,6 +96,12 @@ CNN_TARGET_SPECS = {
     "convolution_kernel": {"training_name": "ConvolutionKernel", "unit": None},
     "pi_time": {"training_name": "pi_time", "unit": "seconds"},
 }
+# Training-set 99th percentiles (rounded). See resources/body_stats_prediction.md.
+NOISE_OUTLIER_THRESHOLD = {
+    "ct": 147.0,
+    "mr": 45.0,
+}
+
 CNN_TRAINING_NAME_TO_TARGET = {
     spec["training_name"]: target for target, spec in CNN_TARGET_SPECS.items()
 }
@@ -919,6 +925,10 @@ def _format_all_body_stats(
             hparams, target, output_count, modality
         )
         result[target] = _format_regression_result(preds[:, target_idx], target)
+    if "noise" in result and modality in NOISE_OUTLIER_THRESHOLD:
+        result["noise"]["noise_outlier"] = bool(
+            result["noise"]["value"] > NOISE_OUTLIER_THRESHOLD[modality]
+        )
     return result
 
 

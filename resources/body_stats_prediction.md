@@ -25,7 +25,7 @@ CT additionally predicts:
 - tube current (`xray_tube_current`)
 - vendor-harmonized convolution-kernel code (from 20 (soft / tissue) to 80 (hard / bone) kernels)
 - contrast presence
-- post-injection time
+- post-injection time (`pi_time`), also mapped to `contrast_phase` (`native`, `arterial_early`, `arterial_late`, `portal_venous`)
 - cranial-most and caudal-most visible vertebral level (`verte_upper`, `verte_lower`)
 - image-noise score
 
@@ -201,7 +201,7 @@ The table below shows training-set percentiles (57,291 CT and 43,200 MR examinat
 | 95th | 85.8 | 40.4 |
 | 99th | 147.4 | 45.4 |
 
-These percentiles can be used as quality-control cutoffs. For example, excluding examinations above the 95th percentile corresponds to `noise > 85` for CT and `noise > 40` for MR.
+These percentiles can be used as quality-control cutoffs. The JSON output includes `noise.noise_outlier` (`true`/`false`) using the 99th-percentile cutoff: `noise > 147` for CT and `noise > 45` for MR.
 
 Visible coverage is encoded using the cranial-most and caudal-most detected vertebra from C1 through L5. These outputs provide a compact indication of which part of the body is present in the image.
 

@@ -3,6 +3,7 @@ import pytest
 
 from totalsegmentator.cnn import (
     CNN_MODEL_TARGET_ORDERS,
+    NOISE_OUTLIER_THRESHOLD,
     _apply_regression_target_denormalization,
     _format_all_body_stats,
     _format_regression_result,
@@ -101,6 +102,29 @@ def test_all_modality_targets_are_formatted(modality, expected_targets):
     result = _format_all_body_stats(preds, hparams, modality)
 
     assert list(result) == expected_targets
+    assert result["noise"]["noise_outlier"] is False
+
+
+@pytest.mark.parametrize(
+    ("modality", "noise_value", "expected_outlier"),
+    [
+        ("ct", 147.0, False),
+        ("ct", 147.01, True),
+        ("mr", 45.0, False),
+        ("mr", 45.01, True),
+    ],
+)
+def test_noise_outlier_uses_percentile_cutoff(modality, noise_value, expected_outlier):
+    training_names = CNN_MODEL_TARGET_ORDERS[modality]
+    preds = np.zeros((1, len(training_names)), dtype=np.float32)
+    preds[0, training_names.index("noise_p75")] = noise_value
+    hparams = {"reg_target_names": training_names}
+
+    result = _format_all_body_stats(preds, hparams, modality)
+
+    assert result["noise"]["value"] == round(noise_value, 2)
+    assert result["noise"]["noise_outlier"] is expected_outlier
+    assert NOISE_OUTLIER_THRESHOLD[modality] == (147.0 if modality == "ct" else 45.0)
 
 
 def test_target_must_be_available_for_modality():

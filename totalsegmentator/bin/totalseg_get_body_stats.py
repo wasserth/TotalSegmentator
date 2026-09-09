@@ -16,6 +16,7 @@ import numpy as np
 from totalsegmentator.cnn import (
     predict_all_body_stats_with_cnn,
 )
+from totalsegmentator.contrast_phase import pi_time_to_phase
 from totalsegmentator.python_api import show_license_info, totalsegmentator
 from totalsegmentator.config import (
     get_weights_dir,
@@ -38,6 +39,24 @@ resources/body_stats_prediction.md
 Info for me:
 Training script is in: predict_body_size/body_size_training.py (not public)
 """
+
+
+def add_contrast_phase(result: dict) -> dict:
+    """Map predicted pi_time to contrast_phase (phase string + probability)."""
+    if "pi_time" not in result:
+        return result
+    phase, probability = pi_time_to_phase(result["pi_time"]["value"])
+    contrast_phase = {
+        "value": phase,
+        "unit": None,
+        "probability": probability,
+    }
+    inserted = {}
+    for key, value in result.items():
+        inserted[key] = value
+        if key == "pi_time":
+            inserted["contrast_phase"] = contrast_phase
+    return inserted
 
 
 def check_body_stats_models_exist():
@@ -379,6 +398,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
             bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
             result["bsa"] = {"value": round(bsa, 2), "unit": "m^2"}
 
+        result = add_contrast_phase(result)
         yield {"id": 3, "progress": 100, "status": "Done", "result": result}
         return
 
@@ -552,7 +572,8 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
         bsa = float(np.sqrt((height_cm * weight_kg) / 3600))
         result["bsa"] = {"value": round(bsa, 2), 
                          "unit": "m^2"}
-    
+
+    result = add_contrast_phase(result)
     yield {"id": 8, "progress": 100, "status": "Done", "result": result}
 
 
@@ -563,6 +584,10 @@ def print_body_stats_result(result: dict):
         value = entry["value"]
         unit = entry.get("unit")
         value_str = f"{value} {unit}" if unit else str(value)
+        if key == "contrast_phase" and "probability" in entry:
+            value_str += f"  (probability: {entry['probability']})"
+        if key == "noise" and "noise_outlier" in entry:
+            value_str += f"  (outlier: {entry['noise_outlier']})"
         print(f"{key + ':':<{label_width}}  {value_str}")
 
 

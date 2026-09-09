@@ -65,6 +65,11 @@
         "max": 1.22,
         "stddev": 3.6124
     },
+    "contrast_phase": {
+        "value": "native",
+        "unit": null,
+        "probability": 1.0
+    },
     "verte_upper": {
         "value": "T11",
         "unit": null,
@@ -80,7 +85,8 @@
         "unit": null,
         "min": 3.92,
         "max": 13.52,
-        "stddev": 3.269
+        "stddev": 3.269,
+        "noise_outlier": false
     },
     "bmi": {
         "value": 25.42,

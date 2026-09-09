@@ -31,11 +31,10 @@ MPS:
 | **High-resolution (`-ta total_highres`)**                           |             |        |       |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 11 min 11 s |        |       |
 | **Higher-order resampling (`-ho`)**                                 |             |        |       |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ho`               | 309 s       | 1039 s |       |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small -ho`     | 312 s       | 679 s  |       |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 68 s        | 95 s   |       |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 70 s        | 84 s   |       |
-
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ho`               | 309 s       | 1039 s | 607 s |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small -ho`     | 312 s       | 679 s  | 303 s |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 68 s        | 95 s   | 59 s  |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 70 s        | 84 s   | 50 s  |
 
 
 
@@ -58,21 +57,19 @@ not directly comparable with the Linux RAM columns.
 | **High-resolution (`-ta total_highres`)**                           |                      |          |                      |                    |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 31.5 GB              | 23.4 GB  |                      |                    |
 | **Higher-order resampling (`-ho`)**                                 |                      |          |                      |                    |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ho`               | 10.3 GB              | 7.2 GB   | 10.0 GB              |                    |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small -ho`     | 10.1 GB              | 8.1 GB   | 9.6 GB               |                    |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 7.9 GB               | 5.0 GB   | 7.9 GB               |                    |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 7.9 GB               | 2.9 GB   | 7.8 GB               |                    |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ho`               | 10.3 GB              | 7.2 GB   | 10.0 GB              | 11.6 GB            |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small -ho`     | 10.1 GB              | 8.1 GB   | 9.6 GB               | 12.9 GB            |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 7.9 GB               | 5.0 GB   | 7.9 GB               | 8.7 GB             |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 7.9 GB               | 2.9 GB   | 7.8 GB               | 9.1 GB             |
 
 
 
 ## Summary
-- 
 
-
-## Notes
-
-- `--model_size small` (`-ms small`) barely changes GPU runtime (pre/postprocessing dominates). On CPU it is about **2.8x faster** than the default `total` model.
-- `--fast` (`-f`) uses the 3 mm model and cuts runtime a lot on all devices.
+- If you have a GPU: use default mode
+- If you have only CPU or MPS (Mac): use `--model_size small` or if you need even faster use `--fast`
+- If you do not need all classes, use `--roi_subset`. This makes a huge difference in runtime.
+- For smoother outlies higher-order resampling (`-ho`) makes a big difference. But it comes with a high runtime. (if you use `--roi_subset` it becomes a lot faster)
+- `total_highres` uses much more RAM, GPU memory and time. Do not run it on large CTs, and do not run it on CPU/MPS. In 99% of the cases default mode + `-ho`is sufficient for your needs.
 - `--save_lowres` (`-sl`) skips resampling the segmentation back to the input resolution. Use this if you do not need the segmentation in the same resolution as the input image.
-- `total_highres` uses much more RAM, GPU memory and time. On this image it nearly filled the 24 GB GPU. Do not run it on large CTs, and do not run it on CPU.
 
