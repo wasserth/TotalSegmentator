@@ -2,7 +2,7 @@
 
 In v3 we did the following improvements:
 
-* `total` and `appendicular_bones` tasks: We added 291 pediatric CT images to improve the segmentation performance on children. Moreover, we greatly improved the label quality: We fixed many small errors in the segmentations, we refined the labels especially for bones structures (e.g. femur segmentations a lot more precise now), and we fixed the vertebrae label mixups. This results in a more accurate segmentation model. Since the previous version was already quite good the changes might be noticable only for very specific cases.  
+* `total` and `appendicular_bones` tasks: We added 291 pediatric CT images to improve the segmentation performance on children. Moreover, we greatly improved the label quality: We fixed many small errors in the segmentations, we refined the labels especially for bones structures (e.g. femur segmentations a lot more precise now), and we fixed the vertebrae label mixups. This results in a more accurate segmentation model. Since the previous version was already quite good the changes might be noticeable only for very specific cases.  
 
 * `total_mr` and `appendicular_bones_mr` tasks: We added 246 whole body MR images, 249 pediatric MR images, and 170 MR images where the model failed before. Moreover, we improved the label quality on all existing cases. This results in a greatly improved segmentation model.
 

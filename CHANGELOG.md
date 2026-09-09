@@ -11,6 +11,7 @@
 * update `appendicular_bones` to Dataset838 (1830 subjects)
 * introduce parameter `--model_size small` for task `total` to further introduce runtime on CPU
 * improve inference runtime and peak RAM by keeping nnU-Net inputs and predictions in memory, overlapping the first model load with input resampling, merging model/split outputs in memory, and avoiding unnecessary full-volume float64 conversions. See [runtime improvements](resources/runtime_improvements.md).
+* speed up forward image resampling by running it through torch on the inference device instead of scipy on one CPU (thanks to [@mhalle](https://github.com/mhalle), [#606](https://github.com/wasserth/TotalSegmentator/pull/606)). Especially faster for higher-order interpolation (`-ro 3`). See [improved resampling](resources/improved_resampling.md).
 * add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm. Always crops to the body region (`--body_seg`).
 * make `thigh_shoulder_muscles` and `thigh_shoulder_muscles_mr` openly available (Apache-2.0).
 
