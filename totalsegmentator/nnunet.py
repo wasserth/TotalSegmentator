@@ -660,12 +660,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 img_in_zooms = img_in.header.get_zooms()
                 img_in_rsp = change_spacing(
                     img_in, resample, order=resampling_order, dtype=np.int32,
-                    nr_cpus=nr_threads_resampling, use_gpu=use_gpu, device=device
+                    nr_cpus=nr_threads_resampling, device=device
                 )
                 if cascade:
                     cascade = change_spacing(
                         cascade, resample, order=0, dtype=np.uint8,
-                        nr_cpus=nr_threads_resampling, use_gpu=use_gpu
+                        nr_cpus=nr_threads_resampling
                     )
                 if verbose:
                     print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
@@ -1023,13 +1023,13 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 # This is possible due to cropped one-hot resampling.
                 img_pred = change_spacing(img_pred, resample, img_in_shape,
                                           order=1, dtype=np.uint8, nr_cpus=nr_threads_resampling,
-                                          force_affine=img_in.affine, crop_resample=True, use_gpu=use_gpu)
+                                          force_affine=img_in.affine, crop_resample=True)
             else:
                 # Upsampling time: 
                 # -nr=1: 7s, 11000MB
                 img_pred = change_spacing(img_pred, resample, img_in_shape,
                                         order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling,
-                                        force_affine=img_in.affine, use_gpu=use_gpu)
+                                        force_affine=img_in.affine)
             if not quiet: print(f"  Resampled in {time.time() - st_resampling:.2f}s")
         elif save_lowres and not quiet:
             zooms = tuple(round(float(z), 2) for z in img_pred.header.get_zooms()[:3])

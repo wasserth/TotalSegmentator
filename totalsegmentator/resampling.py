@@ -3,16 +3,12 @@
 import os
 import time
 import functools
-import importlib
 import multiprocessing
 
 import numpy as np
 import nibabel as nib
 from scipy import ndimage
 from joblib import Parallel, delayed
-
-cupy_available = importlib.util.find_spec("cupy") is not None
-cucim_available = importlib.util.find_spec("cucim") is not None
 
 
 def change_spacing_of_affine(affine, zoom=0.5):
@@ -55,26 +51,6 @@ def resample_img(img, zoom=0.5, order=0, nr_cpus=-1):
     if dim == 2:
         img_sm = img_sm[:,:,0,0]
     return img_sm
-
-
-def resample_img_cucim(img, zoom=0.5, order=0, nr_cpus=-1):
-    """
-    Completely speedup of resampling compare to non-gpu version not as big, because much time is lost in
-    loading the file and then in copying to the GPU.
-
-    For small image no significant speedup.
-    For large images reducing resampling time by over 50%.
-
-    On our slurm gpu cluster it is actually slower with cucim than without it.
-    """
-    import cupy as cp
-    from cucim.skimage.transform import resize
-
-    img = cp.asarray(img)  # slow
-    new_shape = (np.array(img.shape) * zoom).round().astype(np.int32)
-    resampled_img = resize(img, output_shape=new_shape, order=order, mode="edge", anti_aliasing=False)  # very fast
-    resampled_img = cp.asnumpy(resampled_img)  # Alternative: img_arr = cp.float32(resampled_img.get())   # very fast
-    return resampled_img
 
 
 def resample_one_hot_crop(seg, new_shape, order=1, nr_cpus=1):
@@ -169,7 +145,7 @@ def _zoom_axis_operator(n_in, n_out, order, mode):
 def resample_img_torch(data, new_shape, device="mps", order=3):
     """GPU resample of a 3D intensity array [x,y,z] to ``new_shape`` on MPS / CUDA / CPU.
 
-    The torch analogue of ``resample_img`` / ``resample_img_cucim``. It does not
+    The torch analogue of ``resample_img``. It does not
     reimplement ``scipy.ndimage.zoom``; it applies scipy's own per-axis operators
     (:func:`_zoom_axis_operator`) as matmuls on ``device``, so the result matches
     ``ndimage.zoom(order=order, mode="nearest")`` to float precision on CPU and ~1e-6
@@ -262,7 +238,7 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
 
 def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus=1,
                    nnunet_resample=False, crop_resample=False, dtype=None, remove_negative=False,
-                   force_affine=None, use_gpu=False, device="cpu"):
+                   force_affine=None, device="cpu"):
     """
     Resample nifti image to the new spacing.
 
@@ -293,15 +269,12 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
 
     Note: Only works properly if affine is all 0 except for diagonal and offset (=no rotation and sheering)
     """
-    use_cucim = cupy_available and cucim_available and use_gpu
-
     # Nearest-neighbor interpolation with scipy does not need float64 input. Keeping label
     # maps in their native dtype avoids a full-volume conversion and cuts peak RAM.
-    # cucim/skimage resize rescales integer input to [0, 1], so that path keeps float input.
     # Torch intensity resampling is float32 on GPU/MPS (and on CPU unless the input is
     # already float64), so load float32 and skip a 2x-larger float64 buffer.
     _one_hot = nnunet_resample or crop_resample  # both mean "resample labels, not intensities"
-    if order == 0 and not (_one_hot or use_cucim):
+    if order == 0 and not _one_hot:
         data = np.asanyarray(img_in.dataobj)
     elif order != 0 and not _one_hot:
         data = img_in.get_fdata(dtype=np.float32)
@@ -355,9 +328,8 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     if nnunet_resample and crop_resample:
         raise ValueError("Only one of nnunet_resample and crop_resample can be enabled.")
 
-    # Torch resampling backend (runs on `device`). torch-based, so it runs on Apple
-    # Silicon (MPS) where the cucim path cannot, and it applies scipy's own zoom
-    # operators, so results match the CPU scipy path.
+    # Torch resampling backend (runs on `device`). Applies scipy's own zoom operators,
+    # so results match the CPU scipy path. Works on CUDA, MPS, and CPU.
     #
     # Scope: forward image intensity data (order > 0). Labels stay on scipy / one-hot.
     _use_torch = data.ndim == 3 and order != 0 and not _one_hot
@@ -382,11 +354,7 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
         output_shape = np.round(old_shape * zoom).astype(int)
         new_data = resample_one_hot_crop(data, output_shape, order=order, nr_cpus=nr_cpus)
     else:
-        # GPU path only if available AND globally allowed
-        if use_cucim:
-            new_data = resample_img_cucim(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # gpu resampling
-        else:
-            new_data = resample_img(data, zoom=zoom, order=order, nr_cpus=nr_cpus)  # cpu resampling
+        new_data = resample_img(data, zoom=zoom, order=order, nr_cpus=nr_cpus)
 
     if remove_negative:
         new_data[new_data < 1e-4] = 0
