@@ -170,6 +170,7 @@ def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
 
 
 if __name__ == "__main__":
+    st_total = time.time()
     start_monitors()
 
     base_dir = Path("/mnt/nvme/data/multiseg/test_locally")
@@ -281,3 +282,5 @@ if __name__ == "__main__":
     # Clean up
     shutil.rmtree(base_dir / "15mm" / "pred")
     shutil.rmtree(base_dir / "3mm" / "pred")
+
+    print(f"Total runtime: {time.time() - st_total:.1f}s")
