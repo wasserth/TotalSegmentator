@@ -176,6 +176,11 @@ def resample_img_torch(data, new_shape, device="mps", order=3):
     relative on MPS/CUDA. Needs nothing beyond numpy, scipy and torch.
 
     Intensity data only.
+
+    NIfTI volumes are typically Fortran-contiguous. Do not ``ascontiguousarray`` them on
+    the host first: that is a full F→C transpose of the volume. Torch accepts F-order
+    arrays; ``movedim`` / matmul then run with the existing strides (or a cheap device
+    copy), which is the same numeric result.
     """
     import torch
 
@@ -190,7 +195,7 @@ def resample_img_torch(data, new_shape, device="mps", order=3):
     # float64 is unsupported on MPS and unnecessary here: the operators are float32-exact
     # to ~1e-7 relative, far below the intensity quantization these volumes carry.
     work = torch.float64 if (dev.type == "cpu" and arr.dtype == np.float64) else torch.float32
-    t = torch.as_tensor(np.ascontiguousarray(arr), device=dev, dtype=work)
+    t = torch.as_tensor(arr, device=dev, dtype=work)
     for axis in range(3):
         n_in, n_out = int(t.shape[axis]), new_shape[axis]
         if n_in == n_out:
@@ -293,8 +298,13 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     # Nearest-neighbor interpolation with scipy does not need float64 input. Keeping label
     # maps in their native dtype avoids a full-volume conversion and cuts peak RAM.
     # cucim/skimage resize rescales integer input to [0, 1], so that path keeps float input.
-    if order == 0 and not (crop_resample or nnunet_resample or use_cucim):
+    # Torch intensity resampling is float32 on GPU/MPS (and on CPU unless the input is
+    # already float64), so load float32 and skip a 2x-larger float64 buffer.
+    _one_hot = nnunet_resample or crop_resample  # both mean "resample labels, not intensities"
+    if order == 0 and not (_one_hot or use_cucim):
         data = np.asanyarray(img_in.dataobj)
+    elif order != 0 and not _one_hot:
+        data = img_in.get_fdata(dtype=np.float32)
     else:
         data = img_in.get_fdata()
     old_shape = np.array(data.shape)
@@ -350,7 +360,6 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     # operators, so results match the CPU scipy path.
     #
     # Scope: forward image intensity data (order > 0). Labels stay on scipy / one-hot.
-    _one_hot = nnunet_resample or crop_resample      # both mean "resample labels, not intensities"
     _use_torch = data.ndim == 3 and order != 0 and not _one_hot
     if _use_torch:
         # Keep the device INDEX. select_device() hands down a torch.device("cuda:N"), whose

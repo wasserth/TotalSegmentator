@@ -109,6 +109,36 @@ def test_torch_resample_normalizes_string_devices(monkeypatch, device, expected)
 
 
 @pytest.mark.parametrize("order", [1, 3])
+def test_resample_img_torch_fortran_layout_matches_c_layout(order):
+    """NIfTI data is F-contiguous. Forcing C-order on the host is a full-volume transpose
+    and is not required: the same operators on F-order input must match C-order input."""
+    rng = np.random.default_rng(0)
+    vol_c = np.ascontiguousarray(rng.random((20, 22, 18)))
+    vol_f = np.asfortranarray(vol_c)
+    assert vol_c.flags.c_contiguous and vol_f.flags.f_contiguous
+    new_shape = (30, 33, 27)
+
+    got_c = resampling.resample_img_torch(vol_c, new_shape, device="cpu", order=order)
+    got_f = resampling.resample_img_torch(vol_f, new_shape, device="cpu", order=order)
+
+    np.testing.assert_array_equal(got_c, got_f)
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs CUDA")
+@pytest.mark.parametrize("order", [1, 3])
+def test_resample_img_torch_fortran_layout_matches_c_layout_cuda(order):
+    rng = np.random.default_rng(0)
+    vol_c = np.ascontiguousarray(rng.random((20, 22, 18), dtype=np.float32))
+    vol_f = np.asfortranarray(vol_c)
+    new_shape = (30, 33, 27)
+
+    got_c = resampling.resample_img_torch(vol_c, new_shape, device="cuda:0", order=order)
+    got_f = resampling.resample_img_torch(vol_f, new_shape, device="cuda:0", order=order)
+
+    np.testing.assert_allclose(got_c, got_f, rtol=0, atol=0)
+
+
+@pytest.mark.parametrize("order", [1, 3])
 @pytest.mark.parametrize("new_shape", [(30, 33, 27), (11, 9, 14)])
 def test_resample_img_torch_reproduces_scipy_zoom(order, new_shape):
     """The backend applies scipy's own per-axis operators, so it is not an approximation
@@ -139,7 +169,12 @@ def test_resample_img_torch_matches_scipy_on_mps(order):
 
 @pytest.mark.parametrize("order", [1, 3])
 def test_change_spacing_agrees_with_ndimage_zoom(order):
-    """End to end through change_spacing: torch path matches scipy.ndimage.zoom."""
+    """End to end through change_spacing: torch path matches scipy.ndimage.zoom.
+
+    Intensity data is loaded as float32, so the residual vs scipy's float64 zoom is
+    arithmetic, not sampling. Tighter agreement is covered by
+    test_resample_img_torch_reproduces_scipy_zoom (float64 on CPU).
+    """
     rng = np.random.default_rng(0)
     vol = rng.random((20, 22, 18)) * 1000 - 500
     img = nib.Nifti1Image(vol, np.diag([1.5, 1.5, 1.5, 1]))
@@ -150,7 +185,7 @@ def test_change_spacing_agrees_with_ndimage_zoom(order):
     want = ndimage.zoom(vol, tuple(n / o for n, o in zip(new_shape, vol.shape)),
                         mode="nearest", order=order).astype(np.float32)
 
-    np.testing.assert_allclose(np.asanyarray(got.dataobj), want, rtol=0, atol=1e-4)
+    np.testing.assert_allclose(np.asanyarray(got.dataobj), want, rtol=0, atol=1e-3)
     np.testing.assert_allclose(got.affine, np.diag([1.0, 1.0, 1.0, 1]))
 
 
