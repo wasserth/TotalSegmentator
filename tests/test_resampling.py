@@ -32,51 +32,39 @@ def _record_dispatch(monkeypatch):
 
 
 def test_torch_resample_does_not_intercept_one_hot_label_resampling(monkeypatch):
-    """The flag is scoped to intensity data: crop_resample keeps its own dispatch."""
+    """crop_resample keeps its own dispatch; torch is for intensity data."""
     seg = _blobs((20, 22, 18), 12)
     img = nib.Nifti1Image(seg, np.diag([1.5, 1.5, 1.5, 1]))
     called = _record_dispatch(monkeypatch)
 
     change_spacing(img, 1.0, target_shape=(30, 33, 27), order=1, dtype=np.uint8,
-                   crop_resample=True, nr_cpus=1, torch_resample=True, device="cpu")
+                   crop_resample=True, nr_cpus=1, device="cpu")
 
     assert called == ["resample_one_hot_crop"], called
 
 
 def test_torch_resample_leaves_nearest_label_upsampling_on_scipy(monkeypatch):
-    """order=0 is out of scope for the flag and keeps its own dispatch."""
+    """order=0 is out of scope and keeps its own dispatch."""
     seg = _blobs((20, 22, 18), 12)
     img = nib.Nifti1Image(seg, np.diag([1.5, 1.5, 1.5, 1]))
     called = _record_dispatch(monkeypatch)
 
     change_spacing(img, 1.0, target_shape=(30, 33, 27), order=0, dtype=np.uint8,
-                   nr_cpus=1, torch_resample=True, device="cpu")
+                   nr_cpus=1, device="cpu")
 
     assert called == ["resample_img"], called
 
 
-def test_torch_resample_still_handles_image_data(monkeypatch):
-    """The other side of the gate: intensity data at order>0 is what the backend is for."""
+def test_torch_resample_handles_image_data(monkeypatch):
+    """Intensity data at order>0 always uses the torch backend."""
     rng = np.random.default_rng(0)
     img = nib.Nifti1Image(rng.random((20, 22, 18)).astype(np.float32), np.diag([1.5, 1.5, 1.5, 1]))
     called = _record_dispatch(monkeypatch)
 
     change_spacing(img, 1.0, target_shape=(30, 33, 27), order=3, dtype=np.float32,
-                   nr_cpus=1, torch_resample=True, device="cpu")
+                   nr_cpus=1, device="cpu")
 
     assert called == ["resample_img_torch"], called
-
-
-def test_one_hot_result_is_unchanged_by_the_torch_flag():
-    """Outside its scope the flag is inert: same voxels, same affine."""
-    seg = _blobs((20, 22, 18), 12)
-    img = nib.Nifti1Image(seg, np.diag([1.5, 1.5, 1.5, 1]))
-    kwargs = dict(target_shape=(30, 33, 27), order=1, dtype=np.uint8,
-                  crop_resample=True, nr_cpus=1)
-    stock = change_spacing(img, 1.0, **kwargs)
-    flagged = change_spacing(img, 1.0, torch_resample=True, device="cpu", **kwargs)
-    np.testing.assert_array_equal(np.asanyarray(stock.dataobj), np.asanyarray(flagged.dataobj))
-    np.testing.assert_allclose(stock.affine, flagged.affine)
 
 
 def _record_device(monkeypatch):
@@ -104,8 +92,7 @@ def test_torch_resample_keeps_the_cuda_device_index(monkeypatch):
     seen = _record_device(monkeypatch)
 
     change_spacing(_intensity_image(), 1.0, target_shape=(30, 33, 27), order=3,
-                   dtype=np.float32, nr_cpus=1, torch_resample=True,
-                   device=torch.device("cuda:1"))
+                   dtype=np.float32, nr_cpus=1, device=torch.device("cuda:1"))
 
     assert seen["device"] == "cuda:1"
 
@@ -116,7 +103,7 @@ def test_torch_resample_normalizes_string_devices(monkeypatch, device, expected)
     seen = _record_device(monkeypatch)
 
     change_spacing(_intensity_image(), 1.0, target_shape=(30, 33, 27), order=3,
-                   dtype=np.float32, nr_cpus=1, torch_resample=True, device=device)
+                   dtype=np.float32, nr_cpus=1, device=device)
 
     assert seen["device"] == expected
 
@@ -151,23 +138,25 @@ def test_resample_img_torch_matches_scipy_on_mps(order):
 
 
 @pytest.mark.parametrize("order", [1, 3])
-def test_change_spacing_agrees_with_the_scipy_path(order):
-    """End to end through change_spacing: enabling the flag must not move the image."""
+def test_change_spacing_agrees_with_ndimage_zoom(order):
+    """End to end through change_spacing: torch path matches scipy.ndimage.zoom."""
     rng = np.random.default_rng(0)
-    img = nib.Nifti1Image(rng.random((20, 22, 18)) * 1000 - 500, np.diag([1.5, 1.5, 1.5, 1]))
-    kwargs = dict(target_shape=(30, 33, 27), order=order, dtype=np.float32, nr_cpus=1)
+    vol = rng.random((20, 22, 18)) * 1000 - 500
+    img = nib.Nifti1Image(vol, np.diag([1.5, 1.5, 1.5, 1]))
+    new_shape = (30, 33, 27)
 
-    stock = change_spacing(img, 1.0, **kwargs)
-    torched = change_spacing(img, 1.0, torch_resample=True, device="cpu", **kwargs)
+    got = change_spacing(img, 1.0, target_shape=new_shape, order=order,
+                         dtype=np.float32, nr_cpus=1, device="cpu")
+    want = ndimage.zoom(vol, tuple(n / o for n, o in zip(new_shape, vol.shape)),
+                        mode="nearest", order=order).astype(np.float32)
 
-    np.testing.assert_allclose(np.asanyarray(torched.dataobj), np.asanyarray(stock.dataobj),
-                               rtol=0, atol=1e-4)
-    np.testing.assert_allclose(torched.affine, stock.affine)
+    np.testing.assert_allclose(np.asanyarray(got.dataobj), want, rtol=0, atol=1e-4)
+    np.testing.assert_allclose(got.affine, np.diag([1.0, 1.0, 1.0, 1]))
 
 
 def test_resample_img_torch_needs_no_forked_nnunet():
-    """The backend is numpy + scipy + torch. Requiring a fork of nnU-Net would make the
-    flag unusable against a released nnunetv2 and untestable in CI."""
+    """The backend is numpy + scipy + torch. Requiring a fork of nnU-Net would make it
+    unusable against a released nnunetv2 and untestable in CI."""
     import inspect
 
     source = inspect.getsource(resampling.resample_img_torch)

@@ -257,9 +257,12 @@ def resample_img_nnunet(data, mask=None, original_spacing=1.0, target_spacing=2.
 
 def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus=1,
                    nnunet_resample=False, crop_resample=False, dtype=None, remove_negative=False,
-                   force_affine=None, use_gpu=False, torch_resample=False, device="cpu"):
+                   force_affine=None, use_gpu=False, device="cpu"):
     """
-    Resample nifti image to the new spacing (uses resample_img() internally).
+    Resample nifti image to the new spacing.
+
+    3D intensity data (order > 0) is resampled with the torch backend on `device`.
+    Labels (order 0, nnunet_resample, crop_resample) keep the scipy / one-hot paths.
 
     img_in: nifti image
     new_spacing: float or sequence of float
@@ -342,13 +345,13 @@ def change_spacing(img_in, new_spacing=1.25, target_shape=None, order=0, nr_cpus
     if nnunet_resample and crop_resample:
         raise ValueError("Only one of nnunet_resample and crop_resample can be enabled.")
 
-    # Opt-in torch resampling backend (torch_resample=True; runs on `device`).
-    # torch-based, so it runs on Apple Silicon (MPS) where the cucim path cannot, and it
-    # applies scipy's own zoom operators, so results match the CPU path.
+    # Torch resampling backend (runs on `device`). torch-based, so it runs on Apple
+    # Silicon (MPS) where the cucim path cannot, and it applies scipy's own zoom
+    # operators, so results match the CPU scipy path.
     #
-    # Scope: forward image intensity data (order > 0).
+    # Scope: forward image intensity data (order > 0). Labels stay on scipy / one-hot.
     _one_hot = nnunet_resample or crop_resample      # both mean "resample labels, not intensities"
-    _use_torch = torch_resample and data.ndim == 3 and order != 0 and not _one_hot
+    _use_torch = data.ndim == 3 and order != 0 and not _one_hot
     if _use_torch:
         # Keep the device INDEX. select_device() hands down a torch.device("cuda:N"), whose
         # .type is just "cuda" - resampling on that would land on whichever CUDA device is
