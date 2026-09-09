@@ -209,7 +209,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      remove_small_blobs=False, statistics_normalized_intensities=False,
                      robust_crop=False, higher_order_resampling_LEGACY=False, higher_order_resampling=False,
                      save_probabilities=None,
-                     debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=1,
+                     debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=3,
                      plans="nnUNetPlans", model_size="big"):
     """
     Run TotalSegmentator from within python.

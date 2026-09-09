@@ -137,7 +137,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
 * `--statistics_extra`: In addition to volume and intensity, also compute `n_voxels`, intensity std/min/max and the morphometric `centroid_vox` and `bbox_vox` (voxel coordinates) for each class. Off by default to keep the statistics runtime unchanged.
 * `--higher_order_resampling`: Uses higher order upsampling of the segmentations. Smoother (especially for `--fast`) but slower.
-* `--resampling_order`: Spline interpolation order for input image resampling (default: 1). Setting this to 3 may give slightly better segmentation accuracy at the cost of slower resampling.
+* `--resampling_order`: Spline interpolation order for input image resampling (default: 3). Setting this to 1 can speed up resampling with very similar segmentation accuracy.
 * `--save_lowres`: Save the segmentation at the model resolution (e.g. 1.5mm, or 3mm/6mm with `--fast`/`--fastest`) instead of upsampling it back to the input resolution. Skips the slow upsample and keeps the output on the model grid.
 * `--robust_crop`: For some tasks and for roi_subset a 6mm low resolution model is used to crop to the region of interest. Sometimes this model is incorrect, which leads to artifacts like segmentations being cut off. robust_crop will use a better but slower 3mm model instead.
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
