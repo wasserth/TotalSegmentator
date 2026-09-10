@@ -331,14 +331,16 @@ roi_groups["vertebrae_pp_refined"] = roi_groups["vertebrae_pp"]
 
 
 def plot_roi_group(ref_img, scene, rois, x, y, smoothing, roi_data, affine, task_name):
+    display_affine = affine.copy()
+    display_affine[:3, 3] = 0  # make offset the same for all subjects
+
     for idx, roi in enumerate(rois):
         color = random_colors[idx]
         classname_2_idx = {v: k for k, v in class_map[task_name].items()}
         data = roi_data == classname_2_idx[roi]
 
         if data.max() > 0:  # empty mask
-            affine[:3, 3] = 0  # make offset the same for all subjects
-            cont_actor = plot_mask(scene, data, affine, x, y, smoothing=smoothing,
+            cont_actor = plot_mask(scene, data, display_affine, x, y, smoothing=smoothing,
                                 color=color, opacity=1)
             scene.add(cont_actor)
 

@@ -1,6 +1,7 @@
 import numpy as np
 from fury import window
 
+from totalsegmentator import preview
 from totalsegmentator.rendering import (
     FURY_GE_2,
     SceneRenderer,
@@ -58,6 +59,37 @@ def test_offscreen_renderer_returns_requested_image_size():
 def test_volume_slice_is_available_on_both_fury_generations():
     data = np.arange(8 * 8 * 8, dtype=np.float32).reshape((8, 8, 8))
     assert volume_slice(data, np.eye(4), (0, data.max())) is not None
+
+
+def test_preview_roi_rendering_does_not_modify_input_affine(monkeypatch):
+    affine = np.eye(4)
+    affine[:3, 3] = (-226.0, -58.0, -908.0)
+    original_affine = affine.copy()
+    rendered_affines = []
+
+    class FakeScene:
+        def add(self, actor):
+            pass
+
+    def fake_plot_mask(scene, data, display_affine, x, y, **kwargs):
+        rendered_affines.append(display_affine.copy())
+        return object()
+
+    monkeypatch.setattr(preview, "plot_mask", fake_plot_mask)
+    preview.plot_roi_group(
+        None,
+        FakeScene(),
+        ["body_trunc"],
+        0,
+        0,
+        0,
+        np.ones((2, 2, 2), dtype=np.uint8),
+        affine,
+        "body",
+    )
+
+    np.testing.assert_array_equal(affine, original_affine)
+    np.testing.assert_array_equal(rendered_affines[0][:3, 3], np.zeros(3))
 
 
 def test_parallel_camera_tightly_fits_wide_scene():
