@@ -1,12 +1,10 @@
 # TotalSegmentator
 
-Tool for segmentation of most major anatomical structures in any CT or MR image. It was trained on a wide range of different CT and MR images (different scanners, institutions, protocols,...) and therefore works well on most images. A large part of the training dataset can be downloaded here: [CT dataset](https://doi.org/10.5281/zenodo.6802613) (1228 subjects) and [MR dataset](https://zenodo.org/doi/10.5281/zenodo.11367004) (616 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/) or as [3D Slicer extension](https://github.com/lassoan/SlicerTotalSegmentator).
+Tool for segmentation of most major anatomical structures in any CT or MR image. It was trained on a wide range of different CT and MR images (different scanners, institutions, protocols,...) and therefore works well on most images. A large part of the training dataset can be downloaded here: [CT dataset](https://doi.org/10.5281/zenodo.6802613) (1939 subjects) and [MR dataset](https://zenodo.org/doi/10.5281/zenodo.11367004) (1296 subjects). You can also try the tool online at [totalsegmentator.com](https://totalsegmentator.com/) or as [3D Slicer extension](https://github.com/lassoan/SlicerTotalSegmentator).
 
-**ANNOUNCEMENT: TotalSegmentator now can predict height, weight, age and sex: [totalseg_get_body_stats](#other-commands).**  
+**ANNOUNCEMENT: TotalSegmentator v3 has been released! See [improvements in v3](resources/improvements_in_v3.md) for more details.**
 
-**ANNOUNCEMENT: The new tasks `vertebrae_pp` will greatly improve vertebrae segmentations (less mixup of neighboring vertebrae).**  
-
-**ANNOUNCEMENT: We created web applications for [abdominal organ volume](https://compute.totalsegmentator.com/volume-report/), [aorta diameter](https://compute.totalsegmentator.com/aorta-report/), [spine report](https://compute.totalsegmentator.com/spine-report/), [pulmonary artery diameter](https://compute.totalsegmentator.com/pulmonary-report/), [contrast phase detection](https://compute.totalsegmentator.com/contrast-phase/) and [body weight prediction](https://compute.totalsegmentator.com/body-stats/).**
+**ANNOUNCEMENT: TotalSegmentator now can predict height, weight, age and sex: [totalseg_get_body_stats](#other-commands).**
 
 Main classes for CT and MR:
 ![Alt text](resources/imgs/overview_classes_v2.png)
@@ -19,14 +17,11 @@ If you use it please cite our [Radiology AI paper](https://pubs.rsna.org/doi/10.
 
 ### Installation
 
-TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU and GPU.
+TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU, GPU and MPS.
 
 Install dependencies:
 * Python >= 3.10
 * [PyTorch](http://pytorch.org/) >= 2.0.0
-
-Optionally:
-* if you use the option `--preview` you have to install fury (`pip install fury`). FURY <2 additionally requires xvfb (`apt-get install xvfb`).
 
 
 Install Totalsegmentator
@@ -357,7 +352,7 @@ Our Radiology AI publication refers to TotalSegmentator v1.
 
 ### Other
 * TotalSegmentator sends anonymous usage statistics to help us improve it further. You can deactivate it by setting `send_usage_stats` to `false` in `~/.totalsegmentator/config.json`.
-* At [changes and improvements](resources/improvements_in_v2.md) you can see an overview of differences between v1 and v2. For v3 see [changes and improvements](resources/improvements_in_v3.md) and [runtime measurements](resources/runtime.md).
+* At [changes and improvements](resources/improvements_in_v2.md) you can see an overview of differences between v1 and v2. For v3 see [changes and improvements](resources/improvements_in_v3.md).
 
 
 ### Reference
