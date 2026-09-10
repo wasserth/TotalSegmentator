@@ -327,6 +327,7 @@ roi_groups["total_v2"] = [
 roi_groups["total_highres"] = roi_groups["total"]
 roi_groups["total_v2_mr"] = roi_groups["total_mr"]
 roi_groups["vertebrae_pp_refined"] = roi_groups["vertebrae_pp"]
+roi_groups["appendicular_bones_highres"] = roi_groups["appendicular_bones"]
 
 
 

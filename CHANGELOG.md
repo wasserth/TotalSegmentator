@@ -14,6 +14,7 @@
 * speed up forward image resampling by running it through torch on the inference device instead of scipy on one CPU (thanks to [@mhalle](https://github.com/mhalle), [#606](https://github.com/wasserth/TotalSegmentator/pull/606)). Especially faster for higher-order interpolation (`-ro 3`). See [improved resampling](resources/improved_resampling.md). Remove the unused cupy/cucim resampling path.
 * change the default input image resampling order from 1 to 3 (cheap again with torch resampling).
 * add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm. Always crops to the body region (`--body_seg`).
+* add `appendicular_bones_highres` task: same classes as `appendicular_bones` at 0.75x0.75x1.0mm.
 * make `thigh_shoulder_muscles` and `thigh_shoulder_muscles_mr` openly available (Apache-2.0).
 
 

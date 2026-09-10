@@ -828,12 +828,15 @@ class_map["total_v2"][26] = "vertebrae_S1"
 class_map["total_highres"] = class_map["total"].copy()
 class_map["total_v2_mr"] = class_map["total_mr"].copy()
 class_map["vertebrae_pp_refined"] = class_map["vertebrae_pp"].copy()
+class_map["appendicular_bones_highres"] = class_map["appendicular_bones"].copy()
+class_map["appendicular_bones_highres_auxiliary"] = class_map["appendicular_bones_auxiliary"].copy()
 
 
 commercial_models = {
     "heartchambers_highres": 301,
     "total_highres": 841,
     "appendicular_bones": 838,
+    "appendicular_bones_highres": 848,
     "appendicular_bones_mr": 875,
     "tissue_types": 481,
     "tissue_types_mr": 925,

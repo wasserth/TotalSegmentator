@@ -8,6 +8,8 @@ In v3 we did the following improvements:
 
 * `total_highres` task: The `total` model is trained on images resampled to 1.5mm isotropic resolution which is a good trade-off between speed and accuracy for most use cases. However, for some cases a higher resolution is beneficial. For these cases you can use the `total_highres` model which is trained on images resampled to 0.75 x 0.75 x 1.0mm isotropic resolution. But be aware: This takes a lot more RAM, GPU memory and runtime! Do not run on big CT images.
 
+* `appendicular_bones_highres` task: Same classes as `appendicular_bones`, trained at 0.75 x 0.75 x 1.0mm. Takes more RAM, GPU memory and runtime than the 1.5mm model.
+
 If you need the same segmentation results as in v2, you can use the task `total_v2` and `total_mr_v2`. This runs the old models from v2.
 
 

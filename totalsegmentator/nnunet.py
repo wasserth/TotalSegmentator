@@ -911,7 +911,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         else:
             img_pred = nib.Nifti1Image(segmentations["s01"], img_in_rsp.affine)
 
-        # Currently only relevant for appendicular_bones / appendicular_bones_mr
+        # Currently only relevant for appendicular_bones / appendicular_bones_highres / appendicular_bones_mr
         img_pred = remove_auxiliary_labels(img_pred, task_name)
 
         # Postprocessing multilabel (run here on lower resolution)

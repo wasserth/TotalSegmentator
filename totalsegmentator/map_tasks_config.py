@@ -402,6 +402,15 @@ TASK_CONFIGS = {
         "disallow_fast": True,
         "commercial": True,
     },
+    "appendicular_bones_highres": {
+        "task_id": 848,
+        "resample": [0.75, 0.75, 1.0],
+        "trainer": "nnUNetTrainerNoMirroring",
+        "model": "3d_fullres_high",
+        "plans": "nnUNetResEncUNetLPlans_16",
+        "disallow_fast": True,
+        "commercial": True,
+    },
     "appendicular_bones_mr": {
         "task_id": 875,
         "resample": 1.5,
@@ -671,6 +680,7 @@ TASK_ID_WEIGHTS_CONFIGS = {
     # Commercial models
     304: {"foldername": "Dataset304_appendicular_bones_ext_1559subj"},
     838: {"foldername": "Dataset838_appendicular_bones_ext_1830subj"},
+    848: {"foldername": "Dataset848_appendicular_bones_ext_1830subj"},
     855: {"foldername": "Dataset855_TotalSegMRI_appendicular_bones_1088subj"},
     875: {"foldername": "Dataset875_TotalSegMRI_appendicular_bones_1751subj", "version": "v3.0.0-weights"},
     301: {"foldername": "Dataset301_heart_highres_1559subj"},

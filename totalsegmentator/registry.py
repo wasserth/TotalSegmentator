@@ -24,7 +24,7 @@ TASKS = [
     "lung_vessels", "lung_vessels_LEGACY", "cerebral_bleed", "hip_implant",
     "coronary_arteries", "coronary_arteries_LEGACY",
     "pleural_pericard_effusion", "test",
-    "appendicular_bones", "appendicular_bones_mr", "tissue_types", "heartchambers_highres",
+    "appendicular_bones", "appendicular_bones_highres", "appendicular_bones_mr", "tissue_types", "heartchambers_highres",
     "face", "vertebrae_body", "vertebrae_pp", "vertebrae_pp_refined", "total_mr", "total_v2_mr", "tissue_types_mr", "tissue_4_types", "face_mr",
     "head_glands_cavities", "head_muscles", "headneck_bones_vessels", "headneck_muscles",
     "brain_structures", "liver_vessels", "liver_lesions", "liver_lesions_mr", "oculomotor_muscles",

@@ -50,6 +50,7 @@ TASK_TO_ID = {
 
     "heartchambers_highres": [301],
     "appendicular_bones": [838],
+    "appendicular_bones_highres": [848],
     "appendicular_bones_mr": [875],
     "tissue_types": [481],
     "tissue_types_mr": [925],

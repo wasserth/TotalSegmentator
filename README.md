@@ -95,6 +95,7 @@ Available with a license (free licenses available for non-commercial usage [here
 * **total_highres**: same 117 classes as `total`, but at submillimeter resolution instead of 1.5mm
 * **heartchambers_highres**: myocardium, atrium_left, ventricle_left, atrium_right, ventricle_right, aorta, pulmonary_artery (trained on sub-millimeter resolution; [details](resources/heartchambers_highres_details.md))
 * **appendicular_bones**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius, carpal, metacarpal, phalanges_hand
+* **appendicular_bones_highres**: same classes as `appendicular_bones`, but at submillimeter resolution instead of 1.5mm
 * **appendicular_bones_mr**: patella, tibia, fibula, tarsal, metatarsal, phalanges_feet, ulna, radius (for MR images)
 * **tissue_types**: subcutaneous_fat, torso_fat, skeletal_muscle
 * **tissue_types_mr**: subcutaneous_fat, torso_fat, skeletal_muscle (for MR images; works on all sequences but for DIXON prefer F for subcut./torso fat and W for muscle as input)
