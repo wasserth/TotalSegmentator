@@ -96,6 +96,54 @@ CNN_TARGET_SPECS = {
     "convolution_kernel": {"training_name": "ConvolutionKernel", "unit": None},
     "pi_time": {"training_name": "pi_time", "unit": "seconds"},
 }
+# Percentiles 1..100 of the noise_p75 ground-truth labels in the CT and MR
+# training metadata. Keeping these thresholds avoids shipping the full distributions.
+NOISE_P75_PERCENTILE_THRESHOLDS = {
+    "ct": (
+        12.095225, 12.951233, 13.431103, 13.757826, 14.024527,
+        14.239496, 14.412836, 14.577277, 14.725867, 14.862330,
+        14.994176, 15.121742, 15.244726, 15.364225, 15.487177,
+        15.606385, 15.715878, 15.833665, 15.954161, 16.072548,
+        16.186419, 16.306599, 16.420442, 16.539103, 16.662221,
+        16.793742, 16.927378, 17.052381, 17.188283, 17.327827,
+        17.483740, 17.624877, 17.775298, 17.927968, 18.078786,
+        18.237175, 18.403087, 18.578980, 18.767521, 18.959801,
+        19.166984, 19.377470, 19.588418, 19.778613, 19.986834,
+        20.197207, 20.416613, 20.635383, 20.847664, 21.074429,
+        21.297093, 21.526358, 21.758964, 21.989398, 22.197797,
+        22.396830, 22.625699, 22.835976, 23.067498, 23.283584,
+        23.534020, 23.769373, 24.008777, 24.257263, 24.495209,
+        24.758905, 25.008165, 25.275879, 25.559635, 25.845138,
+        26.136702, 26.427474, 26.753170, 27.068452, 27.351467,
+        27.676692, 28.003057, 28.373379, 28.760517, 29.147455,
+        29.592680, 30.070547, 30.576670, 31.218671, 32.012370,
+        33.056704, 34.497820, 36.605619, 39.701429, 44.105218,
+        49.606735, 55.726270, 62.139485, 72.933242, 85.769629,
+        99.379865, 112.892474, 127.867560, 147.353229, 200.000000,
+    ),
+    "mr": (
+        1.123649, 5.351897, 6.395118, 7.226252, 7.966299,
+        8.597455, 9.158009, 9.624110, 10.077347, 10.472344,
+        10.849042, 11.228941, 11.560226, 11.870523, 12.188619,
+        12.517865, 12.807275, 13.108375, 13.401067, 13.700950,
+        13.990004, 14.262797, 14.537951, 14.826252, 15.090551,
+        15.374874, 15.631241, 15.892200, 16.160794, 16.464411,
+        16.731745, 16.999341, 17.269566, 17.526680, 17.799786,
+        18.073727, 18.360245, 18.650458, 18.953160, 19.263272,
+        19.585566, 19.894721, 20.230746, 20.585235, 20.924555,
+        21.249979, 21.639647, 22.009222, 22.389496, 22.778477,
+        23.183657, 23.564308, 23.947867, 24.323566, 24.686694,
+        25.033341, 25.400975, 25.757088, 26.043423, 26.353704,
+        26.637551, 26.920590, 27.253120, 27.527156, 27.795540,
+        28.050766, 28.337061, 28.597940, 28.862339, 29.137722,
+        29.399648, 29.668087, 29.922319, 30.218483, 30.499611,
+        30.811786, 31.116043, 31.453797, 31.777039, 32.121754,
+        32.478385, 32.847898, 33.244751, 33.606674, 34.025641,
+        34.519642, 35.000725, 35.511751, 36.045205, 36.597641,
+        37.247702, 37.894282, 38.626608, 39.446195, 40.367665,
+        41.577382, 42.879230, 44.249684, 45.411360, 50.000000,
+    ),
+}
 CNN_TRAINING_NAME_TO_TARGET = {
     spec["training_name"]: target for target, spec in CNN_TARGET_SPECS.items()
 }
@@ -903,6 +951,15 @@ def _format_regression_result(preds: np.ndarray, target: str) -> dict:
     return result
 
 
+def _get_noise_percentile(noise_value: float, modality: str) -> int | None:
+    """Return the 1-based percentile bucket for an estimated noise value."""
+    if not np.isfinite(noise_value):
+        return None
+    thresholds = NOISE_P75_PERCENTILE_THRESHOLDS[modality]
+    percentile = int(np.searchsorted(thresholds, noise_value, side="left")) + 1
+    return min(percentile, 100)
+
+
 def _format_all_body_stats(
     preds: np.ndarray, hparams: dict, modality: str | None = None
 ) -> dict:
@@ -918,7 +975,12 @@ def _format_all_body_stats(
         target_idx = _get_target_output_index(
             hparams, target, output_count, modality
         )
-        result[target] = _format_regression_result(preds[:, target_idx], target)
+        target_preds = preds[:, target_idx]
+        result[target] = _format_regression_result(target_preds, target)
+        if target == "noise" and modality is not None:
+            result[target]["percentile"] = _get_noise_percentile(
+                float(np.mean(target_preds)), modality
+            )
     return result
 
 

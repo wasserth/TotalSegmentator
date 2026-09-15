@@ -186,6 +186,7 @@ Noise labels are generated from local 10 mm patches in TotalSegmentator tissue m
 - For CT, the score combines absolute residual noise from skeletal muscle, subcutaneous fat, and torso fat.
 - For MR, residual noise is divided by local signal because MR intensity is arbitrarily scaled. Valid relative-noise patches are pooled across tissue regions.
 - The CNN predicts the 75th percentile so that locally noisy image regions influence the score. Higher values indicate more noise.
+- The `noise` output includes a `percentile` from 1 to 100, locating the estimate in the modality-specific training distribution.
 
 The table below shows training-set percentiles (57,291 CT and 43,200 MR examinations). CT and MR scores are not on the same scale and should not be compared across modalities.
 

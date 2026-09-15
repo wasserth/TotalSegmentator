@@ -80,7 +80,8 @@
         "unit": null,
         "min": 3.92,
         "max": 13.52,
-        "stddev": 3.269
+        "stddev": 3.269,
+        "percentile": 1
     },
     "bmi": {
         "value": 25.42,
