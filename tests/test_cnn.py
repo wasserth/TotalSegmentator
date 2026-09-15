@@ -4,10 +4,12 @@ import pytest
 from totalsegmentator.cnn import (
     CNN_MODEL_TARGET_ORDERS,
     NOISE_OUTLIER_THRESHOLD,
+    NOISE_P75_PERCENTILE_THRESHOLDS,
     _apply_regression_target_denormalization,
     _format_all_body_stats,
     _format_regression_result,
     _get_model_target_names,
+    _get_noise_percentile,
     _get_nr_classes,
     _validate_modality_and_target,
 )
@@ -103,6 +105,7 @@ def test_all_modality_targets_are_formatted(modality, expected_targets):
 
     assert list(result) == expected_targets
     assert result["noise"]["noise_outlier"] is False
+    assert 1 <= result["noise"]["percentile"] <= 100
 
 
 @pytest.mark.parametrize(
@@ -125,6 +128,18 @@ def test_noise_outlier_uses_percentile_cutoff(modality, noise_value, expected_ou
     assert result["noise"]["value"] == round(noise_value, 2)
     assert result["noise"]["noise_outlier"] is expected_outlier
     assert NOISE_OUTLIER_THRESHOLD[modality] == (147.0 if modality == "ct" else 45.0)
+
+
+@pytest.mark.parametrize("modality", ["ct", "mr"])
+def test_noise_percentile_thresholds_define_100_sorted_buckets(modality):
+    thresholds = NOISE_P75_PERCENTILE_THRESHOLDS[modality]
+
+    assert len(thresholds) == 100
+    assert all(left <= right for left, right in zip(thresholds, thresholds[1:]))
+    assert _get_noise_percentile(thresholds[49], modality) == 50
+    assert _get_noise_percentile(thresholds[49] + 1e-4, modality) == 51
+    assert _get_noise_percentile(thresholds[0] - 1, modality) == 1
+    assert _get_noise_percentile(thresholds[-1] + 1, modality) == 100
 
 
 def test_target_must_be_available_for_modality():

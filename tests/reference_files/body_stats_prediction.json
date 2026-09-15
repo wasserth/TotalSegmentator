@@ -86,6 +86,7 @@
         "min": 3.92,
         "max": 13.52,
         "stddev": 3.269,
+        "percentile": 1,
         "noise_outlier": false
     },
     "bmi": {
