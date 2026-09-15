@@ -50,3 +50,8 @@ For v3 we did not use a `validation` set anymore. There is only `train` and `tes
 
 * the start of the ribs close to the spine is always missing a small part
 * the GT segmentation of the colon/small_bowel is sometimes bad because the colon is so messy it is not possible to disentangle colon and small_bowel
+
+
+## Acknowledgments
+
+We want to thank Brian Derstine, Sven Holcombe, Murong Xu, Martin Segeroth, Paul Hehenkamp and Andrew Nicoli for their help in improving the labels for the improved `total` and `total_mr` models.
