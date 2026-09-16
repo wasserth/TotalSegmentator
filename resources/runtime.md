@@ -24,17 +24,18 @@ MPS:
 | **Default**                                                         |             |        |       |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 105 s       | 872 s  | 443 s |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`         | 95 s        | 313 s  | 133 s |
-| **Fast mode (`-f`)**                                                |             |        |       |
+| **Fast mode (**`-f`**)**                                            |             |        |       |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f`                | 25 s        | 57 s   | 26 s  |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small`      | 25 s        | 43 s   | 16 s  |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -sl`  | 17 s        | 34 s   | 15 s  |
-| **High-resolution (`-ta total_highres`)**                           |             |        |       |
+| **High-resolution (**`-ta total_highres`**)**                       |             |        |       |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 11 min 11 s |        |       |
-| **Higher-order resampling (`-ho`)**                                 |             |        |       |
+| **Higher-order resampling (**`-ho`**)**                             |             |        |       |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ho`               | 309 s       | 1039 s | 607 s |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small -ho`     | 312 s       | 679 s  | 303 s |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 68 s        | 95 s   | 59 s  |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 70 s        | 84 s   | 50 s  |
+
 
 
 
@@ -50,17 +51,18 @@ not directly comparable with the Linux RAM columns.
 | **Default**                                                         |                      |          |                      |                    |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 8.6 GB               | 7.1 GB   | 8.8 GB               | 12.2 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`         | 8.5 GB               | 8.1 GB   | 9.1 GB               | 11.9 GB            |
-| **Fast mode (`-f`)**                                                |                      |          |                      |                    |
+| **Fast mode (**`-f`**)**                                            |                      |          |                      |                    |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f`                | 5.6 GB               | 3.4 GB   | 6.5 GB               | 10.0 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small`      | 5.6 GB               | 2.9 GB   | 6.6 GB               | 9.1 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -sl`  | 5.6 GB               | 2.9 GB   | 6.7 GB               | 9.9 GB             |
-| **High-resolution (`-ta total_highres`)**                           |                      |          |                      |                    |
+| **High-resolution (**`-ta total_highres`**)**                       |                      |          |                      |                    |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 31.5 GB              | 23.4 GB  |                      |                    |
-| **Higher-order resampling (`-ho`)**                                 |                      |          |                      |                    |
+| **Higher-order resampling (**`-ho`**)**                             |                      |          |                      |                    |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ho`               | 10.3 GB              | 7.2 GB   | 10.0 GB              | 11.6 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small -ho`     | 10.1 GB              | 8.1 GB   | 9.6 GB               | 12.9 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 7.9 GB               | 5.0 GB   | 7.9 GB               | 8.7 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 7.9 GB               | 2.9 GB   | 7.8 GB               | 9.1 GB             |
+
 
 
 
@@ -73,7 +75,7 @@ and only the five lung-lobe classes. The first three commands also used
 
 `total_highres` was run without `--roi_subset` (it always body-crops, then predicts all classes).
 
-
+### Runtime
 | Command                                                             | GPU   | CPU    | MPS   |
 | ------------------------------------------------------------------- | ----- | ------ | ----- |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 23 s  | 37 s   | 21 s  |
@@ -82,12 +84,14 @@ and only the five lung-lobe classes. The first three commands also used
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 191 s | 1662 s | 847 s |
 
 
+### Memory
 | Command                                                             | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
 | ------------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 3.8 GB               | 2.4 GB   | 4.7 GB               | 6.5 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`         | 3.6 GB               | 4.7 GB   | 5.1 GB               | 7.3 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 4.0 GB               | 1.7 GB   | 4.7 GB               | 6.2 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 12.2 GB              | 9.3 GB   | 14.5 GB              | 18.5 GB            |
+
 
 
 
