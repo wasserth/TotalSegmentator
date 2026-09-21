@@ -2,6 +2,8 @@ import sys
 import json
 import subprocess
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -121,6 +123,58 @@ class TestTotalsegInfoCLI(unittest.TestCase):
 
 class TestRunReport(unittest.TestCase):
     """Tests for the run-report builder. Needs torch + nibabel (present in CI)."""
+
+    def test_build_run_report_single_nifti_output(self):
+        pytest.importorskip("torch")
+        pytest.importorskip("nibabel")
+        from totalsegmentator.python_api import build_run_report
+
+        with TemporaryDirectory() as tmpdir:
+            output = Path(tmpdir) / "segmentation.nii.gz"
+            output.touch()
+
+            report = build_run_report(
+                input="ct.nii.gz", output=output, task="total", device="cpu",
+                fast=False, fastest=False, ml=True, output_type="nifti",
+                roi_subset=None, runtime_seconds=0.0,
+            )
+
+            self.assertEqual(report["output_files"], [output.name])
+
+    def test_build_run_report_output_files(self):
+        pytest.importorskip("torch")
+        pytest.importorskip("nibabel")
+        from totalsegmentator.python_api import build_run_report
+
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            masks = root / "masks"
+            masks.mkdir()
+            for name in ("spleen.nii.gz", "liver.nii.gz", "statistics.json"):
+                (masks / name).touch()
+            empty = root / "empty"
+            empty.mkdir()
+            for name in ("segmentation.nii", "segmentation.nii.gz", "segmentation.dcm"):
+                (root / name).touch()
+
+            cases = [
+                ("directory", masks, False, "nifti", ["liver.nii.gz", "spleen.nii.gz"]),
+                ("empty_directory", empty, False, "nifti", []),
+                ("uncompressed", root / "segmentation.nii", True, "nifti", ["segmentation.nii"]),
+                ("string_path", str(root / "segmentation.nii.gz"), True, "nifti", ["segmentation.nii.gz"]),
+                ("missing", root / "missing.nii.gz", True, "nifti", []),
+                ("in_memory", None, True, "nifti", []),
+                ("dicom_seg", root / "segmentation.dcm", True, "dicom_seg", []),
+                ("dicom_rtstruct", root / "segmentation.dcm", True, "dicom_rtstruct", []),
+            ]
+            for name, output, ml, output_type, expected in cases:
+                with self.subTest(case=name):
+                    report = build_run_report(
+                        input="ct.nii.gz", output=output, task="total", device="cpu",
+                        fast=False, fastest=False, ml=ml, output_type=output_type,
+                        roi_subset=None, runtime_seconds=0.0,
+                    )
+                    self.assertEqual(report["output_files"], expected)
 
     def test_build_run_report(self):
         pytest.importorskip("torch")
