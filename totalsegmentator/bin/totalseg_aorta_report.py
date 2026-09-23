@@ -131,6 +131,8 @@ def _save_report(final_result, output_nifti, output_json):
 """
 Run for one test case:
 
+# Reuse existing masks:
+
 cd /mnt/nvme/data/test_data/aorta_report/28500925
 totalseg_aorta_report \
   -i ct_15mm.nii.gz \
@@ -144,6 +146,19 @@ totalseg_aorta_report \
   -a organ_aorta_T264.nii.gz \
   -an annulus.nii.gz \
   -d
+
+# Create new masks:
+cd /mnt/nvme/data/test_data/aorta_report/23950963
+totalseg_aorta_report \
+  -i ct.nii.gz \
+  -o aorta_report/aorta_report.nii.gz \
+  -j aorta_report/aorta_report.json \
+  -l aorta_report/aorta_report.txt \
+  -tmp tmp_aorta_report \
+  --run_models \
+  --erosion \
+  -d
+
 """
 def main():
     parser = _build_parser()

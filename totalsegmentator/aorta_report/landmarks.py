@@ -44,20 +44,25 @@ def create_structures():
 
 def build_centerline(aorta, annulus, affine, spacing, logger, debug=False):
     annulus_center = find_center(annulus)
-    if annulus_center is None:
-        raise ValueError("Unable to create a centerline because the annulus mask is empty.")
-
     aorta_smooth = smooth_mask(binary_dilation(aorta, iterations=4), sigma=6)
     centerline_image, centerline = get_centerline(aorta_smooth, debug=debug)
     centerline = reorder_centerline(centerline)
-    centerline_image, centerline = add_point_to_centerline(centerline_image, centerline, annulus_center)
-
-    extended_image, extended = extend_centerline(centerline_image, centerline, 1)
-    if annulus[tuple(centerline[-1].point.astype(int))]:
-        logger.info("  New annulus point is in annulus mask!")
-        centerline_image, centerline = extended_image, extended
+    if annulus_center is None:
+        logger.info(
+            "WARNING: Annulus mask is empty. Building the centerline without an annulus anchor."
+        )
     else:
-        logger.info("WARNING: New annulus point is not in annulus mask! Skipping the extension.")
+        centerline_image, centerline = add_point_to_centerline(
+            centerline_image, centerline, annulus_center
+        )
+        extended_image, extended = extend_centerline(centerline_image, centerline, 1)
+        if annulus[tuple(centerline[-1].point.astype(int))]:
+            logger.info("  New annulus point is in annulus mask!")
+            centerline_image, centerline = extended_image, extended
+        else:
+            logger.info(
+                "WARNING: New annulus point is not in annulus mask! Skipping the extension."
+            )
 
     if get_len_path_mm(centerline, spacing) < 2:
         logger.info("WARNING: Centerline is very short (<2mm). This may indicate issues with the input data.")
