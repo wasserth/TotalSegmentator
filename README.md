@@ -130,7 +130,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
-* `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
+* `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class. Incomplete structures receive zero by default (see [Typical problems](#typical-problems)).
 * `--statistics_extra`: In addition to volume and intensity, also compute `n_voxels`, intensity std/min/max and the morphometric `centroid_vox` and `bbox_vox` (voxel coordinates) for each class. Off by default to keep the statistics runtime unchanged.
 * `--higher_order_resampling`: Uses higher order upsampling of the segmentations. Smoother (especially for `--fast`) but slower.
 * `--resampling_order`: Spline interpolation order for input image resampling (default: 3). Setting this to 1 can speed up resampling with very similar segmentation accuracy.
@@ -318,6 +318,17 @@ In some cases the following kind of manual postprocessing might be useful:
 
 ### Typical problems
 
+**Zero volume and intensity despite a nonempty segmentation**
+
+By default, `--statistics` sets a structure's `volume` and `intensity` to zero if its mask reaches the image border region. These structures are treated as potentially incomplete.
+
+To calculate statistics for these structures as well, use:
+```bash
+TotalSegmentator -i ct.nii.gz -o seg --statistics --stats_include_incomplete
+```
+For the Python API use `statistics_exclude_masks_at_border=False`.
+
+
 **ITK loading Error**
 When you get the following error message
 ```text
@@ -334,6 +345,7 @@ fslorient -copysform2qform input_file
 [fslreorient2std input_file output_file]
 ```
 or use [this python command](https://github.com/MIC-DKFZ/nnDetection/issues/24#issuecomment-2627684467).
+
 
 **Bad segmentations**
 When you get bad segmentation results check the following:
