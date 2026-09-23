@@ -88,7 +88,7 @@ def build_run_report(input, output, task, device, fast, fastest, ml, output_type
 
     Pure function (no side effects): captures software versions, the resolved
     device, the run options, the classes produced (filtered by roi_subset when
-    set) and the files written to the output directory. Used by the
+    set) and the NIfTI output filenames. Used by the
     `--report` CLI option so that automation can verify and chain runs without
     parsing stdout.
     """
@@ -106,6 +106,8 @@ def build_run_report(input, output, task, device, fast, fastest, ml, output_type
     output_files = []
     if output is not None and Path(output).is_dir():
         output_files = sorted(p.name for p in Path(output).glob("*.nii.gz"))
+    elif output is not None and output_type == "nifti" and Path(output).is_file():
+        output_files = [Path(output).name]
 
     return {
         "totalsegmentator_version": package_version(),

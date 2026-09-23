@@ -68,7 +68,7 @@ Pass `--report <path.json>` to write a manifest after the run completes. It cont
 | `input`, `output` | resolved paths (or `"Nifti1Image"` for an in-memory input) |
 | `num_classes`, `classes` | classes produced (`index -> name`), filtered by `roi_subset` |
 | `runtime_seconds` | wall-clock segmentation time |
-| `output_files` | `*.nii.gz` files written to the output directory |
+| `output_files` | Basenames of `*.nii.gz` files in the output directory, or the existing single-file NIfTI output; empty when no output is saved |
 
 This lets a pipeline verify a run and chain the next step (e.g. feed `output_files` into
 `totalseg_combine_masks` or statistics) without parsing stdout.
