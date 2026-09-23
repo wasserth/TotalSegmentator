@@ -3,8 +3,10 @@ import numpy as np
 from PIL import Image
 
 from totalsegmentator.aorta_report.centerline import Vertex
+from totalsegmentator.aorta_report import landmarks as landmarks_module
 from totalsegmentator.aorta_report.landmarks import (
     attach_structure_anchors,
+    build_centerline,
     create_landmarks,
     create_structures,
 )
@@ -37,6 +39,28 @@ def test_sinotubular_junction_does_not_require_brachio_anchor():
     assert result["brachio"]["empty"]
     assert not result["sinotub_junc"]["empty"]
     assert result["sinotub_junc"]["cl_idx"] is not None
+
+
+def test_empty_annulus_still_builds_aorta_centerline(monkeypatch):
+    path = [Vertex((5, 5, z)) for z in range(4, 20)]
+    image = np.zeros((12, 12, 24), dtype=np.uint8)
+
+    def fake_get_centerline(data, debug=False):
+        return image.copy(), [Vertex(vertex.point.copy()) for vertex in path]
+
+    monkeypatch.setattr(landmarks_module, "get_centerline", fake_get_centerline)
+    aorta = np.zeros_like(image)
+    aorta[4:8, 4:8, 4:20] = 1
+    logger = _Logger()
+
+    _, centerline, resampled = build_centerline(
+        aorta, np.zeros_like(aorta), np.eye(4), (1, 1, 1), logger
+    )
+
+    assert len(centerline) == len(path)
+    assert np.array_equal(centerline[-1].point, path[-1].point)
+    assert len(resampled) > 10
+    assert any("Annulus mask is empty" in message for message in logger.messages)
 
 
 def test_empty_structure_dependencies_produce_empty_landmarks_without_index_errors():
