@@ -130,7 +130,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
 * `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
-* `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class.
+* `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class. Potentially incomplete structures receive zero values by default (see [Typical problems](#typical-problems)).
 * `--statistics_extra`: In addition to volume and intensity, also compute `n_voxels`, intensity std/min/max and the morphometric `centroid_vox` and `bbox_vox` (voxel coordinates) for each class. Off by default to keep the statistics runtime unchanged.
 * `--higher_order_resampling`: Uses higher order upsampling of the segmentations. Smoother (especially for `--fast`) but slower.
 * `--resampling_order`: Spline interpolation order for input image resampling (default: 1). Setting this to 3 may give slightly better segmentation accuracy at the cost of slower resampling.
@@ -315,6 +315,30 @@ In some cases the following kind of manual postprocessing might be useful:
 
 
 ### Typical problems
+
+**Zero volume and intensity despite a nonempty segmentation**
+
+By default, `--statistics` sets a structure's `volume` and `intensity` to zero if its mask reaches the image border region (the outer three voxels along any axis of the image used for statistics). These structures are treated as potentially incomplete. This does not remove the segmentation mask, and zero statistics do not necessarily mean that a structure is absent.
+
+To calculate statistics for these structures as well, use:
+```bash
+TotalSegmentator -i ct.nii.gz -o segmentations --statistics --stats_include_incomplete
+```
+
+With the Python API:
+```python
+from totalsegmentator.python_api import totalsegmentator
+
+if __name__ == "__main__":
+    seg_img, stats = totalsegmentator(
+        "ct.nii.gz",
+        "segmentations",
+        statistics=True,
+        statistics_exclude_masks_at_border=False,
+    )
+```
+
+The resulting statistics describe only the segmented portion within the image; they do not recover any missing anatomy or represent the full volume of a structure that is cut off.
 
 **ITK loading Error**
 When you get the following error message
