@@ -54,4 +54,4 @@ For v3 we did not use a `validation` set anymore. There is only `train` and `tes
 
 ## Acknowledgments
 
-We want to thank Brian Derstine, Sven Holcombe, Murong Xu, Martin Segeroth, Paul Hehenkamp and Andrew Nicoli for their help in improving the labels for the improved `total` and `total_mr` models.
+We want to thank Brian Derstine, Sven Holcombe, Murong Xu, Martin Segeroth, Michael Bach, Paul Hehenkamp and Andrew Nicoli for their help in improving the labels for the improved `total` and `total_mr` models.
