@@ -15,6 +15,7 @@ import tempfile
 import inspect
 import warnings
 import atexit
+import threading
 from copy import deepcopy
 from concurrent.futures import ThreadPoolExecutor
 
@@ -261,23 +262,7 @@ def _build_nnunetv2_predictor(task_id, model="3d_fullres", folds=None,
     """
     model_folder = get_output_folder(task_id, trainer, plans, model)
 
-    assert device in ['cpu', 'cuda',
-                           'mps'] or isinstance(device, torch.device), f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {device}.'
-    if device == 'cpu':
-        # let's allow torch to use hella threads
-        import multiprocessing
-        torch.set_num_threads(multiprocessing.cpu_count())
-        device = torch.device('cpu')
-    elif device == 'cuda':
-        # multithreading in torch doesn't help nnU-Net if run on GPU
-        torch.set_num_threads(1)
-        # torch.set_num_interop_threads(1)  # throws error if setting the second time
-        device = torch.device('cuda')
-    elif isinstance(device, torch.device):
-        torch.set_num_threads(1)
-        device = device
-    else:
-        device = torch.device('mps')
+    device = _configure_torch_device(device)
     disable_tta = not tta
     verbose = False
     chk = "checkpoint_final.pth"
@@ -328,6 +313,53 @@ def _create_nnunetv2_predictor(task_id, model="3d_fullres", folds=None,
         task_id, model, folds, trainer, tta, plans, device, quiet, step_size
     )
     return _initialize_nnunetv2_predictor(*predictor_setup)
+
+
+# Initialized predictors kept across calls when a caller opts in (keep_models=True): building the
+# network and loading its checkpoint is repeated on every call otherwise; reusing them saved 7 s
+# per `total` call on an A10 (measured). A cached predictor carries nothing from one image to the
+# next - nnU-Net loads the fold weights into the network on every prediction. Keyed by everything that shapes a predictor. Concurrent calls that
+# share a cached model are not supported; run them in one thread.
+def _configure_torch_device(device):
+    """The torch device for `device`, with torch's thread count set for it. Runs for every
+    prediction (a model from the keep_models cache included): the thread count is process-wide."""
+    assert device in ['cpu', 'cuda',
+                           'mps'] or isinstance(device, torch.device), f'-device must be either cpu, mps or cuda. Other devices are not tested/supported. Got: {device}.'
+    if device == 'cpu':
+        # let's allow torch to use hella threads
+        import multiprocessing
+        torch.set_num_threads(multiprocessing.cpu_count())
+        return torch.device('cpu')
+    elif device == 'cuda':
+        # multithreading in torch doesn't help nnU-Net if run on GPU
+        torch.set_num_threads(1)
+        # torch.set_num_interop_threads(1)  # throws error if setting the second time
+        return torch.device('cuda')
+    elif isinstance(device, torch.device):
+        torch.set_num_threads(1)
+        return device
+    else:
+        return torch.device('mps')
+
+
+_PREDICTOR_CACHE = {}
+_PREDICTOR_CACHE_LOCK = threading.Lock()
+
+
+def _predictor_key(task_id, model, folds, trainer, tta, plans, device, step_size):
+    return (task_id, model, None if folds is None else tuple(folds), trainer, bool(tta), plans,
+            str(device), float(step_size))
+
+
+def clear_model_cache():
+    """Release the models kept by keep_models=True (and their GPU memory)."""
+    with _PREDICTOR_CACHE_LOCK:
+        _PREDICTOR_CACHE.clear()
+    nnunet_predict_from_raw_data.compute_gaussian.cache_clear()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()
 
 
 def _shutdown_predictor_loader(executor, future, wait=True):
@@ -505,12 +537,15 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          normalized_intensities=False, higher_order_resampling_LEGACY=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
                          debug=False, save_lowres=False, resampling_order=3, plans="nnUNetPlans",
-                         vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False):
+                         vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False,
+                         keep_models=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
     resampling_order: interpolation order for input image resampling
     cascade: nibabel image or None
+    keep_models: keep the models loaded after this call, so the next call with the same task skips
+                 building and loading them. Holds their memory until clear_model_cache().
 
     output_type may be a string or a list of strings (multi-output support)
     """
@@ -674,8 +709,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         predictor_future = None
         predictor_future_task_id = None
         # With a roi_subset the list of multimodel parts is only known after filtering below.
-        if test == 0 and save_probabilities is None and (roi_subset is None or not multimodel):
-            predictor_future_task_id = task_id[0] if multimodel else task_id
+        first_task_id = task_id[0] if multimodel else task_id
+        first_cached = keep_models and _predictor_key(first_task_id, model, folds, trainer, tta, plans,
+                                                      device, step_size) in _PREDICTOR_CACHE
+        if (test == 0 and save_probabilities is None and (roi_subset is None or not multimodel)
+                and not first_cached):
+            predictor_future_task_id = first_task_id
             with nostdout(verbose):
                 predictor_setup = _build_nnunetv2_predictor(
                     predictor_future_task_id, model, folds, trainer, tta, plans, device, quiet, step_size
@@ -792,7 +831,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                     print(f"Predicting part {idx+1} of {len(task_ids)} ...")
                 try:
                     with nostdout(verbose):
-                        if predictor_future is not None and tid == predictor_future_task_id:
+                        key = _predictor_key(tid, model, folds, trainer, tta, plans, device, step_size)
+                        with _PREDICTOR_CACHE_LOCK:
+                            predictor = _PREDICTOR_CACHE.get(key) if keep_models else None
+                        if predictor is not None:
+                            _configure_torch_device(device)
+                        elif predictor_future is not None and tid == predictor_future_task_id:
                             predictor = predictor_future.result()
                             predictor_future = None
                             predictor_executor.shutdown(wait=False)
@@ -801,6 +845,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             predictor = _create_nnunetv2_predictor(
                                 tid, model, folds, trainer, tta, plans, device, quiet, step_size
                             )
+                        if keep_models:
+                            with _PREDICTOR_CACHE_LOCK:
+                                _PREDICTOR_CACHE[key] = predictor
                         signature = _preprocessing_signature(predictor)
                         if signature != cached_preprocessing_signature:
                             # Keep at most one preprocessed full volume. Consecutive
@@ -833,9 +880,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 finally:
                     if "predictor" in locals():
                         del predictor
-                    nnunet_predict_from_raw_data.compute_gaussian.cache_clear()
-                    if torch.cuda.is_available():
-                        torch.cuda.empty_cache()
+                    if not keep_models:
+                        # release the model's memory; with keep_models it stays in _PREDICTOR_CACHE
+                        nnunet_predict_from_raw_data.compute_gaussian.cache_clear()
+                        if torch.cuda.is_available():
+                            torch.cuda.empty_cache()
 
                 if multimodel:
                     # Map each part-model's local labels into the final TotalSegmentator labels.
