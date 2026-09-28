@@ -51,6 +51,7 @@ setup(name='TotalSegmentator',
             'tqdm>=4.45.0',
             'xvfbwrapper',
             'nnunetv2>=2.3.1',
+            'connected-components-3d',  # remove_small_blobs; nnU-Net brings it too (acvl-utils)
             'requests',
             'dicom2nifti',
             'pyarrow',
