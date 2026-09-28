@@ -147,6 +147,16 @@ def main():
                         help="Use cropped-logits resampling during nnU-Net export for lower memory usage.",
                         default=False)
 
+    smooth = parser.add_mutually_exclusive_group()
+    smooth.add_argument("-nl", "--nearest_labels", action="store_const", dest="smooth_labels", const=False,
+                        help="Upsample the label map to the input resolution with nearest neighbor (blocky at the "
+                             "model's voxel size), as TotalSegmentator did before smooth labels became the default.")
+    smooth.add_argument("-sm", "--smooth_labels", action="store_const", dest="smooth_labels", const=True,
+                        help="Require smooth label maps: each model's logits are interpolated onto the input grid. "
+                             "The default wherever they apply once the optional labelfield package is installed; "
+                             "this flag raises where they cannot apply or labelfield is missing.")
+    parser.set_defaults(smooth_labels="auto")
+
     parser.add_argument("-s", "--statistics", nargs='?', const=True, default=False,
                         metavar="filepath",
                         help="Calc volume (in mm3) and mean intensity. Results will be in statistics.json in the output directory. Optionally specify a custom output path for statistics.json.")
@@ -294,7 +304,8 @@ def main():
                      higher_order_resampling=args.higher_order_resampling,
                      save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
                      statistics_extra=args.statistics_extra, save_lowres=args.save_lowres,
-                     resampling_order=args.resampling_order, model_size=args.model_size)
+                     resampling_order=args.resampling_order, model_size=args.model_size,
+                     smooth_labels=args.smooth_labels)
 
 
 if __name__ == '__main__':

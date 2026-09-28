@@ -362,6 +362,38 @@ def clear_model_cache():
         torch.mps.empty_cache()
 
 
+def resolve_smooth_labels(smooth_labels, *, resample, save_lowres=False, higher_order_resampling_LEGACY=False,
+                          save_probabilities=None, test=0):
+    """What smooth_labels means for this call: False, "linear" or "nearest".
+
+    "auto" (the default of totalsegmentator()) is smooth wherever it applies - a task that
+    resamples, an output at input resolution, none of higher_order_resampling_LEGACY,
+    save_probabilities or a test mode, and the labelfield package installed (an optional
+    dependency) - and the nearest-neighbor upsample otherwise, silently. True asks for it and raises where it cannot apply; "nearest"
+    runs the same path with nearest interpolation (it reproduces the default upsampled labels
+    exactly where nnU-Net's own resample is the identity; postprocessing then runs on the input
+    grid, so -rmb, vertebrae_pp and body can differ from the default at a few boundary voxels).
+    """
+    if smooth_labels in (False, None):
+        return False
+    applies = (resample is not None and not save_lowres and not higher_order_resampling_LEGACY
+               and save_probabilities is None and test == 0)
+    if smooth_labels == "auto":
+        if not applies:
+            return False
+        try:
+            import labelfield  # noqa: F401
+        except ImportError:
+            return False
+        return "linear"
+    if resample is None or save_lowres:
+        raise ValueError("smooth_labels needs a task that resamples, and an output at input resolution.")
+    if higher_order_resampling_LEGACY or save_probabilities is not None or test != 0:
+        raise ValueError("smooth_labels is not supported together with higher_order_resampling_LEGACY, "
+                         "save_probabilities or test mode.")
+    return "nearest" if smooth_labels == "nearest" else "linear"
+
+
 def _shutdown_predictor_loader(executor, future, wait=True):
     if future is not None:
         future.cancel()
@@ -493,8 +525,11 @@ def _logits_to_segmentation(predictor, logits, properties, slab_bytes=1 << 30):
 
 
 def _predict_preprocessed_nnunet_array(predictor, data, properties,
-                                       use_cropped_logits_resampling=False):
+                                       use_cropped_logits_resampling=False, on_logits=None):
     logits = predictor.predict_logits_from_preprocessed_data(data).cpu()
+    if on_logits is not None:
+        # The one moment the logits exist: smooth label maps are painted from them here.
+        on_logits(logits, properties)
     segmentation = None
     if not use_cropped_logits_resampling:
         segmentation = _logits_to_segmentation(predictor, logits, properties)
@@ -526,6 +561,48 @@ def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_ta
         subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
 
 
+def _postprocess_multilabel(img_pred, task_name, remove_small_blobs, quiet=False, verbose=False):
+    """
+    The multilabel postprocessing of a prediction, on whatever grid img_pred is on: the model grid
+    by default, the input grid with smooth label maps or higher_order_resampling. Sizes are in mm3
+    and converted with img_pred's own voxel size, so the same thresholds hold on either grid.
+    """
+    # Postprocessing multilabel
+    if task_name == "body":
+        img_pred_pp = keep_largest_blob_multilabel(np.asanyarray(img_pred.dataobj).astype(np.uint8),
+                                                   class_map[task_name], ["body_trunc"], debug=False, quiet=quiet)
+        img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+
+    if task_name == "body":
+        vox_vol = np.prod(img_pred.header.get_zooms())
+        size_thr_mm3 = 50000
+        img_pred_pp = remove_small_blobs_multilabel(np.asanyarray(img_pred.dataobj).astype(np.uint8),
+                                                    class_map[task_name], ["body_extremities"],
+                                                    interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)
+        img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+
+    if task_name == "vertebrae_pp":
+        voxel_spacing = img_pred.header.get_zooms()
+        vox_vol = np.prod(img_pred.header.get_zooms())
+        img_pred_pp = postprocess_vertebrae_pp(np.asanyarray(img_pred.dataobj).astype(np.uint8),
+                                               class_map[task_name], voxel_volume=vox_vol,
+                                               voxel_spacing=voxel_spacing, verbose=verbose)
+        img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+    
+    # General postprocessing    
+    if remove_small_blobs:
+        if not quiet: print("Removing small blobs...")
+        st = time.time()
+        vox_vol = np.prod(img_pred.header.get_zooms())
+        size_thr_mm3 = 200 if remove_small_blobs is True else remove_small_blobs
+        img_pred_pp = remove_small_blobs_multilabel(np.asanyarray(img_pred.dataobj).astype(np.uint8),
+                                                    class_map[task_name], list(class_map[task_name].values()),
+                                                    interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)
+        img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
+        if not quiet: print(f"  Removed in {time.time() - st:.2f}s")
+    return img_pred
+
+
 def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_id, model="3d_fullres", folds=None,
                          trainer="nnUNetTrainerV2", tta=False, multilabel_image=True,
                          resample=None, crop=None, crop_path=None, task_name="total", nora_tag="None", preview=False,
@@ -538,12 +615,16 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
                          debug=False, save_lowres=False, resampling_order=3, plans="nnUNetPlans",
                          vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False,
-                         keep_models=False):
+                         smooth_labels=False, keep_models=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
     resampling_order: interpolation order for input image resampling
     cascade: nibabel image or None
+    smooth_labels: interpolate each model's logits onto the input grid instead of upsampling the
+                   label map with nearest neighbor (see smooth_labels.py): False, True, "auto"
+                   (smooth wherever it applies; resolve_smooth_labels) or "nearest" (the same path
+                   with nearest interpolation, which reproduces the nearest-neighbor output).
     keep_models: keep the models loaded after this call, so the next call with the same task skips
                  building and loading them. Holds their memory until clear_model_cache().
 
@@ -600,7 +681,11 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
     if save_lowres and crop is not None:
         raise ValueError("save_lowres is not supported together with cropping or roi_subset.")
-    
+
+    smooth_labels = resolve_smooth_labels(smooth_labels, resample=resample, save_lowres=save_lowres,
+                                          higher_order_resampling_LEGACY=higher_order_resampling_LEGACY,
+                                          save_probabilities=save_probabilities, test=test)
+
     if v1_order and task_name in ["total", "total_v2"]:
         label_map = class_map["total_v1"]
     else:
@@ -814,6 +899,21 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             cached_preprocessing_signature = None
             cached_preprocessed_inputs = None
 
+            smooth = None
+            if smooth_labels:
+                from totalsegmentator.smooth_labels import SmoothComposite
+                smooth = SmoothComposite(img_in.shape, img_in_rsp.shape, device,
+                                         interp=smooth_labels)
+                # (first model plane, planes this piece is responsible for) - the triple split's
+                # pieces and the ranges its reassembly keeps, so the seams fall where they do now
+                n_z = img_in_rsp.shape[2]
+                if do_triple_split:
+                    smooth_pieces = {"s01": (0, (0, third)),
+                                     "s02": (third + 1 - margin, (third, third * 2)),
+                                     "s03": (third * 2 + 1 - margin, (third * 2, n_z))}
+                else:
+                    smooth_pieces = {"s01": (0, (0, n_z))}
+
             if multimodel:
                 class_map_inv = {v: k for k, v in class_map[task_name].items()}
                 segmentations = {
@@ -859,12 +959,26 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                                 for img_part, (data, properties) in raw_inputs.items()
                             }
                             cached_preprocessing_signature = signature
+                        painters = {}
+                        if smooth is not None:
+                            if tuple(predictor.plans_manager.transpose_forward) != (0, 1, 2):
+                                raise ValueError("smooth_labels does not support models that transpose their input.")
+                            smooth_lut = None
+                            if multimodel:
+                                part_map = class_map_parts[map_taskid_to_partname[tid]]
+                                smooth_lut = np.zeros(max(part_map.keys()) + 1, dtype=np.int64)
+                                for local_label, class_name in part_map.items():
+                                    smooth_lut[local_label] = class_map_inv[class_name]
+                            for img_part, (z_offset, keep) in smooth_pieces.items():
+                                painters[img_part] = partial(smooth.paint, lut=smooth_lut,
+                                                             z_offset=z_offset, keep=keep)
                         predicted_parts = {
                             img_part: _predict_preprocessed_nnunet_array(
                                 predictor,
                                 preprocessed,
                                 properties,
                                 use_cropped_logits_resampling,
+                                on_logits=painters.get(img_part),
                             )
                             for img_part, (preprocessed, properties)
                             in cached_preprocessed_inputs.items()
@@ -994,39 +1108,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         # Currently only relevant for appendicular_bones / appendicular_bones_highres / appendicular_bones_mr
         img_pred = remove_auxiliary_labels(img_pred, task_name)
 
-        # Postprocessing multilabel (run here on lower resolution)
-        if task_name == "body":
-            img_pred_pp = keep_largest_blob_multilabel(img_pred.get_fdata().astype(np.uint8),
-                                                       class_map[task_name], ["body_trunc"], debug=False, quiet=quiet)
-            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
-
-        if task_name == "body":
-            vox_vol = np.prod(img_pred.header.get_zooms())
-            size_thr_mm3 = 50000
-            img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
-                                                        class_map[task_name], ["body_extremities"],
-                                                        interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)
-            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
-
-        if task_name == "vertebrae_pp":
-            voxel_spacing = img_pred.header.get_zooms()
-            vox_vol = np.prod(img_pred.header.get_zooms())
-            img_pred_pp = postprocess_vertebrae_pp(img_pred.get_fdata().astype(np.uint8),
-                                                   class_map[task_name], voxel_volume=vox_vol,
-                                                   voxel_spacing=voxel_spacing, verbose=verbose)
-            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
-        
-        # General postprocessing    
-        if remove_small_blobs:
-            if not quiet: print("Removing small blobs...")
-            st = time.time()
-            vox_vol = np.prod(img_pred.header.get_zooms())
-            size_thr_mm3 = 200 if remove_small_blobs is True else remove_small_blobs
-            img_pred_pp = remove_small_blobs_multilabel(img_pred.get_fdata().astype(np.uint8),
-                                                        class_map[task_name], list(class_map[task_name].values()),
-                                                        interval=[size_thr_mm3/vox_vol, 1e10], debug=False, quiet=quiet)  # ~24s
-            img_pred = nib.Nifti1Image(img_pred_pp, img_pred.affine)
-            if not quiet: print(f"  Removed in {time.time() - st:.2f}s")
+        img_pred = _postprocess_multilabel(img_pred, task_name, remove_small_blobs, quiet, verbose)
 
         preview_after_refinement = preview and output_task_name == "vertebrae_pp_refined" and vertebrae_body_mask is not None
         if preview and not preview_after_refinement:
@@ -1073,7 +1155,14 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                                          normalized_intensities=normalized_intensities)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
-        if resample is not None and not save_lowres:
+        if smooth_labels:
+            # Already on the input grid: painted from each model's logits during prediction.
+            # Statistics and the preview above used the model-grid labels, as they do by default.
+            img_pred = remove_auxiliary_labels(nib.Nifti1Image(smooth.result(), img_in.affine), task_name)
+            del smooth
+            # the postprocessing again, on the input grid - as higher_order_resampling runs it
+            img_pred = _postprocess_multilabel(img_pred, task_name, remove_small_blobs, quiet, verbose)
+        elif resample is not None and not save_lowres:
             if not quiet: print("Resampling...")
             if verbose: print(f"  back to original shape: {img_in_shape}")
             # Use force_affine otherwise output affine sometimes slightly off (which then is even increased
