@@ -1,4 +1,5 @@
 ## Master
+* smooth label maps: with the optional `labelfield` package installed, each model's logits are interpolated onto the input grid on the device and composited there, instead of upsampling the label map with nearest neighbor (about 2 % slower for `total` on an A10). On by default where it applies (`smooth_labels="auto"`); without labelfield, and with `--nearest_labels` / `-nl`, the output is the previous one exactly. `-sm` asks for it explicitly. Not used with `--save_lowres`, `-ho`, `--save_probabilities`, or tasks that do not resample. In smooth mode postprocessing (`-rmb`, body, vertebrae) runs on the input grid.
 
 
 ## Release 3.0.0 (XX.09.2026)

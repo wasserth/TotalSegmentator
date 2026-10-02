@@ -212,12 +212,21 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      robust_crop=False, higher_order_resampling_LEGACY=False, higher_order_resampling=False,
                      save_probabilities=None,
                      debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=3,
-                     plans="nnUNetPlans", model_size="big"):
+                     plans="nnUNetPlans", model_size="big", smooth_labels="auto", keep_models=False):
     """
     Run TotalSegmentator from within python.
 
     For explanation of the arguments see description of command line
     arguments in bin/TotalSegmentator.
+
+    smooth_labels: "auto" (default) interpolates each model's logits onto the input grid wherever
+    that applies, and upsamples the label map with nearest neighbor elsewhere; False always upsamples
+    with nearest neighbor (the output of TotalSegmentator before smooth labels); True requires smooth
+    labels and raises where they cannot apply.
+
+    keep_models: keep the models loaded after this call, so later calls with the same task skip
+    building and loading them (7 s per `total` call on an A10, measured). Their memory stays held until
+    clear_model_cache(). For batch scripts and servers; one call in a process gains nothing.
 
     Return: multilabel Nifti1Image
     """
@@ -343,6 +352,11 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         raise ValueError("save_lowres cannot be used together with --higher_order_resampling "
                          "(higher-order resampling upsamples to the input resolution).")
 
+    if smooth_labels not in ("auto", False, None) and (higher_order_resampling or higher_order_resampling_LEGACY
+                                                       or save_lowres):
+        raise ValueError("smooth_labels cannot be used together with --higher_order_resampling, "
+                         "--higher_order_resampling_LEGACY or --save_lowres.")
+
     if higher_order_resampling:
         resample = None
         save_lowres = False
@@ -422,7 +436,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                                 crop=None, crop_path=None, task_name=crop_task, nora_tag="None", preview=False,
                                 save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                                 crop_addon=None, output_type=output_type, statistics=False,
-                                quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device,
+                                quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device, keep_models=keep_models,
                                 debug=debug, resampling_order=resampling_order)
             class_map_inv = {v: k for k, v in class_map[crop_task].items()}
             
@@ -430,7 +444,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
             # If crop_model is specified, run totalsegmentator for the crop model
             organ_seg = totalsegmentator(input, None, task=crop_model, nr_thr_resamp=nr_thr_resamp, 
                                          device=convert_device_to_string(device), quiet=quiet, verbose=verbose,
-                                         resampling_order=resampling_order)
+                                         resampling_order=resampling_order, smooth_labels=False,
+                                         keep_models=keep_models)
             class_map_inv = {v: k for k, v in class_map[crop_model].items()}
 
         crop_mask = np.zeros(organ_seg.shape, dtype=np.uint8)
@@ -462,7 +477,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False,
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type=output_type, statistics=False,
-                            quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device,
+                            quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device, keep_models=keep_models,
                             debug=debug, resampling_order=resampling_order)
         crop = body_seg
         if verbose: print(f"Rough body segmentation generated in {time.time()-st:.2f}s")
@@ -476,7 +491,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             crop=None, crop_path=None, task_name="vertebrae_body", nora_tag="None", preview=False,
                             save_binary=False, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,
                             crop_addon=crop_addon, output_type="nifti", statistics=False,
-                            quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device,
+                            quiet=quiet, verbose=verbose, test=0, skip_saving=False, device=device, keep_models=keep_models,
                             debug=debug, resampling_order=resampling_order,
                             use_cropped_logits_resampling=higher_order_resampling)
         if verbose: print(f"Vertebrae body mask generated in {time.time()-st:.2f}s")
@@ -488,7 +503,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             nr_threads_resampling=nr_thr_resamp, nr_threads_saving=nr_thr_saving,
                             force_split=force_split, crop_addon=crop_addon, roi_subset=roi_subset,
                             output_type=output_type, statistics=statistics_fast,
-                            quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device,
+                            quiet=quiet, verbose=verbose, test=test, skip_saving=skip_saving, device=device, keep_models=keep_models,
                             exclude_masks_at_border=statistics_exclude_masks_at_border,
                             no_derived_masks=no_derived_masks, v1_order=v1_order,
                             stats_aggregation=stats_aggregation, remove_small_blobs=remove_small_blobs,
@@ -499,7 +514,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             debug=debug, save_lowres=save_lowres,
                             resampling_order=resampling_order, plans=plans,
                             vertebrae_body_mask=vertebrae_body_mask, output_task_name=task,
-                            use_cropped_logits_resampling=higher_order_resampling)
+                            use_cropped_logits_resampling=higher_order_resampling,
+                            smooth_labels=smooth_labels)
     try:
         # this can result in error if running multiple processes in parallel because all try to write the same file.
         # Trying to fix with lock from portalocker did not work. Network drive seems to not support this locking.
@@ -572,3 +588,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     else:
         return seg_img
 
+
+def clear_model_cache():
+    """Release the models kept by totalsegmentator(..., keep_models=True), and their GPU memory."""
+    from totalsegmentator.nnunet import clear_model_cache as clear
+    clear()
