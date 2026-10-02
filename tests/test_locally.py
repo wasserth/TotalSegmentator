@@ -126,6 +126,16 @@ def start_monitors():
     gpu_util_thread.daemon = True
     gpu_util_thread.start()
 
+def _is_empty_log_value(value):
+    if value is None:
+        return True
+    if isinstance(value, str):
+        return value == ""
+    if isinstance(value, (float, np.floating)):
+        return np.isnan(value)
+    return False
+
+
 def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
     if last_log is None or new_log is None:
         print("Cannot compare logs because one of them is None.")
@@ -140,6 +150,14 @@ def are_logs_similar(last_log, new_log, cols, tolerance_percent=0.04):
 
     identical = True
     for old_value, new_value, col in zip(last_log, new_log, cols):
+        old_empty = _is_empty_log_value(old_value)
+        new_empty = _is_empty_log_value(new_value)
+        if old_empty and new_empty:
+            continue
+        if (old_empty or new_empty) and col != "comment":
+            print(f"  Difference in {col}: {old_value} != {new_value}")
+            identical = False
+            continue
         # Check string values for equality
         if isinstance(old_value, str) and isinstance(new_value, str):
             if old_value != new_value and col != "comment":
@@ -185,6 +203,7 @@ if __name__ == "__main__":
     device = "gpu"  # "cpu" or "gpu"
 
     debug = False
+    calc_surface_dice = False
 
     for resolution in ["15mm", "3mm"]:
     # for resolution in ["3mm"]:
@@ -219,11 +238,13 @@ if __name__ == "__main__":
 
         print("Calc metrics...")
         subjects = [s.name.split(".")[0] for s in subjects]
-        res = [calc_metrics(s, gt_dir, pred_dir, class_map["total"]) for s in subjects]
+        res = [calc_metrics(s, gt_dir, pred_dir, class_map["total"],
+                            calc_surface_dice=calc_surface_dice) for s in subjects]
         res = pd.DataFrame(res)
 
         print("Aggregate metrics...")
-        for metric in ["dice", "surface_dice_3"]:
+        metrics = ["dice", "surface_dice_3"] if calc_surface_dice else ["dice"]
+        for metric in metrics:
             res_all_rois = {}
             for roi_name in class_map["total"].values():
                 row_wo_nan = res[f"{metric}-{roi_name}"].dropna()
@@ -234,6 +255,8 @@ if __name__ == "__main__":
             #     for k, v in res_all_rois.items():
             #         print(f"{k}: {v:.3f}")
             scores[resolution][metric] = np.nanmean(list(res_all_rois.values())).round(3)  # mean over all rois
+        if not calc_surface_dice:
+            scores[resolution]["surface_dice_3"] = None
 
     scores = dict(scores)
     times = dict(times)
