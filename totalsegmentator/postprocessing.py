@@ -83,18 +83,38 @@ def remove_small_blobs_multilabel(data, class_map, rois, interval=[10, 30], debu
     rois: list of labels where to filter for the largest blob
 
     return multilabel image (np.array)
+
+    The same result as running remove_small_blobs on each roi's binary mask (face connectivity,
+    blobs with size <= interval[0] or > interval[1] set to 0), in one pass: the connected
+    components of equal labels are the per-class blobs. connected-components-3d comes with
+    nnU-Net (via acvl-utils).
     """
-    st = time.time()
+    import cc3d
+
     class_map_inv = {v: k for k, v in class_map.items()}
-
-    for roi in tqdm(rois, disable=quiet):
-        idx = class_map_inv[roi]
-        data_roi = (data == idx)
-        cleaned_roi = remove_small_blobs(data_roi, interval, debug) > 0.5  # Remove small blobs from this ROI
-        data[data_roi] = 0  # Clear the original ROI in data
-        data[cleaned_roi] = idx  # Write back the cleaned ROI into data
-
-    # print(f"  remove_small_blobs_multilabel took {time.time() - st:.2f}s")
+    roi_labels = {class_map_inv[roi] for roi in rois}
+    if data.size == 0:
+        return data
+    lo, hi = int(data.min()), int(data.max())
+    # every label the image can hold (-rmb): one labeling of the whole image. Otherwise (body,
+    # negative labels) only the rois' voxels are labeled; that path is always correct.
+    if lo >= 0 and hi <= len(roi_labels) and roi_labels >= set(range(1, hi + 1)):
+        blobs, n = cc3d.connected_components(data, connectivity=6, return_N=True)
+    else:                                                    # only some (body): the others are not blobs
+        in_rois = np.isin(data, np.array(sorted(roi_labels), dtype=data.dtype))
+        blobs, n = cc3d.connected_components(np.where(in_rois, data, 0), connectivity=6, return_N=True)
+    if n == 0:
+        return data
+    # blob sizes, in slabs: np.bincount casts its input to int64, a full-volume copy otherwise
+    flat = blobs.ravel()
+    counts = np.zeros(n + 1, dtype=np.int64)
+    for start in range(0, flat.size, 1 << 22):
+        counts += np.bincount(flat[start:start + (1 << 22)], minlength=n + 1)
+    remove = (counts <= interval[0]) | (counts > interval[1])
+    remove[0] = False                                   # background, and every label not in rois
+    if debug:
+        print(f"blobs: {len(counts) - 1}, removed: {int(remove.sum())}")
+    data[remove[blobs]] = 0
     return data
 
 
