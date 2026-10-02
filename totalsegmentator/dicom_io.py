@@ -13,6 +13,8 @@ from tqdm import tqdm
 import numpy as np
 import nibabel as nib
 import dicom2nifti
+import dicom2nifti.settings as dicom2nifti_settings
+from dicom2nifti.exceptions import ConversionValidationError
 
 from totalsegmentator.config import get_weights_dir
 from totalsegmentator.dicom_utils import rgb_to_cielab_dicom, generate_random_color, load_snomed_mapping, load_color_mapping
@@ -291,8 +293,21 @@ def dcm_to_nifti(input_path, output_path, tmp_dir=None, verbose=False):
             zip_ref.extractall(extract_dir)
             input_path = extract_dir
 
-    # Convert to nifti
-    dicom2nifti.dicom_series_to_nifti(input_path, output_path, reorient_nifti=True)
+    try:
+        dicom2nifti.dicom_series_to_nifti(input_path, output_path, reorient_nifti=True)
+    except ConversionValidationError as e:
+        if "GANTRY_TILT" not in str(e):
+            raise
+        # Keep the original voxel grid (the tilt is stored as shear in the affine) instead of
+        # resampling, so the segmentation still maps 1:1 onto the source slices for DICOM SEG
+        # and RTSTRUCT output.
+        print("WARNING: DICOM series has gantry tilt (non-orthogonal slices). Converting without "
+              "resampling; the tilt is encoded in the NIfTI affine.")
+        dicom2nifti_settings.disable_validate_orthogonal()
+        try:
+            dicom2nifti.dicom_series_to_nifti(input_path, output_path, reorient_nifti=True)
+        finally:
+            dicom2nifti_settings.enable_validate_orthogonal()
 
 
 def detect_dicom_modality(series_path: Path) -> str | None:
