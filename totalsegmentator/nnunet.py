@@ -433,18 +433,49 @@ def _preprocess_nnunet_array(predictor, data, properties):
     return torch.from_numpy(preprocessed), data_properties
 
 
+def _logits_to_segmentation(predictor, logits, properties, slab_bytes=1 << 30):
+    """
+    nnU-Net's export (convert_predicted_logits_to_segmentation_with_correct_shape) for the case
+    TotalSegmentator almost always hits - a softmax model whose logits need no resampling, because
+    the input already has the model's spacing - with the argmax in torch on the prediction device,
+    in slabs, instead of numpy on one CPU core. numpy has no fast float16 argmax: it took 18 s of a
+    69 s `total` run on an A10. Same labels: both take the first maximum. Returns None where
+    nnU-Net's own export is needed (regions, resampling).
+    """
+    label_manager = predictor.label_manager
+    if label_manager.has_regions:
+        return None
+    if tuple(logits.shape[1:]) != tuple(properties["shape_after_cropping_and_before_resampling"]):
+        return None
+    dtype = np.uint8 if len(label_manager.foreground_labels) < 255 else np.uint16
+    K, Z, Y, X = (int(s) for s in logits.shape)
+    planes = max(1, slab_bytes // max(1, K * Y * X * logits.element_size()))
+    cropped = np.empty((Z, Y, X), dtype=dtype)
+    for z in range(0, Z, planes):
+        best = logits[:, z:z + planes].to(predictor.device).argmax(0)
+        cropped[z:z + planes] = best.cpu().numpy().astype(dtype, copy=False)
+    segmentation = np.zeros(properties["shape_before_cropping"], dtype=dtype)
+    bbox = properties["bbox_used_for_cropping"]
+    segmentation[tuple(slice(b[0], b[1]) for b in bbox)] = cropped
+    return segmentation.transpose(predictor.plans_manager.transpose_backward)
+
+
 def _predict_preprocessed_nnunet_array(predictor, data, properties,
                                        use_cropped_logits_resampling=False):
     logits = predictor.predict_logits_from_preprocessed_data(data).cpu()
-    segmentation = convert_predicted_logits_to_segmentation_with_correct_shape(
-        logits,
-        predictor.plans_manager,
-        predictor.configuration_manager,
-        predictor.label_manager,
-        properties,
-        return_probabilities=False,
-        use_cropped_logits_resampling=use_cropped_logits_resampling,
-    )
+    segmentation = None
+    if not use_cropped_logits_resampling:
+        segmentation = _logits_to_segmentation(predictor, logits, properties)
+    if segmentation is None:
+        segmentation = convert_predicted_logits_to_segmentation_with_correct_shape(
+            logits,
+            predictor.plans_manager,
+            predictor.configuration_manager,
+            predictor.label_manager,
+            properties,
+            return_probabilities=False,
+            use_cropped_logits_resampling=use_cropped_logits_resampling,
+        )
     del logits
     # nnU-Net arrays use ZYX. TotalSegmentator/nibabel uses XYZ.
     return np.asarray(segmentation).transpose((2, 1, 0))
