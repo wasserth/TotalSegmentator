@@ -44,8 +44,28 @@ def create_structures():
 
 def build_centerline(aorta, annulus, affine, spacing, logger, debug=False):
     annulus_center = find_center(annulus)
-    aorta_smooth = smooth_mask(binary_dilation(aorta, iterations=4), sigma=6)
-    centerline_image, centerline = get_centerline(aorta_smooth, debug=debug)
+    dilated = binary_dilation(aorta, iterations=4)
+    aorta_smooth = smooth_mask(dilated, sigma=6)
+    if aorta_smooth.any():
+        aorta_for_centerline = aorta_smooth
+    elif np.any(dilated):
+        logger.info(
+            "WARNING: Smoothed aorta mask is empty. Building the centerline from the dilated aorta."
+        )
+        aorta_for_centerline = dilated.astype(np.uint8)
+    elif np.any(aorta):
+        logger.info(
+            "WARNING: Dilated aorta mask is empty. Building the centerline from the original aorta."
+        )
+        aorta_for_centerline = (aorta > 0).astype(np.uint8)
+    else:
+        logger.info("WARNING: Aorta mask is empty. Skipping centerline creation.")
+        return np.zeros(aorta.shape, dtype=np.uint8), [], []
+    try:
+        centerline_image, centerline = get_centerline(aorta_for_centerline, debug=debug)
+    except ValueError:
+        logger.info("WARNING: Unable to create a centerline from the aorta mask.")
+        return np.zeros(aorta.shape, dtype=np.uint8), [], []
     centerline = reorder_centerline(centerline)
     if annulus_center is None:
         logger.info(
@@ -138,6 +158,12 @@ def create_landmarks(structures, annulus_volume, centerline, aorta_img, spacing,
             if structures[name]["empty"]:
                 logger.info(f"WARNING: landmark {number} is empty because {name} is empty!")
 
+    if not centerline:
+        logger.info("WARNING: Skipping landmark placement because the centerline is empty.")
+        for landmark in landmarks.values():
+            landmark["empty"] = True
+        return landmarks
+
     def set_index(number, index):
         if landmarks[number]["empty"]:
             return
@@ -186,4 +212,11 @@ def create_landmarks(structures, annulus_volume, centerline, aorta_img, spacing,
         else:
             logger.info("WARNING: Distance between annulus sinutub. jun. is too small! As robust backup take middle as sinuses of valsalva.")
             set_index(2, get_mid_of_points(centerline, landmarks[1]["cl_idx"], landmarks[3]["cl_idx"]))
+
+    for number, landmark in landmarks.items():
+        if landmark.get("cl_idx") is None and not landmark["empty"]:
+            landmark["empty"] = True
+            logger.info(
+                f"WARNING: landmark {number} has no centerline index. Setting to empty."
+            )
     return landmarks

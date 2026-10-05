@@ -319,7 +319,9 @@ def create_aorta_report(
         )
 
         animated_cpr = None
-        if cpr_path is not None or cpr_animated_path is not None:
+        if (cpr_path is not None or cpr_animated_path is not None) and not centerline:
+            logger.info("WARNING: Skipping CPR because the centerline is empty.")
+        elif cpr_path is not None or cpr_animated_path is not None:
             logger.info("Calculating CPR...")
             cpr_started = time.time()
             res_ct, res_seg, lumen_images, cpr_info = cpr(

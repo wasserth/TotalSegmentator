@@ -48,7 +48,8 @@ def diameter_profiles(mask_data, centerline, spacing, crop_size_mm, subsample=5,
 
 def create_landmark_planes(landmarks, centerline, aorta, annulus, spacing, logger, erosion=False):
     for number, landmark in landmarks.items():
-        if landmark["empty"]:
+        if landmark.get("empty") or landmark.get("cl_idx") is None:
+            landmark["empty"] = True
             landmark["diameter_tmp"] = 0
             continue
         point = centerline[landmark["cl_idx"]].point
@@ -146,7 +147,12 @@ def measure_sections(landmarks, aorta_img, aorta_totalseg, true_lumen, false_lum
     for name, (start_number, end_number) in SECTION_LANDMARKS.items():
         logger.info(f"  Processing section: {name}...")
         start_landmark, end_landmark = landmarks[start_number], landmarks[end_number]
-        if start_landmark["empty"] or end_landmark["empty"]:
+        if (
+            start_landmark.get("empty")
+            or end_landmark.get("empty")
+            or start_landmark.get("cl_idx") is None
+            or end_landmark.get("cl_idx") is None
+        ):
             logger.info(f"WARNING: {name} is empty!")
             section_stats[name] = dict.fromkeys(
                 ("length", "max_diameter", "max_diameter_perpendicular", "volume", "volume_true_lumen", "volume_false_lumen")
