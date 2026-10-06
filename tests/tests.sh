@@ -12,6 +12,9 @@ pytest -v tests/test_config.py
 # Test task registry + totalseg_info command (no GPU/model needed)
 pytest -v tests/test_registry.py
 
+# Test empty crop handling (no GPU/model needed)
+pytest -v tests/test_nnunet_crop.py
+
 # Smoke test the introspection commands
 totalseg_info --list-tasks > /dev/null
 totalseg_info --classes -ta total --json > /dev/null
