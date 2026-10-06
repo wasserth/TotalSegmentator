@@ -390,7 +390,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          normalized_intensities=False, higher_order_resampling_LEGACY=False,
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
                          debug=False, save_lowres=False, resampling_order=1, plans="nnUNetPlans",
-                         vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False):
+                         vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False,
+                         statistics_extra=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -775,7 +776,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             stats = get_basic_statistics(img_pred.get_fdata(), img_in_rsp, stats_file, 
                                          quiet, output_task_name, exclude_masks_at_border, roi_subset,
                                          metric=stats_aggregation, 
-                                         normalized_intensities=normalized_intensities)
+                                         normalized_intensities=normalized_intensities,
+                                         extra_metrics=statistics_extra)
             if not quiet: print(f"  calculated in {time.time()-st:.2f}s")
 
         if resample is not None and not save_lowres:
