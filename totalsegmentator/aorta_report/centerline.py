@@ -6,6 +6,7 @@ from itertools import combinations
 import networkx as nx
 import nibabel as nib
 import numpy as np
+from scipy.ndimage import binary_dilation
 from skimage.morphology import skeletonize
 
 
@@ -98,12 +99,7 @@ def resample_points_by_arc_length(points, positions):
     )
 
 
-def get_centerline(data, debug=False):
-    if debug:
-        print("Skeletonize...")
-    skeleton = skeletonize(data.copy() > 0)
-    if debug:
-        print("Building graph....")
+def _paths_from_skeleton(skeleton):
     candidates = []
     for graph in _build_trees(skeleton):
         endpoints = [node for node in graph.nodes if graph.degree(node) == 1]
@@ -114,13 +110,56 @@ def get_centerline(data, debug=False):
             key=lambda pair: nx.shortest_path_length(graph, pair[0], pair[1]),
         )
         candidates.append(nx.shortest_path(graph, longest[0], longest[1]))
-    if not candidates:
-        raise ValueError("Unable to create a centerline from the aorta mask.")
-    path = max(candidates, key=get_len_path)
-    image = np.zeros(skeleton.shape)
+    return candidates
+
+
+def _rasterize_centerline(shape, path):
+    image = np.zeros(shape)
+    limit = np.asarray(shape) - 1
     for vertex in path:
-        image[tuple(vertex.point)] = 1
-    return image, path
+        point = np.clip(np.rint(vertex.point), 0, limit).astype(int)
+        image[tuple(point)] = 1
+    return image
+
+
+def _axis_centerline(mask):
+    """Straight centerline through a mask whose skeleton has no usable path."""
+    points = np.argwhere(mask)
+    if len(points) < 2:
+        return None
+    centered = points.astype(float) - points.mean(axis=0)
+    _, _, axes = np.linalg.svd(centered, full_matrices=False)
+    projection = centered @ axes[0]
+    start = points[int(np.argmin(projection))].astype(float)
+    end = points[int(np.argmax(projection))].astype(float)
+    length = float(np.linalg.norm(end - start))
+    if length < 1:
+        return None
+    steps = max(int(np.ceil(length)), 1)
+    return [Vertex(start + idx / steps * (end - start)) for idx in range(steps + 1)]
+
+
+def get_centerline(data, debug=False):
+    if debug:
+        print("Skeletonize...")
+    mask = np.asarray(data) > 0
+    skeleton = skeletonize(mask) if mask.any() else np.zeros(mask.shape, dtype=bool)
+    if debug:
+        print("Building graph....")
+    candidates = _paths_from_skeleton(skeleton) if skeleton.any() else []
+    # Lee thinning deletes objects whose thickness is even, leaving an empty
+    # skeleton. One extra dilation makes that thickness odd.
+    if not candidates and mask.any():
+        dilated_skeleton = skeletonize(binary_dilation(mask))
+        if dilated_skeleton.any():
+            candidates = _paths_from_skeleton(dilated_skeleton)
+    if candidates:
+        path = max(candidates, key=get_len_path)
+        return _rasterize_centerline(mask.shape, path), path
+    path = _axis_centerline(mask)
+    if path is None:
+        raise ValueError("Unable to create a centerline from the aorta mask.")
+    return _rasterize_centerline(mask.shape, path), path
 
 
 def reorder_centerline(centerline):

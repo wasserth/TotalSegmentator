@@ -360,10 +360,29 @@ def _record_rotating_scene(scene, output_prefix, window_size, nr_frames):
         Image.fromarray(cropped).save(frame_path)
 
 
+def _mask_has_voxels(mask):
+    return mask is not None and np.any(mask)
+
+
+def _add_surface(scene, plot_mask, mask, **kwargs):
+    if not _mask_has_voxels(mask):
+        return False
+    scene.add(plot_mask(scene, mask, **kwargs))
+    return True
+
+
+def _render_preview_scene(scene, output_prefix, window_size, nr_frames, has_actor):
+    if has_actor:
+        _record_rotating_scene(scene, output_prefix, window_size, nr_frames)
+        return
+    height, width = window_size[1], window_size[0]
+    blank = np.zeros((height - 200, width - 300, 3), dtype=np.uint8)
+    for frame_index in range(nr_frames):
+        Image.fromarray(blank).save(f"{output_prefix}{frame_index:06d}.png")
+
+
 def plot_masks_3d(masks, output_path, file_prefix, smoothing=20, nr_frames=12, debug=False, colors_subset=None):
     """
-    todo: check that all masks are not empty -> otherwise error
-
     masks: list of binary mask ([ndarray])
     """
     from fury import window
@@ -371,17 +390,26 @@ def plot_masks_3d(masks, output_path, file_prefix, smoothing=20, nr_frames=12, d
 
     window_size = (700, 900)
     scene = window.Scene()
+    has_actor = False
     try:
         for idx, mask in enumerate(masks):
             if not np.any(mask):
                 continue
             color = list(colors.keys())[idx] if colors_subset is None else colors_subset[idx]
-            scene.add(plot_mask(
-                scene, mask, np.eye(4), 0, 0, smoothing=smoothing,
-                color=colors[color], opacity=1.0, orientation="sagittal",
-            ))
-        _record_rotating_scene(
-            scene, Path(output_path) / file_prefix, window_size, nr_frames
+            has_actor = _add_surface(
+                scene,
+                plot_mask,
+                mask,
+                affine=np.eye(4),
+                x_current=0,
+                y_current=0,
+                smoothing=smoothing,
+                color=colors[color],
+                opacity=1.0,
+                orientation="sagittal",
+            ) or has_actor
+        _render_preview_scene(
+            scene, Path(output_path) / file_prefix, window_size, nr_frames, has_actor
         )
     finally:
         scene.clear()
@@ -389,8 +417,6 @@ def plot_masks_3d(masks, output_path, file_prefix, smoothing=20, nr_frames=12, d
     
 def plot_aorta_3d(aorta, true_lumen, false_lumen, all_vessels, centerline, landmarks, output_path, smoothing=20, nr_frames=12, debug=False):
     """
-    todo: check that all masks are not empty -> otherwise error
-
     aorta: binary mask (ndarray)
     all_vessels: binary mask (ndarray)
     landsmakrs: dict of all landsmarks. each landmark has keys cl_idx, roi, diameter
@@ -415,32 +441,37 @@ def plot_aorta_3d(aorta, true_lumen, false_lumen, all_vessels, centerline, landm
 
     window_size = (700, 900)
     scene = window.Scene()
+    has_actor = False
     try:
-        scene.add(plot_mask(
-            scene, aorta, np.eye(4), 0, 0, smoothing=smoothing,
-            color=colors["gray_light"], opacity=.3, orientation="sagittal",
-        ))
-        if np.any(false_lumen):
-            scene.add(plot_mask(
-                scene, false_lumen, np.eye(4), 0, 0, smoothing=smoothing,
-                color=colors["red"], opacity=.1, orientation="sagittal",
-            ))
-        scene.add(plot_mask(
-            scene, all_vessels, np.eye(4), 0, 0, smoothing=smoothing,
-            color=colors["gray_dark"], opacity=1.0, orientation="sagittal",
-        ))
-        scene.add(plot_mask(
-            scene, centerline, np.eye(4), 0, 0, smoothing=0,
-            color=colors["red"], opacity=1.0, orientation="sagittal",
-        ))
+        surface_kwargs = dict(
+            affine=np.eye(4), x_current=0, y_current=0, orientation="sagittal"
+        )
+        has_actor = _add_surface(
+            scene, plot_mask, aorta, smoothing=smoothing,
+            color=colors["gray_light"], opacity=0.3, **surface_kwargs,
+        ) or has_actor
+        has_actor = _add_surface(
+            scene, plot_mask, false_lumen, smoothing=smoothing,
+            color=colors["red"], opacity=0.1, **surface_kwargs,
+        ) or has_actor
+        has_actor = _add_surface(
+            scene, plot_mask, all_vessels, smoothing=smoothing,
+            color=colors["gray_dark"], opacity=1.0, **surface_kwargs,
+        ) or has_actor
+        has_actor = _add_surface(
+            scene, plot_mask, centerline, smoothing=0,
+            color=colors["red"], opacity=1.0, **surface_kwargs,
+        ) or has_actor
 
         for lm_nr, lm_dict in landmarks.items():
-            if lm_dict["empty"]:
+            if lm_dict.get("empty"):
                 continue
-            scene.add(plot_mask(
-                scene, lm_dict["roi"], np.eye(4), 0, 0,
-                color=lm_dict["color"], orientation="sagittal", smoothing=smoothing,
-            ))
+            has_actor = _add_surface(
+                scene, plot_mask, lm_dict.get("roi"),
+                color=lm_dict["color"], smoothing=smoothing, **surface_kwargs,
+            ) or has_actor
+            if lm_dict.get("cl_point") is None:
+                continue
             size = all_vessels.shape
             x, y, z = lm_dict["cl_point"]
             x = size[0] - x
@@ -448,12 +479,14 @@ def plot_aorta_3d(aorta, true_lumen, false_lumen, all_vessels, centerline, landm
             x = size[1] - x
             position = np.array([x, y, z]) + lm_dict["txt_offset"]
             scene.add(text(lm_nr, position, (8, 8, 8), colors["white"]))
+            has_actor = True
 
-        _record_rotating_scene(
+        _render_preview_scene(
             scene,
             Path(output_path) / "preview_3d_rotating_",
             window_size,
             nr_frames,
+            has_actor,
         )
     finally:
         scene.clear()

@@ -1,8 +1,10 @@
 import nibabel as nib
 import numpy as np
+import pytest
 
 from totalsegmentator.aorta_report.centerline import (
     Vertex,
+    get_centerline,
     get_cumulative_arc_lengths,
     get_index_for_point,
     get_mid_of_points,
@@ -10,6 +12,7 @@ from totalsegmentator.aorta_report.centerline import (
     get_normal_for_cl_point,
     resample_cl_to_same_distance,
 )
+from totalsegmentator.aorta_report import centerline as centerline_module
 from totalsegmentator.aorta_report.geometry import (
     draw_plane,
     get_plane_diameters,
@@ -41,6 +44,37 @@ def test_centerline_arc_length_lookup_and_endpoints():
     assert get_mid_of_points(centerline, 0, 2) == 1
     assert get_mid_of_points(centerline, 1, 1) == 1
     assert get_mid_of_points(centerline, None, 1) is None
+
+
+def test_even_thickness_mask_still_gets_a_centerline():
+    mask = np.zeros((24, 24, 40), dtype=np.uint8)
+    mask[8:16, 8:16, 4:36] = 1
+
+    _, path = get_centerline(mask)
+
+    assert len(path) > 10
+    assert abs(path[0].point[2] - path[-1].point[2]) > 10
+
+
+def test_centerline_uses_mask_axis_when_skeleton_is_empty(monkeypatch):
+    monkeypatch.setattr(
+        centerline_module,
+        "skeletonize",
+        lambda image: np.zeros(np.shape(image), dtype=bool),
+    )
+    mask = np.zeros((10, 10, 20), dtype=np.uint8)
+    mask[4, 4, 2:18] = 1
+
+    image, path = get_centerline(mask)
+
+    assert len(path) >= 2
+    assert image.sum() > 0
+    assert tuple(np.rint(path[0].point)) in ((4, 4, 2), (4, 4, 17))
+
+
+def test_empty_mask_cannot_produce_a_centerline():
+    with pytest.raises(ValueError, match="Unable to create a centerline"):
+        get_centerline(np.zeros((6, 6, 6), dtype=np.uint8))
 
 
 def test_centerline_resampling_preserves_endpoints_and_handles_short_inputs():

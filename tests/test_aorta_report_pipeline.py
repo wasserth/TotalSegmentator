@@ -10,6 +10,8 @@ from totalsegmentator.aorta_report.landmarks import (
     create_landmarks,
     create_structures,
 )
+from totalsegmentator.aorta_report.measurements import create_landmark_planes
+from totalsegmentator.aorta_report import plotting
 from totalsegmentator.aorta_report import rendering
 
 
@@ -61,6 +63,115 @@ def test_empty_annulus_still_builds_aorta_centerline(monkeypatch):
     assert np.array_equal(centerline[-1].point, path[-1].point)
     assert len(resampled) > 10
     assert any("Annulus mask is empty" in message for message in logger.messages)
+
+
+def test_empty_aorta_skips_centerline_without_raising():
+    aorta = np.zeros((8, 8, 8), dtype=np.uint8)
+    logger = _Logger()
+
+    image, centerline, resampled = build_centerline(
+        aorta, aorta.copy(), np.eye(4), (1, 1, 1), logger
+    )
+
+    assert image.shape == aorta.shape
+    assert centerline == []
+    assert resampled == []
+    assert any("Aorta mask is empty" in message for message in logger.messages)
+
+
+def test_small_aorta_keeps_centerline_when_smoothing_erases_it():
+    aorta = np.zeros((48, 48, 48), dtype=np.uint8)
+    aorta[24, 24, 12:36] = 1
+    logger = _Logger()
+
+    _, centerline, resampled = build_centerline(
+        aorta, np.zeros_like(aorta), np.eye(4), (1, 1, 1), logger
+    )
+
+    assert len(centerline) >= 2
+    assert len(resampled) >= 2
+    assert any("Smoothed aorta mask is empty" in message for message in logger.messages)
+
+
+def test_unplaced_landmark_marks_dependents_empty_before_plane_measurement():
+    structures = create_structures()
+    for structure in structures.values():
+        structure["empty"] = True
+        structure["cl_idx"] = None
+    structures["brachio"]["empty"] = False
+    structures["brachio"]["cl_idx"] = 20
+    structures["subclavian"]["empty"] = False
+    structures["subclavian"]["cl_idx"] = 8
+    centerline = [Vertex((6, 6, z)) for z in range(21)]
+    aorta = np.zeros((12, 12, 24), dtype=np.uint8)
+    aorta[4:9, 4:9, 2:22] = 1
+    aorta_img = nib.Nifti1Image(aorta, np.eye(4))
+    logger = _Logger()
+
+    landmarks = create_landmarks(
+        structures,
+        annulus_volume=0,
+        centerline=centerline,
+        aorta_img=aorta_img,
+        spacing=(1, 1, 1),
+        logger=logger,
+    )
+
+    assert landmarks[5]["empty"]
+    assert landmarks[6]["empty"]
+    assert landmarks[6].get("cl_idx") is None
+    assert any("landmark 6 has no centerline index" in message for message in logger.messages)
+
+    max_diameter = create_landmark_planes(
+        landmarks, centerline, aorta, np.zeros_like(aorta), (1, 1, 1), logger
+    )
+
+    assert max_diameter >= 0
+    assert all("diameter_tmp" in landmark for landmark in landmarks.values())
+
+
+def test_preview_skips_empty_masks(monkeypatch, tmp_path):
+    plotted = []
+
+    def fake_plot_mask(_scene, mask, **_kwargs):
+        plotted.append(int(np.count_nonzero(mask)))
+        return "actor"
+
+    class _Scene:
+        def __init__(self):
+            self.actors = []
+
+        def add(self, actor):
+            self.actors.append(actor)
+
+        def clear(self):
+            self.actors.clear()
+
+    monkeypatch.setattr("totalsegmentator.rendering.plot_mask", fake_plot_mask)
+    monkeypatch.setattr("totalsegmentator.rendering.text", lambda *args, **kwargs: "text")
+    monkeypatch.setattr("fury.window.Scene", _Scene)
+    monkeypatch.setattr(plotting, "_record_rotating_scene", lambda *args, **kwargs: None)
+
+    aorta = np.zeros((8, 8, 8), dtype=np.uint8)
+    aorta[2:6, 2:6, 1:7] = 1
+    landmarks = {
+        number: {"empty": True, "roi": np.zeros_like(aorta), "cl_point": None}
+        for number in range(1, 12)
+    }
+
+    plotting.plot_aorta_3d(
+        aorta,
+        aorta,
+        np.zeros_like(aorta),
+        np.zeros_like(aorta),
+        np.zeros_like(aorta),
+        landmarks,
+        tmp_path,
+        smoothing=0,
+        nr_frames=1,
+    )
+
+    assert plotted == [int(np.count_nonzero(aorta))]
 
 
 def test_empty_structure_dependencies_produce_empty_landmarks_without_index_errors():
