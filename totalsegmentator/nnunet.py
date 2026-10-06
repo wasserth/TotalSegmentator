@@ -530,7 +530,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             nib.save(nib.Nifti1Image(empty_img, img_in.affine), file_out / f"{roi_name}.nii.gz")
                         if nora_tag != "None":
                             subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
-                    return img_out, img_in_orig, None
+                return img_out, img_in_orig, None
                 
             img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32, verbose=verbose)
             if cascade:
