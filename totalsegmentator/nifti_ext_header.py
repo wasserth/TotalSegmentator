@@ -15,13 +15,14 @@ def add_label_map_to_nifti(img_in, label_map):
 
     img: nifti image
     label_map: a dictionary with label ids and names | a list of names and a running id will be generated starting at 1
+        If None, label ids are inferred from the nonzero voxel values.
 
     returns: nifti image
     """
     data = img_in.get_fdata()
 
     if label_map is None:
-        label_map = {idx+1: f"L{val}" for idx, val in enumerate(np.unique(data)[1:])}
+        label_map = {int(val): f"L{val}" for val in np.unique(data) if val != 0}
 
     if type(label_map) is not dict:   # can be list or dict_values list
         label_map = {idx+1: val for idx, val in enumerate(label_map)}
