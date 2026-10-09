@@ -472,6 +472,13 @@ class_map = {
         14: "liver",
         15: "spleen"
     },
+    # those classes need to be removed
+    "appendicular_bones_mr_auxiliary": {
+        9: "humerus",
+        10: "femur",
+        11: "liver",
+        12: "spleen"
+    },
     "tissue_types": {
         1: "subcutaneous_fat",
         2: "torso_fat",
