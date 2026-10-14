@@ -369,7 +369,8 @@ class VertebraeProcessor:
 
 def get_verte_height(ct_img, verte_img, verte_label_map, verte_body_img, 
                      verte_body_label_map, preview_file, combined_preview_file, 
-                     file_out, debug, smoothed_body_out=None, horizontal_mask_type='smoothed', spine_range='all'):
+                     file_out, debug, smoothed_body_out=None, horizontal_mask_type='smoothed', spine_range='all',
+                     no_highlighting=False):
     """Analyze vertebrae height and create visualization"""
     processor = VertebraeProcessor(ct_img, verte_img, verte_label_map, verte_body_img, verte_body_label_map, horizontal_mask_type=horizontal_mask_type, spine_range=spine_range)
     vertebrae_info = processor.process_vertebrae()
@@ -393,7 +394,7 @@ def get_verte_height(ct_img, verte_img, verte_label_map, verte_body_img,
         create_vertebrae_visualization(ct_img, processor.ct_data, vertebrae_info, vertebrae_names, preview_file, debug)
     
     if combined_preview_file:
-        create_combined_spine_visualization(ct_img, processor.ct_data, vertebrae_info, vertebrae_names, combined_preview_file, debug, spine_range)
+        create_combined_spine_visualization(ct_img, processor.ct_data, vertebrae_info, vertebrae_names, combined_preview_file, debug, spine_range, no_highlighting)
     
     # Save results
     if file_out:
@@ -879,7 +880,7 @@ def _create_combined_image(ct_data, vertebrae_info, vertebrae_names, bounds):
     return combined_image, filled_mask
 
 
-def _add_combined_annotations(ax, ct_data, vertebrae_info, vertebrae_names, bounds, spacing, spine_range='all'):
+def _add_combined_annotations(ax, ct_data, vertebrae_info, vertebrae_names, bounds, spacing, spine_range='all', no_highlighting=False):
     """Add vertebrae annotations to combined plot"""
     y_min, y_max, z_min, z_max = bounds
     
@@ -950,7 +951,7 @@ def _add_combined_annotations(ax, ct_data, vertebrae_info, vertebrae_names, boun
                 
                 if is_fracture_for_display or force_yellow_due_to_volume:
                     text = f"{vertebra_id}: {heights_text} (-{fracture_info['height_difference_percent']}%){line_break}(x: {x_slice_display}, HU: {median_intensity_int})"
-                    text_color = 'yellow'
+                    text_color = 'white' if no_highlighting else 'yellow'
                 else:
                     text = f"{vertebra_id}: {heights_text}{line_break}(x: {x_slice_display}, HU: {median_intensity_int})"
                     text_color = 'white'
@@ -964,7 +965,7 @@ def _add_combined_annotations(ax, ct_data, vertebrae_info, vertebrae_names, boun
                        bbox=dict(boxstyle='round,pad=0.3', facecolor='black', alpha=0.8))
 
 
-def create_combined_spine_visualization(ct_img, ct_data, vertebrae_info, vertebrae_names, preview_file, debug, spine_range='all'):
+def create_combined_spine_visualization(ct_img, ct_data, vertebrae_info, vertebrae_names, preview_file, debug, spine_range='all', no_highlighting=False):
     """Create PNG visualization showing all vertebrae combined in one sagittal view"""
     if not vertebrae_names:
         print("No vertebrae to visualize in combined view")
@@ -992,7 +993,7 @@ def create_combined_spine_visualization(ct_img, ct_data, vertebrae_info, vertebr
     ax.imshow(combined_image.T, cmap='gray', origin='lower', aspect=aspect_ratio, vmin=HU_WINDOW[0], vmax=HU_WINDOW[1])
     
     # Add annotations
-    _add_combined_annotations(ax, ct_data, vertebrae_info, vertebrae_names, bounds, spacing, spine_range)
+    _add_combined_annotations(ax, ct_data, vertebrae_info, vertebrae_names, bounds, spacing, spine_range, no_highlighting)
     
     ax.set_xticks([])
     ax.set_yticks([])

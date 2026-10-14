@@ -76,10 +76,4 @@ img { max-width: 100%; }
 .stripe-darker:nth-child(odd) { background-color: #161616; }
 .justify-center { -webkit-box-pack: center; -webkit-justify-content: center; justify-content: center; }
 .square { float: left; width: 20px; height: 20px; margin: 5px; border: 1px solid rgba(255, 255, 255, 1); }
-.warning-box, .success-box { color: white; padding: 1.5em; font-size: 1.3em; font-weight: bold; text-align: center; border-radius: 8px; margin: 1em; width: 100%; }
-.warning-box { background-color: #f00; }
-.success-box { background-color: #2e7d32; }
-.status-box { position: relative; overflow: hidden; }
-.status-text { position: relative; z-index: 2; }
-.status-symbol { position: absolute; left: 50%; top: 59%; width: 120%; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); z-index: 1; color: #fff; font-family: Arial, sans-serif; font-size: 24em; font-weight: 700; line-height: 1; text-align: center; opacity: .98; }
-.status-symbol-check { font-size: 22em; }
+.result-box { color: white; padding: 1em; font-size: 1.3em; font-weight: bold; text-align: center; border: 1px solid #aaa; border-radius: 8px; }
