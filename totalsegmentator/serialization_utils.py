@@ -50,9 +50,9 @@ def nifti_to_filestream(nifti_img):
 
     # Slow?? (but with zipping; needed if want to download as .nii.gz nifti file?)
     bio = io.BytesIO()
-    zz = gzip.GzipFile(fileobj=bio, mode='w')
-    file_map = nifti_img.make_file_map({'image': zz, 'header': zz})
-    nifti_img.to_file_map(file_map)
+    with gzip.GzipFile(fileobj=bio, mode='w') as zz:
+        file_map = nifti_img.make_file_map({'image': zz, 'header': zz})
+        nifti_img.to_file_map(file_map)
     return bio.getvalue()
 
 
