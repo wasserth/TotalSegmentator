@@ -102,21 +102,21 @@ TASK_CONFIGS = {
     },
     "body": {
         "sub_modes": {
-            "fast": {"task_id": 300, "resample": 6.0, "trainer": "nnUNetTrainer"},
-            "default": {"task_id": 299, "resample": 1.5, "trainer": "nnUNetTrainer"},
+            "fast": {"task_id": 307, "resample": 6.0, "trainer": "nnUNetTrainer"},
+            "default": {"task_id": 306, "resample": 1.5, "trainer": "nnUNetTrainer"},
         }
     },
     "body_mr": {
         "sub_modes": {
             "fast": {
-                "task_id": 598,  # todo: train
+                "task_id": 623,
                 "resample": 6.0,
-                "trainer": "nnUNetTrainer_DASegOrd0",
+                "trainer": "nnUNetTrainer",
             },
             "default": {
-                "task_id": 597,
+                "task_id": 622,
                 "resample": 1.5,
-                "trainer": "nnUNetTrainer_DASegOrd0",
+                "trainer": "nnUNetTrainer",
             },
         }
     },
@@ -427,9 +427,10 @@ TASK_CONFIGS = {
         "commercial": True,
     },
     "tissue_types_mr": {
-        "task_id": 925,
+        "task_id": 929,
         "resample": 1.5,
-        "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
+        "trainer": "nnUNetTrainer",
+        "model": "3d_fullres_15mm",
         "disallow_fast": True,
         "commercial": True,
     },
@@ -605,6 +606,8 @@ TASK_ID_WEIGHTS_CONFIGS = {
         # "zenodo_weights_url": "https://zenodo.org/record/7334272/files/Task269_Body_extrem_6mm_1200subj.zip?download=1",
         # "alt_weights_url": "/static/totalseg_v2/Dataset300_body_6mm_1559subj.zip",
     },
+    306: {"foldername": "Dataset306_body_1830subj", "version": "v3.0.0-weights"},
+    307: {"foldername": "Dataset307_body_6mm_1830subj", "version": "v3.0.0-weights"},
     775: {"foldername": "Dataset775_head_glands_cavities_492subj", "version": "v2.3.0-weights"},
     776: {"foldername": "Dataset776_headneck_bones_vessels_492subj", "version": "v2.3.0-weights"},
     777: {"foldername": "Dataset777_head_muscles_492subj", "version": "v2.3.0-weights"},
@@ -630,6 +633,8 @@ TASK_ID_WEIGHTS_CONFIGS = {
     873: {"foldername": "Dataset873_TotalSegMRI_total_6mm_1751subj", "version": "v3.0.0-weights"},
     597: {"foldername": "Dataset597_mri_body_139subj", "version": "v2.5.0-weights"},
     598: {"foldername": "Dataset598_mri_body_6mm_139subj", "version": "v2.5.0-weights"},
+    622: {"foldername": "Dataset622_mri_body_1751subj", "version": "v3.0.0-weights"},
+    623: {"foldername": "Dataset623_mri_body_6mm_1751subj", "version": "v3.0.0-weights"},
     756: {"foldername": "Dataset756_mri_vertebrae_1076subj", "version": "v2.5.0-weights"},
     857: {"foldername": "Dataset857_TotalSegMRI_thigh_shoulder_1088subj", "version": "v3.0.0-weights"},
 
@@ -688,6 +693,7 @@ TASK_ID_WEIGHTS_CONFIGS = {
     481: {"foldername": "Dataset481_tissue_1559subj"},
     485: {"foldername": "Dataset485_tissue_4types_1559subj"},
     925: {"foldername": "Dataset925_MRI_tissue_subset_903subj"},
+    929: {"foldername": "Dataset929_MRI_tissue_subset_914subj"},
     856: {"foldername": "Dataset856_TotalSegMRI_face_1088subj"},
     409: {"foldername": "Dataset409_neuro_550subj"},
     507: {"foldername": "Dataset507_coronary_arteries_cm_nativ_400subj"},

@@ -411,7 +411,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 crop_task = "total"
             crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"
             if crop is not None and ("body_trunc" in crop or "body_extremities" in crop):
-                crop_model_task = 300
+                crop_model_task = 307
                 crop_spacing = 6.0
                 crop_trainer = "nnUNetTrainer"
                 crop_task = "body"
@@ -454,10 +454,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     # Generate rough body segmentation (6mm) (speedup for big images; not useful in combination with --fast option)
     if crop is None and body_seg:
-        download_pretrained_weights(300)
+        download_pretrained_weights(307)
         st = time.time()
         if not quiet: print("Generating rough body segmentation...")
-        body_seg, _, _ = nnUNet_predict_image(input, None, 300, model="3d_fullres", folds=[0],
+        body_seg, _, _ = nnUNet_predict_image(input, None, 307, model="3d_fullres", folds=[0],
                             trainer="nnUNetTrainer", tta=False, multilabel_image=True, resample=6.0,
                             crop=None, crop_path=None, task_name="body", nora_tag="None", preview=False,
                             save_binary=True, nr_threads_resampling=nr_thr_resamp, nr_threads_saving=1,

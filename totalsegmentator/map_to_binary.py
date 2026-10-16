@@ -839,7 +839,7 @@ commercial_models = {
     "appendicular_bones_highres": 848,
     "appendicular_bones_mr": 875,
     "tissue_types": 481,
-    "tissue_types_mr": 925,
+    "tissue_types_mr": 929,
     "tissue_4_types": 485,
     "face": 303,
     "face_mr": 856,
