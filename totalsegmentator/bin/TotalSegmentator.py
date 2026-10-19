@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import argparse
+import gc
 import importlib.metadata
 from pathlib import Path
 import re
 from totalsegmentator.python_api import totalsegmentator, validate_device_type_api
+from totalsegmentator.config import setup_nnunet
 from totalsegmentator.registry import TASKS, format_tasks_table, format_classes_table
 
 
@@ -279,6 +281,16 @@ def main():
                     args.task = "total_mr"
         except Exception:
             pass
+
+    # torch._dynamo and nnU-Net add several hundred thousand long-lived objects, and every full
+    # collection of the cyclic garbage collector walks all of them. The collections while importing
+    # nnU-Net and at interpreter exit took about 14 s per call. Import it with the collector off and
+    # freeze what exists, so later collections only look at objects created by the run.
+    gc.disable()
+    setup_nnunet()  # nnU-Net reads its paths from the environment when it is imported
+    from totalsegmentator import nnunet  # noqa: F401
+    gc.freeze()
+    gc.enable()
 
     totalsegmentator(args.input, args.output, args.ml, args.nr_thr_resamp, args.nr_thr_saving,
                      args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
