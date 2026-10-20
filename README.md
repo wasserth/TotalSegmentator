@@ -164,6 +164,11 @@ If you want to combine some subclasses (e.g. lung lobes) into one binary mask (e
 totalseg_combine_masks -i totalsegmentator_output_dir -o combined_mask.nii.gz -m lung
 ```
 
+If you want to analyze a segmentation (e.g. `tissue_types`) only within a vertebrae range (e.g. L1-L5), you can use the following command. It removes everything above the upper end of the upper vertebra, below the lower end of the lower vertebra and outside of `body_trunc` (from `-ta body`). `-v` is the multilabel output of `-ta vertebrae_pp`. Optionally it saves a sagittal preview (`-p`) and statistics (`-s`, volume, mean/median HU (requires `-c`) and height per class and for `body_trunc` for normalization). Classes touching the image border are excluded from the statistics unless `--stats_include_incomplete` is set. With `--per_vertebrae` the statistics are reported for each vertebra separately (useful if the field of view varies across images).
+```bash
+totalseg_crop_to_vertebrae_range -i tissue_types.nii.gz -o tissue_types_l1_l5.nii.gz -v vertebrae.nii.gz -b body.nii.gz -r l1 l5 -c ct.nii.gz -s stats.json -p preview.png
+```
+
 If you want to calculate the [Evans index](https://radiopaedia.org/articles/evans-index-2) you can use the following command:
 ```bash
 totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png

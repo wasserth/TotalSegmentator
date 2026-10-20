@@ -106,6 +106,7 @@ setup(name='TotalSegmentator',
                 'totalseg_aorta_report=totalsegmentator.bin.totalseg_aorta_report:main',
                 'totalseg_pulmonary_report=totalsegmentator.bin.totalseg_pulmonary_report:main',
                 'totalseg_get_body_stats=totalsegmentator.bin.totalseg_get_body_stats:main',
+                'totalseg_crop_to_vertebrae_range=totalsegmentator.bin.totalseg_crop_to_vertebrae_range:main',
                 'totalseg_info=totalsegmentator.bin.totalseg_info:main',
                 'totalseg_mcp=totalsegmentator_mcp.mcp_server:main'
             ],

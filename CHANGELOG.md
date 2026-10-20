@@ -16,6 +16,7 @@
 * add `total_highres` task: same classes as `total` at 0.75x0.75x1.0mm. Always crops to the body region (`--body_seg`).
 * add `appendicular_bones_highres` task: same classes as `appendicular_bones` at 0.75x0.75x1.0mm.
 * make `thigh_shoulder_muscles` and `thigh_shoulder_muscles_mr` openly available (Apache-2.0).
+* add `totalseg_crop_to_vertebrae_range`: crop a multilabel segmentation (e.g. `tissue_types`) to a vertebrae range and to `body_trunc`, with optional statistics (overall or `--per_vertebrae`) and sagittal preview.
 
 
 ## Release 2.18.0 (12.08.2026)
