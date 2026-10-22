@@ -44,7 +44,8 @@ def create_spine_report(
     host="local",
     totalseg_parallel=False,
     spine_range="all",
-    original_nifti_path=None
+    original_nifti_path=None,
+    no_highlighting=False
 ):
     """
     ct_bytes: path to nifti file or 
@@ -125,7 +126,7 @@ def create_spine_report(
                      tmp_dir / "spine_report_combined_preview.png", 
                      tmp_dir / "spine_report_heights.json", 
                      debug, smoothed_body_out=None, horizontal_mask_type="raw",
-                     spine_range=spine_range)
+                     spine_range=spine_range, no_highlighting=no_highlighting)
 
     yield {"id": 6, "progress": 90, "status": "Generating report image"}
 
@@ -135,19 +136,22 @@ def create_spine_report(
     vertebrae_high_height_diff = []
     vertebrae_low_intensity = []
     has_measurements = any(key.startswith("vertebrae_") for key in report_json)
+
+    if contrast_phase == "arterial":
+        hu_thr = HU_THRESHOLD + ART_HU_ADDON
+    elif contrast_phase == "portal_venous":
+        hu_thr = HU_THRESHOLD + PV_HU_ADDON
+    else:
+        hu_thr = HU_THRESHOLD
+    report_json["contrast_phase"] = contrast_phase
+    report_json["hu_threshold"] = hu_thr
+
     # for vertebrae in ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12", "L1", "L2", "L3", "L4", "L5"]:
     for vertebrae in ["L1", "L2", "L3", "L4", "L5"]:
         vertebrae_name = f"vertebrae_{vertebrae}"
         if f"{vertebrae_name}_intensity" in report_json:
             height_diff = report_json[f"{vertebrae_name}_height_difference"]
             intensity = report_json[f"{vertebrae_name}_intensity_median"]
-
-            if contrast_phase == "arterial":
-                hu_thr = HU_THRESHOLD + ART_HU_ADDON
-            elif contrast_phase == "portal_venous":
-                hu_thr = HU_THRESHOLD + PV_HU_ADDON
-            else:
-                hu_thr = HU_THRESHOLD
 
             if height_diff > 0.2:
                 vertebrae_high_height_diff.append(vertebrae)
@@ -162,6 +166,7 @@ def create_spine_report(
                      "has_measurements": has_measurements,
                      "vertebrae_high_height_diff": vertebrae_high_height_diff,
                      "vertebrae_low_intensity": vertebrae_low_intensity,
+                     "no_highlighting": no_highlighting,
                      "metadata": metadata,
                      "contrast_phase": contrast_phase.replace("_", " ")}
     report_img = generate_html(tp, "report_template_frontpage.html",
@@ -230,6 +235,9 @@ def main():
                         help="Run all totalsegmentator runs in parallel. Faster, but needs more RAM + GPU memory.")
     parser.add_argument("-r", "--save_runtime", action="store_true",
                         help="Save runtime to META/runtime.json file.")
+    parser.add_argument("--no_highlighting", action="store_true",
+                        help="Do not show the result text and do not highlight vertebrae above the "
+                             "threshold in yellow (all measurements are shown in white).")
     parser.add_argument("--debug", action="store_true",
                         help="If debug use other tmp dir.")
     parser.add_argument('--version', action='version', version=VERSION)
@@ -312,7 +320,8 @@ def main():
             host="local",
             totalseg_parallel=args.totalseg_parallel,
             spine_range=args.spine_range,
-            original_nifti_path=args.original_nifti_path
+            original_nifti_path=args.original_nifti_path,
+            no_highlighting=args.no_highlighting
         )
 
         for r in res:

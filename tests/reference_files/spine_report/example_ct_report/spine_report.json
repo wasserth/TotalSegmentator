@@ -35,7 +35,9 @@
         "vertebrae_L5_volume_ml": 34.02,
         "vertebrae_L5_intensity": 145.44,
         "vertebrae_L5_intensity_median": 129.0,
-        "LWS_max": 0.22
+        "LWS_max": 0.22,
+        "contrast_phase": "native",
+        "hu_threshold": 90.25
     },
     "metadata": {
         "PatientName": "Unknown",

@@ -244,7 +244,6 @@ pipx install \
 ### Web applications
 We provide the following web applications to easily process your images:
 * [TotalSegmentator](https://totalsegmentator.com/): Run totalsegmentator on your own images via a simple web interface.
-* [TotalSegmentator Annotation Platform](https://annotate.totalsegmentator.com/): Help annotate more data to further improve TotalSegmentator.
 * [Volume Report](https://compute.totalsegmentator.com/volume-report/): Get the volume of abdominal organs + tissue und bone density. Also show percentile in population.
 * [Evans Index](https://compute.totalsegmentator.com/evans-index/): Compute the Evans index.
 * [Aorta Report](https://compute.totalsegmentator.com/aorta-report/): Analyse the diameter along the aorta.
