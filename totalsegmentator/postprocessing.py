@@ -326,8 +326,6 @@ def postprocess_vertebrae_pp(data, label_map, min_size_mm3=100, voxel_volume=1.0
     count_from_top = not l5_in_image and c1_label in present_labels
 
     centers = ndimage.center_of_mass(keep_mask, component_map, keep_components)
-    if len(keep_components) == 1:
-        centers = [centers]
     component_centers = [(component, center[2]) for component, center in zip(keep_components, centers)]
 
     if count_from_top:
