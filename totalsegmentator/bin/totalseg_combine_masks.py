@@ -46,7 +46,10 @@ def main():
     nib.save(combined_img, args.output)
 
     if args.nora_tag != "None":
-        subprocess.call(f"/opt/nora/src/node/nora -p {args.nora_tag} --add {args.output} --addtag mask", shell=True)
+        subprocess.call([
+            "/opt/nora/src/node/nora", "-p", args.nora_tag,
+            "--add", str(args.output), "--addtag", "mask",
+        ])
 
 
 if __name__ == "__main__":
