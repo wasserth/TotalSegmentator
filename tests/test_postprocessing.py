@@ -1,8 +1,10 @@
+import nibabel as nib
 import numpy as np
 
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.postprocessing import postprocess_vertebrae_pp
 from totalsegmentator.postprocessing import refine_vertebrae_pp_with_body_mask
+from totalsegmentator.postprocessing import remove_auxiliary_labels
 
 
 def _add_block(data, z_start, z_stop, label):
@@ -91,3 +93,47 @@ def test_refine_vertebrae_pp_with_body_mask_dilates_and_intersects_body():
     assert refined[2, 3, 3] == 24
     assert refined[3, 4, 3] == 24
     assert refined[3, 3, 1] == 0  # dilated, but outside vertebrae_body
+
+
+def test_remove_auxiliary_labels_strips_appendicular_bones_mr_aux_labels():
+    data = np.zeros((4, 4, 4), dtype=np.uint8)
+    data[0, 0, 0] = 7  # ulna — canonical, kept
+    data[0, 0, 1] = 8  # radius — canonical, kept
+    data[0, 0, 2] = 9  # humerus aux — removed
+    data[0, 1, 0] = 10  # femur aux — removed
+    data[0, 1, 1] = 11  # liver aux — removed
+    data[0, 1, 2] = 12  # spleen aux — removed
+    img = nib.Nifti1Image(data, np.eye(4))
+
+    cleaned = remove_auxiliary_labels(img, "appendicular_bones_mr").get_fdata()
+
+    assert cleaned[0, 0, 0] == 7
+    assert cleaned[0, 0, 1] == 8
+    assert cleaned[0, 0, 2] == 0
+    assert cleaned[0, 1, 0] == 0
+    assert cleaned[0, 1, 1] == 0
+    assert cleaned[0, 1, 2] == 0
+
+
+def test_remove_auxiliary_labels_keeps_appendicular_bones_ct_behaviour():
+    data = np.zeros((4, 4, 4), dtype=np.uint8)
+    data[0, 0, 0] = 5  # metatarsal — canonical, kept
+    data[0, 0, 1] = 12  # humerus aux — removed
+    data[0, 0, 2] = 15  # spleen aux — removed
+    img = nib.Nifti1Image(data, np.eye(4))
+
+    cleaned = remove_auxiliary_labels(img, "appendicular_bones").get_fdata()
+
+    assert cleaned[0, 0, 0] == 5
+    assert cleaned[0, 0, 1] == 0
+    assert cleaned[0, 0, 2] == 0
+
+
+def test_remove_auxiliary_labels_noop_for_tasks_without_aux_map():
+    data = np.zeros((4, 4, 4), dtype=np.uint8)
+    data[0, 0, 0] = 90
+    img = nib.Nifti1Image(data, np.eye(4))
+
+    cleaned = remove_auxiliary_labels(img, "total_mr").get_fdata()
+
+    np.testing.assert_array_equal(cleaned, data)
