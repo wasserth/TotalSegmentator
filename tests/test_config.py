@@ -3,6 +3,41 @@ import json
 from totalsegmentator import config as config_module
 
 
+def test_setup_totalseg_creates_parent_directories(tmp_path, monkeypatch):
+    config_dir = tmp_path / "new" / "nested" / ".totalsegmentator"
+    monkeypatch.setenv("TOTALSEG_HOME_DIR", str(config_dir))
+
+    config = config_module.setup_totalseg(totalseg_id="totalseg_test")
+
+    expected = {
+        "totalseg_id": "totalseg_test",
+        "send_usage_stats": True,
+        "prediction_counter": 0,
+    }
+    assert config == expected
+    assert json.loads((config_dir / "config.json").read_text()) == expected
+
+
+def test_setup_totalseg_preserves_existing_config(tmp_path, monkeypatch):
+    config_dir = tmp_path / "nested" / ".totalsegmentator"
+    config_dir.mkdir(parents=True)
+    monkeypatch.setenv("TOTALSEG_HOME_DIR", str(config_dir))
+    expected = {
+        "totalseg_id": "totalseg_existing",
+        "send_usage_stats": False,
+        "prediction_counter": 7,
+        "custom_setting": "keep",
+    }
+    config_file = config_dir / "config.json"
+    config_file.write_text(json.dumps(expected))
+    original = config_file.read_bytes()
+
+    config = config_module.setup_totalseg(totalseg_id="totalseg_replacement")
+
+    assert config == expected
+    assert config_file.read_bytes() == original
+
+
 def test_set_license_number_skips_validation_for_existing_license(tmp_path, monkeypatch):
     monkeypatch.setenv("TOTALSEG_HOME_DIR", str(tmp_path))
     config_module.setup_totalseg()
