@@ -176,7 +176,7 @@ totalseg_evans_index -i ct_skull.nii.gz -o evans_index.json -p evans_index.png
 
 If you want to find osteoporotic spine fractures you can use the following command. Please cite this [paper](https://rdcu.be/fp2jd):
 ```bash
-totalseg_spine_report.py -i ct.nii.gz -o spine_report.nii.gz -j spine_report.json -l spine_report.log
+totalseg_spine_report -i ct.nii.gz -o spine_report.nii.gz -j spine_report.json -l spine_report.log
 ```
 
 To measure aortic landmark diameters and section lengths/volumes (and curved planar reformation (CPR)), use the aorta report command. (requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/)). See the [aorta report documentation](resources/aorta_report.md) for more details:
