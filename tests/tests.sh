@@ -6,6 +6,9 @@ set -e
 # Test device type selection function
 pytest -v tests/test_device_type.py
 
+# Test that tasks which crop with another task (teeth) pass on the device (no GPU/model needed)
+pytest -v tests/test_crop_model_device.py
+
 # Test config helpers
 pytest -v tests/test_config.py
 

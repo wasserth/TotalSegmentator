@@ -47,11 +47,16 @@ def convert_device_to_cuda(device):
 
 
 def convert_device_to_string(device):
+    """
+    Convert a device as returned by select_device() back to a device string of the
+    python api ("gpu", "gpu:X", "cpu" or "mps").
+    """
     if hasattr(device, 'type'):  # torch.device object
         if device.type == "cuda":
-            return "gpu"
+            return "gpu" if device.index is None else f"gpu:{device.index}"
         else:
             return device.type
+    return device  # select_device() returns "cpu" and "mps" as strings
 
 
 def select_device(device):
