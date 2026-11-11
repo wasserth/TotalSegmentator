@@ -365,6 +365,34 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     # nib.save(nib.Nifti1Image(seg.astype(np.uint8), affine), Path(dir_out) / "s01.nii.gz")
 
 
+def get_working_dtype(img: Nifti1Image, data: np.ndarray):
+    """
+    Datatype for the cropped and resampled copy of the input image that is passed to nnU-Net.
+
+    int32 keeps the temporary files small and loses nothing on integer valued images (CT in
+    Hounsfield units, most MR images converted from DICOM). Images with fractional intensities
+    keep float32: MR images are often float valued with a small range (normalised to [0, 1],
+    bias corrected, quantitative maps like ADC) and an integer cast would leave them with a
+    few grey levels or none at all.
+    """
+    dataobj = img.dataobj
+    if nib.is_proxy(dataobj):
+        # Loaded from a file: nibabel keeps the scaling on the array proxy, not in the header.
+        slope, inter = getattr(dataobj, "slope", 1), getattr(dataobj, "inter", 0)
+        stored_as_integers = (np.issubdtype(img.get_data_dtype(), np.integer)
+                              and float(slope).is_integer() and float(inter).is_integer())
+    else:
+        stored_as_integers = np.issubdtype(np.asanyarray(dataobj).dtype, np.integer)
+    if stored_as_integers:
+        return np.int32
+    # Stored as float: keep int32 if every value is a whole number (e.g. a CT saved as float).
+    # One slice at a time to keep memory low. Stops at the first slice with a fractional value.
+    # (~0.1s for a 512x512x900 image)
+    if any(np.any(data_slice != np.trunc(data_slice)) for data_slice in data):
+        return np.float32
+    return np.int32
+
+
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
     k, v = class_map_item
     # Have to load img inside of each thread. If passing it as argument a lot slower.
@@ -500,7 +528,9 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             raise TypeError(f"Invalid dtype {img_dtype}. Expected a simple dtype, not a structured one.")
 
         # takes ~0.9s for medium image
-        img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
+        img_in_data = img_in_orig.get_fdata()
+        working_dtype = get_working_dtype(img_in_orig, img_in_data)
+        img_in = nib.Nifti1Image(img_in_data, img_in_orig.affine)  # copy img_in_orig
 
         if crop is not None:
             if type(crop) is str:
@@ -533,7 +563,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
                 return img_out, img_in_orig, None
                 
-            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32, verbose=verbose)
+            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=working_dtype, verbose=verbose)
             if cascade:
                 cascade, _ = crop_to_mask(cascade, crop_mask_img, addon=crop_addon, dtype=np.uint8, verbose=verbose)
             if not quiet:
@@ -549,7 +579,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
             img_in_rsp = change_spacing(img_in, resample,
-                                        order=resampling_order, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
+                                        order=resampling_order, dtype=working_dtype, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
             if cascade:
                 cascade = change_spacing(cascade, resample,
                                          order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)
