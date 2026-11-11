@@ -88,6 +88,24 @@ def touches_border(mask):
     return False
 
 
+def _fits_int16(data):
+    """
+    True if casting to int16 does not change any value: only whole numbers within the int16 range.
+
+    One slice at a time to keep memory low. Stops at the first slice with a value which does not fit.
+    (~0.3s for a 512x512x900 image)
+    """
+    info = np.iinfo(np.int16)
+    for data_slice in data:
+        if data_slice.size == 0:
+            continue
+        if not (data_slice.min() >= info.min and data_slice.max() <= info.max):
+            return False
+        if np.any(data_slice != np.trunc(data_slice)):
+            return False
+    return True
+
+
 def _empty_extra_metrics(target):
     target["n_voxels"] = 0
     target["intensity_std"] = 0.0
@@ -135,7 +153,13 @@ def get_basic_statistics(seg: np.array,
         default runtime unchanged.
     """
     ct_img = nib.load(ct_file) if isinstance(ct_file, (str, Path)) else ct_file
-    ct = ct_img.get_fdata().astype(np.int16)
+    ct = ct_img.get_fdata()
+    # int16 makes the intensity statistics a lot faster and loses nothing on CT images in
+    # Hounsfield units. Images an int16 cast would change keep their float values: fractional
+    # intensities (e.g. MR images normalised to [0, 1], ADC maps) would be truncated and
+    # values above 32767 (e.g. 16 bit MR images) would wrap around to negative numbers.
+    if _fits_int16(ct):
+        ct = ct.astype(np.int16)
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     

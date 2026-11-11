@@ -52,6 +52,9 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_preview
 # Research utilities: extra statistics metrics (no GPU needed)
 pytest -v tests/test_research_utils.py
 
+# Statistics of images which do not fit into int16, e.g. float valued MR images (no GPU needed)
+pytest -v tests/test_statistics_intensity.py
+
 # Test - fast - multilabel
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_fast.nii.gz --fast --ml -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast
