@@ -21,6 +21,7 @@ from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.map_tasks_config import DEFAULT_CONFIG, TASK_CONFIGS
 from totalsegmentator.map_to_total import map_to_total
 import re
+import difflib
 
 
 def validate_device_type_api(value):
@@ -201,6 +202,28 @@ def get_task_config(task, fast=False, fastest=False, quiet=False, robust_crop=No
 
     return config
 
+def validate_roi_subset(roi_subset, task):
+    """
+    Raise an error if roi_subset contains class names which the task does not have.
+
+    Without this check a wrong class name (a typo, or a class of the CT task used with
+    total_mr) only fails with a KeyError after the weights were downloaded and the
+    cropping model was run.
+    """
+    if not isinstance(roi_subset, list) or task not in class_map:
+        return  # nothing to check here; wrong types and tasks are reported further down
+    valid_names = list(class_map[task].values())
+    unknown = []
+    for roi in roi_subset:
+        if roi not in valid_names:
+            close = difflib.get_close_matches(str(roi), valid_names, n=1)
+            suggestion = f" (did you mean '{close[0]}'?)" if close else ""
+            unknown.append(f"'{roi}'{suggestion}")
+    if unknown:
+        raise ValueError(f"roi_subset contains class names which are not part of task '{task}': {', '.join(unknown)}. "
+                         f"Run `totalseg_info --classes -ta {task}` to see all class names of this task.")
+
+
 def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path, None]=None, ml=False, nr_thr_resamp=1, nr_thr_saving=6,
                      fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
                      statistics: Union[bool, str, Path]=False, radiomics=False, crop_path=None, body_seg=False,
@@ -305,6 +328,10 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         img_type = "nifti"
     else:
         img_type = "dicom"
+
+    # Check the requested class names before any weights are downloaded or models are run
+    validate_roi_subset(roi_subset, task)
+    validate_roi_subset(roi_subset_robust, task)
 
     if type(task_id) is list:
         for tid in task_id:
