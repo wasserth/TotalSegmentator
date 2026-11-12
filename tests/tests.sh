@@ -15,6 +15,9 @@ pytest -v tests/test_registry.py
 # Test empty crop handling (no GPU/model needed)
 pytest -v tests/test_nnunet_crop.py
 
+# Test that float valued input images keep their intensities (no GPU/model needed)
+pytest -v tests/test_nnunet_input_dtype.py
+
 # Smoke test the introspection commands
 totalseg_info --list-tasks > /dev/null
 totalseg_info --classes -ta total --json > /dev/null
