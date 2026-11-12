@@ -10,7 +10,6 @@ import importlib.resources
 import platform
 
 import requests
-import torch
 
 
 def get_totalseg_dir():
@@ -228,6 +227,7 @@ def send_usage_stats(config, params):
         license_number = get_license_number()
 
         try:
+            import torch
             st = time.time()
             url = "https://stats.totalsegmentator.com:443/"
             r = requests.post(url + "log_totalseg_run",
@@ -263,6 +263,7 @@ def send_usage_stats_application(application_name):
     if config is not None and config["send_usage_stats"]:
 
         try:
+            import torch
             st = time.time()
             url = "https://stats.totalsegmentator.com:443/"
             r = requests.post(url + "log_totalseg_application_run",
