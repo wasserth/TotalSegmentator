@@ -2,7 +2,6 @@ import pathlib
 from pathlib import Path
 import json
 from functools import partial
-import time
 from typing import Union
 
 import numpy as np
@@ -109,9 +108,9 @@ def _add_extra_metrics(target, data, ct):
         return
     vals = ct[data]
     target["n_voxels"] = int(idx.shape[0])
-    target["intensity_std"] = float(np.std(vals).round(5))
-    target["intensity_min"] = float(vals.min())
-    target["intensity_max"] = float(vals.max())
+    target["intensity_std"] = float(np.std(vals, dtype=np.float64).round(5))
+    target["intensity_min"] = round(float(vals.min()), 5)
+    target["intensity_max"] = round(float(vals.max()), 5)
     target["centroid_vox"] = [round(float(c), 2) for c in idx.mean(axis=0)]
     target["bbox_vox"] = [[int(idx[:, a].min()), int(idx[:, a].max())] for a in range(idx.shape[1])]
 
@@ -135,7 +134,8 @@ def get_basic_statistics(seg: np.array,
         default runtime unchanged.
     """
     ct_img = nib.load(ct_file) if isinstance(ct_file, (str, Path)) else ct_file
-    ct = ct_img.get_fdata().astype(np.int16)
+    # float32: no truncation of fractional (MR) intensities, no int16 overflow above 32767
+    ct = ct_img.get_fdata(dtype=np.float32)
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     
@@ -159,14 +159,11 @@ def get_basic_statistics(seg: np.array,
                 _empty_extra_metrics(stats[mask_name])
         else:
             stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3; 0.2s
-            roi_mask = (data > 0).astype(np.uint8)  # 0.16s
-            st = time.time()
+            has_voxels = data.any()
             if metric == "mean":
-                # stats[mask_name]["intensity"] = ct[roi_mask > 0].mean().round(2) if roi_mask.sum() > 0 else 0.0  # 3.0s
-                stats[mask_name]["intensity"] = np.average(ct, weights=roi_mask).round(5) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.03s
+                stats[mask_name]["intensity"] = float(ct[data].mean(dtype=np.float64).round(5)) if has_voxels else 0.0
             elif metric == "median":
-                stats[mask_name]["intensity"] = np.median(ct[roi_mask > 0]).round(5) if roi_mask.sum() > 0 else 0.0  # 0.9s  # fast lowres mode: 0.014s
-            # print(f"took: {time.time()-st:.4f}s")
+                stats[mask_name]["intensity"] = round(float(np.median(ct[data])), 5) if has_voxels else 0.0
             if extra_metrics:
                 _add_extra_metrics(stats[mask_name], data, ct)
 
