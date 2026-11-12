@@ -12,11 +12,11 @@ from totalsegmentator.config import setup_totalseg, set_config_key
 # Each list holds all weights a run of the task needs, so that the task also works on a
 # machine without internet. This includes the model which crops the image to the region of
 # interest before the task itself runs (also used for --roi_subset):
-#   298: total 6mm, 297: total 3mm, 852: total_mr 3mm, 300: body 6mm
+#   298: total 6mm, 297: total 3mm, 837: total_v3 6mm, 852: total_mr 3mm, 300: body 6mm
 TASK_TO_ID = {
     "total": [291, 292, 293, 294, 295, 298],
     "total_fast": [297, 298],
-    "total_v3": [831, 832, 833, 834, 835, 837, 298],
+    "total_v3": [831, 832, 833, 834, 835, 837],
     "total_v3_fast": [836, 837],
     "total_mr": [850, 851, 852],
     "total_fast_mr": [852, 853],

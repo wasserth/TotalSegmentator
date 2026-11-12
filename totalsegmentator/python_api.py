@@ -374,7 +374,12 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         if crop_model is None:  # use default "total" model for cropping
             if robust_rs or robust_crop:
                 print("  (Using more robust (but slower) 3mm model for cropping.)")
-                crop_model_task = 852 if task.endswith("_mr") else 297
+                if task.endswith("_mr"):
+                    crop_model_task = 852
+                elif task == "total_v3":
+                    crop_model_task = 836
+                else:
+                    crop_model_task = 297
                 crop_spacing = 3.0
             else:
                 # For MR always run 3mm model for cropping, because 6mm too bad results
@@ -382,11 +387,16 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                 if task.endswith("_mr"):
                     crop_model_task = 852
                     crop_spacing = 3.0
+                elif task == "total_v3":
+                    crop_model_task = 837
+                    crop_spacing = 6.0
                 else:
                     crop_model_task = 298
                     crop_spacing = 6.0
             if task.endswith("_mr") or modality == "mr":
                 crop_task = "total_mr"
+            elif task == "total_v3":
+                crop_task = "total_v3"
             else:
                 crop_task = "total"
             crop_trainer = "nnUNetTrainer_2000epochs_NoMirroring" if task.endswith("_mr") else "nnUNetTrainer_4000epochs_NoMirroring"

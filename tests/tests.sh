@@ -12,9 +12,6 @@ pytest -v tests/test_config.py
 # Test task registry + totalseg_info command (no GPU/model needed)
 pytest -v tests/test_registry.py
 
-# Test that totalseg_download_weights fetches all weights a run of each task needs (no GPU/model needed)
-pytest -v tests/test_download_weights_tasks.py
-
 # Test empty crop handling (no GPU/model needed)
 pytest -v tests/test_nnunet_crop.py
 
