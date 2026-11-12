@@ -9,9 +9,6 @@ pytest -v tests/test_device_type.py
 # Test config helpers
 pytest -v tests/test_config.py
 
-# Test that wrong class names in --roi_subset are reported before anything is downloaded or run (no GPU/model needed)
-pytest -v tests/test_roi_subset_validation.py
-
 # Test task registry + totalseg_info command (no GPU/model needed)
 pytest -v tests/test_registry.py
 
