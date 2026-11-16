@@ -365,34 +365,6 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
     # nib.save(nib.Nifti1Image(seg.astype(np.uint8), affine), Path(dir_out) / "s01.nii.gz")
 
 
-def get_working_dtype(img: Nifti1Image, data: np.ndarray):
-    """
-    Datatype for the cropped and resampled copy of the input image that is passed to nnU-Net.
-
-    int32 keeps the temporary files small and loses nothing on integer valued images (CT in
-    Hounsfield units, most MR images converted from DICOM). Images with fractional intensities
-    keep float32: MR images are often float valued with a small range (normalised to [0, 1],
-    bias corrected, quantitative maps like ADC) and an integer cast would leave them with a
-    few grey levels or none at all.
-    """
-    dataobj = img.dataobj
-    if nib.is_proxy(dataobj):
-        # Loaded from a file: nibabel keeps the scaling on the array proxy, not in the header.
-        slope, inter = getattr(dataobj, "slope", 1), getattr(dataobj, "inter", 0)
-        stored_as_integers = (np.issubdtype(img.get_data_dtype(), np.integer)
-                              and float(slope).is_integer() and float(inter).is_integer())
-    else:
-        stored_as_integers = np.issubdtype(np.asanyarray(dataobj).dtype, np.integer)
-    if stored_as_integers:
-        return np.int32
-    # Stored as float: keep int32 if every value is a whole number (e.g. a CT saved as float).
-    # One slice at a time to keep memory low. Stops at the first slice with a fractional value.
-    # (~0.1s for a 512x512x900 image)
-    if any(np.any(data_slice != np.trunc(data_slice)) for data_slice in data):
-        return np.float32
-    return np.int32
-
-
 def save_segmentation_nifti(class_map_item, tmp_dir=None, file_out=None, nora_tag=None, header=None, task_name=None, quiet=None):
     k, v = class_map_item
     # Have to load img inside of each thread. If passing it as argument a lot slower.
@@ -529,8 +501,12 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
 
         # takes ~0.9s for medium image
         img_in_data = img_in_orig.get_fdata()
-        working_dtype = get_working_dtype(img_in_orig, img_in_data)
         img_in = nib.Nifti1Image(img_in_data, img_in_orig.affine)  # copy img_in_orig
+
+        # int32 truncates images with fractional intensities (e.g. MR normalised to [0, 1]), so
+        # those stay float32. Checked slice by slice to keep memory low (~0.3s for 512x512x900).
+        is_fractional = any(np.any(s != np.trunc(s)) for s in img_in_data)
+        working_dtype = np.float32 if is_fractional else np.int32
 
         if crop is not None:
             if type(crop) is str:
