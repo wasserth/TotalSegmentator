@@ -179,7 +179,7 @@ If you want to find osteoporotic spine fractures you can use the following comma
 totalseg_spine_report -i ct.nii.gz -o spine_report.nii.gz -j spine_report.json -l spine_report.log
 ```
 
-To measure aortic landmark diameters and section lengths/volumes (and curved planar reformation (CPR)), use the aorta report command. (requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/)). See the [aorta report documentation](resources/aorta_report.md) for more details:
+To measure aortic landmark diameters and section lengths/volumes (and curved planar reformation (CPR)), use the aorta report command. (requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/)). See the [aorta report documentation](resources/aorta_report.md) and our [paper](https://arxiv.org/abs/2611.17968)for more details:
 ```bash
 totalseg_aorta_report -i ct.nii.gz \
   -o aorta_report.nii.gz -j aorta_report.json -l aorta_report.log \

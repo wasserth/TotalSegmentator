@@ -7,7 +7,7 @@ NIfTI report. It can also generate a curved planar reformation (CPR).
 
 The report is a research prototype and is not intended for clinical diagnosis.
 For research use, cite the
-[TotalSegmentator paper](https://pubs.rsna.org/doi/10.1148/ryai.230024).
+[TotalSegmentator Aorta Report paper](https://arxiv.org/abs/2611.17968) (see [Citation](#citation)).
 
 Overview of the aorta report
 
@@ -151,6 +151,16 @@ short or incorrect path.
 - The implementation currently supports local model execution only.
 - Input validation currently returns without an error status, so automation should verify that all
 requested output files were created.
+
+## Citation
+
+If you use the aorta report please cite our [paper](https://arxiv.org/abs/2611.17968):
+
+```text
+Wasserthal, J., Hinck, D., Segeroth, M., Cyriac, J., Berdajs, D., Miazza, J., Pradella, M., 2026. TotalSegmentator Aorta Report: Automated Aortic Diameter Measurement at 11 Standardized Landmarks on CT Images. arXiv:2611.17968. https://doi.org/10.48550/arXiv.2611.17968
+```
+
+Please also cite the [TotalSegmentator paper](https://pubs.rsna.org/doi/10.1148/ryai.230024), since the aorta report is built on TotalSegmentator segmentations.
 
 ## License
 
