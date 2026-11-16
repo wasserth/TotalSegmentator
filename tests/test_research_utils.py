@@ -1,6 +1,5 @@
 import json
 import unittest
-from pathlib import Path
 
 import pytest
 
@@ -67,25 +66,29 @@ def test_statistics_extra_prediction_paths(monkeypatch, tmp_path, fast, save_low
 
     model_prediction = {}
 
-    def predict(input_dir, output_dir, task_id, *args, **kwargs):
+    # Inference runs in memory. The task id stands in for the predictor, so no weights are needed.
+    monkeypatch.setattr(nnunet, "_build_nnunetv2_predictor", lambda task_id, *args: (task_id,))
+    monkeypatch.setattr(nnunet, "_initialize_nnunetv2_predictor", lambda task_id: task_id)
+    monkeypatch.setattr(nnunet, "_create_nnunetv2_predictor", lambda task_id, *args: task_id)
+    monkeypatch.setattr(nnunet, "_preprocessing_signature", lambda task_id: "same for all models")
+    monkeypatch.setattr(nnunet, "_preprocess_nnunet_array", lambda task_id, data, properties: (data, properties))
+
+    def predict(task_id, data, properties, *args, **kwargs):
         # Default mode combines several models, each with its own label map.
         labels = nnunet.class_map["total"]
         if task_id in nnunet.map_taskid_to_partname_ct:
             part = nnunet.map_taskid_to_partname_ct[task_id]
             labels = nnunet.class_map_5_parts[part]
         spleen_label = next((idx for idx, name in labels.items() if name == "spleen"), None)
-        for path in Path(input_dir).glob("*_0000.nii.gz"):
-            img = nib.load(path)
-            seg = np.zeros(img.shape, dtype=np.uint8)
-            if spleen_label is not None:
-                slices = tuple(slice(size // 2 - 1, size // 2 + 2) for size in img.shape)
-                seg[slices] = spleen_label
-                model_prediction["mask"] = seg == spleen_label
-                model_prediction["voxel_volume"] = float(np.prod(img.header.get_zooms()))
-            output = Path(output_dir) / path.name.replace("_0000.nii.gz", ".nii.gz")
-            nib.save(nib.Nifti1Image(seg, img.affine), output)
+        seg = np.zeros(data.shape[1:][::-1], dtype=np.uint8)  # nnU-Net's CZYX -> XYZ
+        if spleen_label is not None:
+            slices = tuple(slice(size // 2 - 1, size // 2 + 2) for size in seg.shape)
+            seg[slices] = spleen_label
+            model_prediction["mask"] = seg == spleen_label
+            model_prediction["voxel_volume"] = float(np.prod(properties["spacing"]))
+        return seg
 
-    monkeypatch.setattr(nnunet, "nnUNetv2_predict", predict)
+    monkeypatch.setattr(nnunet, "_predict_preprocessed_nnunet_array", predict)
     img = nib.Nifti1Image(np.full((10, 10, 10), 25, dtype=np.int16),
                          np.diag([3.0, 3.0, 3.0, 1.0]))
     stats_file = tmp_path / "custom_statistics.json"
