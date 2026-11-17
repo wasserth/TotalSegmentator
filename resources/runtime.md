@@ -1,5 +1,7 @@
 # Runtime and memory measurements (v3.0.0)
 
+> These numbers were measured with the v3.0.0 inference pipeline. Since then every task runs on nnU-Net's streaming inference (see CHANGELOG.md): the segmentation is always resampled from the logits to the input resolution (what `-ho` did), and `-ho` and `-sl` are gone. The tables have not been measured again.
+
 Measured on one CT image with shape **512 x 512 x 807** and spacing **0.82 x 0.82 x 1.00 mm**.
 
 Hardware setup:
@@ -100,7 +102,6 @@ and only the five lung-lobe classes. The first three commands also used
 - If you have a GPU: use default mode
 - If you have only CPU or MPS (Mac): use `--model_size small` or if you need even faster use `--fast`
 - If you do not need all classes, use `--roi_subset`. This makes a huge difference in runtime.
-- For smoother outlies higher-order resampling (`-ho`) makes a big difference. But it comes with a high runtime. (if you use `--roi_subset` it becomes a lot faster)
-- `total_highres` uses much more RAM, GPU memory and time. Do not run it on large CTs, and do not run it on CPU/MPS. In 99% of the cases default mode + `-ho`is sufficient for your needs.
-- `--save_lowres` (`-sl`) skips resampling the segmentation back to the input resolution. Use this if you do not need the segmentation in the same resolution as the input image.
+- Every task resamples its segmentation from the logits to the input resolution (smooth outlines; `-ho` before)
+- `total_highres` uses much more RAM, GPU memory and time. Do not run it on large CTs, and do not run it on CPU/MPS. In 99% of the cases default mode is sufficient for your needs.
 

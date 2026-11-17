@@ -300,10 +300,7 @@ async def run_segmentation(
     ]
 
     if speed == "fast":
-        arguments.extend([
-            "--fast",
-            "--higher_order_resampling",
-        ])
+        arguments.append("--fast")
     elif speed == "fastest":
         arguments.append("--fastest")
 

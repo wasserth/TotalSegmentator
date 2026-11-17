@@ -20,7 +20,7 @@ def _blobs(shape, n_labels, seed=0):
 def _record_dispatch(monkeypatch):
     """Which resampling implementation change_spacing actually reaches."""
     called = []
-    for name in ("resample_img", "resample_img_torch", "resample_one_hot_crop"):
+    for name in ("resample_img", "resample_img_torch"):
         original = getattr(resampling, name)
 
         def wrapper(*args, _name=name, _original=original, **kwargs):
@@ -29,18 +29,6 @@ def _record_dispatch(monkeypatch):
 
         monkeypatch.setattr(resampling, name, wrapper)
     return called
-
-
-def test_torch_resample_does_not_intercept_one_hot_label_resampling(monkeypatch):
-    """crop_resample keeps its own dispatch; torch is for intensity data."""
-    seg = _blobs((20, 22, 18), 12)
-    img = nib.Nifti1Image(seg, np.diag([1.5, 1.5, 1.5, 1]))
-    called = _record_dispatch(monkeypatch)
-
-    change_spacing(img, 1.0, target_shape=(30, 33, 27), order=1, dtype=np.uint8,
-                   crop_resample=True, nr_cpus=1, device="cpu")
-
-    assert called == ["resample_one_hot_crop"], called
 
 
 def test_torch_resample_leaves_nearest_label_upsampling_on_scipy(monkeypatch):

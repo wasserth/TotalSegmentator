@@ -19,7 +19,7 @@ VERTEBRAE_ORDER = ([f"vertebrae_C{i}" for i in range(1, 8)] +
 # Rare anatomical variants which are normally empty; do not warn if they are missing
 OPTIONAL_VERTEBRAE = ["vertebrae_L6", "vertebrae_S1"]
 
-BORDER_MARGIN = 3  # same margin as totalsegmentator.statistics.touches_border
+BORDER_MARGIN = 3  # same 3-voxel border as the statistics of totalsegmentator.statistics.get_basic_statistics
 
 
 def parse_vertebra_name(name):

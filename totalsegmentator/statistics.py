@@ -5,6 +5,7 @@ from functools import partial
 from typing import Union
 
 import numpy as np
+from scipy import ndimage
 import nibabel as nib
 from nibabel.nifti1 import Nifti1Image
 from tqdm import tqdm
@@ -72,21 +73,6 @@ def get_radiomics_features_for_entire_dir(ct_file:Path, mask_dir:Path, file_out:
 #     return (first_slice.sum() > 0) or (last_slice.sum() > 0)
 
 
-def touches_border(mask):
-    """
-    Check if mask touches any of the borders. Then we do not calc any statistics for it because the mask
-    is incomplete.
-    Do not check last two slices but the previous one, because segmentation on last slices often bad.
-    """
-    if np.any(mask[:3, :, :]) or np.any(mask[-3:, :, :]):
-        return True
-    if np.any(mask[:, :3, :]) or np.any(mask[:, -3:, :]):
-        return True
-    if np.any(mask[:, :, :3]) or np.any(mask[:, :, -3:]):
-        return True
-    return False
-
-
 def _empty_extra_metrics(target):
     target["n_voxels"] = 0
     target["intensity_std"] = 0.0
@@ -96,13 +82,14 @@ def _empty_extra_metrics(target):
     target["bbox_vox"] = None
 
 
-def _add_extra_metrics(target, data, ct):
+def _add_extra_metrics(target, data, ct, offset=(0, 0, 0)):
     """Add morphometric + intensity-distribution metrics for one structure.
 
     centroid_vox and bbox_vox are in voxel/index coordinates (numpy axes i,j,k);
     bbox_vox is [[i_min,i_max],[j_min,j_max],[k_min,k_max]] with inclusive maxima.
+    data and ct can be a crop of the image that starts at index `offset`.
     """
-    idx = np.argwhere(data)
+    idx = np.argwhere(data) + np.asarray(offset)
     if idx.shape[0] == 0:
         _empty_extra_metrics(target)
         return
@@ -134,8 +121,9 @@ def get_basic_statistics(seg: np.array,
         default runtime unchanged.
     """
     ct_img = nib.load(ct_file) if isinstance(ct_file, (str, Path)) else ct_file
-    # float32: no truncation of fractional (MR) intensities, no int16 overflow above 32767
-    ct = ct_img.get_fdata(dtype=np.float32)
+    # float32: no truncation of fractional (MR) intensities, no int16 overflow above 32767; caching="unchanged": do not
+    # leave a copy in the image
+    ct = ct_img.get_fdata(dtype=np.float32, caching="unchanged")
     spacing = ct_img.header.get_zooms()
     vox_vol = spacing[0] * spacing[1] * spacing[2]
     
@@ -145,27 +133,53 @@ def get_basic_statistics(seg: np.array,
     class_map_stats = class_map[task]
     if roi_subset is not None:
         class_map_stats = {k: v for k, v in class_map_stats.items() if v in roi_subset}
-    
+
+    # One pass over the volume for every class: voxel counts and intensity sums per label (bincount, in slabs to
+    # bound the int64 copy bincount makes), and the labels in the 3-voxel border shell (a mask there is incomplete).
+    # Same values as one full-volume pass per class, up to float summation order.
+    seg = np.asarray(seg)
+    if not np.issubdtype(seg.dtype, np.integer):
+        seg = seg.astype(np.int32)
+    n = max(int(seg.max()) if seg.size else 0, max(class_map_stats.keys(), default=0)) + 1
+    # in the arrays' own memory layout where they share one (NIfTI's): no transposing copies
+    order = "F" if seg.flags.f_contiguous and ct.flags.f_contiguous else "C"
+    flat_seg, flat_ct = seg.ravel(order=order), ct.ravel(order=order)
+    counts, sums = np.zeros(n, dtype=np.int64), np.zeros(n, dtype=np.float64)
+    for start in range(0, flat_seg.size, 1 << 22):
+        s = flat_seg[start:start + (1 << 22)]
+        counts += np.bincount(s, minlength=n)
+        sums += np.bincount(s, weights=flat_ct[start:start + (1 << 22)], minlength=n)
+    on_border = np.zeros(n, dtype=bool)
+    for axis in range(3):
+        for border in (slice(None, 3), slice(-3, None)):
+            index = [slice(None)] * 3
+            index[axis] = border
+            on_border[np.unique(seg[tuple(index)])] = True
+    # the per-class work that is left (median, extra metrics) only looks at the class's bounding box
+    boxes = ndimage.find_objects(seg, max_label=n - 1) if metric == "median" or extra_metrics else None
+
     stats = {}
     for k, mask_name in tqdm(class_map_stats.items(), disable=quiet):
         stats[mask_name] = {}
-        # data = nib.load(mask).get_fdata()  # loading: 0.6s
-        data = seg == k  # 0.18s
-        if touches_border(data) and exclude_masks_at_border:
+        if on_border[k] and exclude_masks_at_border:
             # print(f"WARNING: {mask_name} touches border. Skipping.")
             stats[mask_name]["volume"] = 0.0
             stats[mask_name]["intensity"] = 0.0
             if extra_metrics:
                 _empty_extra_metrics(stats[mask_name])
         else:
-            stats[mask_name]["volume"] = data.sum() * vox_vol  # vol in mm3; 0.2s
-            has_voxels = data.any()
+            stats[mask_name]["volume"] = counts[k] * vox_vol  # vol in mm3
             if metric == "mean":
-                stats[mask_name]["intensity"] = float(ct[data].mean(dtype=np.float64).round(5)) if has_voxels else 0.0
+                stats[mask_name]["intensity"] = float((sums[k] / counts[k]).round(5)) if counts[k] > 0 else 0.0
             elif metric == "median":
-                stats[mask_name]["intensity"] = round(float(np.median(ct[data])), 5) if has_voxels else 0.0
+                stats[mask_name]["intensity"] = round(float(np.median(ct[boxes[k - 1]][seg[boxes[k - 1]] == k])), 5) \
+                    if counts[k] > 0 else 0.0
             if extra_metrics:
-                _add_extra_metrics(stats[mask_name], data, ct)
+                if counts[k] > 0:
+                    box = boxes[k - 1]
+                    _add_extra_metrics(stats[mask_name], seg[box] == k, ct[box], [s.start for s in box])
+                else:
+                    _empty_extra_metrics(stats[mask_name])
 
     if file_out is not None:
         with open(file_out, "w") as f:

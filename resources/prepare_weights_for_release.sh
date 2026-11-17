@@ -17,8 +17,8 @@ cd /mnt/nvme/data/multiseg/weights_upload/totalsegmentator_v3
 for dataset_id in "$@"; do
     # Get full task name using Python script
     task_name=$(python3 -c "
-from totalsegmentator.nnunet import get_full_task_name_v2
-print(get_full_task_name_v2($dataset_id))
+from nnunetv2.utilities.dataset_name_id_conversion import maybe_convert_to_dataset_name
+print(maybe_convert_to_dataset_name($dataset_id))
 ")
     
     echo "Processing $task_name..."

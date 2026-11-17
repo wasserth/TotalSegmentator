@@ -1,3 +1,5 @@
+> Measured with the inference pipeline of v3.0.0, before the switch to nnU-Net's streaming inference (see CHANGELOG.md); `-sl` used below no longer exists.
+
 Measured on one CT image with shape **512 x 512 x 807** and spacing **0.82 x 0.82 x 1.00 mm**.
 
 Hardware:

@@ -1,23 +1,33 @@
-# Task standard default parameters
+# Every task runs through the same pipeline (predictor.py):
+#   task_id                one nnU-Net model, or a list of models whose label maps are merged (a later one wins)
+#   crop                   classes of a rough segmentation; the models only see their bounding box + crop_margin (mm)
+#                          (+ crop_addon (mm) instead, for a task that names its own crop_model)
+#   crop_margin            the margin around a region found by the total / body model (or by roi_subset)
+#   crop_model             the task that provides that rough segmentation (default: a low resolution total / body model)
+#   robust_crop            use the 3 mm instead of the 6 mm model for it
+#   remove_outside         classes of the rough segmentation; everything further than remove_outside_dilation (mm)
+#                          away from them is removed
+#   input_resampling       how the image gets to the model's spacing (which the model's plans define):
+#                          "cubic": cubic spline on all three axes, on the inference device - for the models whose
+#                                   training images were resampled to the model spacing this way before nnU-Net saw
+#                                   them
+#                          "plans": nnU-Net's resampling as configured in the model's plans
+#   step_size              sliding window step (default: 0.8 for the total tasks, else 0.5)
 DEFAULT_CONFIG = {
-    "resample": None,
     "crop": None,
     "crop_model": None,
-    "crop_addon": [3, 3, 3],  # default value
+    "crop_addon": [3, 3, 3],
+    "crop_margin": [20, 20, 20],
     "robust_crop": False,
-    "cascade": None,
     "remove_outside": None,
     "remove_outside_dilation": None,
-    "remove_mask": None,
-    "modality": None,
-    "plans": None,
+    "input_resampling": "cubic",
+    "plans": "nnUNetPlans",
     "model": "3d_fullres",
     "folds": [0],
     "disallow_fast": False,
     "commercial": False,
 }
-
-# Important: 'resample' expects [x,y,z] but in nnUNet plans.json file it is [z,y,x]. So when copying from plans.json make sure to reverse the order.
 
 # Task custom parameters
 TASK_CONFIGS = {
@@ -26,36 +36,38 @@ TASK_CONFIGS = {
         "sub_modes": {
             "fast": {
                 "task_id": 836,
-                "resample": 3.0,
                 "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
             },
             "fastest": {
                 "task_id": 837,
-                "resample": 6.0,
                 "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
             },
             "default": {
                 "task_id": [831, 832, 833, 834, 835],
-                "resample": 1.5,
                 "trainer": "nnUNetTrainerNoMirroring",
             },
         }
+    },
+    # The 117 classes of `total` in one model, trained on the images as they are (nnU-Net's own input resampling).
+    # Weights are not downloaded: import them with totalseg_import_weights.
+    "total_single": {
+        "task_id": 839,
+        "trainer": "nnUNetTrainer",
+        "input_resampling": "plans",
+        "disallow_fast": True,
     },
     "total_v2": {
         "sub_modes": {
             "fast": {
                 "task_id": 297,
-                "resample": 3.0,
                 "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
             },
             "fastest": {
                 "task_id": 298,
-                "resample": 6.0,
                 "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
             },
             "default": {
                 "task_id": [291, 292, 293, 294, 295],
-                "resample": 1.5,
                 "trainer": "nnUNetTrainerNoMirroring",
             },
         }
@@ -64,18 +76,15 @@ TASK_CONFIGS = {
         "sub_modes": {
             "fast": {
                 "task_id": 872,
-                "resample": 3.0,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
                 # "trainer": "nnUNetTrainerNoMirroring",
             },
             "fastest": {
                 "task_id": 873,
-                "resample": 6.0,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
             },
             "default": {
                 "task_id": [870, 871],
-                "resample": 1.5,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
                 "model": "3d_fullres_15mm",
             },
@@ -85,37 +94,32 @@ TASK_CONFIGS = {
         "sub_modes": {
             "fast": {
                 "task_id": 852,
-                "resample": 3.0,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
             },
             "fastest": {
                 "task_id": 853,
-                "resample": 6.0,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
             },
             "default": {
                 "task_id": [850, 851],
-                "resample": 1.5,
                 "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
             },
         }
     },
     "body": {
         "sub_modes": {
-            "fast": {"task_id": 307, "resample": 6.0, "trainer": "nnUNetTrainer"},
-            "default": {"task_id": 306, "resample": 1.5, "trainer": "nnUNetTrainer"},
+            "fast": {"task_id": 307, "trainer": "nnUNetTrainer"},
+            "default": {"task_id": 306, "trainer": "nnUNetTrainer"},
         }
     },
     "body_mr": {
         "sub_modes": {
             "fast": {
                 "task_id": 623,
-                "resample": 6.0,
                 "trainer": "nnUNetTrainer",
             },
             "default": {
                 "task_id": 622,
-                "resample": 1.5,
                 "trainer": "nnUNetTrainer",
             },
         }
@@ -124,7 +128,8 @@ TASK_CONFIGS = {
     # Direct task mappings
     "total_highres": {
         "task_id": [841, 842, 843, 844, 845],
-        "resample": [0.75, 0.75, 1.0],
+        "crop": ["body_trunc", "body_extremities"],
+        "crop_margin": [3, 3, 3],       # the body crop of TotalSegmentator v3 (--body_seg)
         "trainer": "nnUNetTrainerNoMirroring",
         "model": "3d_fullres_high",
         "plans": "nnUNetResEncUNetLPlans_16",
@@ -133,7 +138,6 @@ TASK_CONFIGS = {
     },
     "lung_vessels": {
         "task_id": 117,
-        "resample": [0.703125, 0.703125, 1.0],
         "trainer": "nnUNetTrainerSkeletonRecall",
         "crop": ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"],
@@ -144,6 +148,7 @@ TASK_CONFIGS = {
     },
     "lung_vessels_LEGACY": {
         "task_id": 258,
+        "input_resampling": "plans",
         "trainer": "nnUNetTrainer",
         "crop": ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"],
@@ -151,7 +156,6 @@ TASK_CONFIGS = {
     },
     # "covid": {
     #     "task_id": 201,
-    #     "resample": None,
     #     "trainer": "nnUNetTrainer",
     #     "crop": ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
     #              "lung_middle_lobe_right", "lung_lower_lobe_right"],
@@ -162,24 +166,26 @@ TASK_CONFIGS = {
     # },
     "cerebral_bleed": {
         "task_id": 150,
+        "input_resampling": "plans",
         "trainer": "nnUNetTrainer",
         "crop": ["brain"],
         "disallow_fast": True,
     },
     "hip_implant": {
         "task_id": 260,
+        "input_resampling": "plans",
         "trainer": "nnUNetTrainer",
         "crop": ["femur_left", "femur_right", "hip_left", "hip_right"],
         "disallow_fast": True,
     },
     "vertebrae_mr": {
         "task_id": 756,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         # "disallow_fast": True # probably should have but does not for some reason.
     },
     "pleural_pericard_effusion": {
         "task_id": 315,
+        "input_resampling": "plans",
         "trainer": "nnUNetTrainer",
         "crop": ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"],
@@ -189,6 +195,7 @@ TASK_CONFIGS = {
     },
     "liver_vessels": {
         "task_id": 8,
+        "input_resampling": "plans",
         "trainer": "nnUNetTrainer",
         "crop": ["liver"],
         "crop_addon": [20, 20, 20],
@@ -196,7 +203,6 @@ TASK_CONFIGS = {
     },
     "head_glands_cavities": {
         "task_id": 775,
-        "resample": [0.75, 0.75, 1.0],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["skull"],
         "crop_addon": [10, 10, 10],
@@ -205,7 +211,6 @@ TASK_CONFIGS = {
     },
     "headneck_bones_vessels": {
         "task_id": 776,
-        "resample": [0.75, 0.75, 1.0],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         # "crop": ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"],
         # "crop_addon": [10, 10, 10],
@@ -216,7 +221,6 @@ TASK_CONFIGS = {
     },
     "head_muscles": {
         "task_id": 777,
-        "resample": [0.75, 0.75, 1.0],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["skull"],
         "crop_addon": [10, 10, 10],
@@ -225,7 +229,6 @@ TASK_CONFIGS = {
     },
     "headneck_muscles": {
         "task_id": [778, 779],
-        "resample": [0.75, 0.75, 1.0],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         # "crop": ["skull", "clavicula_left", "clavicula_right", "vertebrae_C5", "vertebrae_T1", "vertebrae_T4"],
         # "crop_addon": [10, 10, 10],
@@ -236,7 +239,6 @@ TASK_CONFIGS = {
     },
     "oculomotor_muscles": {
         "task_id": 351,
-        "resample": [0.47251562774181366, 0.47251562774181366, 0.8500002026557922],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["skull"],
         "crop_addon": [20, 20, 20],
@@ -244,7 +246,6 @@ TASK_CONFIGS = {
     },
     "lung_nodules": {
         "task_id": 913,
-        "resample": [1.5, 1.5, 1.5],
         "trainer": "nnUNetTrainer_MOSAIC_1k_QuarterLR_NoMirroring",
         "crop": ["lung_upper_lobe_left", "lung_lower_lobe_left", "lung_upper_lobe_right",
                  "lung_middle_lobe_right", "lung_lower_lobe_right"],
@@ -253,7 +254,6 @@ TASK_CONFIGS = {
     },
     "kidney_cysts": {
         "task_id": 789,
-        "resample": [1.5, 1.5, 1.5],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["kidney_left", "kidney_right", "liver", "spleen", "colon"],
         "crop_addon": [10, 10, 10],
@@ -261,13 +261,11 @@ TASK_CONFIGS = {
     },
     "breasts": {
         "task_id": 527,
-        "resample": [1.5, 1.5, 1.5],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "disallow_fast": True,
     },
     "ventricle_parts": {
         "task_id": 552,
-        "resample": [0.4384765625, 0.4345703125, 1.0],
         "trainer": "nnUNetTrainerNoMirroring",
         "crop": ["brain"],
         "crop_addon": [0, 0, 0],
@@ -275,7 +273,6 @@ TASK_CONFIGS = {
     },
     "liver_segments": {
         "task_id": 570,
-        "resample": [0.8046879768371582, 0.8046879768371582, 1.5],
         "trainer": "nnUNetTrainerNoMirroring",
         "crop": ["liver"],
         "crop_addon": [10, 10, 10],
@@ -283,7 +280,6 @@ TASK_CONFIGS = {
     },
     "liver_segments_mr": {
         "task_id": 576,
-        "resample": [1.1250001788139343, 1.1875, 3.0],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["liver"],
         "crop_addon": [10, 10, 10],
@@ -291,7 +287,6 @@ TASK_CONFIGS = {
     },
     "liver_lesions": {
         "task_id": 591,
-        "resample": [0.75, 0.75, 1.0],
         "trainer": "nnUNetTrainer",
         "crop": ["liver"],
         "crop_addon": [10, 10, 10],
@@ -301,7 +296,6 @@ TASK_CONFIGS = {
     },
     "liver_lesions_mr": {
         "task_id": 589,
-        "resample": [0.8603515625, 0.857421875, 1.0],
         "trainer": "nnUNetTrainer_DASegOrd0",
         "crop": ["liver"],
         "robust_crop": True,
@@ -309,7 +303,6 @@ TASK_CONFIGS = {
     },
     "craniofacial_structures": {
         "task_id": 115,
-        "resample": [0.5, 0.5, 0.5],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["skull"],
         "crop_addon": [20, 20, 20],
@@ -319,7 +312,6 @@ TASK_CONFIGS = {
     # I do not have to crop to this region, but model automatically only predicts in this region.
     "abdominal_muscles": {
         "task_id": 952,
-        "resample": [0.75, 0.75, 1],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["body_trunc"],
         "crop_addon": [5, 5, 5],
@@ -328,7 +320,6 @@ TASK_CONFIGS = {
     },
     "teeth": {
         "task_id": 113,  # trained with nnUNet v2.6.2; might not be compatible with older nnunet versions
-        "resample": [0.5, 0.5, 0.5],
         "trainer": "nnUNetTrainer_onlyMirror01",
         # mandible not included, because would increase FOV way too much -> many wrong segmentation in regions outside of teeth
         # (model was trained on pretty narrow FOV because of CBCT data)
@@ -340,13 +331,11 @@ TASK_CONFIGS = {
     },
     "trunk_cavities": {
         "task_id": 343,
-        "resample": [1.5, 1.5, 1.5],
         "trainer": "nnUNetTrainer",
         "disallow_fast": True,
     },
     "brain_aneurysm": {
         "task_id": 615,
-        "resample": [0.390625, 0.390625, 0.5000016391277313],
         "trainer": "nnUNetTrainerDiceTopK10Loss_2000epochs",
         "folds": None,
         "info_msg": "INFO: This task only works with TOF MRI images.\n",
@@ -354,31 +343,26 @@ TASK_CONFIGS = {
     },
     "vertebrae_body": {
         "task_id": 305,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer_DASegOrd0",
         "disallow_fast": True,
     },
     "vertebrae_pp": {
         "task_id": 803,
-        "resample": 1.5,
         "trainer": "nnUNetTrainerNoMirroring",
         "disallow_fast": True,
     },
     "vertebrae_pp_refined": {
         "task_id": 803,
-        "resample": 1.5,
         "trainer": "nnUNetTrainerNoMirroring",
         "disallow_fast": True,
     },
     "thigh_shoulder_muscles": {
         "task_id": 857,  # at the moment only one mixed model for CT and MR; when annotated all CT samples -> train separate CT model
-        "resample": 1.5,
         "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
         "disallow_fast": True,
     },
     "thigh_shoulder_muscles_mr": {
         "task_id": 857,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
         "disallow_fast": True,
     },
@@ -386,6 +370,7 @@ TASK_CONFIGS = {
     # Commercial models
     "heartchambers_highres": {
         "task_id": 301,
+        "input_resampling": "plans",
         "trainer": "nnUNetTrainer",
         "crop": ["heart"],
         "crop_addon": [5, 5, 5],
@@ -397,14 +382,12 @@ TASK_CONFIGS = {
     },
     "appendicular_bones": {
         "task_id": 838,
-        "resample": 1.5,
         "trainer": "nnUNetTrainerNoMirroring",
         "disallow_fast": True,
         "commercial": True,
     },
     "appendicular_bones_highres": {
         "task_id": 848,
-        "resample": [0.75, 0.75, 1.0],
         "trainer": "nnUNetTrainerNoMirroring",
         "model": "3d_fullres_high",
         "plans": "nnUNetResEncUNetLPlans_16",
@@ -413,7 +396,6 @@ TASK_CONFIGS = {
     },
     "appendicular_bones_mr": {
         "task_id": 875,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
         "model": "3d_fullres_15mm",
         "disallow_fast": True,
@@ -421,14 +403,12 @@ TASK_CONFIGS = {
     },
     "tissue_types": {
         "task_id": 481,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer",
         "disallow_fast": True,
         "commercial": True,
     },
     "tissue_types_mr": {
         "task_id": 929,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer",
         "model": "3d_fullres_15mm",
         "disallow_fast": True,
@@ -436,28 +416,24 @@ TASK_CONFIGS = {
     },
     "tissue_4_types": {
         "task_id": 485,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer",
         "disallow_fast": True,
         "commercial": True,
     },
     "face": {
         "task_id": 303,
-        "resample": 1.5,
         "trainer": "nnUNetTrainerNoMirroring",
         "disallow_fast": True,
         "commercial": True,
     },
     "face_mr": {
         "task_id": 856,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
         "disallow_fast": True,
         "commercial": True,
     },
     "brain_structures": {
         "task_id": 409,
-        "resample": [0.5, 0.5, 1.0],
         "trainer": "nnUNetTrainer_DASegOrd0",
         "crop": ["brain"],
         "crop_addon": [10, 10, 10],
@@ -467,7 +443,6 @@ TASK_CONFIGS = {
     },
     "coronary_arteries": {
         "task_id": 509,
-        "resample": [0.7, 0.7, 0.7],
         "trainer": "nnUNetTrainerSkeletonRecall",
         "crop": ["heart"],
         "crop_addon": [20, 20, 20],
@@ -477,7 +452,6 @@ TASK_CONFIGS = {
     },
     "coronary_arteries_LEGACY": {
         "task_id": 507,
-        "resample": [0.7, 0.7, 0.7],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["heart"],
         "crop_addon": [20, 20, 20],
@@ -487,7 +461,6 @@ TASK_CONFIGS = {
     },
     "aortic_sinuses": {
         "task_id": 920,
-        "resample": [0.7, 0.7, 0.7],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["heart"],
         "crop_addon": [0, 0, 0],
@@ -497,7 +470,6 @@ TASK_CONFIGS = {
     },
     "renal_arteries": {
         "task_id": 710,
-        "resample": 1.5,
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         # Model only used for aorta_report and there only working on already cropped image
         "disallow_fast": True,
@@ -505,7 +477,6 @@ TASK_CONFIGS = {
     },
     "aorta_annulus": {
         "task_id": 713,
-        "resample": [0.8, 0.8, 0.8],
         "trainer": "nnUNetTrainer_DASegOrd0",
         # Model only used for aorta_report and there only working on already cropped image
         "model": "3d_fullres_high",
@@ -515,7 +486,6 @@ TASK_CONFIGS = {
     },
     "aortic_dissection": {
         "task_id": 716,
-        "resample": [0.8, 0.8, 0.8],
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         # Model only used for aorta_report and there only working on already cropped image
         "model": "3d_fullres_high",
@@ -525,16 +495,10 @@ TASK_CONFIGS = {
     },
     "pulmonary_artery_landmarks": {
         "task_id": 514,
-        "resample": [0.7802734375, 0.7802734375, 1.0],
         "trainer": "nnUNetTrainer",
         "folds": [0, 1, 2, 3, 4],
         "disallow_fast": True,
         "commercial": True,
-    },
-    "test": {
-        "task_id": [517],
-        "trainer": "nnUNetTrainerV2",
-        "crop": "body",
     },
 }
 
@@ -586,6 +550,9 @@ TASK_ID_WEIGHTS_CONFIGS = {
     835: {"foldername": "Dataset835_TotalSegmentator_part5_ribs_1559subj", "version": "v3.0.0-weights"},
     836: {"foldername": "Dataset836_TotalSegmentator_total_3mm_1559subj", "version": "v3.0.0-weights"},
     837: {"foldername": "Dataset837_TotalSegmentator_total_6mm_1559subj", "version": "v3.0.0-weights"},
+
+    # Total CT, one model, streaming inference (placeholder until the release; "version": None = not downloadable)
+    839: {"foldername": "Dataset839_TotalSegmentator_single_model", "version": None},
 
     # Total CT highres (commercial)
     841: {"foldername": "Dataset841_TotalSeg_highres_part1_organs_1830subj", "commercial": True},

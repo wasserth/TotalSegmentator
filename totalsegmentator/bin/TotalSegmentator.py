@@ -3,6 +3,7 @@ import argparse
 import importlib.metadata
 from pathlib import Path
 import re
+from totalsegmentator.predictor import nifti_cases
 from totalsegmentator.python_api import totalsegmentator, validate_device_type_api
 from totalsegmentator.registry import TASKS, format_tasks_table, format_classes_table
 
@@ -25,14 +26,18 @@ def positive_float(value):
     return value
 
 
-def resampling_order(value):
-    try:
-        value = int(value)
-    except ValueError:
-        raise argparse.ArgumentTypeError(f"Invalid resampling order: '{value}'.")
-    if value < 0 or value > 5:
-        raise argparse.ArgumentTypeError("Resampling order must be between 0 and 5.")
-    return value
+class RemovedOption(argparse.Action):
+    """An option of the old inference pipeline. The options that only tuned it are ignored with a note; the ones that
+    asked for an output the pipeline no longer has are an error."""
+
+    def __init__(self, option_strings, dest, error=False, nargs=0, **kwargs):
+        super().__init__(option_strings, dest, nargs=nargs, help=argparse.SUPPRESS, **kwargs)
+        self.error = error
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if self.error:
+            parser.error(f"{option_string} was removed (see CHANGELOG.md).")
+        print(f"NOTE: {option_string} was removed and is ignored (see CHANGELOG.md).")
 
 
 def normalize_output_types(values):
@@ -61,12 +66,14 @@ def main():
 
     parser.add_argument("-i", metavar="filepath", dest="input",
                         help="CT nifti image or folder of dicom slices or zip file of dicom slices. "
+                             "Or a folder of nifti images: all of them are segmented in one run (models loaded once). "
                              "(Required for segmentation; not needed for --list-tasks / --list-classes.)",
                         type=lambda p: Path(p).absolute(), required=False)
 
     parser.add_argument("-o", metavar="directory", dest="output",
                         help="Output directory for segmentation masks. " +
-                             "Or path of multilabel output nifti file if --ml option is used." +
+                             "Or path of multilabel output nifti file if --ml option is used (.nii.gz is appended if it has no .nii / .nii.gz ending). " +
+                             "For a folder of nifti images: output directory with <case>.nii.gz (--ml) or <case>/ per image. " +
                              "Or path of output dicom seg file if --output_type is set to 'dicom_seg' or 'dicom_rtstruct'. " +
                              "(Required for segmentation; not needed for --list-tasks / --list-classes.)",
                         type=lambda p: Path(p).absolute(), required=False)
@@ -78,18 +85,6 @@ def main():
     parser.add_argument("-ml", "--ml", action="store_true", help="Save one multilabel image for all classes",
                         default=False)
 
-    parser.add_argument("-nr", "--nr_thr_resamp", type=int, help="Nr of threads for resampling", default=1)
-
-    # CT downsampling benchmark:
-    # order=3: Dice: 0.920, NSD: 0.960, 1.5mm: 22s runtime, 3mm: 11s runtime
-    # order=1: Dice: 0.917, NSD: 0.959, 1.5mm: 12s runtime, 3mm: 1.6s runtime
-    #
-    # Info: -ro has no effect if -ho is used because then nnunet takes care of down- and upsampling
-    parser.add_argument("-ro", "--resampling_order", type=resampling_order, default=3,
-                        help="Spline interpolation order for input image resampling (0-5). "
-                             "Default: 3. Setting this to 1 can slightly speed up resampling with similar segmentation accuracy. "
-                             "(has no effect if -ho is used because then nnunet takes care of down- and upsampling)")
-
     parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations",
                         default=6)
 
@@ -97,11 +92,6 @@ def main():
                         default=False)
 
     parser.add_argument("-ff", "--fastest", action="store_true", help="Run even faster lower resolution model (6mm)",
-                        default=False)
-
-    parser.add_argument("-sl", "--save_lowres", action="store_true",
-                        help="Save the segmentation at the model resolution (e.g. 1.5mm, or 3mm/6mm with "
-                             "--fast/--fastest) instead of upsampling it back to the input resolution.",
                         default=False)
 
     parser.add_argument("-t", "--nora_tag", type=str,
@@ -126,7 +116,7 @@ def main():
                              "'small' uses model with less parameters. Default: big.")
 
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
-                        help="Define a subset of classes to save (space separated list of class names). If running 1.5mm model, will only run the appropriate models for these rois.")
+                        help="Define a subset of classes to save (space separated list of class names). The models only run on the region of these classes.")
 
     # Will use 3mm model instead of 6mm model to crop to the rois specified in this argument.
     # 3mm is slower but more accurate.
@@ -135,16 +125,6 @@ def main():
                         help="Like roi_subset but uses a slower but more robust model to find the rois.")
 
     parser.add_argument("-rc", "--robust_crop", action="store_true", help="For cropping (which is required for several task) or roi_subset, use the more robust 3mm model instead of the default and faster 6mm model.",
-                        default=False)
-
-    parser.add_argument("--higher_order_resampling_LEGACY", "--high_order_resampling_LEGACY",
-                        action="store_true",
-                        help="LEGACY: use higher order resampling when upsampling final segmentation masks. "
-                             "Results in smoother segmentations. Use with e.g. -nr 4 for faster runtime.",
-                        default=False)
-
-    parser.add_argument("-ho", "--higher_order_resampling", "--high_order_resampling", action="store_true",
-                        help="Use cropped-logits resampling during nnU-Net export for lower memory usage.",
                         default=False)
 
     parser.add_argument("-s", "--statistics", nargs='?', const=True, default=False,
@@ -171,17 +151,6 @@ def main():
     parser.add_argument("-sx", "--statistics_extra", action="store_true",
                         help="Add extra per-structure metrics to the statistics: n_voxels, intensity std/min/max, "
                              "and the morphometric centroid_vox and bbox_vox (voxel coordinates). Slightly increases statistics runtime.",
-                        default=False)
-
-    parser.add_argument("-cp", "--crop_path", help="Custom path to masks used for cropping. If not set will use output directory.",
-                        type=lambda p: Path(p).absolute(), default=None)
-
-    parser.add_argument("-bs", "--body_seg", action="store_true",
-                        help="Do initial rough body segmentation and crop image to body region "
-                             "(always enabled for task total_highres)",
-                        default=False)
-
-    parser.add_argument("-fs", "--force_split", action="store_true", help="Process image in 3 chunks for less memory consumption. (do not use on small images)",
                         default=False)
 
     parser.add_argument("-ss", "--skip_saving", action="store_true",
@@ -211,9 +180,6 @@ def main():
     parser.add_argument("-q", "--quiet", action="store_true", help="Print no intermediate outputs",
                         default=False)
 
-    parser.add_argument("-sp", "--save_probabilities", help="Save probabilities to this path. Only for experienced users. Python skills required.",
-                        type=lambda p: Path(p).absolute())
-
     parser.add_argument("-v", "--verbose", action="store_true", help="Show more intermediate output",
                         default=False)
 
@@ -223,14 +189,17 @@ def main():
     parser.add_argument("-l", "--license_number", help="Set license number. Needed for some tasks. Only needed once, then stored in config file.",
                         type=str, default=None)
 
-    # Tests:
-    # 0: no testing behaviour activated
-    # 1: total normal
-    # 2: total fast -> removed because can run normally with cpu
-    # 3: lung_vessels
-    parser.add_argument("--test", metavar="0|1|3", choices=[0, 1, 3], type=int,
-                        help="Only needed for unittesting.",
-                        default=0)
+    # Still parsed: argparse would read their short forms as other options otherwise (-fs as --fast --statistics,
+    # -sl as --statistics l, -ro 1 as --radiomics -o 1).
+    parser.add_argument("-nr", "--nr_thr_resamp", action=RemovedOption, nargs=1)
+    parser.add_argument("-ro", "--resampling_order", action=RemovedOption, nargs=1)
+    parser.add_argument("-fs", "--force_split", action=RemovedOption)
+    parser.add_argument("-bs", "--body_seg", action=RemovedOption)
+    parser.add_argument("-ho", "--higher_order_resampling", "--high_order_resampling", action=RemovedOption)
+    parser.add_argument("--higher_order_resampling_LEGACY", "--high_order_resampling_LEGACY", action=RemovedOption)
+    parser.add_argument("-sl", "--save_lowres", action=RemovedOption, error=True)
+    parser.add_argument("-sp", "--save_probabilities", action=RemovedOption, nargs=1, error=True)
+    parser.add_argument("-cp", "--crop_path", action=RemovedOption, nargs=1, error=True)
 
     parser.add_argument("-lt", "--list-tasks", action="store_true", dest="list_tasks",
                         help="List all available tasks (modality, license, number of classes) and exit. "
@@ -266,7 +235,8 @@ def main():
     args.output_type = normalized_output_type[0] if len(normalized_output_type) == 1 else normalized_output_type
 
     # Auto-select task from DICOM Modality when input is DICOM
-    if args.input.exists() and not str(args.input).endswith((".nii", ".nii.gz")):
+    if args.input.exists() and not str(args.input).endswith((".nii", ".nii.gz")) and \
+            not (args.input.is_dir() and nifti_cases(args.input)):
         try:
             from totalsegmentator.dicom_io import detect_dicom_modality
             modality = detect_dicom_modality(args.input)
@@ -280,21 +250,17 @@ def main():
         except Exception:
             pass
 
-    totalsegmentator(args.input, args.output, args.ml, args.nr_thr_resamp, args.nr_thr_saving,
-                     args.fast, args.nora_tag, args.preview, args.task, args.roi_subset,
-                     args.statistics, args.radiomics, args.crop_path, args.body_seg,
-                     args.force_split, args.output_type, args.quiet, args.verbose, args.test, args.skip_saving,
+    totalsegmentator(args.input, args.output, ml=args.ml, nr_thr_saving=args.nr_thr_saving, fast=args.fast,
+                     nora_tag=args.nora_tag, preview=args.preview, task=args.task, roi_subset=args.roi_subset,
+                     statistics=args.statistics, radiomics=args.radiomics, output_type=args.output_type,
+                     quiet=args.quiet, verbose=args.verbose, skip_saving=args.skip_saving,
                      device=args.device, license_number=args.license_number,
                      statistics_exclude_masks_at_border=not args.stats_include_incomplete,
                      no_derived_masks=args.no_derived_masks, v1_order=args.v1_order, fastest=args.fastest,
-                     roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation, 
-                     remove_small_blobs=args.remove_small_blobs, statistics_normalized_intensities=False,
-                     robust_crop=args.robust_crop,
-                     higher_order_resampling_LEGACY=args.higher_order_resampling_LEGACY,
-                     higher_order_resampling=args.higher_order_resampling,
-                     save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
-                     statistics_extra=args.statistics_extra, save_lowres=args.save_lowres,
-                     resampling_order=args.resampling_order, model_size=args.model_size)
+                     roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation,
+                     remove_small_blobs=args.remove_small_blobs, robust_crop=args.robust_crop,
+                     debug=args.debug, report=args.report,
+                     statistics_extra=args.statistics_extra, model_size=args.model_size)
 
 
 if __name__ == '__main__':

@@ -7,18 +7,13 @@ from tqdm import tqdm
 from scipy.ndimage import binary_dilation, binary_erosion, binary_closing
 from scipy import ndimage
 
-from totalsegmentator.map_to_binary import class_map
-
 
 def keep_largest_blob(data, debug=False):
-    blob_map, nr_of_blobs = ndimage.label(data)
-    # Get number of pixels in each blob
-    # counts = list(np.bincount(blob_map.flatten()))  # this will also count background -> bug
-    counts = [np.sum(blob_map == i) for i in range(1, nr_of_blobs + 1)]  # this will not count background
-    if len(counts) == 0: return data  # no foreground
-    largest_blob_label = np.argmax(counts) + 1  # +1 because labels start from 1
-    if debug: print(f"size of largest blob: {np.max(counts)}")
-    return (blob_map == largest_blob_label).astype(np.uint8)
+    import cc3d
+    # face connectivity, as scipy.ndimage.label; connected-components-3d comes with nnU-Net (via acvl-utils)
+    largest = cc3d.largest_k(data, k=1, connectivity=6).astype(np.uint8)
+    if debug: print(f"size of largest blob: {np.count_nonzero(largest)}")
+    return largest
 
 
 def keep_largest_blob_multilabel(data, class_map, rois, debug=False, quiet=False):
@@ -182,19 +177,6 @@ def extract_skin(ct_img, body_img):
     skin = remove_small_blobs(skin>0.5, interval=[5,1e10])
 
     return nib.Nifti1Image(skin.astype(np.uint8), ct_img.affine)
-
-
-def remove_auxiliary_labels(img, task_name):
-    task_name_aux = task_name + "_auxiliary"
-    if task_name_aux in class_map:
-        class_map_aux = class_map[task_name_aux]
-        data = img.get_fdata()
-        # remove auxiliary labels
-        for idx in class_map_aux.keys():
-            data[data == idx] = 0
-        return nib.Nifti1Image(data.astype(np.uint8), img.affine)
-    else:
-        return img
 
 
 def _multilabel_labels_touch(data):

@@ -17,7 +17,8 @@ from totalsegmentator.cnn import (
     predict_all_body_stats_with_cnn,
 )
 from totalsegmentator.contrast_phase import pi_time_to_phase
-from totalsegmentator.python_api import show_license_info, totalsegmentator
+from totalsegmentator.python_api import totalsegmentator
+from totalsegmentator.predictor import show_license_info
 from totalsegmentator.config import (
     get_weights_dir,
     send_usage_stats_application,
@@ -156,7 +157,7 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
 
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast"
-            f" -ta {task} -s {stats_total_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
+            f" -ta {task} -s {stats_total_path} --sa median -ns 1 -d {device} {quiet_flag}",
             shell=True)
         seg_img = nib_load_eager(seg_total_path)
         with open(stats_total_path) as f:
@@ -169,7 +170,7 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
             seg_vert_path = tmp_dir / "seg_vertebrae.nii.gz"
             subprocess.call(
                 f"TotalSegmentator -i {ct_img_path} -o {seg_vert_path} --ml"
-                f" -ta vertebrae_mr -s {stats_vert_path} --sa median -nr 1 -ns 1 -d {device} {quiet_flag}",
+                f" -ta vertebrae_mr -s {stats_vert_path} --sa median -ns 1 -d {device} {quiet_flag}",
                 shell=True)
             vertebrae_seg_img = nib_load_eager(seg_vert_path)
             with open(stats_vert_path) as f:
@@ -181,7 +182,7 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
         license_flag = f"-l {license_number}" if license_number else ""
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_tissue_path} --ml"
-            f" -ta {task_tissue} -s {stats_tissue_path} --sa median -nr 1 -ns 1 -d {device}"
+            f" -ta {task_tissue} -s {stats_tissue_path} --sa median -ns 1 -d {device}"
             f" {quiet_flag} {license_flag}",
             shell=True)
         seg_img_tissue = nib_load_eager(seg_tissue_path)
@@ -191,7 +192,7 @@ def run_models_shell(ct_img, modality, device="gpu", quiet=True, license_number=
         seg_body_path = tmp_dir / "seg_body.nii.gz"
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_body_path} --ml"
-            f" -ta {task_body} -nr 1 -ns 1 -d {device} {quiet_flag}",
+            f" -ta {task_body} -ns 1 -d {device} {quiet_flag}",
             shell=True)
         seg_img_body = nib_load_eager(seg_body_path)
         yield "body", seg_img_body, None
@@ -432,11 +433,13 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
         if existing_stats is None:
             yield {"id": 2, "progress": 5, "status": "Running TotalSegmentator model"}
             task = "total" if modality == "ct" else "total_mr"
+            # NOT PORTED: these statistics used to be computed on the 3 mm image; they are now computed at the
+            # input resolution (the segmentation is needed at that resolution below). Validate the classifiers.
             seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, 
                                               task=task,
                                               roi_subset=None, statistics_exclude_masks_at_border=True,
                                               quiet=True, stats_aggregation="median", device=device,
-                                              nr_thr_resamp=1, nr_thr_saving=1)
+                                              nr_thr_saving=1)
         else:
             stats = existing_stats
             seg_img = existing_seg_img
@@ -452,7 +455,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
                                                     task="vertebrae_mr",
                                                     roi_subset=None, statistics_exclude_masks_at_border=True,
                                                     quiet=True, stats_aggregation="median", device=device,
-                                                    nr_thr_resamp=1, nr_thr_saving=1)
+                                                    nr_thr_saving=1)
             stats.update(vertebrae_stats)
             if not quiet:
                 print(f"  took: {time.time()-st:.2f}s")
@@ -464,7 +467,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
                                                 task=task_tissue,
                                                 roi_subset=None, statistics_exclude_masks_at_border=True,
                                                 quiet=True, stats_aggregation="median",
-                                                nr_thr_resamp=1, nr_thr_saving=1,
+                                                nr_thr_saving=1,
                                                 license_number=license_number)
         if not quiet:
             print(f"  took: {time.time()-st:.2f}s")
@@ -476,7 +479,7 @@ def get_body_stats(img, modality: str, f_type: str = "niigz", model_file: Path =
                                         task=task_body,
                                         roi_subset=None,
                                         quiet=True,
-                                        nr_thr_resamp=1, nr_thr_saving=1,
+                                        nr_thr_saving=1,
                                         device=device)
         if not quiet:
             print(f"  took: {time.time()-st:.2f}s")

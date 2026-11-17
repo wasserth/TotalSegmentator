@@ -18,6 +18,7 @@ import numpy as np
 # legacy pickled XGBoost models after PyTorch can segfault in xgboost.__setstate__.
 import xgboost
 from totalsegmentator.python_api import totalsegmentator
+from totalsegmentator.resampling import change_spacing
 from totalsegmentator.config import send_usage_stats_application
 from totalsegmentator.contrast_phase import pi_time_to_phase
 from totalsegmentator.serialization_utils import filestream_to_nifti, nib_load_eager
@@ -27,6 +28,12 @@ from totalsegmentator.dicom_io import dcm_to_nifti
 Additional requirements for this script:
 xgboost
 """
+
+
+def _resample_to_3mm(ct_img):
+    """The classifier uses statistics of the 3 mm model on the image at 3 mm: resample the image, so that the
+    segmentation and its statistics stay at that resolution."""
+    return change_spacing(ct_img, 3.0, order=3, dtype=np.int32)
 
 
 def run_models_shell(ct_img, device="gpu", quiet=True, debug=False):
@@ -42,12 +49,14 @@ def run_models_shell(ct_img, device="gpu", quiet=True, debug=False):
         tmp_dir = Path(tmp_folder)
         ct_img_path = tmp_dir / "ct.nii.gz"
         nib.save(ct_img, ct_img_path)
+        ct_3mm_path = tmp_dir / "ct_3mm.nii.gz"
+        nib.save(_resample_to_3mm(ct_img), ct_3mm_path)
 
         stats_total_path = tmp_dir / "stats_total.json"
         seg_total_path = tmp_dir / "seg_total.nii.gz"
         subprocess.call(
-            f"TotalSegmentator -i {ct_img_path} -o {seg_total_path} --ml --fast --save_lowres"
-            f" -s {stats_total_path} -sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
+            f"TotalSegmentator -i {ct_3mm_path} -o {seg_total_path} --ml --fast"
+            f" -s {stats_total_path} -sa median -sii -ns 1 -d {device} {quiet_flag} {debug_flag}",
             shell=True)
         seg_img = nib_load_eager(seg_total_path)
         with open(stats_total_path) as f:
@@ -58,7 +67,7 @@ def run_models_shell(ct_img, device="gpu", quiet=True, debug=False):
         seg_hn_path = tmp_dir / "seg_hn.nii.gz"
         subprocess.call(
             f"TotalSegmentator -i {ct_img_path} -o {seg_hn_path} --ml"
-            f" -ta headneck_bones_vessels -s {stats_hn_path} -sa median -sii -nr 1 -ns 1 -d {device} {quiet_flag} {debug_flag}",
+            f" -ta headneck_bones_vessels -s {stats_hn_path} -sa median -sii -ns 1 -d {device} {quiet_flag} {debug_flag}",
             shell=True)
         seg_img_hn = nib_load_eager(seg_hn_path)
         with open(stats_hn_path) as f:
@@ -127,7 +136,7 @@ def get_ct_contrast_phase(ct_img, f_type: str = "niigz", model_file: Path = None
         st = time.time()
         if existing_stats is None:
             yield {"id": 2, "progress": 10, "status": "Running TotalSegmentator model"}
-            seg_img, stats = totalsegmentator(ct_img, None, ml=True, fast=True, save_lowres=True,
+            seg_img, stats = totalsegmentator(_resample_to_3mm(ct_img), None, ml=True, fast=True,
                                             statistics=True, roi_subset=None,
                                             statistics_exclude_masks_at_border=False,
                                             quiet=True, stats_aggregation="median", device=device,

@@ -14,6 +14,7 @@ import nibabel as nib
 import numpy as np
 
 from totalsegmentator.python_api import totalsegmentator
+from totalsegmentator.resampling import change_spacing
 from totalsegmentator.config import send_usage_stats_application
 
 """
@@ -82,6 +83,8 @@ def get_modality_from_rois(img: nib.Nifti1Image, device: str = "gpu"):
               "autochthon_left", "autochthon_right", 
               "iliopsoas_left", "iliopsoas_right"]
 
+    # the classifier uses statistics of the 3 mm model on the image at 3 mm
+    img = change_spacing(img, 3.0, order=3, dtype=np.int32)
     seg_img, stats = totalsegmentator(img, None, ml=True, fast=True, statistics=True, task="total_mr",
                                       roi_subset=None, statistics_exclude_masks_at_border=False,
                                       quiet=True, stats_aggregation="median", statistics_normalized_intensities=True,

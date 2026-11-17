@@ -1,6 +1,4 @@
-import io
 import os
-import contextlib
 import sys
 import random
 import json
@@ -19,27 +17,6 @@ from totalsegmentator.map_to_binary import class_map, class_map_5_parts, commerc
 from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_license, has_valid_license, has_valid_license_offline, get_version
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti, add_label_map_to_nifti
 from totalsegmentator.map_tasks_config import TASK_ID_WEIGHTS_CONFIGS
-
-"""
-Helpers to suppress stdout prints from nnunet
-https://stackoverflow.com/questions/2828953/silence-the-stdout-of-a-function-in-python-without-trashing-sys-stdout-and-resto
-"""
-class DummyFile:
-    def write(self, x): pass
-    def flush(self): pass
-
-@contextlib.contextmanager
-def nostdout(verbose=False):
-    if not verbose:
-        save_stdout = sys.stdout
-        sys.stdout = DummyFile()
-        try:
-            yield
-        finally:
-            sys.stdout = save_stdout
-    else:
-        yield
-
 
 def robust_rmtree(path, max_retries=3, delay=0.5):
     """
@@ -249,6 +226,9 @@ def download_pretrained_weights(task_id):
             # delete tmp file
             # (config_dir / "tmp_download_file.zip").unlink()
 
+            if WEIGHTS_URL is None:
+                raise FileNotFoundError(f"The weights of model {task_id} are not downloaded automatically. Place the model folder "
+                                        f"at {weights_path} (from a zip: totalseg_import_weights -i <zip>).")
             download_url_and_unpack(WEIGHTS_URL, weights_path.parent)
 
         if not weights_path.exists():
@@ -256,6 +236,32 @@ def download_pretrained_weights(task_id):
                 f"Download of task {task_id} finished, but the expected weights folder "
                 f"was not created: {weights_path}. The archive may contain a different dataset."
             )
+
+
+def save_binary_niftis(data, affine, header, label_map, out_dir, nr_threads=6, nora_tag="None"):
+    """
+    Save one binary mask per class (out_dir / "<name>.nii.gz") from a multilabel array in memory.
+
+    Threads, not processes: the comparison (numpy) and the gzip compression (zlib) release the GIL, so the classes are
+    written in parallel without copying the label map to other processes or reading it back from disk per class.
+
+    label_map: {label_id: name} of the classes to save.
+    """
+    from concurrent.futures import ThreadPoolExecutor
+    import subprocess
+
+    out_dir = Path(out_dir)
+    out_dir.mkdir(exist_ok=True, parents=True)
+
+    def save(item):
+        label_id, name = item
+        output_path = str(out_dir / f"{name}.nii.gz")
+        nib.save(nib.Nifti1Image((data == label_id).view(np.uint8), affine, header), output_path)
+        if nora_tag != "None":
+            subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
+
+    with ThreadPoolExecutor(max(1, nr_threads)) as executor:
+        list(executor.map(save, label_map.items()))
 
 
 def combine_masks_to_multilabel_file(masks_dir, multilabel_file):
@@ -344,44 +350,15 @@ def combine_masks(mask_dir, class_type, multilabel=False):
     return combined_img
 
 
-def compress_nifti(file_in, file_out, dtype=np.int32, force_3d=True):
-    img = nib.load(file_in)
-    data = img.get_fdata()
-    if force_3d and len(data.shape) > 3:
-        print("Info: Input image contains more than 3 dimensions. Only keeping first 3 dimensions.")
-        data = data[:,:,:,0]
-    new_image = nib.Nifti1Image(data.astype(dtype), img.affine)
-    nib.save(new_image, file_out)
-
-
-def check_if_shape_and_affine_identical(img_1, img_2):
-
-    max_diff = np.abs(img_1.affine - img_2.affine).max()
-    if max_diff > 1e-5:
-        print("Affine in:")
-        print(img_1.affine)
-        print("Affine out:")
-        print(img_2.affine)
-        print("Diff:")
-        print(np.abs(img_1.affine-img_2.affine))
-        print("WARNING: Output affine not equal to input affine. This should not happen.")
-
-    if img_1.shape != img_2.shape:
-        print("Shape in:")
-        print(img_1.shape)
-        print("Shape out:")
-        print(img_2.shape)
-        print("WARNING: Output shape not equal to input shape. This should not happen.")
-
-
 def reorder_multilabel_like_v1(data, label_map_v2, label_map_v1):
     """
     Reorder a multilabel image from v2 to v1
     """
     label_map_v2_inv = {v: k for k, v in label_map_v2.items()}
-    data_out = np.zeros(data.shape, dtype=np.uint8)
+    lut = np.zeros(max(label_map_v2) + 1, dtype=np.uint8)       # v2 id -> v1 id, in one pass over the image
     for label_id, label_name in label_map_v1.items():
         if label_name in label_map_v2_inv:
-            data_out[data == label_map_v2_inv[label_name]] = label_id
+            lut[label_map_v2_inv[label_name]] = label_id
         # heart chambers are not in v2 anymore. The results seg will be empty for these classes
-    return data_out
+    order = "F" if data.flags.f_contiguous else "C"             # keep the memory layout of data
+    return lut[data.ravel(order=order)].reshape(data.shape, order=order)

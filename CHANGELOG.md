@@ -1,4 +1,14 @@
 ## Master
+* every task runs through one pipeline on nnU-Net's streaming inference (`totalsegmentator/predictor.py`): the predicted logits are resampled exactly to the input grid, in constant memory, for every task and every image size. **The segmentations of all tasks change slightly** (smooth borders at the input resolution, as with `--higher_order_resampling` before).
+* requires `nnunetv2>=2.9.0` (streaming inference).
+* a multilabel output (`--ml`) without a `.nii` / `.nii.gz` ending is saved as `<output>.nii.gz` (before: nibabel wrote an uncompressed `<output>.nii`).
+* `-i` (and the `input` of `totalsegmentator()`) also takes a folder of NIfTI images: all of them are segmented in one run, with the models loaded once and reading and saving overlapping the GPU. `-o` is then a folder (`<name>.nii.gz` per image with `--ml`, else `<name>/`). A folder without NIfTI images is still one DICOM series. When several images share an output folder, their statistics and previews are named `<name>_statistics.json` / `<name>_preview_<task>.png`.
+* new task `total_single`: the 117 classes of `total` in one model instead of five (weights are imported with `totalseg_import_weights -i <weights.zip>`, not downloaded). `total` is unchanged.
+* removed the options that worked around the memory use of the old pipeline or tuned it: `--higher_order_resampling`, `--higher_order_resampling_LEGACY`, `--resampling_order`, `--nr_thr_resamp`, `--force_split`, `--body_seg`, `--save_lowres`, `--save_probabilities`, `--crop_path`. On the command line the first six are ignored with a note and the last three are an error (`crop_to_body` ignores its `--nr_thr_resamp` the same way). `--test` is gone as well.
+* `totalsegmentator()` in the Python API: the same arguments are gone (plus `test` and `plans`), and all arguments but `input` and `output` are keyword arguments now. Positional calls with more than two arguments raise a `TypeError` instead of silently meaning something else.
+* `totalsegmentator.predictor.TotalSegmentatorPredictor` keeps the models of a task loaded and segments a list of images as a batch.
+* statistics are always computed at the resolution of the input image.
+* the 20 mm margin that v3 put around every region found by the `total` / body model (and around `--roi_subset`) is the registry field `crop_margin` now (`total_highres`: 3 mm, its body crop); a task's `crop_addon` applies when it has its own `crop_model`, as before.
 
 
 ## Release 3.0.0 (XX.09.2026)

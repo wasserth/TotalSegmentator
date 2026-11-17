@@ -167,12 +167,17 @@ class TestRunReport(unittest.TestCase):
                 (masks / name).touch()
             empty = root / "empty"
             empty.mkdir()
+            per_image = root / "per_image"         # a folder of images without --ml: <name>/<class>.nii.gz
+            for case in ("a", "b"):
+                (per_image / case).mkdir(parents=True)
+                (per_image / case / "liver.nii.gz").touch()
             for name in ("segmentation.nii", "segmentation.nii.gz", "segmentation.dcm"):
                 (root / name).touch()
 
             cases = [
                 ("directory", masks, False, "nifti", ["liver.nii.gz", "spleen.nii.gz"]),
                 ("empty_directory", empty, False, "nifti", []),
+                ("folder_of_images", per_image, False, "nifti", ["a/liver.nii.gz", "b/liver.nii.gz"]),
                 ("uncompressed", root / "segmentation.nii", True, "nifti", ["segmentation.nii"]),
                 ("string_path", str(root / "segmentation.nii.gz"), True, "nifti", ["segmentation.nii.gz"]),
                 ("missing", root / "missing.nii.gz", True, "nifti", []),
@@ -197,13 +202,12 @@ class TestRunReport(unittest.TestCase):
         report = build_run_report(
             input="ct.nii.gz", output=None, task="total", device="cpu",
             fast=False, fastest=False, ml=False, output_type="nifti",
-            roi_subset=["liver", "spleen"], runtime_seconds=12.345,
-            save_lowres=False)
+            roi_subset=["liver", "spleen"], runtime_seconds=12.345)
 
         expected_keys = {
             "totalsegmentator_version", "nnunetv2_version", "torch_version",
             "task", "modality", "license_required", "device", "fast", "fastest",
-            "save_lowres", "multilabel", "output_type", "roi_subset", "input", "output",
+            "multilabel", "output_type", "roi_subset", "input", "output",
             "num_classes", "classes", "runtime_seconds", "output_files",
         }
         self.assertEqual(set(report), expected_keys)
