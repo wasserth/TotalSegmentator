@@ -144,14 +144,9 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 
 ### Other commands
 
-If you want to know body weight, size, age, sex, BMI, BSA, image noise, contrast, FOV and more information about the image you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md) or in the [paper](https://arxiv.org/abs/2608.29348):
+If you want to know body weight, size, age, sex, BMI, BSA, image noise, post injection time, contrast phase, FOV and more information about the image you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md) or in the [paper](https://arxiv.org/abs/2608.29348):
 ```bash
 totalseg_get_body_stats -i ct.nii.gz -o body_stats.json -m [ct/mr]
-```
-
-If you want to know which contrast phase a CT image is you can use the following command (requires `pip install xgboost`). More details can be found [here](resources/contrast_phase_prediction.md):
-```bash
-totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
 ```
 
 If you want to know which modality (CT or MR) an image is you can use the following command (requires `pip install xgboost`). 
@@ -189,6 +184,11 @@ artery report command. See the
 totalseg_pulmonary_report -i ct.nii.gz \
   -o pulmonary_report.nii.gz -j pulmonary_report.json \
   -l pulmonary_report.log --run_models
+```
+
+If you want to know which contrast phase a CT image is you can use the following command (requires `pip install xgboost`). More details can be found [here](resources/contrast_phase_prediction.md). This is LEGACY, better to use `totalseg_get_body_stats` instead which is faster:
+```bash
+totalseg_get_phase -i ct.nii.gz -o contrast_phase.json
 ```
 
 Normally weights are automatically downloaded when running TotalSegmentator. If you want to download the weights with an extra command (e.g. when building a docker container) use this:
