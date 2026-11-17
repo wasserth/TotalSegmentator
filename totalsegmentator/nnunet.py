@@ -239,7 +239,8 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
                      trainer="nnUNetTrainer", tta=False,
                      num_threads_preprocessing=3, num_threads_nifti_save=2,
                      plans="nnUNetPlans", device="cuda", quiet=False, step_size=0.5,
-                     save_probabilities_path=None, use_cropped_logits_resampling=False):
+                     save_probabilities_path=None, use_cropped_logits_resampling=False,
+                     inference_backend="nnunet"):
     """
     Identical to bash function nnUNetv2_predict
     """
@@ -268,6 +269,12 @@ def nnUNetv2_predict(dir_in, dir_out, task_id, model="3d_fullres", folds=None,
         device = device
     else:
         device = torch.device('mps')
+    if inference_backend == "fastforks":
+        from totalsegmentator.fastforks_predictor import predict_parts
+
+        predict_parts(model_folder, Path(dir_in), Path(dir_out), device, folds, step_size, tta)
+        return
+
     disable_tta = not tta
     verbose = False
     if save_probabilities_path is None:
@@ -391,7 +398,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
                          debug=False, save_lowres=False, resampling_order=1, plans="nnUNetPlans",
                          vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False,
-                         statistics_extra=False):
+                         statistics_extra=False, inference_backend="nnunet"):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -636,7 +643,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                                              nr_threads_resampling, nr_threads_saving,
                                              plans=plans, device=device, quiet=quiet, step_size=step_size,
                                              save_probabilities_path=save_probabilities,
-                                             use_cropped_logits_resampling=use_cropped_logits_resampling)
+                                             use_cropped_logits_resampling=use_cropped_logits_resampling,
+                                             inference_backend=inference_backend)
                     except Exception as e:
                         if debug:
                             print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {tid}, part: {idx+1}/{len(task_id)}")
@@ -674,7 +682,8 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                                          nr_threads_resampling, nr_threads_saving,
                                          plans=plans, device=device, quiet=quiet, step_size=step_size,
                                          save_probabilities_path=save_probabilities,
-                                         use_cropped_logits_resampling=use_cropped_logits_resampling)
+                                         use_cropped_logits_resampling=use_cropped_logits_resampling,
+                                         inference_backend=inference_backend)
                 except Exception as e:
                     if debug:
                         print(f"Error during prediction for input: {file_in}, task: {task_name}, task_id: {task_id}")

@@ -142,6 +142,20 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--list-tasks` / `--list-classes [task]`: Print the available tasks (or the classes of one task) and exit, without running a segmentation. For machine-readable output use the `totalseg_info` command below.
 
 
+#### Experimental FastForks predictor
+
+On CUDA with Python 3.11 or newer, install `pip install -e '.[fastforks]'` from this checkout.
+Select the predictor with `--inference_backend fastforks` (Python API: `inference_backend="fastforks"`).
+
+```bash
+TotalSegmentator -i ct.nii.gz -o labels.nii.gz --ml --fast --inference_backend fastforks
+```
+
+This runs the primary v2 `total` CT model at 3 mm (`--fast`) or 1.5 mm (default) using
+FastForks portable FP16 inference with the installed nnU-Net weights. Auxiliary crop models
+still run through nnU-Net. Probability export and higher-order logits resampling require the
+default nnU-Net predictor.
+
 ### Other commands
 
 If you want to know body weight, size, age, sex, BMI, BSA, image noise, post injection time, contrast phase, FOV and more information about the image you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md) or in the [paper](https://arxiv.org/abs/2608.29348):

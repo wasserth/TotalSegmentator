@@ -121,6 +121,8 @@ def main():
                              "Run 'totalseg_info --list-tasks' to see all options.",
                         default="total")
 
+    parser.add_argument("--inference_backend", choices=["nnunet", "fastforks"], default="nnunet",
+                        help="Primary segmentation predictor. FastForks requires CUDA and supports total CT at 1.5 and 3 mm.")
     parser.add_argument("-ms", "--model_size", choices=["big", "small"], default="big",
                         help="Select model size. Currently only affects task 'total_v3': "
                              "'small' uses nnUNetResEncUNetLPlans_8. Default: big.")
@@ -293,7 +295,7 @@ def main():
                      higher_order_resampling=args.higher_order_resampling,
                      save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
                      statistics_extra=args.statistics_extra, save_lowres=args.save_lowres,
-                     resampling_order=args.resampling_order, model_size=args.model_size)
+                     resampling_order=args.resampling_order, model_size=args.model_size, inference_backend=args.inference_backend)
 
 
 if __name__ == '__main__':
