@@ -500,7 +500,13 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             raise TypeError(f"Invalid dtype {img_dtype}. Expected a simple dtype, not a structured one.")
 
         # takes ~0.9s for medium image
-        img_in = nib.Nifti1Image(img_in_orig.get_fdata(), img_in_orig.affine)  # copy img_in_orig
+        img_in_data = img_in_orig.get_fdata()
+        img_in = nib.Nifti1Image(img_in_data, img_in_orig.affine)  # copy img_in_orig
+
+        # int32 truncates images with fractional intensities (e.g. MR normalised to [0, 1]), so
+        # those stay float32. Checked slice by slice to keep memory low (~0.3s for 512x512x900).
+        is_fractional = any(np.any(s != np.trunc(s)) for s in img_in_data)
+        working_dtype = np.float32 if is_fractional else np.int32
 
         if crop is not None:
             if type(crop) is str:
@@ -533,7 +539,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {file_out} --addtag atlas", shell=True)
                 return img_out, img_in_orig, None
                 
-            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=np.int32, verbose=verbose)
+            img_in, bbox = crop_to_mask(img_in, crop_mask_img, addon=crop_addon, dtype=working_dtype, verbose=verbose)
             if cascade:
                 cascade, _ = crop_to_mask(cascade, crop_mask_img, addon=crop_addon, dtype=np.uint8, verbose=verbose)
             if not quiet:
@@ -549,7 +555,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
             img_in_rsp = change_spacing(img_in, resample,
-                                        order=resampling_order, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
+                                        order=resampling_order, dtype=working_dtype, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
             if cascade:
                 cascade = change_spacing(cascade, resample,
                                          order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)
