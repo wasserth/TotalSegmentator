@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from totalsegmentator.map_to_binary import class_map
 from totalsegmentator.postprocessing import postprocess_vertebrae_pp
@@ -75,6 +76,35 @@ def test_vertebrae_pp_postprocessing_counts_from_top_when_c1_present_without_l5(
     assert np.all(cleaned[:, :, 20:24] == 1)
     assert np.all(cleaned[:, :, 12:16] == 2)
     assert np.all(cleaned[:, :, 4:8] == 3)
+
+
+@pytest.mark.parametrize("labels, expected_label", [((20, 21), 21), ((1, 2), 1), ((23, 24), 24)])
+@pytest.mark.parametrize("with_noise", [False, True])
+def test_vertebrae_pp_postprocessing_single_component(labels, expected_label, with_noise):
+    data = np.zeros((20, 20, 20), dtype=np.uint8)
+    data[5:15, 5:15, 5:10] = labels[0]
+    data[5:15, 5:15, 10:15] = labels[1]
+    if with_noise:
+        data[0, 0, 0] = 1  # removed before selecting the counting direction
+    original = data.copy()
+
+    cleaned = postprocess_vertebrae_pp(data, class_map["vertebrae_pp"], dilation_mm=0)
+
+    expected = np.zeros_like(data)
+    expected[5:15, 5:15, 5:15] = expected_label
+    np.testing.assert_array_equal(cleaned, expected)
+    np.testing.assert_array_equal(data, original)
+    assert cleaned.dtype == np.uint8
+
+
+def test_vertebrae_pp_postprocessing_removes_all_small_components():
+    data = np.zeros((5, 5, 5), dtype=np.uint8)
+    data[2, 2, 2] = 20
+    data[2, 2, 3] = 21
+
+    cleaned = postprocess_vertebrae_pp(data, class_map["vertebrae_pp"], dilation_mm=0)
+
+    np.testing.assert_array_equal(cleaned, np.zeros_like(data))
 
 
 def test_refine_vertebrae_pp_with_body_mask_dilates_and_intersects_body():
