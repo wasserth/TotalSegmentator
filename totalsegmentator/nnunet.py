@@ -1091,7 +1091,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                                                           dilation_mm=2, verbose=verbose)
 
         # Reorder labels if needed
+        img_data_v2_order = None
         if v1_order and task_name in ["total", "total_v2"]:
+            # Only the multilabel file uses the v1 order. Per-class files keep the v2 labels.
+            img_data_v2_order = img_data
             img_data = reorder_multilabel_like_v1(img_data, class_map[task_name], class_map["total_v1"])
 
         # Keep only voxel values corresponding to the roi_subset
@@ -1186,15 +1189,19 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                             print("Shape of output image is very big. Setting nr_threads_saving=1 to save memory.")
                             nr_threads_saving = 1
 
+                        # Cut the classes from the postprocessed label map for any number of threads.
+                        # img_pred misses the postprocessing (e.g. remove_outside, vertebrae refinement).
+                        class_data = img_data if img_data_v2_order is None else img_data_v2_order
                         if nr_threads_saving == 1:
                             for k, v in selected_classes.items():
-                                binary_img = img_data == k
+                                binary_img = class_data == k
                                 output_path = str(file_out / f"{v}.nii.gz")
                                 nib.save(nib.Nifti1Image(binary_img.astype(np.uint8), img_pred.affine, new_header), output_path)
                                 if nora_tag != "None":
                                     subprocess.call(f"/opt/nora/src/node/nora -p {nora_tag} --add {output_path} --addtag mask", shell=True)
                         else:
-                            nib.save(img_pred, tmp_dir / "s01.nii.gz")  # needed inside of threads
+                            # needed inside of threads
+                            nib.save(nib.Nifti1Image(class_data, img_pred.affine, img_pred.header), tmp_dir / "s01.nii.gz")
                             pool = Pool(nr_threads_saving)
                             results = []
                             for k, v in selected_classes.items():
