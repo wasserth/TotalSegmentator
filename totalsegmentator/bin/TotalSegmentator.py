@@ -60,6 +60,18 @@ def normalize_output_types(values):
     return result
 
 
+def resolve_multilabel(mode, output, folder_of_images=False):
+    """'auto': multilabel if the output is a file path or the input a folder of images, binary (one file per class)
+    if the output is a directory."""
+    if mode != "auto":
+        return mode == "multilabel"
+    if folder_of_images:
+        return True
+    if output.is_dir():
+        return False
+    return output.name.endswith((".nii", ".nii.gz", ".dcm"))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Segment 104 anatomical structures in CT images.",
                                      epilog="Written by Jakob Wasserthal. If you use this tool please cite https://pubs.rsna.org/doi/10.1148/ryai.230024")
@@ -71,9 +83,9 @@ def main():
                         type=lambda p: Path(p).absolute(), required=False)
 
     parser.add_argument("-o", metavar="directory", dest="output",
-                        help="Output directory for segmentation masks. " +
-                             "Or path of multilabel output nifti file if --ml option is used (.nii.gz is appended if it has no .nii / .nii.gz ending). " +
-                             "For a folder of nifti images: output directory with <case>.nii.gz (--ml) or <case>/ per image. " +
+                        help="Output directory for segmentation masks (one file per class). " +
+                             "Or path of multilabel output nifti file (ending with .nii / .nii.gz; see --multilabel). " +
+                             "For a folder of nifti images: output directory with <case>.nii.gz per image (or <case>/ with '-ml binary'). " +
                              "Or path of output dicom seg file if --output_type is set to 'dicom_seg' or 'dicom_rtstruct'. " +
                              "(Required for segmentation; not needed for --list-tasks / --list-classes.)",
                         type=lambda p: Path(p).absolute(), required=False)
@@ -82,8 +94,13 @@ def main():
                     help="Select output type(s). Choices: nifti, dicom_rtstruct, dicom_seg. Multiple are allowed e.g. -ot nifti dicom_seg OR -ot nifti,dicom_seg).",
                     default=None)
 
-    parser.add_argument("-ml", "--ml", action="store_true", help="Save one multilabel image for all classes",
-                        default=False)
+    parser.add_argument("-ml", "--multilabel", "--ml", dest="ml", nargs="?", const="auto", default="auto",
+                        choices=["auto", "multilabel", "binary"],
+                        help="'multilabel': save one multilabel image for all classes. 'binary': save one binary "
+                             "mask per class into the output directory. 'auto' (default): multilabel if -o is a file "
+                             "path (ending with .nii / .nii.gz / .dcm) or -i is a folder of nifti images, binary if "
+                             "-o is a directory. "
+                             "-ml without a value is the same as 'auto'.")
 
     parser.add_argument("-ns", "--nr_thr_saving", type=int, help="Nr of threads for saving segmentations",
                         default=6)
@@ -229,6 +246,11 @@ def main():
     missing = [flag for flag, val in (("-i", args.input), ("-o", args.output)) if val is None]
     if missing:
         parser.error(f"the following arguments are required for segmentation: {', '.join(missing)}")
+
+    folder_of_images = args.input.is_dir() and bool(nifti_cases(args.input))
+    if folder_of_images and args.output.name.endswith((".nii", ".nii.gz", ".dcm")):
+        parser.error(f"-i is a folder of images, so -o has to be a folder, not a file: {args.output}")
+    args.ml = resolve_multilabel(args.ml, args.output, folder_of_images)
 
     normalized_output_type = ["nifti"] if args.output_type is None else normalize_output_types(args.output_type)
     # Backward compatibility: single element stays a string

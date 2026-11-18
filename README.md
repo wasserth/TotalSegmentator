@@ -33,20 +33,20 @@ pip install TotalSegmentator
 ### Usage
 For CT images:
 ```bash
-TotalSegmentator -i ct.nii.gz -o segmentations
+TotalSegmentator -i ct.nii.gz -o seg.nii.gz
 ```
 For MR images:
 ```bash
-TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
+TotalSegmentator -i mri.nii.gz -o seg.nii.gz --task total_mr
 ```
 > Note: A Nifti file or a folder (or zip file) with all DICOM slices of one patient is allowed as input.
 
-> Note: The input can also be a folder of Nifti files. All of them are segmented in one run, with the models loaded only once, which is much faster than one call per image. `-o` is then a folder that gets `<name>.nii.gz` per image with `--ml`, or a folder `<name>/` per image otherwise:
+> Note: The input can also be a folder of Nifti files. All of them are segmented in one run, with the models loaded only once, which is much faster than one call per image. `-o` then has to be a folder.
 > ```bash
-> TotalSegmentator -i folder_of_cts -o segmentations --ml
+> TotalSegmentator -i folder_of_cts -o segmentations
 > ```
 
-> Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--model_size small` (uses smaller model) or `--roi_subset` to greatly improve runtime. Use `-ml` to speedup saving (save one combined file instead of one file per class). If you run on a M-series Mac use `--device mps` for great speedup.
+> Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--model_size small` (uses smaller model) or `--roi_subset` to greatly improve runtime. If you run on a M-series Mac use `--device mps` for great speedup.
 
 > Note: This is not a medical device and is not intended for clinical usage. However, it is part of several FDA-approved products, where it has been certified as a component of the overall system.
 
@@ -135,7 +135,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
 * `--model_size small`: Use a smaller model (less filters) to reduce runtime (especially on CPU). (Only works for `total` and `total` + `--fast`)
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
-* `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
+* `--multilabel` / `-ml` `auto|multilabel|binary`: `multilabel` saves one nifti file containing all labels, `binary` saves one file for each class. The default `auto` uses `multilabel` if `-o` is a file path (ending with `.nii`, `.nii.gz` or `.dcm`) or `-i` is a folder of Nifti images, and `binary` if `-o` is a directory. `-ml` without a value is the same as `auto`. Multilabel saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class. Incomplete structures receive zero by default (see [Typical problems](#typical-problems)).
 * `--statistics_extra`: In addition to volume and intensity, also compute `n_voxels`, intensity std/min/max and the morphometric `centroid_vox` and `bbox_vox` (voxel coordinates) for each class. Off by default to keep the statistics runtime unchanged.

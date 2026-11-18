@@ -1,4 +1,5 @@
 ## Master
+* `-ml` / `--multilabel` (`--ml` still works) takes `auto|multilabel|binary`, default `auto`: multilabel output if `-o` is a file path (ending with `.nii`, `.nii.gz` or `.dcm`), one binary mask per class if it is a directory. For a folder of NIfTI images as `-i`, `-o` has to be a folder and `auto` is multilabel (`<name>.nii.gz` per image; `-ml binary` for `<name>/`). `-ml` without a value means `auto`. **Changed default**: `-o seg.nii.gz` without `-ml` now writes a multilabel file (before: a folder named `seg.nii.gz`); `-o seg --ml` now writes binary masks into `seg/` (use `-ml multilabel` for the old `seg.nii.gz`).
 * every task runs through one pipeline on nnU-Net's streaming inference (`totalsegmentator/predictor.py`): the predicted logits are resampled exactly to the input grid, in constant memory, for every task and every image size. **The segmentations of all tasks change slightly** (smooth borders at the input resolution, as with `--higher_order_resampling` before).
 * requires `nnunetv2>=2.9.0` (streaming inference).
 * a multilabel output (`--ml`) without a `.nii` / `.nii.gz` ending is saved as `<output>.nii.gz` (before: nibabel wrote an uncompressed `<output>.nii`).
@@ -9,7 +10,6 @@
 * `totalsegmentator.predictor.TotalSegmentatorPredictor` keeps the models of a task loaded and segments a list of images as a batch.
 * statistics are always computed at the resolution of the input image.
 * the 20 mm margin that v3 put around every region found by the `total` / body model (and around `--roi_subset`) is the registry field `crop_margin` now (`total_highres`: 3 mm, its body crop); a task's `crop_addon` applies when it has its own `crop_model`, as before.
-
 
 ## Release 3.0.1 (intermediate release, never released on pypi)
 * make work with fury > v2. This does not used VTK anymore.
