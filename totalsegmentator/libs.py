@@ -167,7 +167,8 @@ def download_pretrained_weights(task_id):
         "Dataset297_TotalSegmentator_total_3mm_1559subj_v204",  # for >= v2.0.5
         # "Dataset298_TotalSegmentator_total_6mm_1559subj",  # for >= v2.0.5
         "Dataset302_vertebrae_body_1559subj",
-        "body_stats_models_2026_02_11"
+        "body_stats_models_2026_02_11",
+        "body_stats_models_2026_03_24"
     ]
 
     # url = "http://backend.totalsegmentator.com"

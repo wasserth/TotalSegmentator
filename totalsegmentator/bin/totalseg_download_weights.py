@@ -71,7 +71,6 @@ TASK_TO_ID = {
     "thigh_shoulder_muscles_mr": [857],
     "coronary_arteries": [509, 837],
     "coronary_arteries_LEGACY": [507, 837],
-    "body_stats_xgb": ["body_stats_xgb"],
     "body_stats_mr": ["body_stats_mr"],
     "body_stats_ct": ["body_stats_ct"],
     "aortic_sinuses": [920, 837],

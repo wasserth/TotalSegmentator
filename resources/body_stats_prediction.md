@@ -63,6 +63,8 @@ The CNNs were trained on heterogeneous clinical examinations rather than one sta
 
 Values below are mean absolute error (MAE) ± standard deviation. Sex is reported as F1 score. Classification targets in the additional-target table are F1 scores.
 
+XGBoost is the baseline from the paper: an XGBoost model on volumes and intensities from TotalSegmentator segmentations. It is no longer shipped with `totalseg_get_body_stats`.
+
 ### CT
 
 #### Internal test set
@@ -205,12 +207,3 @@ The table below shows training-set percentiles (57,291 CT and 43,200 MR examinat
 These percentiles can be used as quality-control cutoffs. The JSON output includes `noise.noise_outlier` (`true`/`false`) using the 99th-percentile cutoff: `noise > 147` for CT and `noise > 45` for MR.
 
 Visible coverage is encoded using the cranial-most and caudal-most detected vertebra from C1 through L5. These outputs provide a compact indication of which part of the body is present in the image.
-
-
-## XGBoost Model
-
-An alternative model uses TotalSegmentator segmentations and XGBoost. It is slower, requires several segmentation steps, and had lower performance than the CNN for all four core targets in the current internal CT and MR test sets. It is mainly retained as a baseline or fallback.
-
-TotalSegmentator provides organ, bone, vertebral, and tissue-compartment segmentations. Region volumes and median intensities, together with vertebral-level measurements of subcutaneous fat, torso fat, and skeletal muscle, are used as XGBoost features. Separate target-specific ensembles predict weight, height, age, and sex.
-
-The XGBoost model uses the `tissue_types` task, which requires a license. An academic license is available [here](https://backend.totalsegmentator.com/license-academic/) and can be provided with `-l <license_number>`.

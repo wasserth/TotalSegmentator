@@ -669,12 +669,6 @@ TASK_ID_WEIGHTS_CONFIGS = {
     716: {"foldername": "Dataset716_aorta_true_false_lumen_171subj"},
     514: {"foldername": "Dataset514_annulus_pulmonary_70subj"},
 
-    # XGBoost
-    "body_stats_xgb": {
-        "foldername": "body_stats_models_2026_03_24",
-        "version": "v2.5.0-weights"
-    },
-
     # CNN body stats: one multi-target model per modality (license server)
     "body_stats_mr": {
         "rel_path": "lightning_models",

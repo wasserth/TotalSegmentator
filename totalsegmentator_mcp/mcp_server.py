@@ -233,7 +233,6 @@ async def estimate_body_statistics(
                 "-d",
                 device,
                 "-q",
-                "--call_via_subprocess",
             ],
         )
 

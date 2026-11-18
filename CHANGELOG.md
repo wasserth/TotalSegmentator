@@ -10,6 +10,8 @@
 * `totalsegmentator.predictor.TotalSegmentatorPredictor` keeps the models of a task loaded and segments a list of images as a batch.
 * statistics are always computed at the resolution of the input image.
 * a task's `crop_addon` in `map_tasks_config.py` is now the margin around its crop. Before, every region found by the `total` / body model got 20 mm and `crop_addon` only applied to a task with its own `crop_model` (`teeth`). **The segmentations of the cropped tasks with a `crop_addon` other than 20 mm change.** Tasks without a `crop_addon`, and `--roi_subset`, keep the 20 mm (the default `crop_addon`; `total_highres`: 3 mm, its body crop).
+* `totalseg_get_body_stats`: removed the XGBoost model (`-mt xgboost`); the CNN is the only model. `-mt` / `--model_type` and `--call_via_subprocess` are gone, and so are the `get_body_stats()` arguments `model_type`, `call_via_subprocess`, `existing_stats`, `existing_seg_img` and `use_border`. The `body_stats_xgb` weights can no longer be downloaded.
+
 
 ## Release 3.0.1 (intermediate release, never released on pypi)
 * make work with fury > v2. This does not used VTK anymore.
