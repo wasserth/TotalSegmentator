@@ -117,11 +117,11 @@ def test_roi_examples():
     assert P.get_roi("total_v2", config, roi_subset=["liver"], robust=True)["mode"] == "fast"
     assert P.get_roi("total_mr", P.get_task_config("total_mr", quiet=True), ["liver"])["mode"] == "fast"
     assert P.get_roi("abdominal_muscles", P.get_task_config("abdominal_muscles", quiet=True))["task"] == "body"
-    # a region found by the total / body model gets 20 mm, as in TotalSegmentator v3; crop_addon only counts with a
-    # crop_model of the task (teeth above)
-    for task in ("abdominal_muscles", "liver_segments_mr", "lung_vessels"):
-        assert P.get_task_config(task, quiet=True)["crop_addon"] != [20, 20, 20]
-        assert P.get_roi(task, P.get_task_config(task, quiet=True))["margin"] == [20, 20, 20]
+    # a task's crop_addon is the margin of its crop; without one the crop gets 20 mm
+    assert P.get_roi("abdominal_muscles", P.get_task_config("abdominal_muscles", quiet=True))["margin"] == [5, 5, 5]
+    assert P.get_roi("liver_segments_mr", P.get_task_config("liver_segments_mr", quiet=True))["margin"] == [10, 10, 10]
+    assert P.get_roi("ventricle_parts", P.get_task_config("ventricle_parts", quiet=True))["margin"] == [5, 5, 5]
+    assert P.get_roi("lung_vessels", P.get_task_config("lung_vessels", quiet=True))["margin"] == [20, 20, 20]
 
 
 def test_total_highres_crops_to_the_body_with_3mm(monkeypatch):

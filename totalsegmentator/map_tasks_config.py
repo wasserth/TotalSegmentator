@@ -1,8 +1,7 @@
 # Every task runs through the same pipeline (predictor.py):
 #   task_id                one nnU-Net model, or a list of models whose label maps are merged (a later one wins)
-#   crop                   classes of a rough segmentation; the models only see their bounding box + crop_margin (mm)
-#                          (+ crop_addon (mm) instead, for a task that names its own crop_model)
-#   crop_margin            the margin around a region found by the total / body model (or by roi_subset)
+#   crop                   classes of a rough segmentation; the models only see their bounding box + crop_addon (mm)
+#   crop_addon             the margin around that region (also around the region of roi_subset)
 #   crop_model             the task that provides that rough segmentation (default: a low resolution total / body model)
 #   robust_crop            use the 3 mm instead of the 6 mm model for it
 #   remove_outside         classes of the rough segmentation; everything further than remove_outside_dilation (mm)
@@ -16,8 +15,7 @@
 DEFAULT_CONFIG = {
     "crop": None,
     "crop_model": None,
-    "crop_addon": [3, 3, 3],
-    "crop_margin": [20, 20, 20],
+    "crop_addon": [20, 20, 20],
     "robust_crop": False,
     "remove_outside": None,
     "remove_outside_dilation": None,
@@ -129,7 +127,7 @@ TASK_CONFIGS = {
     "total_highres": {
         "task_id": [841, 842, 843, 844, 845],
         "crop": ["body_trunc", "body_extremities"],
-        "crop_margin": [3, 3, 3],       # the body crop of TotalSegmentator v3 (--body_seg)
+        "crop_addon": [3, 3, 3],        # the body crop of TotalSegmentator v3 (--body_seg)
         "trainer": "nnUNetTrainerNoMirroring",
         "model": "3d_fullres_high",
         "plans": "nnUNetResEncUNetLPlans_16",
@@ -268,7 +266,7 @@ TASK_CONFIGS = {
         "task_id": 552,
         "trainer": "nnUNetTrainerNoMirroring",
         "crop": ["brain"],
-        "crop_addon": [0, 0, 0],
+        "crop_addon": [5, 5, 5],
         "disallow_fast": True,
     },
     "liver_segments": {
@@ -463,7 +461,7 @@ TASK_CONFIGS = {
         "task_id": 920,
         "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         "crop": ["heart"],
-        "crop_addon": [0, 0, 0],
+        "crop_addon": [5, 5, 5],
         "model": "3d_fullres_high",
         "disallow_fast": True,
         "commercial": True,

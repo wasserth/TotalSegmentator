@@ -9,7 +9,7 @@
 * `totalsegmentator()` in the Python API: the same arguments are gone (plus `test` and `plans`), and all arguments but `input` and `output` are keyword arguments now. Positional calls with more than two arguments raise a `TypeError` instead of silently meaning something else.
 * `totalsegmentator.predictor.TotalSegmentatorPredictor` keeps the models of a task loaded and segments a list of images as a batch.
 * statistics are always computed at the resolution of the input image.
-* the 20 mm margin that v3 put around every region found by the `total` / body model (and around `--roi_subset`) is the registry field `crop_margin` now (`total_highres`: 3 mm, its body crop); a task's `crop_addon` applies when it has its own `crop_model`, as before.
+* a task's `crop_addon` in `map_tasks_config.py` is now the margin around its crop. Before, every region found by the `total` / body model got 20 mm and `crop_addon` only applied to a task with its own `crop_model` (`teeth`). **The segmentations of the cropped tasks with a `crop_addon` other than 20 mm change.** Tasks without a `crop_addon`, and `--roi_subset`, keep the 20 mm (the default `crop_addon`; `total_highres`: 3 mm, its body crop).
 
 ## Release 3.0.1 (intermediate release, never released on pypi)
 * make work with fury > v2. This does not used VTK anymore.

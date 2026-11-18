@@ -139,9 +139,7 @@ def get_roi(task: str, config: dict, roi_subset: Optional[list[str]] = None, rob
         provider = task if task in ("total_v2", "total_v2_mr") else "total_mr" if task.endswith("_mr") else "total"
         # 6 mm model; the 3 mm model if asked for and for MR, where 6 mm is too coarse
         mode = "fast" if robust or config["robust_crop"] or provider.endswith("_mr") else "fastest"
-    # crop_margin: 20 mm around a region found by the total / body model unless the task says otherwise, as in
-    # TotalSegmentator v3 (crop_addon only counts for a task with its own crop_model)
-    return {"task": provider, "mode": mode, "classes": classes, "margin": config["crop_margin"]}
+    return {"task": provider, "mode": mode, "classes": classes, "margin": config["crop_addon"]}
 
 
 def class_ids(task: str, classes: Sequence[str]) -> list[int]:
