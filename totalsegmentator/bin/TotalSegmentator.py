@@ -115,9 +115,9 @@ def main():
                         help="tag in nora as mask. Pass nora project id as argument.",
                         default="None")
 
-    parser.add_argument("-p", "--preview", action="store_true",
-                        help="Generate a png preview of segmentation",
-                        default=False)
+    parser.add_argument("-p", "--preview", nargs='?', const=True, default=False,
+                        metavar="filepath",
+                        help="Generate a png preview of segmentation. Saved as preview_<task>.png in the output directory. Optionally specify a custom output path for the png.")
 
     # cerebral_bleed: Intracerebral hemorrhage
     # liver_vessels: hepatic vessels

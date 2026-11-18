@@ -116,7 +116,7 @@ def build_run_report(input, output, task, device, fast, fastest, ml, output_type
 
 
 def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Path, None]=None, *, ml=False,
-                     nr_thr_saving=6, fast=False, nora_tag="None", preview=False, task="total", roi_subset=None,
+                     nr_thr_saving=6, fast=False, nora_tag="None", preview: Union[bool, str, Path]=False, task="total", roi_subset=None,
                      statistics: Union[bool, str, Path]=False, radiomics=False, output_type="nifti", quiet=False,
                      verbose=False, skip_saving=False, device="gpu", license_number=None,
                      statistics_exclude_masks_at_border=True, no_derived_masks=False, v1_order=False, fastest=False,
@@ -206,7 +206,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
     try:
         # this can result in error if running multiple processes in parallel because all try to write the same file.
         config = increase_prediction_counter()
-        send_usage_stats(config, {"task": task, "fast": fast, "preview": preview,
+        send_usage_stats(config, {"task": task, "fast": fast, "preview": bool(preview),
                                   "multilabel": ml, "roi_subset": roi_subset,
                                   "statistics": statistics, "radiomics": radiomics})
     except Exception:

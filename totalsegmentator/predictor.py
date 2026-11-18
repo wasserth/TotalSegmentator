@@ -358,7 +358,13 @@ def export_case(data: np.ndarray, source: dict, output: Optional[Path], task: st
     # several images in one call, each written as a file: its statistics and preview are named after that file
     prefix = f"{output.name.split('.')[0]}_" if options["batch"] and out_dir is not None and out_dir != output else ""
     if options["preview"]:
-        if out_dir is None:
+        if isinstance(options["preview"], (str, Path)):
+            preview_file = Path(options["preview"]).absolute()
+        elif out_dir is not None:
+            preview_file = out_dir / f"{prefix}preview_{task}.png"
+        else:
+            preview_file = None
+        if preview_file is None:
             print("WARNING: No output directory specified. Skipping preview generation.")
         else:
             from totalsegmentator.preview import generate_preview
@@ -368,8 +374,8 @@ def export_case(data: np.ndarray, source: dict, output: Optional[Path], task: st
             ct = change_spacing(nib.as_closest_canonical(_input_image(source)), 1.5, order=1, dtype=np.int32)
             seg = change_spacing(nib.as_closest_canonical(Nifti1Image(data, source["affine"])), 1.5,
                                  target_shape=ct.shape, order=0, dtype=np.uint8)
-            out_dir.mkdir(exist_ok=True, parents=True)
-            generate_preview(ct, out_dir / f"{prefix}preview_{task}.png", np.asanyarray(seg.dataobj), 20, task)
+            preview_file.parent.mkdir(exist_ok=True, parents=True)
+            generate_preview(ct, preview_file, np.asanyarray(seg.dataobj), 20, task)
 
     stats = None
     if options["statistics"]:
@@ -607,7 +613,7 @@ class TotalSegmentatorPredictor:
                 roi_subset: Optional[list[str]] = None, output_type: Union[str, list[str]] = "nifti",
                 statistics: Union[bool, str, Path] = False, statistics_extra: bool = False,
                 stats_aggregation: str = "mean", statistics_exclude_masks_at_border: bool = True,
-                statistics_normalized_intensities: bool = False, preview: bool = False,
+                statistics_normalized_intensities: bool = False, preview: Union[bool, str, Path] = False,
                 remove_small_blobs: Union[bool, float] = False, v1_order: bool = False,
                 no_derived_masks: bool = False, nr_thr_saving: int = 6, skip_saving: bool = False,
                 nora_tag: str = "None", return_images: Optional[bool] = None):
@@ -631,6 +637,8 @@ class TotalSegmentatorPredictor:
             return_images = single or all(o is None for o in outputs)
         if not single and isinstance(statistics, (str, Path)):
             raise ValueError("statistics: give True for several images (each gets its own statistics file), not a path.")
+        if not single and isinstance(preview, (str, Path)):
+            raise ValueError("preview: give True for several images (each gets its own preview file), not a path.")
         if roi_subset is not None and not isinstance(roi_subset, list):
             raise ValueError("roi_subset must be a list of strings")
         if roi_subset is not None and not self.task.startswith("total"):
