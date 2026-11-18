@@ -105,3 +105,18 @@ and only the five lung-lobe classes. The first three commands also used
 - Every task resamples its segmentation from the logits to the input resolution (smooth outlines; `-ho` before)
 - `total_highres` uses much more RAM, GPU memory and time. Do not run it on large CTs, and do not run it on CPU/MPS. In 99% of the cases default mode is sufficient for your needs.
 
+
+## Running the MPS measurements remotely
+
+To access the Mac open a reverse tunnel to the Linux machine.
+
+On the Mac:
+```bash
+ssh -N -o ExitOnForwardFailure=yes -R 2222:localhost:22 <user>@<linux-host-ip>
+```
+
+On the Linux machine:
+```bash
+ssh -p 2222 <user>@localhost
+```
+
