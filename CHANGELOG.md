@@ -11,7 +11,7 @@
 * the 20 mm margin that v3 put around every region found by the `total` / body model (and around `--roi_subset`) is the registry field `crop_margin` now (`total_highres`: 3 mm, its body crop); a task's `crop_addon` applies when it has its own `crop_model`, as before.
 
 
-## Release 3.0.0 (XX.09.2026)
+## Release 3.0.1 (intermediate release, never released on pypi)
 * make work with fury > v2. This does not used VTK anymore.
 * `--save_lowres` now also works with the default (1.5mm) models, not only `--fast`/`--fastest`.
 * pin `uharfbuzz<0.56.1` so FURY >=2 / pygfx does not crash on import with Cython 3.3 Limited API wheels (`TypeError: Shared Cython type cython_function_or_method has the wrong size`).
