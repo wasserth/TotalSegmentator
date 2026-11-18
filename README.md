@@ -142,6 +142,33 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--list-tasks` / `--list-classes [task]`: Print the available tasks (or the classes of one task) and exit, without running a segmentation. For machine-readable output use the `totalseg_info` command below.
 
 
+#### Experimental in-memory whole-body CT inference
+
+Use `--optimized_ct` with `-ta total` (v2) or `-ta total_v3`. Both tasks use 1.5 mm by default,
+3 mm with `--fast`, and 6 mm with `--fastest`. The v3 release also provides
+`--model_size small` checkpoints at 1.5 and 3 mm.
+The predictor uses PyTorch and the installed fold-zero weights. Select CUDA, CPU or Metal with the usual device option.
+
+A Python process can reuse the initialized networks between sequential scans. On CUDA the session
+runs one window at a time under FP16 autocast. For a multi-part task it caches the networks in host
+memory and moves each network to the GPU for its windows. A single-part network can stay on the GPU
+until the session switches to a different network:
+
+```python
+from totalsegmentator.optimized_ct import CTSession
+from totalsegmentator.python_api import totalsegmentator
+
+session = CTSession()
+for scan in scans:
+    labels = totalsegmentator(scan, fast=True, optimized_ct=session)
+```
+
+With the weights downloaded, run `python benchmarks/ct_inference.py ct.nii.gz --fast` from an installed
+checkout to compare the first call, warm median, PyTorch peak allocated memory and per-label Dice
+against the default predictor. Select v3 with `--task total_v3`; use `--model-size small` for its smaller network.
+Use `--fastest` for 6 mm or omit both resolution flags for 1.5 mm.
+Use `--device mps` or `--device cpu` for the Mac comparison. CUDA memory figures cover allocations tracked by PyTorch.
+
 ### Other commands
 
 If you want to know body weight, size, age, sex, BMI, BSA, image noise, post injection time, contrast phase, FOV and more information about the image you can use the following command (requires `pip install timm monai`). It runs on CPU in <1min. It requires a license which you can get for free for non-commercial usage [here](https://backend.totalsegmentator.com/license-academic/). More details can be found [here](resources/body_stats_prediction.md) or in the [paper](https://arxiv.org/abs/2608.29348):

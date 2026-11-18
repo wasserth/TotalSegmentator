@@ -100,7 +100,7 @@ from totalsegmentator.map_to_binary import class_map, class_map_5_parts, class_m
 from totalsegmentator.map_to_binary import map_taskid_to_partname_mr, map_taskid_to_partname_ct, map_taskid_to_partname_ct_v3, map_taskid_to_partname_headneck_muscles
 from totalsegmentator.alignment import as_closest_canonical_nifti, undo_canonical_nifti
 from totalsegmentator.alignment import as_closest_canonical, undo_canonical
-from totalsegmentator.resampling import change_spacing
+from totalsegmentator.resampling import change_spacing, cucim_available, cupy_available
 from totalsegmentator.libs import combine_masks, compress_nifti, check_if_shape_and_affine_identical, reorder_multilabel_like_v1
 from totalsegmentator.dicom_io import dcm_to_nifti, save_mask_as_rtstruct, save_mask_as_dicomseg
 from totalsegmentator.cropping import crop_to_mask_nifti, undo_crop_nifti
@@ -391,7 +391,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                          save_probabilities=None, cascade=None, remove_outside_mask=None, remove_outside_dilation=None,
                          debug=False, save_lowres=False, resampling_order=1, plans="nnUNetPlans",
                          vertebrae_body_mask=None, output_task_name=None, use_cropped_logits_resampling=False,
-                         statistics_extra=False):
+                         statistics_extra=False, optimized_ct=False):
     """
     crop: string or a nibabel image
     resample: None or float (target spacing for all dimensions) or list of floats
@@ -548,18 +548,28 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             st = time.time()
             img_in_shape = img_in.shape
             img_in_zooms = img_in.header.get_zooms()
-            img_in_rsp = change_spacing(img_in, resample,
-                                        order=resampling_order, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
+            if optimized_ct:
+                from totalsegmentator.optimized_ct import model_grid, nifti_zyx, restore_labels
+                ct, grid_affine = model_grid(img_in, resample, device)
+                grid_shape = tuple(reversed(ct.shape))
+                if statistics or preview:
+                    img_in_rsp = nifti_zyx(ct, grid_affine)
+            else:
+                img_in_rsp = change_spacing(img_in, resample,
+                                            order=resampling_order, dtype=np.int32, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)  # 4 cpus instead of 1 makes it a bit slower
+                grid_shape = img_in_rsp.shape
             if cascade:
                 cascade = change_spacing(cascade, resample,
                                          order=0, dtype=np.uint8, nr_cpus=nr_threads_resampling, use_gpu=use_gpu)
             if verbose:
-                print(f"  from shape {img_in.shape} to shape {img_in_rsp.shape}")
+                print(f"  from shape {img_in.shape} to shape {grid_shape}")
             if not quiet: print(f"  Resampled in {time.time() - st:.2f}s")
         else:
             img_in_rsp = img_in
+            grid_shape = img_in.shape
 
-        nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
+        if not optimized_ct:
+            nib.save(img_in_rsp, tmp_dir / "s01_0000.nii.gz")
 
         if cascade:
             nib.save(cascade, tmp_dir / "s01_0001.nii.gz")
@@ -568,7 +578,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         nr_voxels_thr = 512*512*900
         # nr_voxels_thr = 256*256*900
         img_parts = ["s01"]
-        ss = img_in_rsp.shape
+        ss = grid_shape
         # If image to big then split into 3 parts along z axis. Also make sure that z-axis is at least 200px otherwise
         # splitting along it does not really make sense.
         do_triple_split = np.prod(ss) > nr_voxels_thr and ss[2] > 200 and multimodel
@@ -576,7 +586,7 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             do_triple_split = True
         if cascade:
             do_triple_split = False
-        if do_triple_split:
+        if do_triple_split and not optimized_ct:
             if not quiet: print("Splitting into subparts...")
             img_parts = ["s01", "s02", "s03"]
             third = img_in_rsp.shape[2] // 3
@@ -601,22 +611,36 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
             step_size = 0.5
 
         st = time.time()
-        if multimodel:  # if running multiple models
+        if multimodel and roi_subset is not None:
+            part_names = []
+            new_task_id = []
+            for part_name, part_map in class_map_parts.items():
+                if any(organ in roi_subset for organ in part_map.values()):
+                    # get taskid associated to model part_name
+                    map_partname_to_taskid = {v:k for k,v in map_taskid_to_partname.items()}
+                    new_task_id.append(map_partname_to_taskid[part_name])
+                    part_names.append(part_name)
+            task_id = new_task_id
+            if verbose:
+                print(f"Computing parts: {part_names} based on the provided roi_subset")
 
-            # only compute model parts containing the roi subset
-            if roi_subset is not None:
-                part_names = []
-                new_task_id = []
-                for part_name, part_map in class_map_parts.items():
-                    if any(organ in roi_subset for organ in part_map.values()):
-                        # get taskid associated to model part_name
-                        map_partname_to_taskid = {v:k for k,v in map_taskid_to_partname.items()}
-                        new_task_id.append(map_partname_to_taskid[part_name])
-                        part_names.append(part_name)
-                task_id = new_task_id
-                if verbose:
-                    print(f"Computing parts: {part_names} based on the provided roi_subset")
-
+        if optimized_ct:
+            ids = task_id if multimodel else [task_id]
+            models = []
+            global_ids = {name: i for i, name in class_map[task_name].items()}
+            for tid in ids:
+                folder = get_output_folder(tid, trainer, plans, model)
+                lut = None
+                if multimodel:
+                    part = class_map_parts[map_taskid_to_partname[tid]]
+                    lut = np.zeros(256, dtype=np.uint8)
+                    for local_id, name in part.items():
+                        lut[local_id] = global_ids[name]
+                models.append((folder, lut))
+            prediction = optimized_ct.segment(ct, resample, models, step_size, do_triple_split)
+            img_pred = nifti_zyx(prediction, grid_affine)
+            del ct, prediction
+        elif multimodel:
             if test == 0:
                 class_map_inv = {v: k for k, v in class_map[task_name].items()}
                 (tmp_dir / "parts").mkdir(exist_ok=True)
@@ -688,14 +712,15 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
         if not quiet: print(f"  Predicted in {time.time() - st:.2f}s")
 
         # Combine image subparts back to one image
-        if do_triple_split:
+        if do_triple_split and not optimized_ct:
             combined_img = np.zeros(img_in_rsp.shape, dtype=np.uint8)
             combined_img[:,:,:third] = nib.load(tmp_dir / "s01.nii.gz").get_fdata()[:,:,:-margin]
             combined_img[:,:,third:third*2] = nib.load(tmp_dir / "s02.nii.gz").get_fdata()[:,:,margin-1:-margin]
             combined_img[:,:,third*2:] = nib.load(tmp_dir / "s03.nii.gz").get_fdata()[:,:,margin-1:]
             nib.save(nib.Nifti1Image(combined_img, img_in_rsp.affine), tmp_dir / "s01.nii.gz")
 
-        img_pred = nib.load(tmp_dir / "s01.nii.gz")
+        if not optimized_ct:
+            img_pred = nib.load(tmp_dir / "s01.nii.gz")
 
         # Currently only relevant for T304 (appendicular bones)
         img_pred = remove_auxiliary_labels(img_pred, task_name)
@@ -811,6 +836,10 @@ def nnUNet_predict_image(file_in: Union[str, Path, Nifti1Image], file_out, task_
                 img_pred = change_spacing(img_pred, resample, img_in_shape,
                                           order=1, dtype=np.uint8, nr_cpus=nr_threads_resampling,
                                           force_affine=img_in.affine, crop_resample=True, use_gpu=use_gpu)
+            elif optimized_ct and not (use_gpu and cupy_available and cucim_available):
+                # The cuCIM resize uses different sample positions from scipy.ndimage.zoom.
+                labels = torch.from_numpy(np.ascontiguousarray(np.asarray(img_pred.dataobj).T)).to(device)
+                img_pred = nifti_zyx(restore_labels(labels, img_in_shape[::-1]), img_in.affine)
             else:
                 # Upsampling time: 
                 # -nr=1: 7s, 11000MB

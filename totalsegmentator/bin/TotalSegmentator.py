@@ -121,6 +121,8 @@ def main():
                              "Run 'totalseg_info --list-tasks' to see all options.",
                         default="total")
 
+    parser.add_argument("--optimized_ct", action="store_true",
+                        help="Experimental in-memory predictor for v2 and v3 whole-body CT.")
     parser.add_argument("-ms", "--model_size", choices=["big", "small"], default="big",
                         help="Select model size. Currently only affects task 'total_v3': "
                              "'small' uses nnUNetResEncUNetLPlans_8. Default: big.")
@@ -293,7 +295,7 @@ def main():
                      higher_order_resampling=args.higher_order_resampling,
                      save_probabilities=args.save_probabilities, debug=args.debug, report=args.report,
                      statistics_extra=args.statistics_extra, save_lowres=args.save_lowres,
-                     resampling_order=args.resampling_order, model_size=args.model_size)
+                     resampling_order=args.resampling_order, model_size=args.model_size, optimized_ct=args.optimized_ct)
 
 
 if __name__ == '__main__':
