@@ -115,6 +115,10 @@ def test_roi_examples():
     assert P.get_roi("total_v2", config, roi_subset=["liver"]) == \
         {"task": "total_v2", "mode": "fastest", "classes": ["liver"], "margin": [20, 20, 20]}
     assert P.get_roi("total_v2", config, roi_subset=["liver"], robust=True)["mode"] == "fast"
+    # roi_subset only crops in the default mode
+    assert P.get_roi("total", P.get_task_config("total", "fastest", quiet=True), ["liver"], mode="fastest") is None
+    assert P.get_roi("total", P.get_task_config("total", "fast", quiet=True), ["liver"], mode="fast") is None
+    assert P.get_roi("total_mr", P.get_task_config("total_mr", "fast", quiet=True), ["liver"], mode="fast") is None
     assert P.get_roi("total_mr", P.get_task_config("total_mr", quiet=True), ["liver"])["mode"] == "fast"
     assert P.get_roi("abdominal_muscles", P.get_task_config("abdominal_muscles", quiet=True))["task"] == "body"
     # a task's crop_addon is the margin of its crop; without one the crop gets 20 mm

@@ -20,7 +20,6 @@ MPS:
 
 ## Runtime by device
 
-
 | Command                                                             | GPU         | CPU    | MPS   |
 | ------------------------------------------------------------------- | ----------- | ------ | ----- |
 | **Default**                                                         |             |        |       |
@@ -38,15 +37,11 @@ MPS:
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 68 s        | 95 s   | 59 s  |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 70 s        | 84 s   | 50 s  |
 
-
-
-
 ## Memory by device
 
 Linux RAM is the peak process-tree PSS. MPS is the peak process-tree physical
 footprint and includes both CPU and GPU allocations in unified memory, so it is
 not directly comparable with the Linux RAM columns.
-
 
 | Command                                                             | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
 | ------------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
@@ -65,9 +60,6 @@ not directly comparable with the Linux RAM columns.
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 7.9 GB               | 5.0 GB   | 7.9 GB               | 8.7 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ms small -ho`  | 7.9 GB               | 2.9 GB   | 7.8 GB               | 9.1 GB             |
 
-
-
-
 ## Real life example: Get lungs in Chest CT
 
 A more typical case: a chest CT (**512 x 512 x 139**, spacing **0.76 x 0.76 x 2.50 mm**)
@@ -78,6 +70,7 @@ and only the five lung-lobe classes. The first three commands also used
 `total_highres` was run without `--roi_subset` (it always body-crops, then predicts all classes).
 
 ### Runtime
+
 | Command                                                             | GPU   | CPU    | MPS   |
 | ------------------------------------------------------------------- | ----- | ------ | ----- |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 23 s  | 37 s   | 21 s  |
@@ -85,17 +78,14 @@ and only the five lung-lobe classes. The first three commands also used
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 31 s  | 27 s   | 16 s  |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 191 s | 1662 s | 847 s |
 
-
 ### Memory
+
 | Command                                                             | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
 | ------------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml`                   | 3.8 GB               | 2.4 GB   | 4.7 GB               | 6.5 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ms small`         | 3.6 GB               | 4.7 GB   | 5.1 GB               | 7.3 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -ho`            | 4.0 GB               | 1.7 GB   | 4.7 GB               | 6.2 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -ta total_highres` | 12.2 GB              | 9.3 GB   | 14.5 GB              | 18.5 GB            |
-
-
-
 
 ## Summary
 
@@ -105,17 +95,18 @@ and only the five lung-lobe classes. The first three commands also used
 - Every task resamples its segmentation from the logits to the input resolution (smooth outlines; `-ho` before)
 - `total_highres` uses much more RAM, GPU memory and time. Do not run it on large CTs, and do not run it on CPU/MPS. In 99% of the cases default mode is sufficient for your needs.
 
-
 ## Running the MPS measurements remotely
 
 To access the Mac open a reverse tunnel to the Linux machine.
 
 On the Mac:
+
 ```bash
 ssh -N -o ExitOnForwardFailure=yes -R 2222:localhost:22 <user>@<linux-host-ip>
 ```
 
 On the Linux machine:
+
 ```bash
 ssh -p 2222 <user>@localhost
 ```

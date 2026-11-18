@@ -122,14 +122,16 @@ def get_task_config(task: str, mode: str = "default", quiet: bool = False, model
     return config
 
 
-def get_roi(task: str, config: dict, roi_subset: Optional[list[str]] = None, robust: bool = False) -> Optional[dict]:
+def get_roi(task: str, config: dict, roi_subset: Optional[list[str]] = None, robust: bool = False,
+            mode: str = "default") -> Optional[dict]:
     """
     The region the models of a task run on: the bounding box of `classes` in the label map of another (cheap) task,
     plus `margin` mm. None: the whole image. A task has a region if its config names one ("crop"), or if the caller
-    only wants some classes of a total task (roi_subset).
+    only wants some classes of a total task (roi_subset) in the default mode. The --fast and --fastest models are
+    single low resolution models; a crop barely makes them faster.
     """
     classes = config["crop"] or roi_subset
-    if classes is None:
+    if classes is None or (config["crop"] is None and mode != "default"):
         return None
     if config["crop_model"] is not None:
         return {"task": config["crop_model"], "mode": "default", "classes": classes, "margin": config["crop_addon"]}
@@ -550,7 +552,7 @@ class TotalSegmentatorPredictor:
         spacing = np.array(properties["spacing"])
         models = self.models(task, config, roi_subset)
 
-        roi = get_roi(task, config, roi_subset, self.robust_crop)
+        roi = get_roi(task, config, roi_subset, self.robust_crop, mode)
         if roi is not None:
             rough = self.segment(data, properties, roi["task"], roi["mode"], prepared=prepared, num_cases=num_cases)
             box = bounding_box(label_isin(rough, class_ids(roi["task"], roi["classes"])),
@@ -587,9 +589,9 @@ class TotalSegmentatorPredictor:
         """Which models run on the whole image - the task's own, or those at the end of its chain of rois - as
         arguments of models(), and whether segment() needs the image itself as well (for a roi, or for the second
         task of vertebrae_pp_refined)."""
-        task, config, needs_image = self.task, self._config, self.task == "vertebrae_pp_refined"
-        while (roi := get_roi(task, config, roi_subset, self.robust_crop)) is not None:
-            task, roi_subset, needs_image = roi["task"], None, True
+        task, mode, config, needs_image = self.task, self.mode, self._config, self.task == "vertebrae_pp_refined"
+        while (roi := get_roi(task, config, roi_subset, self.robust_crop, mode)) is not None:
+            task, mode, roi_subset, needs_image = roi["task"], roi["mode"], None, True
             config = self._task_config(task, roi["mode"])
         return (task, config, roi_subset), needs_image
 

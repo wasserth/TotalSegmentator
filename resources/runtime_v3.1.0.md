@@ -32,7 +32,6 @@ Linux RAM is the peak process-tree PSS. MPS is the peak process-tree physical
 footprint and includes both CPU and GPU allocations in unified memory, so it is
 not directly comparable with the Linux RAM columns.
 
-
 ## Big CT
 
 ### Runtime
@@ -51,7 +50,6 @@ not directly comparable with the Linux RAM columns.
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 2.4 GB               | 1.7 GB   | 3.0 GB               | 3.7 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 2.4 GB               | 1.3 GB   | 2.6 GB               | 2.3 GB             |
 
-
 ## Chest CT
 
 ### Runtime
@@ -69,7 +67,6 @@ not directly comparable with the Linux RAM columns.
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ta total_single`  | 1.7 GB               | 5.6 GB   | 7.9 GB               | 18.0 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 1.3 GB               | 1.5 GB   | 2.3 GB               | 2.9 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 1.3 GB               | 0.5 GB   | 1.1 GB               | 1.6 GB             |
-
 
 ## Real life example: Get lungs in Chest CT
 
@@ -93,7 +90,6 @@ The same chest CT, but only the five lung-lobe classes. All commands also used
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 1.6 GB               | 1.4 GB   | 2.4 GB               | 3.2 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 1.4 GB               | 0.6 GB   | 1.4 GB               | 1.7 GB             |
 
-
 ## Summary
 
 - If you have a GPU: use default mode (`total_single`). On a big CT it takes 14 s, barely more than `--fast`.
@@ -101,17 +97,18 @@ The same chest CT, but only the five lung-lobe classes. All commands also used
 - Default mode on MPS needs a lot of unified memory (18-25 GB); on Macs with 16 GB use `--fast`.
 - If you do not need all classes, use `--roi_subset`. In default mode on CPU/MPS this cuts runtime by about 40% (chest CT); with `--fast`/`--fastest` and on GPU it makes little difference.
 
-
 ## Running the MPS measurements remotely
 
 To access the Mac open a reverse tunnel to the Linux machine.
 
 On the Mac:
+
 ```bash
 ssh -N -o ExitOnForwardFailure=yes -R 2222:localhost:22 <user>@<linux-host-ip>
 ```
 
 On the Linux machine:
+
 ```bash
 ssh -p 2222 <user>@localhost
 ```
