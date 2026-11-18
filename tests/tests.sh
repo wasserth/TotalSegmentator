@@ -9,6 +9,9 @@ pytest -v tests/test_device_type.py
 # Test config helpers
 pytest -v tests/test_config.py
 
+# Test weights download helpers (local server, no network)
+pytest -v tests/test_download.py
+
 # Test task registry + totalseg_info command (no GPU/model needed)
 pytest -v tests/test_registry.py
 

@@ -20,6 +20,10 @@ from totalsegmentator.config import get_totalseg_dir, get_weights_dir, is_valid_
 from totalsegmentator.nifti_ext_header import load_multilabel_nifti, add_label_map_to_nifti
 from totalsegmentator.map_tasks_config import TASK_ID_WEIGHTS_CONFIGS
 
+# Seconds a weights download may wait to connect or for more data before it fails, instead of
+# hanging forever on a stalled connection. It is not a limit on the whole download.
+DOWNLOAD_TIMEOUT = 300
+
 """
 Helpers to suppress stdout prints from nnunet
 https://stackoverflow.com/questions/2828953/silence-the-stdout-of-a-function-in-python-without-trashing-sys-stdout-and-resto
@@ -87,7 +91,7 @@ def download_model_with_license_and_unpack(task_name, config_dir):
                           json={"license_number": license_number,
                                 "task": task_name,
                                 "version": get_version()},
-                          timeout=300,
+                          timeout=DOWNLOAD_TIMEOUT,
                           stream=True)
         r.raise_for_status()  # Raise an exception for HTTP errors (4xx, 5xx)
 
@@ -138,7 +142,7 @@ def download_url_and_unpack(url, config_dir):
         with open(tempfile, 'wb') as f:
             # session = requests.Session()  # making it slower
 
-            with requests.get(url, stream=True) as r:
+            with requests.get(url, stream=True, timeout=DOWNLOAD_TIMEOUT) as r:
                 r.raise_for_status()
 
                 # With progress bar
