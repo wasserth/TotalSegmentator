@@ -1,6 +1,6 @@
 # Runtime and memory measurements (v3.0.0)
 
-> These numbers were measured with the v3.0.0 inference pipeline. Since then every task runs on nnU-Net's streaming inference (see CHANGELOG.md): the segmentation is always resampled from the logits to the input resolution (what `-ho` did), and `-ho` and `-sl` are gone. The tables have not been measured again.
+> These numbers were measured with the v3.0.0 inference pipeline. Since then every task runs on nnU-Net's streaming inference (see CHANGELOG.md): the segmentation is always resampled from the logits to the input resolution (what `-ho` did), and `-ho` and `-sl` are gone. New measurements are in [runtime_v3.1.0.md](runtime_v3.1.0.md).
 
 Measured on one CT image with shape **512 x 512 x 807** and spacing **0.82 x 0.82 x 1.00 mm**.
 

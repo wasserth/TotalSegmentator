@@ -42,9 +42,6 @@ TotalSegmentator -i mri.nii.gz -o seg.nii.gz --task total_mr
 > Note: A Nifti file or a folder (or zip file) with all DICOM slices of one patient is allowed as input.
 
 > Note: The input can also be a folder of Nifti files. All of them are segmented in one run, with the models loaded only once, which is much faster than one call per image. `-o` then has to be a folder.
-> ```bash
-> TotalSegmentator -i folder_of_cts -o segmentations
-> ```
 
 > Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--model_size small` (uses smaller model) or `--roi_subset` to greatly improve runtime. If you run on a M-series Mac use `--device mps` for great speedup.
 
@@ -261,7 +258,7 @@ we added more classes.)
 
 ![Alt text](resources/imgs/runtime_table.png)
 
-These measurements, and the ones in [resources/runtime.md](resources/runtime.md) (including `total_highres`, and CPU vs GPU), were made with the inference pipeline before the switch to nnU-Net's streaming inference (see CHANGELOG.md).
+These measurements, and the ones in [resources/runtime_v3.0.1.md](resources/runtime_v3.0.1.md) (including `total_highres`, and CPU vs GPU), were made with the inference pipeline before the switch to nnU-Net's streaming inference (see CHANGELOG.md). Measurements with the streaming inference (GPU, CPU and MPS) are in [resources/runtime_v3.1.0.md](resources/runtime_v3.1.0.md).
 
 If you want to reduce memory consumption you can use the following options:
 * `--fast`: This will use a lower-resolution model
