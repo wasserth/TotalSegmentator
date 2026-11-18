@@ -1,5 +1,7 @@
 # Torch resampling ([PR #606](https://github.com/wasserth/TotalSegmentator/pull/606)) on eiger
 
+> Measured before the switch to nnU-Net's streaming inference (see CHANGELOG.md). `-ro` and `-ho` no longer exist: the models whose training images were resampled with a cubic spline get their input resampled that way (order 3, `resample_img_torch` on the inference device; `input_resampling` in `map_tasks_config.py`), and nnU-Net maps the logits back to the input grid.
+
 Measured on `/home/jakob/Downloads/nnunet_test/ct.nii.gz`: shape **512 x 512 x 807**, spacing **0.818 x 0.818 x 1.00 mm**.
 
 This is the forward **image** resample only (`change_spacing` / `resample_img` vs `resample_img_torch`). Label resampling is unchanged by the PR.

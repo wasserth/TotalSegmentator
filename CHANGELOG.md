@@ -1,7 +1,19 @@
 ## Master
+* `-ml` / `--multilabel` (`--ml` still works) takes `auto|multilabel|binary`, default `auto`: multilabel output if `-o` is a file path (ending with `.nii`, `.nii.gz` or `.dcm`), one binary mask per class if it is a directory. For a folder of NIfTI images as `-i`, `-o` has to be a folder and `auto` is multilabel (`<name>.nii.gz` per image; `-ml binary` for `<name>/`). `-ml` without a value means `auto`. **Changed default**: `-o seg.nii.gz` without `-ml` now writes a multilabel file (before: a folder named `seg.nii.gz`); `-o seg --ml` now writes binary masks into `seg/` (use `-ml multilabel` for the old `seg.nii.gz`).
+* every task runs through one pipeline on nnU-Net's streaming inference (`totalsegmentator/predictor.py`): the predicted logits are resampled exactly to the input grid, in constant memory, for every task and every image size. **The segmentations of all tasks change slightly** (smooth borders at the input resolution, as with `--higher_order_resampling` before).
+* requires `nnunetv2>=2.9.0` (streaming inference).
+* a multilabel output (`--ml`) without a `.nii` / `.nii.gz` ending is saved as `<output>.nii.gz` (before: nibabel wrote an uncompressed `<output>.nii`).
+* `-i` (and the `input` of `totalsegmentator()`) also takes a folder of NIfTI images: all of them are segmented in one run, with the models loaded once and reading and saving overlapping the GPU. `-o` is then a folder (`<name>.nii.gz` per image with `--ml`, else `<name>/`). A folder without NIfTI images is still one DICOM series. When several images share an output folder, their statistics and previews are named `<name>_statistics.json` / `<name>_preview_<task>.png`.
+* new task `total_single`: the 117 classes of `total` in one model instead of five (weights are imported with `totalseg_import_weights -i <weights.zip>`, not downloaded). `total` is unchanged.
+* removed the options that worked around the memory use of the old pipeline or tuned it: `--higher_order_resampling`, `--higher_order_resampling_LEGACY`, `--resampling_order`, `--nr_thr_resamp`, `--force_split`, `--body_seg`, `--save_lowres`, `--save_probabilities`, `--crop_path`. On the command line the first six are ignored with a note and the last three are an error (`crop_to_body` ignores its `--nr_thr_resamp` the same way). `--test` is gone as well.
+* `totalsegmentator()` in the Python API: the same arguments are gone (plus `test` and `plans`), and all arguments but `input` and `output` are keyword arguments now. Positional calls with more than two arguments raise a `TypeError` instead of silently meaning something else.
+* `totalsegmentator.predictor.TotalSegmentatorPredictor` keeps the models of a task loaded and segments a list of images as a batch.
+* statistics are always computed at the resolution of the input image.
+* a task's `crop_addon` in `map_tasks_config.py` is now the margin around its crop. Before, every region found by the `total` / body model got 20 mm and `crop_addon` only applied to a task with its own `crop_model` (`teeth`). **The segmentations of the cropped tasks with a `crop_addon` other than 20 mm change.** Tasks without a `crop_addon`, and `--roi_subset`, keep the 20 mm (the default `crop_addon`; `total_highres`: 3 mm, its body crop).
+* `totalseg_get_body_stats`: removed the XGBoost model (`-mt xgboost`); the CNN is the only model. `-mt` / `--model_type` and `--call_via_subprocess` are gone, and so are the `get_body_stats()` arguments `model_type`, `call_via_subprocess`, `existing_stats`, `existing_seg_img` and `use_border`. The `body_stats_xgb` weights can no longer be downloaded.
 
 
-## Release 3.0.0 (XX.09.2026)
+## Release 3.0.1 (intermediate release, never released on pypi)
 * make work with fury > v2. This does not used VTK anymore.
 * `--save_lowres` now also works with the default (1.5mm) models, not only `--fast`/`--fastest`.
 * pin `uharfbuzz<0.56.1` so FURY >=2 / pygfx does not crash on import with Cython 3.3 Limited API wheels (`TypeError: Shared Cython type cython_function_or_method has the wrong size`).

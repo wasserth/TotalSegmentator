@@ -18,9 +18,9 @@ def add_label_map_to_nifti(img_in, label_map):
 
     returns: nifti image
     """
-    data = img_in.get_fdata()
-
     if label_map is None:
+        # only here the voxels are needed (a full float64 copy of the image otherwise)
+        data = img_in.get_fdata()
         label_map = {idx+1: f"L{val}" for idx, val in enumerate(np.unique(data)[1:])}
 
     if type(label_map) is not dict:   # can be list or dict_values list

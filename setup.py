@@ -44,13 +44,13 @@ setup(name='TotalSegmentator',
              "resources/pulmonary_report/usb_logo_white.svg"]
             },
         install_requires=[
-            'torch>=2.1.2',  # torch < 2.6.0 required if using nnunetv2 < 2.6.0
+            'torch>=2.1.2',
             'numpy',
             'SimpleITK',
             'nibabel>=2.3.0',
             'tqdm>=4.45.0',
             'xvfbwrapper',
-            'nnunetv2>=2.3.1',
+            'nnunetv2>=2.9.0',  # streaming inference (nnunetv2.inference.predict_streaming)
             'connected-components-3d',  # remove_small_blobs; nnU-Net brings it too (acvl-utils)
             'requests',
             'dicom2nifti',

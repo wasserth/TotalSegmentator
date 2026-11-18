@@ -10,8 +10,8 @@ from totalsegmentator.config import get_totalseg_dir, get_weights_dir
 
 def main():
     """
-    Import manually downloaded weights (zip file) to the right folder.
-    DEPRECATED! This is no longer needed in v2.0.0 and later.
+    Import weights (zip file) to the right folder: weights that are not downloaded automatically (e.g. task
+    total_single), or manually downloaded ones.
     """
     parser = argparse.ArgumentParser(description="Import manually downloaded weights.",
                                      epilog="Written by Jakob Wasserthal.")

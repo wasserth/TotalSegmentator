@@ -12,8 +12,8 @@ pytest -v tests/test_config.py
 # Test task registry + totalseg_info command (no GPU/model needed)
 pytest -v tests/test_registry.py
 
-# Test empty crop handling (no GPU/model needed)
-pytest -v tests/test_nnunet_crop.py
+# Test the pieces of the inference pipeline (no GPU/model needed)
+pytest -v tests/test_pipeline.py
 
 # Smoke test the introspection commands
 totalseg_info --list-tasks > /dev/null
@@ -21,13 +21,9 @@ totalseg_info --classes -ta total --json > /dev/null
 TotalSegmentator --list-tasks > /dev/null
 
 # Test - multilabel prediction (also exercises --report manifest)
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz -bs --ml -d cpu --report tests/unittest_run_report.json
+TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction.nii.gz --ml -d cpu --report tests/unittest_run_report.json
 python -c "import json; r=json.load(open('tests/unittest_run_report.json')); assert r['task']=='total' and r['num_classes']>0, r"
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel
-
-# Test - multilabel prediction - high order resampling
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_high_order.nii.gz -bs --ml -ho -d cpu
-pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_high_order
 
 # Test - roi subset
 # 2 cpus:
@@ -56,14 +52,6 @@ pytest -v tests/test_research_utils.py
 TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_fast.nii.gz --fast --ml -d cpu
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast
 
-# Test - fast - multilabel - force split
-TotalSegmentator -i tests/reference_files/example_ct.nii.gz -o tests/unittest_prediction_fast_force_split.nii.gz --fast --ml -fs -d cpu
-pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast_force_split
-
-# Test - fast - multilabel - body_seg
-TotalSegmentator -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_prediction_fast_body_seg.nii.gz --fast --ml -bs -d cpu
-pytest -v tests/test_end_to_end.py::test_end_to_end::test_prediction_multilabel_fast_body_seg
-
 # Test phase prediction
 totalseg_get_phase -i tests/reference_files/example_ct_sm.nii.gz -o tests/unittest_phase_prediction.json
 pytest -v tests/test_end_to_end.py::test_end_to_end::test_phase_prediction
@@ -76,10 +64,7 @@ pytest -v tests/test_end_to_end.py::test_end_to_end::test_body_stats_prediction
 rm -rf tests/unittest_prediction_roi_subset
 rm -rf tests/unittest_prediction_fast
 rm tests/unittest_prediction.nii.gz
-rm tests/unittest_prediction_high_order.nii.gz
 rm tests/unittest_prediction_fast.nii.gz
-rm tests/unittest_prediction_fast_force_split.nii.gz
-rm tests/unittest_prediction_fast_body_seg.nii.gz
 rm tests/unittest_phase_prediction.json
 rm tests/unittest_body_stats_prediction.json
 rm tests/unittest_run_report.json

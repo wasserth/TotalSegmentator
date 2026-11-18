@@ -45,15 +45,6 @@ class test_end_to_end(unittest.TestCase):
         images_equal = dice > 0.99
         self.assertTrue(images_equal, f"multilabel prediction not correct (dice: {dice:.6f})")
 
-    def test_prediction_multilabel_high_order(self):
-        img_ref = nib.load("tests/reference_files/example_seg.nii.gz").get_fdata()
-        img_new = nib.load("tests/unittest_prediction_high_order.nii.gz").get_fdata()
-        dice = dice_score_multilabel(img_ref, img_new)
-        # Dice is roughly 0.87 in this test case, because higher order resampling changes segmentations quite a bit,
-        # especially on these small images.
-        images_equal = dice > 0.85
-        self.assertTrue(images_equal, f"multilabel prediction high order not correct (dice: {dice:.6f})")
-
     def test_prediction_multilabel_mr(self):
         img_ref = nib.load("tests/reference_files/example_seg_mr.nii.gz").get_fdata()
         img_new = nib.load("tests/unittest_prediction_mr.nii.gz").get_fdata()
@@ -93,20 +84,6 @@ class test_end_to_end(unittest.TestCase):
         dice = dice_score_multilabel(img_ref, img_new)
         images_equal = dice > 0.99
         self.assertTrue(images_equal, f"multilabel prediction fast not correct (dice: {dice:.6f})")
-
-    def test_prediction_multilabel_fast_force_split(self):
-        img_ref = nib.load("tests/reference_files/example_seg_fast_force_split.nii.gz").get_fdata()
-        img_new = nib.load("tests/unittest_prediction_fast_force_split.nii.gz").get_fdata()
-        dice = dice_score_multilabel(img_ref, img_new)
-        images_equal = dice > 0.99
-        self.assertTrue(images_equal, f"force_split prediction not correct (nr_of_diff_voxels: {dice:.6f})")
-
-    def test_prediction_multilabel_fast_body_seg(self):
-        img_ref = nib.load("tests/reference_files/example_seg_fast_body_seg.nii.gz").get_fdata()
-        img_new = nib.load("tests/unittest_prediction_fast_body_seg.nii.gz").get_fdata()
-        dice = dice_score_multilabel(img_ref, img_new)
-        images_equal = dice > 0.99
-        self.assertTrue(images_equal, f"body_seg prediction fast not correct (dice: {dice:.6f})")
 
     def test_lung_vessels(self):
         for roi in ["lung_airways", "lung_airways_wall", "lung_arteries", "lung_veins"]:

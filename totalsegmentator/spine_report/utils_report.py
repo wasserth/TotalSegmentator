@@ -74,7 +74,7 @@ def run_models_abdomen(ct_path, tmp_dir, logger):
     if (tmp_dir / 'totalseg_vertebrae_pp_refined.nii.gz').exists():
         logger.info("  Skipping TotalSeg vertebrae_pp_refined (already exists)")
     else:
-        subprocess.call(f"TotalSegmentator -i {ct_path} -o {tmp_dir / 'totalseg_vertebrae_pp_refined.nii.gz'} -ta vertebrae_pp_refined -ml -ns 1 -ro 1", shell=True)
+        subprocess.call(f"TotalSegmentator -i {ct_path} -o {tmp_dir / 'totalseg_vertebrae_pp_refined.nii.gz'} -ta vertebrae_pp_refined -ml -ns 1", shell=True)
 
     print(f"TotalSegmentator done (took: {time.time()-st:.2f}s)")
     yield "TotalSegmentator done"

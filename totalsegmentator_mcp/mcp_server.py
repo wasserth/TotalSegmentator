@@ -233,7 +233,6 @@ async def estimate_body_statistics(
                 "-d",
                 device,
                 "-q",
-                "--call_via_subprocess",
             ],
         )
 
@@ -300,10 +299,7 @@ async def run_segmentation(
     ]
 
     if speed == "fast":
-        arguments.extend([
-            "--fast",
-            "--higher_order_resampling",
-        ])
+        arguments.append("--fast")
     elif speed == "fastest":
         arguments.append("--fastest")
 

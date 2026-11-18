@@ -30,7 +30,7 @@ if __name__ == "__main__":
                 print(f"Deleting: {dir}")
                 shutil.rmtree(dir)
     
-        for file in [fold_dir / "checkpoint_best.pth"]:
+        for file in [fold_dir / "checkpoint_best.pth", fold_dir / "checkpoint_best.safetensors"]:
             if file.exists():
                 print(f"Deleting: {file}")
                 os.remove(file)

@@ -22,6 +22,7 @@ TotalSegmentator works on Ubuntu, Mac, and Windows and on CPU, GPU and MPS.
 Install dependencies:
 * Python >= 3.10
 * [PyTorch](http://pytorch.org/) >= 2.0.0
+* [nnU-Net](https://github.com/MIC-DKFZ/nnUNet) >= 2.9.0 (streaming inference). Until nnU-Net 2.9.0 is on PyPI, install it from GitHub first: `pip install git+https://github.com/MIC-DKFZ/nnUNet.git`
 
 
 Install Totalsegmentator
@@ -32,15 +33,17 @@ pip install TotalSegmentator
 ### Usage
 For CT images:
 ```bash
-TotalSegmentator -i ct.nii.gz -o segmentations
+TotalSegmentator -i ct.nii.gz -o seg.nii.gz
 ```
 For MR images:
 ```bash
-TotalSegmentator -i mri.nii.gz -o segmentations --task total_mr
+TotalSegmentator -i mri.nii.gz -o seg.nii.gz --task total_mr
 ```
 > Note: A Nifti file or a folder (or zip file) with all DICOM slices of one patient is allowed as input.
 
-> Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--model_size small` (uses smaller model) or `--roi_subset` to greatly improve runtime. Use `-ml` to speedup saving (save one combined file instead of one file per class). If you run on a M-series Mac use `--device mps` for great speedup.
+> Note: The input can also be a folder of Nifti files. All of them are segmented in one run, with the models loaded only once, which is much faster than one call per image. `-o` then has to be a folder.
+
+> Note: If you run on CPU use the option `--fast` (uses lower resolution) or `--model_size small` (uses smaller model) or `--roi_subset` to greatly improve runtime. If you run on a M-series Mac use `--device mps` for great speedup.
 
 > Note: This is not a medical device and is not intended for clinical usage. However, it is part of several FDA-approved products, where it has been certified as a component of the overall system.
 
@@ -53,6 +56,7 @@ Next to the default task (`total`) there are more subtasks with more classes. If
 
 Openly available for any usage (Apache-2.0 license):
 * **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes; see [here](resources/class_details.md) for more details)
+* **total_single**: the 117 classes of `total` in one model instead of five. Its weights are not downloaded automatically: import them with `totalseg_import_weights -i <weights.zip>` (the weights come with their own license, see the README in the zip)
 * **total_v2**: previous `total` model for backward compatibility 
 * **total_mr**: default task containing 50 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **total_v2_mr**: previous `total_mr` model for backward compatibility 
@@ -127,14 +131,11 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--device`: Choose `cpu` or `gpu` or `gpu:X`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
 * `--model_size small`: Use a smaller model (less filters) to reduce runtime (especially on CPU). (Only works for `total` and `total` + `--fast`)
-* `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate).
-* `--ml`: This will save one nifti file containing all labels instead of one file for each class. Saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
+* `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate). With `--fast` or `--fastest` no cropping is done (the low resolution model runs on the whole image and only the selected classes are saved).
+* `--multilabel` / `-ml` `auto|multilabel|binary`: `multilabel` saves one nifti file containing all labels, `binary` saves one file for each class. The default `auto` uses `multilabel` if `-o` is a file path (ending with `.nii`, `.nii.gz` or `.dcm`) or `-i` is a folder of Nifti images, and `binary` if `-o` is a directory. `-ml` without a value is the same as `auto`. Multilabel saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).
 * `--statistics`: This will generate a file `statistics.json` with volume (in mm³) and mean intensity of each class. Incomplete structures receive zero by default (see [Typical problems](#typical-problems)).
 * `--statistics_extra`: In addition to volume and intensity, also compute `n_voxels`, intensity std/min/max and the morphometric `centroid_vox` and `bbox_vox` (voxel coordinates) for each class. Off by default to keep the statistics runtime unchanged.
-* `--higher_order_resampling`: Uses higher order upsampling of the segmentations. Smoother (especially for `--fast`) but slower.
-* `--resampling_order`: Spline interpolation order for input image resampling (default: 3). Setting this to 1 can speed up resampling with very similar segmentation accuracy.
-* `--save_lowres`: Save the segmentation at the model resolution (e.g. 1.5mm, or 3mm/6mm with `--fast`/`--fastest`) instead of upsampling it back to the input resolution. Skips the slow upsample and keeps the output on the model grid.
 * `--robust_crop`: For some tasks and for roi_subset a 6mm low resolution model is used to crop to the region of interest. Sometimes this model is incorrect, which leads to artifacts like segmentations being cut off. robust_crop will use a better but slower 3mm model instead.
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview.png` in output directory).
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
@@ -207,16 +208,9 @@ After acquiring a license number for the non-open tasks you can set it with the 
 totalseg_set_license -l aca_12345678910
 ```
 
-If you want to run as fast as possible to process many cases and lower resolution is ok, I would recommend this setting (for a large CT image this takes ~30s on GPU and ~70s on CPU):
+If you want to run as fast as possible to process many cases and lower resolution is ok, I would recommend this setting (to segment many images, also see `TotalSegmentatorPredictor` in the [Python API](#python-api)):
 ```bash
-TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f -sl -ro 1
-```
-
-You can output the softmax probabilities. This will give you a `.npz` file you can load with numpy. The geometry
-might not be identical to your input image. There will also be a `.pkl` output file with geometry
-information. This does not work well for the `total` task since this is based on multiple models.
-```bash
-TotalSegmentator -i ct.nii.gz -o seg -ta lung_nodules --save_probabilities probs.npz
+TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ml -f
 ```
 
 If you do not have internet access on the machine you want to run TotalSegmentator on:
@@ -264,13 +258,11 @@ we added more classes.)
 
 ![Alt text](resources/imgs/runtime_table.png)
 
-More measurements (including `--model_size small`, `--save_lowres`, `total_highres`, and CPU vs GPU) are in [resources/runtime.md](resources/runtime.md).
+These measurements, and the ones in [resources/runtime_v3.0.1.md](resources/runtime_v3.0.1.md) (including `total_highres`, and CPU vs GPU), were made with the inference pipeline before the switch to nnU-Net's streaming inference (see CHANGELOG.md). Measurements with the streaming inference (GPU, CPU and MPS) are in [resources/runtime_v3.1.0.md](resources/runtime_v3.1.0.md).
 
 If you want to reduce memory consumption you can use the following options:
 * `--fast`: This will use a lower-resolution model
-* `--body_seg`: This will crop the image to the body region before processing it
 * `--roi_subset <list of classes>`: This will only predict a subset of classes
-* `--force_split`: This will split the image into 3 parts and process them one after another. (Do not use this for small images. Splitting these into even smaller images will result in a field of view which is too small.)
 * `--nr_thr_saving 1`: Saving big images with several threads will take a lot of memory
 
 
@@ -290,6 +282,16 @@ if __name__ == "__main__":
     nib.save(output_img, output_path)
 ```
 You can see all available arguments [here](https://github.com/wasserth/TotalSegmentator/blob/master/totalsegmentator/python_api.py). Running from within the main environment should avoid some multiprocessing issues.
+
+Every call of `totalsegmentator()` loads the models of the task. To segment several images, keep a predictor: it loads the models once, and for a list of images it reads the next image and saves the previous results while the GPU is busy.
+```python
+from totalsegmentator.predictor import TotalSegmentatorPredictor
+
+if __name__ == "__main__":
+    with TotalSegmentatorPredictor("total", device="gpu") as predictor:
+        output_img = predictor.predict(input_img)                           # one image: Nifti1Image in and out
+        predictor.predict([input_path_1, input_path_2], [output_dir_1, output_dir_2])       # a batch
+```
 
 The segmentation image contains the names of the classes in the extended header. If you want to load this additional header information you can use the following code (requires `pip install xmltodict`):
 ```python
@@ -379,6 +381,10 @@ If you use this tool please cite it as follows
 Wasserthal, J., Breit, H.-C., Meyer, M.T., Pradella, M., Hinck, D., Sauter, A.W., Heye, T., Boll, D., Cyriac, J., Yang, S., Bach, M., Segeroth, M., 2023. TotalSegmentator: Robust Segmentation of 104 Anatomic Structures in CT Images. Radiology: Artificial Intelligence. https://doi.org/10.1148/ryai.230024
 ```
 Please also cite [nnUNet](https://github.com/MIC-DKFZ/nnUNet) since TotalSegmentator is heavily based on it.
+TotalSegmentator runs its models through nnU-Net's streaming inference. Please also cite:
+```text
+Isensee, F., Wasserthal, J., Shiyam Sundar, L. K., Rokuss, M., Ulrich Harsy, C., Langenberg, M., Happold, S. M., & Maier-Hein, K. H. (2026). Segment Everything, Materialize Nothing: Exact Streaming Inference for Many-Class 3D Segmentation. arXiv:XXXX.XXXXX.
+```
 Moreover, we would really appreciate it if you let us know what you are using this tool for. You can also tell us what classes we should add in future releases. You can do so [here](https://github.com/wasserth/TotalSegmentator/issues/1).
 
 
