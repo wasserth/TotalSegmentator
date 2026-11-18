@@ -240,7 +240,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      robust_crop=False, higher_order_resampling_LEGACY=False, higher_order_resampling=False,
                      save_probabilities=None,
                      debug=False, report=None, statistics_extra=False, save_lowres=False, resampling_order=1,
-                     plans="nnUNetPlans", model_size="big", inference_backend="nnunet"):
+                     plans="nnUNetPlans", model_size="big", optimized_ct=False):
     """
     Run TotalSegmentator from within python.
 
@@ -267,15 +267,18 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
 
     validate_device_type_api(device)
     device = select_device(device)
-    if inference_backend not in ("nnunet", "fastforks"):
-        raise ValueError("inference_backend must be 'nnunet' or 'fastforks'.")
-    if inference_backend == "fastforks":
-        if task != "total" or fastest or plans != "nnUNetPlans":
-            raise ValueError("FastForks supports the total CT task with standard plans at 1.5 or 3 mm.")
-        if torch.device(device).type != "cuda":
-            raise ValueError("The FastForks predictor requires a CUDA device.")
-        if save_probabilities is not None or higher_order_resampling or test:
-            raise ValueError("FastForks supports label prediction with default logits resampling only.")
+    if optimized_ct:
+        from totalsegmentator.optimized_ct import CTSession
+        if task not in ("total", "total_v3") or plans != "nnUNetPlans":
+            raise ValueError("Optimized CT requires the total or total_v3 whole-body CT task with its standard plans.")
+        if task == "total_v3" and model_size == "small" and fastest and not fast:
+            raise ValueError("The v3 6 mm release provides only the default model size.")
+        if save_probabilities is not None or higher_order_resampling or test or resampling_order != 1:
+            raise ValueError("Optimized CT supports label output with linear CT resampling and standard logits resampling.")
+        if optimized_ct is True:
+            optimized_ct = CTSession()
+        elif not isinstance(optimized_ct, CTSession):
+            raise TypeError("optimized_ct must be a boolean or CTSession.")
     if verbose: print(f"Using Device: {device}")
     
     if output_type == "dicom_rtstruct":
@@ -530,8 +533,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                             cascade=cascade, remove_outside_mask=remove_mask, remove_outside_dilation=remove_outside_dilation,
                             debug=debug, save_lowres=save_lowres,
                             resampling_order=resampling_order, plans=plans,
-                            vertebrae_body_mask=vertebrae_body_mask, output_task_name=task,
-                            inference_backend=inference_backend,
+                            vertebrae_body_mask=vertebrae_body_mask, output_task_name=task, optimized_ct=optimized_ct,
                             use_cropped_logits_resampling=higher_order_resampling)
     seg = seg_img.get_fdata().astype(np.uint8)
 
@@ -591,7 +593,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
         report_data = build_run_report(input, output, task, device, fast, fastest, ml,
                                        output_type, roi_subset, time.time() - run_start,
                                        save_lowres=save_lowres)
-        report_data["primary_inference_backend"] = inference_backend
+        if optimized_ct:
+            report_data["primary_inference"] = "optimized_ct"
         report_path = Path(report).absolute()
         report_path.parent.mkdir(parents=True, exist_ok=True)
         with open(report_path, "w") as f:

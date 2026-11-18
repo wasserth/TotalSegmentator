@@ -75,7 +75,6 @@ setup(name='TotalSegmentator',
             'uharfbuzz>=0.52,<0.56.1'
         ],
         extras_require={
-            'fastforks': ['fastforks-core>=0.2.0'],
             'mcp': [
                 'mcp',
                 'uvicorn',

@@ -142,19 +142,32 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--list-tasks` / `--list-classes [task]`: Print the available tasks (or the classes of one task) and exit, without running a segmentation. For machine-readable output use the `totalseg_info` command below.
 
 
-#### Experimental FastForks predictor
+#### Experimental in-memory whole-body CT inference
 
-On CUDA with Python 3.11 or newer, install `pip install -e '.[fastforks]'` from this checkout.
-Select the predictor with `--inference_backend fastforks` (Python API: `inference_backend="fastforks"`).
+Use `--optimized_ct` with `-ta total` (v2) or `-ta total_v3`. Both tasks use 1.5 mm by default,
+3 mm with `--fast`, and 6 mm with `--fastest`. The v3 release also provides
+`--model_size small` checkpoints at 1.5 and 3 mm.
+The predictor uses PyTorch and the installed fold-zero weights. Select CUDA, CPU or Metal with the usual device option.
 
-```bash
-TotalSegmentator -i ct.nii.gz -o labels.nii.gz --ml --fast --inference_backend fastforks
+A Python process can reuse the initialized networks between sequential scans. On CUDA the session
+runs one window at a time under FP16 autocast. For a multi-part task it caches the networks in host
+memory and moves each network to the GPU for its windows. A single-part network can stay on the GPU
+until the session switches to a different network:
+
+```python
+from totalsegmentator.optimized_ct import CTSession
+from totalsegmentator.python_api import totalsegmentator
+
+session = CTSession()
+for scan in scans:
+    labels = totalsegmentator(scan, fast=True, optimized_ct=session)
 ```
 
-This runs the primary v2 `total` CT model at 3 mm (`--fast`) or 1.5 mm (default) using
-FastForks portable FP16 inference with the installed nnU-Net weights. Auxiliary crop models
-still run through nnU-Net. Probability export and higher-order logits resampling require the
-default nnU-Net predictor.
+With the weights downloaded, run `python benchmarks/ct_inference.py ct.nii.gz --fast` from an installed
+checkout to compare the first call, warm median, PyTorch peak allocated memory and per-label Dice
+against the default predictor. Select v3 with `--task total_v3`; use `--model-size small` for its smaller network.
+Use `--fastest` for 6 mm or omit both resolution flags for 1.5 mm.
+Use `--device mps` or `--device cpu` for the Mac comparison. CUDA memory figures cover allocations tracked by PyTorch.
 
 ### Other commands
 
