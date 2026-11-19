@@ -128,6 +128,19 @@ def test_roi_examples():
     assert P.get_roi("lung_vessels", P.get_task_config("lung_vessels", quiet=True))["margin"] == [20, 20, 20]
 
 
+def test_total_is_one_model_and_total_5parts_five():
+    assert P.get_task_config("total", quiet=True)["task_id"] == 839
+    assert P.get_task_config("total_5parts", quiet=True)["task_id"] == [831, 832, 833, 834, 835]
+    for mode in ("fast", "fastest"):
+        assert P.get_task_config("total", mode, quiet=True) == P.get_task_config("total_5parts", mode, quiet=True)
+    assert class_map["total"] == class_map["total_5parts"]
+    # the small models exist for the five parts and the low resolution models, not for the one model
+    P.get_task_config("total_5parts", quiet=True, model_size="small")
+    P.get_task_config("total", "fast", quiet=True, model_size="small")
+    with pytest.raises(ValueError, match="model_size"):
+        P.get_task_config("total", quiet=True, model_size="small")
+
+
 def test_total_highres_crops_to_the_body_with_3mm(monkeypatch):
     """TotalSegmentator v3 cropped total_highres to the body with the task's 3 mm (--body_seg), not with 20 mm."""
     monkeypatch.setattr(P, "show_license_info", lambda: None)      # a commercial task

@@ -1,8 +1,8 @@
 # Runtime and memory measurements (v3.1.0)
 
 Measured with nnU-Net's streaming inference (TotalSegmentator commit `2640c03`, nnU-Net master `13128943`).
-Default mode uses `-ta total_single` (the 117 classes of `total` in one model at 1.5 mm); `--fast` and `--fastest`
-use the 3 mm and 6 mm `total` models. All runs predict all 117 classes (no `--roi_subset`), except the lung example.
+Default mode uses the one `total` model (117 classes at 1.5 mm); `--fast` and `--fastest` use the 3 mm and 6 mm
+`total` models. All runs predict all 117 classes (no `--roi_subset`), except the lung example.
 For the measurements with the old inference pipeline (incl. `-ms small`, `-ho`, `-sl` and `total_highres`) see
 [runtime_v3.0.1.md](runtime_v3.0.1.md).
 
@@ -38,7 +38,7 @@ not directly comparable with the Linux RAM columns.
 
 | Command                                                         | GPU    | CPU    | MPS    |
 | --------------------------------------------------------------- | ------ | ------ | ------ |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ta total_single`  | 14 s   | 280 s  | 143 s  |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz`                   | 14 s   | 280 s  | 143 s  |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 12 s   | 108 s  | 36 s   |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 12 s   | 85 s   | 24 s   |
 
@@ -46,7 +46,7 @@ not directly comparable with the Linux RAM columns.
 
 | Command                                                         | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
 | --------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ta total_single`  | 2.8 GB               | 6.2 GB   | 8.4 GB               | 25.2 GB            |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz`                   | 2.8 GB               | 6.2 GB   | 8.4 GB               | 25.2 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 2.4 GB               | 1.7 GB   | 3.0 GB               | 3.7 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 2.4 GB               | 1.3 GB   | 2.6 GB               | 2.3 GB             |
 
@@ -56,7 +56,7 @@ not directly comparable with the Linux RAM columns.
 
 | Command                                                         | GPU    | CPU    | MPS    |
 | --------------------------------------------------------------- | ------ | ------ | ------ |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ta total_single`  | 10 s   | 109 s  | 70 s   |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz`                   | 10 s   | 109 s  | 70 s   |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 7 s    | 30 s   | 16 s   |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 7 s    | 17 s   | 7 s    |
 
@@ -64,7 +64,7 @@ not directly comparable with the Linux RAM columns.
 
 | Command                                                         | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
 | --------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ta total_single`  | 1.7 GB               | 5.6 GB   | 7.9 GB               | 18.0 GB            |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz`                   | 1.7 GB               | 5.6 GB   | 7.9 GB               | 18.0 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 1.3 GB               | 1.5 GB   | 2.3 GB               | 2.9 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 1.3 GB               | 0.5 GB   | 1.1 GB               | 1.6 GB             |
 
@@ -78,7 +78,7 @@ The same chest CT, but only the five lung-lobe classes. All commands also used
 
 | Command                                                         | GPU    | CPU    | MPS    |
 | --------------------------------------------------------------- | ------ | ------ | ------ |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ta total_single`  | 11 s   | 68 s   | 42 s   |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz`                   | 11 s   | 68 s   | 42 s   |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 8 s    | 26 s   | 10 s   |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 7 s    | 27 s   | 8 s    |
 
@@ -86,13 +86,13 @@ The same chest CT, but only the five lung-lobe classes. All commands also used
 
 | Command                                                         | System RAM (GPU run) | GPU VRAM | System RAM (CPU run) | MPS unified memory |
 | --------------------------------------------------------------- | -------------------- | -------- | -------------------- | ------------------ |
-| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz -ta total_single`  | 2.0 GB               | 5.4 GB   | 7.8 GB               | 13.0 GB            |
+| `TotalSegmentator -i ct.nii.gz -o seg.nii.gz`                   | 2.0 GB               | 5.4 GB   | 7.8 GB               | 13.0 GB            |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fast`            | 1.6 GB               | 1.4 GB   | 2.4 GB               | 3.2 GB             |
 | `TotalSegmentator -i ct.nii.gz -o seg.nii.gz --fastest`         | 1.4 GB               | 0.6 GB   | 1.4 GB               | 1.7 GB             |
 
 ## Summary
 
-- If you have a GPU: use default mode (`total_single`). On a big CT it takes 14 s, barely more than `--fast`.
+- If you have a GPU: use default mode. On a big CT it takes 14 s, barely more than `--fast`.
 - If you have only CPU or MPS (Mac): default mode takes 2-5 min on a big CT; use `--fast` or `--fastest` if that is too slow.
 - Default mode on MPS needs a lot of unified memory (18-25 GB); on Macs with 16 GB use `--fast`.
 - If you do not need all classes, use `--roi_subset`. In default mode on CPU/MPS this cuts runtime by about 40% (chest CT); with `--fast`/`--fastest` and on GPU it makes little difference.

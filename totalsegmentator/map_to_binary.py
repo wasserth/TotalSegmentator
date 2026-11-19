@@ -823,7 +823,7 @@ class_map = {
     }
 }
 
-class_map["total_single"] = class_map["total"].copy()
+class_map["total_5parts"] = class_map["total"].copy()
 class_map["total_v2"] = class_map["total"].copy()
 class_map["total_v2"][26] = "vertebrae_S1"
 class_map["total_highres"] = class_map["total"].copy()

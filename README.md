@@ -55,8 +55,8 @@ TotalSegmentator -i mri.nii.gz -o seg.nii.gz --task total_mr
 Next to the default task (`total`) there are more subtasks with more classes. If the taskname ends with `_mr` it works for MR images, otherwise for CT images.
 
 Openly available for any usage (Apache-2.0 license):
-* **total**: default task containing 117 main classes (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes; see [here](resources/class_details.md) for more details)
-* **total_single**: the 117 classes of `total` in one model instead of five. Its weights are not downloaded automatically: import them with `totalseg_import_weights -i <weights.zip>` (the weights come with their own license, see the README in the zip)
+* **total**: default task containing 117 main classes in one model (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes; see [here](resources/class_details.md) for more details). The weights of this model are licensed under CC BY 4.0
+* **total_5parts**: the 117 classes of `total` with five models (the previous `total`)
 * **total_v2**: previous `total` model for backward compatibility 
 * **total_mr**: default task containing 50 main classes on MR images (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for a list of classes)
 * **total_v2_mr**: previous `total_mr` model for backward compatibility 
@@ -130,7 +130,7 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 ### Advanced settings
 * `--device`: Choose `cpu` or `gpu` or `gpu:X`
 * `--fast`: For faster runtime and less memory requirements use this option. It will run a lower resolution model (3mm instead of 1.5mm).
-* `--model_size small`: Use a smaller model (less filters) to reduce runtime (especially on CPU). (Only works for `total` and `total` + `--fast`)
+* `--model_size small`: Use a smaller model (less filters) to reduce runtime (especially on CPU). (Only works for `total_5parts` and `total` + `--fast`)
 * `--roi_subset`: Takes a space-separated list of class names (e.g. `spleen colon brain`) and only predicts those classes. Saves a lot of runtime and memory. Might be less accurate especially for small classes (e.g. prostate). With `--fast` or `--fastest` no cropping is done (the low resolution model runs on the whole image and only the selected classes are saved).
 * `--multilabel` / `-ml` `auto|multilabel|binary`: `multilabel` saves one nifti file containing all labels, `binary` saves one file for each class. The default `auto` uses `multilabel` if `-o` is a file path (ending with `.nii`, `.nii.gz` or `.dcm`) or `-i` is a folder of Nifti images, and `binary` if `-o` is a directory. `-ml` without a value is the same as `auto`. Multilabel saves runtime during saving of nifti files. (see [here](https://github.com/wasserth/TotalSegmentator#class-details) for index to class name mapping).
 * `--output_type`: This will output the segmentation as DICOM. Supported are `dicom_seg` requires (`pip install highdicom`) and `dicom_rtstruct` requires (`pip install rt_utils`).

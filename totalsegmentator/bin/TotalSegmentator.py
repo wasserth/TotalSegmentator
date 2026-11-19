@@ -129,8 +129,8 @@ def main():
                         default="total")
 
     parser.add_argument("-ms", "--model_size", choices=["big", "small"], default="big",
-                        help="Select model size. Currently only affects task 'total': "
-                             "'small' uses model with less parameters. Default: big.")
+                        help="Select model size. Currently only affects task 'total_5parts' and task "
+                             "'total' with --fast: 'small' uses model with less parameters. Default: big.")
 
     parser.add_argument("-rs", "--roi_subset", type=str, nargs="+",
                         help="Define a subset of classes to save (space separated list of class names). The models only run on the region of these classes.")

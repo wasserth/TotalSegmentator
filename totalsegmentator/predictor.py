@@ -59,12 +59,12 @@ from totalsegmentator.statistics import get_basic_statistics
 # images read and preprocessed ahead of the GPU by predict()'s loader thread (see there)
 READ_AHEAD = 2
 
-TOTAL_TASKS = ("total", "total_single", "total_v2", "total_mr", "total_v2_mr")
+TOTAL_TASKS = ("total", "total_5parts", "total_v2", "total_mr", "total_v2_mr")
 
 # Multi-model tasks: ({part: {label id in that part's model: class}}, {model: part}). The label maps of the parts are
 # merged in the order of the task's "task_id" list; where two parts disagree the later one wins.
 PART_MAPS = {
-    "total": (class_map_5_parts, map_taskid_to_partname_ct),
+    "total_5parts": (class_map_5_parts, map_taskid_to_partname_ct),
     "total_v2": (class_map_5_parts_total_v2, map_taskid_to_partname_ct),
     "total_highres": (class_map_5_parts, map_taskid_to_partname_ct),
     "total_mr": (class_map_parts_mr, map_taskid_to_partname_mr),
@@ -93,7 +93,8 @@ def show_license_info():
 
 def get_task_config(task: str, mode: str = "default", quiet: bool = False, model_size: str = "big") -> dict:
     """The configuration of a task in a mode ('default', 'fast' or 'fastest'): DEFAULT_CONFIG updated with
-    TASK_CONFIGS[task]. model_size 'small': the variant of the models with fewer filters (exists for 'total')."""
+    TASK_CONFIGS[task]. model_size 'small': the variant of the models with fewer filters (exists for 'total_5parts'
+    and the --fast model of 'total')."""
     if task not in TASK_CONFIGS:
         raise ValueError(f"Unknown task: {task}")
     config = DEFAULT_CONFIG.copy()
@@ -112,8 +113,9 @@ def get_task_config(task: str, mode: str = "default", quiet: bool = False, model
     if model_size not in ("big", "small"):
         raise ValueError("model_size must be 'big' or 'small'.")
     if model_size == "small":
-        if task != "total":
-            raise ValueError("model_size='small' is currently only supported for task 'total'.")
+        if not (task == "total_5parts" or (task == "total" and mode != "default")):
+            raise ValueError("model_size='small' is currently only supported for task 'total_5parts' and for task "
+                             "'total' with --fast.")
         config["plans"] = "nnUNetResEncUNetLPlans_8"
     if "info_msg" in raw_task and not quiet:
         print(raw_task["info_msg"])
@@ -646,7 +648,7 @@ class TotalSegmentatorPredictor:
         validate_roi_subset(roi_subset, self.task)      # before any weights are downloaded or models are run
         output_types = [output_type] if isinstance(output_type, str) else list(output_type)
         outputs = [output_file(o, ml, output_types) for o in outputs]
-        v1_order = v1_order and self.task in ("total", "total_single", "total_v2")
+        v1_order = v1_order and self.task in ("total", "total_5parts", "total_v2")
         label_map = class_map["total_v1"] if v1_order else class_map[self.task]
         if roi_subset is not None:
             label_map = {k: v for k, v in label_map.items() if v in roi_subset}

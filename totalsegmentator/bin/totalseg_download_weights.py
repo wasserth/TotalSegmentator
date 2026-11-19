@@ -15,8 +15,9 @@ from totalsegmentator.config import setup_totalseg, set_config_key
 #   837: total 6mm, 836: total 3mm, 872: total_mr 3mm, 307: body 6mm,
 #   298: total_v2 6mm, 297: total_v2 3mm, 852: total_v2_mr 3mm
 TASK_TO_ID = {
-    "total": [831, 832, 833, 834, 835, 837],
+    "total": [839, 837],
     "total_fast": [836, 837],
+    "total_5parts": [831, 832, 833, 834, 835, 837],
     "total_v2": [291, 292, 293, 294, 295, 298],
     "total_v2_fast": [297, 298],
     "total_mr": [870, 871, 872],

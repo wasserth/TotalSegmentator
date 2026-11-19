@@ -40,19 +40,30 @@ TASK_CONFIGS = {
                 "task_id": 837,
                 "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
             },
+            # The 117 classes in one model, trained on the images as they are (nnU-Net's own input resampling).
+            "default": {
+                "task_id": 839,
+                "trainer": "nnUNetTrainer",
+                "input_resampling": "plans",
+            },
+        }
+    },
+    # The previous `total`: the 117 classes in five models
+    "total_5parts": {
+        "sub_modes": {
+            "fast": {
+                "task_id": 836,
+                "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
+            },
+            "fastest": {
+                "task_id": 837,
+                "trainer": "nnUNetTrainer_4000epochs_NoMirroring",
+            },
             "default": {
                 "task_id": [831, 832, 833, 834, 835],
                 "trainer": "nnUNetTrainerNoMirroring",
             },
         }
-    },
-    # The 117 classes of `total` in one model, trained on the images as they are (nnU-Net's own input resampling).
-    # Weights are not downloaded: import them with totalseg_import_weights.
-    "total_single": {
-        "task_id": 839,
-        "trainer": "nnUNetTrainer",
-        "input_resampling": "plans",
-        "disallow_fast": True,
     },
     "total_v2": {
         "sub_modes": {
@@ -549,8 +560,8 @@ TASK_ID_WEIGHTS_CONFIGS = {
     836: {"foldername": "Dataset836_TotalSegmentator_total_3mm_1559subj", "version": "v3.0.0-weights"},
     837: {"foldername": "Dataset837_TotalSegmentator_total_6mm_1559subj", "version": "v3.0.0-weights"},
 
-    # Total CT, one model, streaming inference (placeholder until the release; "version": None = not downloadable)
-    839: {"foldername": "Dataset839_TotalSegmentator_single_model", "version": None},
+    # Total CT, one model, streaming inference
+    839: {"foldername": "Dataset839_TotalSegmentator_single_model", "version": "v3.0.0-weights"},
 
     # Total CT highres (commercial)
     841: {"foldername": "Dataset841_TotalSeg_highres_part1_organs_1830subj", "commercial": True},
