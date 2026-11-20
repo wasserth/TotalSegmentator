@@ -50,7 +50,7 @@ setup(name='TotalSegmentator',
             'nibabel>=2.3.0',
             'tqdm>=4.45.0',
             'xvfbwrapper',
-            'nnunetv2>=2.9.0',  # streaming inference (nnunetv2.inference.predict_streaming)
+            'nnunetv2>=2.9.0,<3',  # streaming inference (nnunetv2.inference.predict_streaming)
             'connected-components-3d',  # remove_small_blobs; nnU-Net brings it too (acvl-utils)
             'requests',
             'dicom2nifti',
