@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(name='TotalSegmentator',
-        version='3.0.0',
+        version='3.1.0',
         description='Robust segmentation of 117 classes in CT images.',
         long_description="See Readme.md on github for more details.",
         url='https://github.com/wasserth/TotalSegmentator',
