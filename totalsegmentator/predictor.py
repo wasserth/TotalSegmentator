@@ -421,7 +421,6 @@ def _save(img_out: Nifti1Image, header, output: Path, task: str, label_map: dict
     from totalsegmentator.dicom_io import save_mask_as_dicomseg, save_mask_as_rtstruct
     output_types, nora_tag, data = options["output_types"], options["nora_tag"], np.asanyarray(img_out.dataobj)
     if not options["quiet"]: print("Saving segmentations...")
-    st = time.time()
     if len(output_types) > 1:       # several files next to each other, named after the output
         base_dir = output if output.is_dir() else output.parent
         base_name = f"{task}_segmentation" if output.is_dir() else output.name.split(".")[0]
@@ -448,7 +447,6 @@ def _save(img_out: Nifti1Image, header, output: Path, task: str, label_map: dict
                 body = Nifti1Image((data > 0).astype(np.uint8), img_out.affine, header)
                 nib.save(body, file / "body.nii.gz")
                 nib.save(extract_skin(_input_image(source), body), file / "skin.nii.gz")
-    if not options["quiet"]: print(f"  Saved in {time.time() - st:.2f}s")
 
 
 # ------------------------------------------------------------------ the predictor ----------------------------------
@@ -748,6 +746,8 @@ class TotalSegmentatorPredictor:
         if not single:
             with self._dropped_if_broken():
                 results = [r.result() for r in results]
-        if not self.quiet: print(f"  Predicted {len(inputs)} image(s) in {time.time() - st:.2f}s")
+        if not self.quiet:
+            n_images = f" {len(inputs)} images" if len(inputs) > 1 else ""
+            print(f"\nPredicted{n_images} in {time.time() - st:.2f}s")
         results = [r if statistics else r[0] for r in results]
         return results[0] if single else results
