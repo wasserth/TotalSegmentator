@@ -259,18 +259,21 @@ docker run --gpus 'device=0' --shm-size=16G -v /absolute/path/to/my/data/directo
 
 
 ### Resource Requirements
-Totalsegmentator has the following runtime and memory requirements (using an Nvidia RTX 3090 GPU):
-(1.5mm is the normal model and 3mm is the `--fast` model. With v2 the runtimes have increased a bit since
-we added more classes.)
+TotalSegmentator has the following runtime and memory requirements for the `total` task (all 117 classes).
+Default mode uses the 1.5mm model and `--fast` the 3mm model.
+Big CT: 512x512x807 voxels (0.82x0.82x1.0mm); Chest CT: 512x512x139 voxels (0.76x0.76x2.5mm).
+GPU: Nvidia RTX 3090; CPU: Intel Core i9-9900X (10 cores); MPS: Apple M2 Pro (32 GB).
 
-![Alt text](resources/imgs/runtime_table.png)
+| Device | Mode     | Big CT                         | Chest CT                       |
+| ------ | -------- | ------------------------------ | ------------------------------ |
+| GPU    | default  | 14 s, 6.2 GB VRAM, 2.8 GB RAM  | 10 s, 5.6 GB VRAM, 1.7 GB RAM  |
+| GPU    | `--fast` | 12 s, 1.7 GB VRAM, 2.4 GB RAM  | 7 s, 1.5 GB VRAM, 1.3 GB RAM   |
+| CPU    | default  | 280 s, 8.4 GB RAM              | 109 s, 7.9 GB RAM              |
+| CPU    | `--fast` | 108 s, 3.0 GB RAM              | 30 s, 2.3 GB RAM               |
+| MPS    | default  | 143 s, 25.2 GB unified memory  | 70 s, 18.0 GB unified memory   |
+| MPS    | `--fast` | 36 s, 3.7 GB unified memory    | 16 s, 2.9 GB unified memory    |
 
-These measurements, and the ones in [resources/runtime_v3.0.1.md](resources/runtime_v3.0.1.md) (including `total_highres`, and CPU vs GPU), were made with the inference pipeline before the switch to nnU-Net's streaming inference (see CHANGELOG.md). Measurements with the streaming inference (GPU, CPU and MPS) are in [resources/runtime_v3.1.0.md](resources/runtime_v3.1.0.md).
-
-If you want to reduce memory consumption you can use the following options:
-* `--fast`: This will use a lower-resolution model
-* `--roi_subset <list of classes>`: This will only predict a subset of classes
-* `--nr_thr_saving 1`: Saving big images with several threads will take a lot of memory
+More details are in [resources/runtime_v3.1.0.md](resources/runtime_v3.1.0.md).
 
 
 ### Python API
