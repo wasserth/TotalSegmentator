@@ -122,7 +122,7 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                      statistics_exclude_masks_at_border=True, no_derived_masks=False, v1_order=False, fastest=False,
                      roi_subset_robust=None, stats_aggregation="mean", remove_small_blobs=False,
                      statistics_normalized_intensities=False, robust_crop=False, debug=False, report=None,
-                     statistics_extra=False, model_size="big"):
+                     statistics_extra=False, model_size="big", save_probabilities: Union[str, Path, None]=None):
     """
     Run TotalSegmentator from within python.
 
@@ -198,7 +198,8 @@ def totalsegmentator(input: Union[str, Path, Nifti1Image], output: Union[str, Pa
                                        statistics_normalized_intensities=statistics_normalized_intensities,
                                        preview=preview, remove_small_blobs=remove_small_blobs, v1_order=v1_order,
                                        no_derived_masks=no_derived_masks, nr_thr_saving=nr_thr_saving,
-                                       skip_saving=skip_saving, nora_tag="None" if nora_tag is None else nora_tag)
+                                       skip_saving=skip_saving, nora_tag="None" if nora_tag is None else nora_tag,
+                                       save_probabilities=save_probabilities)
     except Exception:
         if debug:
             print(f"Error during prediction for input: {input}, task: {task}")

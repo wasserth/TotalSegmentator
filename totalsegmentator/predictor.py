@@ -50,6 +50,7 @@ from totalsegmentator.map_to_binary import (class_map, class_map_5_parts, class_
                                             map_taskid_to_partname_ct, map_taskid_to_partname_headneck_muscles,
                                             map_taskid_to_partname_mr)
 from totalsegmentator.nifti_ext_header import add_label_map_to_nifti
+from totalsegmentator.probabilities import add_class_names, crop_geometry, probabilities_base, return_segmentation
 from totalsegmentator.postprocessing import (extract_skin, keep_largest_blob_multilabel, postprocess_vertebrae_pp,
                                              refine_vertebrae_pp_with_body_mask, remove_outside_of_mask,
                                              remove_small_blobs_multilabel)
@@ -270,11 +271,17 @@ class Model:
                                    self.nnunet.configuration_manager, self.nnunet.dataset_json, self.preprocessor,
                                    resampling_threads=None if self.cubic else os.cpu_count())
 
-    def predict(self, data: np.ndarray, properties: dict, num_cases: int = 1) -> np.ndarray:
+    def predict(self, data: np.ndarray, properties: dict, num_cases: int = 1,
+                probabilities: Optional[str] = None) -> np.ndarray:
         """The label map on the grid of the image that was preprocessed (in the reader's axis order). num_cases: how
-        many images the caller is going to predict (nnU-Net compiles the network for larger batches)."""
-        item = {"data": data, "data_properties": properties, "ofile": None}
-        return self.nnunet.predict_from_data_iterator_streaming([item], num_cases=num_cases)[0]
+        many images the caller is going to predict (nnU-Net compiles the network for larger batches). probabilities:
+        also write the class probabilities to probabilities + '.b2nd' / '.pkl'."""
+        item = {"data": data, "data_properties": properties, "ofile": probabilities}
+        if probabilities is None:
+            return self.nnunet.predict_from_data_iterator_streaming([item], num_cases=num_cases)[0]
+        return self.nnunet.predict_from_data_iterator_streaming([item], export_fn=return_segmentation,
+                                                                num_processes_export=1, num_cases=num_cases,
+                                                                save_probabilities=True)[0]
 
 
 # ------------------------------------------------------------------ input ------------------------------------------
@@ -549,12 +556,13 @@ class TotalSegmentatorPredictor:
     @torch.inference_mode()
     def segment(self, data: Optional[np.ndarray], properties: dict, task: str, mode: str = "default",
                 roi_subset: Optional[list[str]] = None, prepared: Optional[list] = None,
-                num_cases: int = 1) -> np.ndarray:
+                num_cases: int = 1, probabilities: Optional[str] = None) -> np.ndarray:
         """
         The label map of a task (ids of class_map[task]) for an image as nnU-Net's reader returns it: data (1, z, y, x)
         and its properties; the label map is (z, y, x). See the module docstring. prepared: the image preprocessed for
         the models that run on all of it (_load); each entry is taken out of the list once its model runs. data is only
-        needed where a model runs on a region of the image.
+        needed where a model runs on a region of the image. probabilities (a task with one model): also write the
+        probabilities of that model to probabilities + '.b2nd' / '.pkl', on the region it runs on.
         """
         config = self._task_config(task, mode)
         spacing = np.array(properties["spacing"])
@@ -567,17 +575,25 @@ class TotalSegmentatorPredictor:
                                np.array(roi["margin"])[::-1] / spacing)
             if box is None:
                 if not self.quiet: print(f"INFO: None of {roi['classes']} found. Returning empty segmentation.")
+                if probabilities is not None:
+                    print("WARNING: No probabilities saved: the model did not run (empty region).")
                 return np.zeros(data.shape[1:], dtype=np.uint8)
             crop = data[(slice(None), *box)]
-            inputs = (model.preprocess(crop, properties) for model, _ in models)
+            # the geometry of the crop: nnU-Net writes it to the .pkl of saved probabilities
+            crop_properties = {**properties,
+                               "nibabel_stuff": crop_geometry(properties["nibabel_stuff"], box, crop.shape[1:])}
+            inputs = (model.preprocess(crop, crop_properties) for model, _ in models)
         elif prepared is not None:
             inputs = (prepared.pop(0) for _ in models)
         else:
             inputs = (model.preprocess(data, properties) for model, _ in models)
 
         # a model's input is dropped once the model has run (a crop is preprocessed only when its model is next)
-        seg = merge_parts((model.predict(*model_input, num_cases), lut)
+        seg = merge_parts((model.predict(*model_input, num_cases, probabilities), lut)
                           for (model, lut), model_input in zip(models, inputs))
+        if probabilities is not None:
+            add_class_names(probabilities + ".b2nd", task,
+                            {0: "background", **class_map[task], **class_map.get(task + "_auxiliary", {})})
         seg = apply_label_rules(seg, task, spacing, self.quiet)
         if roi is not None:
             cropped, seg = seg, np.zeros(data.shape[1:], dtype=np.uint8)
@@ -610,6 +626,19 @@ class TotalSegmentatorPredictor:
         prepared = [model.preprocess(data, properties) for model, _ in self.models(*whole_image_models)]
         return (data if needs_image else None), properties, source, prepared
 
+    def _check_save_probabilities(self, single: bool):
+        import inspect
+        from nnunetv2.inference.predict_streaming import nnUNetPredictorStreaming
+        if not single:
+            raise ValueError("save_probabilities works for one image, not for a list or folder of images.")
+        if isinstance(self._config["task_id"], list):
+            raise ValueError(f"save_probabilities is not supported for task '{self.task}': it combines "
+                             f"{len(self._config['task_id'])} models. It works for tasks with one model.")
+        if "save_probabilities" not in inspect.signature(
+                nnUNetPredictorStreaming.predict_from_data_iterator_streaming).parameters:
+            raise RuntimeError("save_probabilities needs a newer nnU-Net (with probability export in streaming "
+                               "inference): pip install -U nnunetv2")
+
     def predict(self, input: Union[str, Path, Nifti1Image, Sequence[Union[str, Path, Nifti1Image]]],
                 output: Union[str, Path, None, Sequence[Union[str, Path, None]]] = None, ml: bool = False,
                 roi_subset: Optional[list[str]] = None, output_type: Union[str, list[str]] = "nifti",
@@ -618,7 +647,8 @@ class TotalSegmentatorPredictor:
                 statistics_normalized_intensities: bool = False, preview: Union[bool, str, Path] = False,
                 remove_small_blobs: Union[bool, float] = False, v1_order: bool = False,
                 no_derived_masks: bool = False, nr_thr_saving: int = 6, skip_saving: bool = False,
-                nora_tag: str = "None", return_images: Optional[bool] = None):
+                nora_tag: str = "None", return_images: Optional[bool] = None,
+                save_probabilities: Union[str, Path, None] = None):
         """
         Segment one image or a list of images. output: for each image a file (ml=True, or a DICOM output type) or a
         folder that gets one file per class, or None to only return the result. The other arguments are those of
@@ -626,6 +656,8 @@ class TotalSegmentatorPredictor:
         for a list with outputs the images are not sent back from the export workers unless return_images=True.
         For a list, the statistics and preview of an image whose output is a file are named after that file
         (<name>_statistics.json, <name>_preview_<task>.png), so that images sharing a folder keep their own.
+        save_probabilities (one image, a task with one model): also write the class probabilities to this .b2nd file
+        and the image's geometry to a .pkl file next to it (see totalsegmentator/probabilities.py).
         """
         single = isinstance(input, (str, Path, Nifti1Image))
         if not single and isinstance(output, (str, Path)):
@@ -646,6 +678,10 @@ class TotalSegmentatorPredictor:
         if roi_subset is not None and not self.task.startswith("total"):
             raise ValueError("roi_subset only works with the total tasks")
         validate_roi_subset(roi_subset, self.task)      # before any weights are downloaded or models are run
+        if save_probabilities is not None:
+            self._check_save_probabilities(single)
+            save_probabilities = probabilities_base(save_probabilities)
+            Path(save_probabilities).parent.mkdir(parents=True, exist_ok=True)
         output_types = [output_type] if isinstance(output_type, str) else list(output_type)
         outputs = [output_file(o, ml, output_types) for o in outputs]
         v1_order = v1_order and self.task in ("total", "total_5parts", "total_v2")
@@ -686,7 +722,8 @@ class TotalSegmentatorPredictor:
             for out in outputs:
                 data, properties, source, prepared = loading.popleft().result()
                 loading.extend(load(1))                 # read on while this image is predicted; nothing else holds it
-                seg = self.segment(data, properties, self.task, self.mode, roi_subset, prepared, len(inputs))
+                seg = self.segment(data, properties, self.task, self.mode, roi_subset, prepared, len(inputs),
+                                   save_probabilities)
                 body = self.segment(data, properties, "vertebrae_body", num_cases=len(inputs)) \
                     if self.task == "vertebrae_pp_refined" else None
                 del data, prepared

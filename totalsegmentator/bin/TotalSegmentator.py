@@ -157,6 +157,12 @@ def main():
                         help="Write a machine-readable JSON run report (software/model versions, device, task, "
                              "classes, runtime, output files) to this path. Useful for reproducible pipelines and automation.")
 
+    parser.add_argument("-sp", "--save_probabilities", type=lambda p: Path(p).absolute(), default=None,
+                        metavar="filepath",
+                        help="Also save the class probabilities to this .b2nd file (blosc2, uint16 = p * 65535) and "
+                             "the image geometry to a .pkl file next to it. One image, tasks with one model only. "
+                             "See resources/probabilities.md for how to read them.")
+
     parser.add_argument("-sii", "--stats_include_incomplete", action="store_true",
                         help="Normally statistics are only calculated for ROIs which are not cut off by the beginning or end of image. Use this option to calc anyways.",
                         default=False)
@@ -215,7 +221,6 @@ def main():
     parser.add_argument("-ho", "--higher_order_resampling", "--high_order_resampling", action=RemovedOption)
     parser.add_argument("--higher_order_resampling_LEGACY", "--high_order_resampling_LEGACY", action=RemovedOption)
     parser.add_argument("-sl", "--save_lowres", action=RemovedOption, error=True)
-    parser.add_argument("-sp", "--save_probabilities", action=RemovedOption, nargs=1, error=True)
     parser.add_argument("-cp", "--crop_path", action=RemovedOption, nargs=1, error=True)
 
     parser.add_argument("-lt", "--list-tasks", action="store_true", dest="list_tasks",
@@ -282,7 +287,8 @@ def main():
                      roi_subset_robust=args.roi_subset_robust, stats_aggregation=args.stats_aggregation,
                      remove_small_blobs=args.remove_small_blobs, robust_crop=args.robust_crop,
                      debug=args.debug, report=args.report,
-                     statistics_extra=args.statistics_extra, model_size=args.model_size)
+                     statistics_extra=args.statistics_extra, model_size=args.model_size,
+                     save_probabilities=args.save_probabilities)
 
 
 if __name__ == '__main__':

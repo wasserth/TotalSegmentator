@@ -204,7 +204,7 @@ class FakeModel:
     def preprocess(self, data, properties):
         return data[0], properties
 
-    def predict(self, data, properties, num_cases=1):
+    def predict(self, data, properties, num_cases=1, probabilities=None):
         self.shapes.append(data.shape)
         return self.label_fn(data).astype(np.uint8)
 
@@ -454,7 +454,7 @@ def test_removed_cli_options_are_not_read_as_other_options(monkeypatch, capsys):
     cli.main()
     assert calls[0]["fast"] is False and calls[0]["statistics"] is False and calls[0]["radiomics"] is False
     assert "-fs was removed and is ignored" in capsys.readouterr().out
-    for removed in (["-sl"], ["-sp", "probabilities"], ["-cp", "crops"]):
+    for removed in (["-sl"], ["-cp", "crops"]):
         monkeypatch.setattr("sys.argv", ["TotalSegmentator", "-i", "ct.nii.gz", "-o", "seg", *removed])
         with pytest.raises(SystemExit) as exit_info:
             cli.main()

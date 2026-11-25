@@ -139,6 +139,13 @@ Thank you to [INGEDATA](https://www.ingedata.ai/) for providing a team of radiol
 * `--robust_crop`: For some tasks and for roi_subset a 6mm low resolution model is used to crop to the region of interest. Sometimes this model is incorrect, which leads to artifacts like segmentations being cut off. robust_crop will use a better but slower 3mm model instead.
 * `--preview`: This will generate a 3D rendering of all classes, giving you a quick overview if the segmentation worked and where it failed (see `preview_<task>.png` in output directory). Optionally pass a path to save it somewhere else (e.g. `-p my_path/img.png`).
 * `--radiomics`: This will generate a file `statistics_radiomics.json` with the radiomics features of each class. You have to install pyradiomics to use this (`pip install pyradiomics`).
+* `--save_probabilities`: Also save the class probabilities, e.g. `-sp probs.b2nd` (writes `probs.b2nd` and `probs.pkl` with the image geometry). The file is a compressed blosc2 array (`uint16` = probability × 65535, typically <100 MB), which can be read class by class:
+  ```python
+  from totalsegmentator.probabilities import probability_to_nifti, load_probabilities
+  liver_img = probability_to_nifti("probs.b2nd", "liver")      # float32 NIfTI in the geometry of the input image
+  probs = load_probabilities("probs.b2nd", ["liver", "spleen"])  # float32 array (classes, z, y, x)
+  ```
+  More details [here](resources/probabilities.md).
 * `--report`: This will write a machine-readable JSON run manifest to the given path (software and model versions, resolved device, task, classes, runtime and the list of output files). Useful for reproducible pipelines and automation.
 * `--list-tasks` / `--list-classes [task]`: Print the available tasks (or the classes of one task) and exit, without running a segmentation. For machine-readable output use the `totalseg_info` command below.
 
