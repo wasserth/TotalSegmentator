@@ -2,7 +2,7 @@
 
 In v3 we did the following improvements:
 
-* `total` and `appendicular_bones` tasks: We added 291 pediatric CT images to improve the segmentation performance on children. Moreover, we greatly improved the label quality: We fixed many small errors in the segmentations, we refined the labels especially for bones structures (e.g. femur segmentations a lot more precise now), and we fixed the vertebrae label mixups. This results in a more accurate segmentation model. Since the previous version was already quite good the changes might be noticeable only for very specific cases.  
+* `total` and `appendicular_bones` tasks: We added 291 pediatric CT images to improve the segmentation performance on children. Moreover, we greatly improved the label quality: We fixed many small errors in the segmentations, we refined the labels especially for bones structures (e.g. femur segmentations a lot more precise now), for ribs we added the missing part close to the spine, and we fixed the vertebrae label mixups. This results in a more accurate segmentation model. Since the previous version was already quite good the changes might be noticeable only for very specific cases.  
 
 * `total_mr` and `appendicular_bones_mr` tasks: We added 246 whole body MR images, 249 pediatric MR images, and 170 MR images where the model failed before. Moreover, we improved the label quality on all existing cases. This results in a greatly improved segmentation model.
 
@@ -48,7 +48,7 @@ For v3 we did not use a `validation` set anymore. There is only `train` and `tes
 
 ## Still open problems
 
-* the start of the ribs close to the spine is always missing a small part
+* for the pediatric dataset we did not manually correct the ribs and the small vessels (e.g. subclavian artery,...). Those are often hard to identify on these images. Fixing those should give a small improvement in the future.
 * the GT segmentation of the colon/small_bowel is sometimes bad because the colon is so messy it is not possible to disentangle colon and small_bowel
 
 
