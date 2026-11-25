@@ -57,11 +57,11 @@ class TestRegistry(unittest.TestCase):
         self.assertFalse(requires_license("thigh_shoulder_muscles"))
         self.assertFalse(requires_license("thigh_shoulder_muscles_mr"))
         self.assertEqual(get_task_classes("vertebrae_pp_refined"), get_task_classes("vertebrae_pp"))
-        self.assertTrue(requires_license("renal_arteries"))
+        self.assertFalse(requires_license("renal_arteries"))
         self.assertEqual(get_task_classes("renal_arteries")[3], "renal_arteries")
         self.assertTrue(requires_license("aorta_annulus"))
         self.assertEqual(get_task_classes("aorta_annulus")[1], "annulus_proper")
-        self.assertTrue(requires_license("aortic_dissection"))
+        self.assertFalse(requires_license("aortic_dissection"))
         self.assertEqual(get_task_classes("aortic_dissection")[2], "aorta_false_lumen")
         self.assertTrue(requires_license("pulmonary_artery_landmarks"))
         self.assertEqual(

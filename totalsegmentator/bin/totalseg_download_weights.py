@@ -54,6 +54,8 @@ TASK_TO_ID = {
     "teeth": [113, 115, 837],
     "trunk_cavities": [343],
     "brain_aneurysm": [615],
+    "aortic_dissection": [716, 836],
+    "renal_arteries": [710, 836],
 
     "heartchambers_highres": [301, 836],
     "appendicular_bones": [838],
@@ -75,9 +77,7 @@ TASK_TO_ID = {
     "body_stats_mr": ["body_stats_mr"],
     "body_stats_ct": ["body_stats_ct"],
     "aortic_sinuses": [920, 837],
-    "renal_arteries": [710],
     "aorta_annulus": [713],
-    "aortic_dissection": [716],
     "pulmonary_artery_landmarks": [514],
 }
 

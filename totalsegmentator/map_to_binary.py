@@ -848,9 +848,7 @@ commercial_models = {
     "coronary_arteries": 509,
     "coronary_arteries_LEGACY": 507,
     "aortic_sinuses": 920,
-    "renal_arteries": 710,
     "aorta_annulus": 713,
-    "aortic_dissection": 716,
     "pulmonary_artery_landmarks": 514
 }
 

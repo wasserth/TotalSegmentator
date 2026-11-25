@@ -375,6 +375,24 @@ TASK_CONFIGS = {
         "trainer": "nnUNetTrainer_2000epochs_NoMirroring",
         "disallow_fast": True,
     },
+    # Trained on CTs cropped to aorta + heart (20 mm margin), as in the aorta report
+    "aortic_dissection": {
+        "task_id": 716,
+        "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
+        "crop": ["aorta", "heart"],
+        "robust_crop": True,
+        "model": "3d_fullres_high",
+        "folds": [0, 1, 2, 3, 4],
+        "disallow_fast": True,
+    },
+    # The kidneys are part of the crop, so that the renal arteries are not cut off laterally
+    "renal_arteries": {
+        "task_id": 710,
+        "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
+        "crop": ["aorta", "heart", "kidney_left", "kidney_right"],
+        "robust_crop": True,
+        "disallow_fast": True,
+    },
 
     # Commercial models
     "heartchambers_highres": {
@@ -477,25 +495,9 @@ TASK_CONFIGS = {
         "disallow_fast": True,
         "commercial": True,
     },
-    "renal_arteries": {
-        "task_id": 710,
-        "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
-        # Model only used for aorta_report and there only working on already cropped image
-        "disallow_fast": True,
-        "commercial": True,
-    },
     "aorta_annulus": {
         "task_id": 713,
         "trainer": "nnUNetTrainer_DASegOrd0",
-        # Model only used for aorta_report and there only working on already cropped image
-        "model": "3d_fullres_high",
-        "folds": [0, 1, 2, 3, 4],
-        "disallow_fast": True,
-        "commercial": True,
-    },
-    "aortic_dissection": {
-        "task_id": 716,
-        "trainer": "nnUNetTrainer_DASegOrd0_NoMirroring",
         # Model only used for aorta_report and there only working on already cropped image
         "model": "3d_fullres_high",
         "folds": [0, 1, 2, 3, 4],
@@ -657,6 +659,8 @@ TASK_ID_WEIGHTS_CONFIGS = {
     615: {"foldername": "Dataset615_MAXIMUS", "version": "v2.5.0-weights"},
     305: {"foldername": "Dataset305_vertebrae_discs_1559subj", "version": "v2.5.0-weights"},
     803: {"foldername": "Dataset803_TotalSegmentator_vertebrae_inner_1559subj", "version": "v2.5.0-weights"},
+    710: {"foldername": "Dataset710_renal_arteries_127subj", "version": "v3.0.0-weights"},
+    716: {"foldername": "Dataset716_aorta_true_false_lumen_171subj", "version": "v3.0.0-weights"},
 
     # Commercial models
     304: {"foldername": "Dataset304_appendicular_bones_ext_1559subj"},
@@ -675,9 +679,7 @@ TASK_ID_WEIGHTS_CONFIGS = {
     507: {"foldername": "Dataset507_coronary_arteries_cm_nativ_400subj"},
     509: {"foldername": "Dataset509_coronary_arteries_cm_nativ_400subj_SKELETON"},
     920: {"foldername": "Dataset920_aortic_sinuses_cm_nativ_400subj"},
-    710: {"foldername": "Dataset710_renal_arteries_127subj"},
     713: {"foldername": "Dataset713_annulus_proper_48subj"},
-    716: {"foldername": "Dataset716_aorta_true_false_lumen_171subj"},
     514: {"foldername": "Dataset514_annulus_pulmonary_70subj"},
 
     # CNN body stats: one multi-target model per modality (license server)

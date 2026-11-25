@@ -249,6 +249,9 @@ roi_groups = {
     "aortic_dissection": [
         ["aorta_true_lumen", "aorta_false_lumen"]
     ],
+    "renal_arteries": [
+        ["celiac_trunk", "superior_mesenteric_artery", "renal_arteries"]
+    ],
     "pulmonary_artery_landmarks": [
         ["annulus", "sinotubular_junction"],
         ["pul_annulus", "pul_sinotubular_junction", "pul_bifurcation", "pul_left_start", "pul_right_start"]
