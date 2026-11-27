@@ -26,7 +26,9 @@ def dice_score(y_true, y_pred):
 
 
 def calc_metrics(subject, gt_dir=None, pred_dir=None, class_map=None):
-    gt_all = nib.load(gt_dir / f"{subject}.nii.gz").get_fdata()
+    gt_img = nib.load(gt_dir / f"{subject}.nii.gz")
+    gt_all = gt_img.get_fdata()
+    spacing = [float(x) for x in gt_img.header.get_zooms()[:3]]
     pred_all = nib.load(pred_dir / f"{subject}.nii.gz").get_fdata()
 
     r = {"subject": subject}
@@ -39,7 +41,7 @@ def calc_metrics(subject, gt_dir=None, pred_dir=None, class_map=None):
             r[f"surface_dice_3-{roi_name}"] = 0
         elif gt.max() > 0:
             r[f"dice-{roi_name}"] = dice_score(gt, pred)
-            sd = compute_surface_distances(gt, pred, [1.5, 1.5, 1.5])
+            sd = compute_surface_distances(gt, pred, spacing)
             r[f"surface_dice_3-{roi_name}"] = compute_surface_dice_at_tolerance(sd, 3.0)
         # gt.max() == 0 which means we can not calculate any score because roi not in the image
         else:
